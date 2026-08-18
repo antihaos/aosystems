@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Нитеграф — генератор картин из нитей</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧵</text></svg>">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/manrope/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/unbounded/index.css">
+<script>
+tailwind.config={theme:{extend:{fontFamily:{sans:['Manrope','system-ui','sans-serif'],display:['Unbounded','system-ui','sans-serif']}}}};
+</script>
+<style>
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#334155;border-radius:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  input[type=color]{-webkit-appearance:none;appearance:none;background:none;border:none}
+  input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+  input[type=color]::-webkit-color-swatch{border:1px solid rgba(255,255,255,.15);border-radius:8px}
+  input[type=range]{cursor:pointer}
+  .num-in{width:4.4rem;background:#1e293b;border-radius:.45rem;padding:.18rem .4rem;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#fcd34d;text-align:right;outline:none;border:1px solid rgba(255,255,255,.08);transition:border-color .15s, box-shadow .15s}
+  .num-in:focus{border-color:rgba(245,158,11,.65);box-shadow:0 0 0 2px rgba(245,158,11,.15)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .fade-up{animation:fadeUp .5s ease both}
+  .dropzone.drag{border-color:#f59e0b;background:rgba(245,158,11,.07);transform:scale(1.01)}
+  .seg-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:9px;font-size:10px;color:#94a3b8;transition:all .15s ease}
+  .seg-btn:hover{color:#e2e8f0}
+  .seg-active{background:linear-gradient(135deg,#f59e0b,#f97316);color:#0f172a !important;font-weight:700;box-shadow:0 2px 10px rgba(249,115,22,.35)}
+  .btn-active{background:rgba(245,158,11,.15) !important;color:#fbbf24 !important;border-color:rgba(245,158,11,.4) !important}
+</style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans min-h-screen antialiased selection:bg-amber-500/30">
+
+<div class="pointer-events-none fixed -top-48 -right-48 w-[560px] h-[560px] rounded-full bg-amber-500/10 blur-3xl"></div>
+<div class="pointer-events-none fixed -bottom-56 -left-48 w-[560px] h-[560px] rounded-full bg-rose-500/10 blur-3xl"></div>
+
+<header class="sticky top-0 z-40 border-b border-white/5 bg-slate-950/80 backdrop-blur-md">
+  <div class="mx-auto max-w-[1440px] px-4 lg:px-8 h-16 flex items-center gap-3">
+    <svg viewBox="0 0 48 48" class="w-9 h-9 shrink-0">
+      <defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs>
+      <circle cx="24" cy="24" r="21" fill="none" stroke="url(#lg1)" stroke-width="2.5"/>
+      <g stroke="#f59e0b" stroke-width="1" opacity=".75">
+        <line x1="44" y1="24" x2="14" y2="41.3"/><line x1="41.3" y1="34" x2="4" y2="24"/>
+        <line x1="34" y1="41.3" x2="6.7" y2="14"/><line x1="24" y1="44" x2="14" y2="6.7"/>
+        <line x1="14" y1="41.3" x2="24" y2="4"/><line x1="6.7" y1="34" x2="34" y2="6.7"/>
+        <line x1="4" y1="24" x2="41.3" y2="14"/>
+      </g>
+    </svg>
+    <div>
+      <h1 class="font-display text-lg leading-none bg-gradient-to-r from-amber-300 to-orange-400 bg-clip-text text-transparent">Нитеграф</h1>
+      <p class="text-[11px] text-slate-500 mt-0.5">генератор картин из нитей · string art</p>
+    </div>
+    <div class="ml-auto hidden sm:block text-[11px] text-slate-500">жадный алгоритм подбора хорд</div>
+  </div>
+</header>
+
+<main class="relative mx-auto max-w-[1440px] px-4 lg:px-8 py-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] items-start">
+
+  <!-- ======= ХОЛСТ ======= -->
+  <section class="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 p-4 lg:p-5 fade-up">
+    <div class="flex flex-wrap items-center gap-3 mb-4">
+      <h2 class="font-display text-sm text-slate-300">Холст</h2>
+      <span id="statusChip" class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1">
+        <span id="statusDot" class="w-1.5 h-1.5 rounded-full bg-slate-400"></span><span id="statusText">Ожидание</span>
+      </span>
+      <button id="btnCompare" class="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-800/70 px-3 py-1.5 text-xs text-slate-300 hover:text-white transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        Сравнить с оригиналом
+      </button>
+    </div>
+
+    <div id="canvasWrap" class="relative rounded-xl overflow-hidden ring-1 ring-white/5 bg-slate-950" style="background:radial-gradient(circle at 50% 40%, #1e293b 0%, #020617 75%)">
+      <canvas id="view" class="block w-full h-auto"></canvas>
+      <div id="empty" class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center pointer-events-none px-6">
+        <svg class="w-14 h-14 text-slate-600" fill="none" stroke="currentColor" stroke-width="1.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.16-5.16a2.25 2.25 0 013.18 0l5.16 5.16m-1.5-1.5l1.41-1.41a2.25 2.25 0 013.18 0l2.91 2.91M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25z"/></svg>
+        <p class="text-sm text-slate-400 font-medium">Загрузите изображение, чтобы начать</p>
+        <p class="text-xs text-slate-600">перетащите файл, вставьте из буфера (Ctrl+V)<br>или выберите пример в панели справа</p>
+      </div>
+    </div>
+
+    <p class="mt-3 text-xs text-slate-500">Кликните по гвоздю на ободе, чтобы выбрать стартовый. Кнопка «Сравнить» показывает оригинал поверх результата.</p>
+
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+      <div class="rounded-xl bg-slate-800/60 ring-1 ring-white/5 p-3">
+        <div class="text-[10px] uppercase tracking-wider text-slate-500">Нити</div>
+        <div class="mt-1 font-mono text-lg text-slate-100 leading-none"><span id="statThreads">0</span> <span id="statMax" class="text-xs text-slate-500">/ 2500</span></div>
+      </div>
+      <div class="rounded-xl bg-slate-800/60 ring-1 ring-white/5 p-3">
+        <div class="text-[10px] uppercase tracking-wider text-slate-500">Ошибка</div>
+        <div class="mt-1 font-mono text-lg text-slate-100 leading-none" id="statError">—</div>
+      </div>
+      <div class="rounded-xl bg-slate-800/60 ring-1 ring-white/5 p-3">
+        <div class="text-[10px] uppercase tracking-wider text-slate-500">Гвоздь №</div>
+        <div class="mt-1 font-mono text-lg text-slate-100 leading-none" id="statNail">—</div>
+      </div>
+      <div class="rounded-xl bg-slate-800/60 ring-1 ring-white/5 p-3">
+        <div class="text-[10px] uppercase tracking-wider text-slate-500">Время</div>
+        <div class="mt-1 font-mono text-lg text-slate-100 leading-none" id="statTime">00:00</div>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <div class="flex justify-between text-xs text-slate-500 mb-1.5"><span>Прогресс</span><span id="progressPct">0%</span></div>
+      <div class="h-2 rounded-full bg-slate-800 overflow-hidden"><div id="progressFill" class="h-full w-0 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-[width] duration-200"></div></div>
+    </div>
+  </section>
+
+  <!-- ======= ПАНЕЛЬ ======= -->
+  <aside class="space-y-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pr-1 pb-2">
+
+    <div class="rounded-xl bg-amber-500/10 ring-1 ring-amber-500/20 px-3.5 py-2.5 text-[11px] leading-relaxed text-amber-200/90 fade-up">
+      💡 Значение любого параметра можно <b>ввести вручную</b> в поле справа — даже выше шкалы ползунка. Максимум ползунка автоматически расширится до введённого числа.
+    </div>
+
+    <!-- Изображение -->
+    <section class="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 p-4 space-y-4 fade-up">
+      <header class="flex items-center gap-2">
+        <span class="w-6 h-6 grid place-items-center rounded-lg bg-amber-500/10 text-amber-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.16-5.16a2.25 2.25 0 013.18 0l5.16 5.16m-1.5-1.5l1.41-1.41a2.25 2.25 0 013.18 0l2.91 2.91M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z"/></svg></span>
+        <h2 class="text-sm font-semibold">Изображение</h2>
+      </header>
+
+      <div id="dropzone" class="dropzone cursor-pointer rounded-xl border-2 border-dashed border-slate-700 p-5 text-center transition hover:border-amber-500/60 hover:bg-amber-500/5">
+        <svg class="w-8 h-8 mx-auto text-slate-500" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"/></svg>
+        <p class="mt-2 text-xs text-slate-400">Перетащите картинку сюда,<br>вставьте из буфера или</p>
+        <span class="mt-2 inline-block rounded-lg bg-slate-800 ring-1 ring-white/10 px-3 py-1.5 text-xs font-semibold text-amber-300">выберите файл</span>
+        <input id="fileInput" type="file" accept="image/*" class="hidden">
+      </div>
+
+      <div id="imgInfo" class="hidden items-center gap-2 rounded-lg bg-slate-800/60 ring-1 ring-white/5 px-3 py-2 text-[11px] text-slate-400">
+        <svg class="w-3.5 h-3.5 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="imgName" class="truncate font-medium text-slate-300"></span>
+        <span id="imgDim" class="ml-auto shrink-0 font-mono"></span>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button id="demoLion" class="flex items-center gap-2 rounded-lg bg-slate-800/70 ring-1 ring-white/10 p-2 text-left hover:ring-amber-500/40 transition">
+          <img src="https://image.qwenlm.ai/public_source/72e2c23c-9936-4365-bf62-582b69d671f4/1b5d3e0d4-3fbc-48b1-a2fc-5f10a96d750e.png" loading="lazy" class="w-9 h-9 rounded-md object-cover ring-1 ring-white/10">
+          <span class="text-[11px] text-slate-300 leading-tight">Пример:<br><b class="text-slate-100">Лев</b></span>
+        </button>
+        <button id="demoPortrait" class="flex items-center gap-2 rounded-lg bg-slate-800/70 ring-1 ring-white/10 p-2 text-left hover:ring-amber-500/40 transition">
+          <img src="https://image.qwenlm.ai/public_source/72e2c23c-9936-4365-bf62-582b69d671f4/19d110cbc-f21d-410c-ac62-000e9a042479.png" loading="lazy" class="w-9 h-9 rounded-md object-cover ring-1 ring-white/10">
+          <span class="text-[11px] text-slate-300 leading-tight">Пример:<br><b class="text-slate-100">Портрет</b></span>
+        </button>
+      </div>
+
+      <div class="space-y-3 pt-1 border-t border-white/5">
+        <label class="block">
+          <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Яркость</span><input id="brightNum" type="number" class="num-in" value="0"></div>
+          <input id="brightRange" type="range" value="0" class="w-full accent-amber-500">
+        </label>
+        <label class="block">
+          <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Контраст</span><input id="contrastNum" type="number" class="num-in" value="20"></div>
+          <input id="contrastRange" type="range" value="20" class="w-full accent-amber-500">
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+          <input id="invertChk" type="checkbox" class="peer sr-only">
+          <span class="w-9 h-5 rounded-full bg-slate-700 peer-checked:bg-amber-500 relative transition after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4"></span>
+          <span class="text-xs text-slate-400">Инвертировать изображение</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Гвозди -->
+    <section class="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 p-4 space-y-4 fade-up">
+      <header class="flex items-center gap-2">
+        <span class="w-6 h-6 grid place-items-center rounded-lg bg-amber-500/10 text-amber-400"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="4" r="1.6"/><circle cx="12" cy="20" r="1.6"/><circle cx="4" cy="12" r="1.6"/><circle cx="20" cy="12" r="1.6"/><circle cx="6.3" cy="6.3" r="1.6"/><circle cx="17.7" cy="6.3" r="1.6"/><circle cx="6.3" cy="17.7" r="1.6"/><circle cx="17.7" cy="17.7" r="1.6"/></svg></span>
+        <h2 class="text-sm font-semibold">Гвозди</h2>
+      </header>
+
+      <div id="shapeSeg" class="grid grid-cols-4 gap-1 bg-slate-800/80 rounded-xl p-1">
+        <button data-shape="circle" class="seg-btn seg-active"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Круг</button>
+        <button data-shape="square" class="seg-btn"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/></svg>Квадрат</button>
+        <button data-shape="triangle" class="seg-btn"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/></svg>Треуг.</button>
+        <button data-shape="poly" class="seg-btn"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3l7.8 5.7-3 9.2H7.2l-3-9.2z"/></svg>Многоуг.</button>
+      </div>
+
+      <div id="polyRow" class="hidden">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Стороны многоугольника</span><input id="sidesNum" type="number" class="num-in" value="6"></div>
+        <input id="sidesRange" type="range" value="6" class="w-full accent-amber-500">
+      </div>
+
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Количество гвоздей</span><input id="nailsNum" type="number" class="num-in" value="220"></div>
+        <input id="nailsRange" type="range" value="220" class="w-full accent-amber-500">
+      </label>
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Отступ от края</span><input id="marginNum" type="number" class="num-in" value="14"></div>
+        <input id="marginRange" type="range" value="14" class="w-full accent-amber-500">
+      </label>
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Поворот, °</span><input id="rotNum" type="number" class="num-in" value="0"></div>
+        <input id="rotRange" type="range" value="0" class="w-full accent-amber-500">
+      </label>
+      <label class="flex items-center gap-2 cursor-pointer select-none">
+        <input id="showNailsChk" type="checkbox" checked class="peer sr-only">
+        <span class="w-9 h-5 rounded-full bg-slate-700 peer-checked:bg-amber-500 relative transition after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4"></span>
+        <span class="text-xs text-slate-400">Показывать гвозди на холсте</span>
+      </label>
+    </section>
+
+    <!-- Нити -->
+    <section class="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 p-4 space-y-4 fade-up">
+      <header class="flex items-center gap-2">
+        <span class="w-6 h-6 grid place-items-center rounded-lg bg-amber-500/10 text-amber-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 20L20 4M4 12l8-8M12 20l8-8"/></svg></span>
+        <h2 class="text-sm font-semibold">Нити</h2>
+      </header>
+
+      <div id="modeSeg" class="grid grid-cols-2 gap-1 bg-slate-800/80 rounded-xl p-1">
+        <button data-mode="dark" class="seg-btn seg-active !flex-row"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor" opacity=".8"/></svg>Тёмные нити</button>
+        <button data-mode="light" class="seg-btn !flex-row"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>Светлые нити</button>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-slate-400">Цвет нити</span>
+        <input id="inkColor" type="color" value="#141414" class="w-10 h-8 rounded-lg cursor-pointer">
+      </div>
+
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Макс. количество нитей</span><input id="maxNum" type="number" class="num-in" value="2500"></div>
+        <input id="maxRange" type="range" value="2500" class="w-full accent-amber-500">
+      </label>
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Вес нити (плотность)</span><input id="weightNum" type="number" class="num-in" value="26"></div>
+        <input id="weightRange" type="range" value="26" class="w-full accent-amber-500">
+      </label>
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Толщина нити, px</span><input id="thickNum" type="number" step="0.05" class="num-in" value="1"></div>
+        <input id="thickRange" type="range" value="1" class="w-full accent-amber-500">
+      </label>
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Мин. шаг между гвоздями</span><input id="skipNum" type="number" class="num-in" value="12"></div>
+        <input id="skipRange" type="range" value="12" class="w-full accent-amber-500">
+      </label>
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Порог остановки</span><input id="stopNum" type="number" step="0.5" class="num-in" value="3"></div>
+        <input id="stopRange" type="range" value="3" class="w-full accent-amber-500">
+      </label>
+      <label class="block">
+        <div class="flex items-center justify-between mb-1.5"><span class="text-xs text-slate-400">Скорость анимации</span></div>
+        <select id="speedSel" class="w-full bg-slate-800 rounded-lg text-sm px-3 py-2 ring-1 ring-white/10 focus:outline-none focus:ring-amber-500/50">
+          <option value="1">1 нить / кадр — медленно</option>
+          <option value="2">2 нити / кадр</option>
+          <option value="5" selected>5 нитей / кадр</option>
+          <option value="10">10 нитей / кадр</option>
+          <option value="20">20 нитей / кадр</option>
+          <option value="50">50 нитей / кадр — турбо</option>
+        </select>
+      </label>
+    </section>
+
+    <!-- Управление -->
+    <section class="rounded-2xl bg-slate-900/60 ring-1 ring-white/10 p-4 space-y-3 fade-up">
+      <header class="flex items-center gap-2">
+        <span class="w-6 h-6 grid place-items-center rounded-lg bg-amber-500/10 text-amber-400"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg></span>
+        <h2 class="text-sm font-semibold">Управление</h2>
+      </header>
+
+      <button id="btnRun" class="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold text-slate-950 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 active:scale-[.98] transition shadow-lg shadow-orange-500/20">
+        <svg id="icoPlay" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="icoPause" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        <span id="runLabel">Старт</span>
+      </button>
+      <button id="btnReset" class="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-300 bg-slate-800/80 ring-1 ring-white/10 hover:bg-slate-700/80 active:scale-[.98] transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+        Сброс
+      </button>
+
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btnPng" class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-800/80 ring-1 ring-white/10 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700/80 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          PNG
+        </button>
+        <button id="btnSeq" class="inline-flex items-center justify-center gap-1.5 rounded-lg bg-slate-800/80 ring-1 ring-white/10 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700/80 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+          Порядок
+        </button>
+      </div>
+      <p class="text-[10px] leading-relaxed text-slate-600">«Порядок» — текстовый файл с последовательностью обхода гвоздей: пригодится, если захотите сплести картину вручную.</p>
+    </section>
+  </aside>
+</main>
+
+<footer class="mx-auto max-w-[1440px] px-4 lg:px-8 pb-8 text-[11px] text-slate-600">
+  Нитеграф · жадный алгоритм string-art: на каждом шаге выбирается хорда, максимально уменьшающая остаточную ошибку изображения.
+</footer>
+
+<div id="toasts" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end pointer-events-none"></div>
+
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};};
+
+const SIZE=600;
+const view=$('view'); view.width=SIZE; view.height=SIZE;
+const vctx=view.getContext('2d');
+const work=document.createElement('canvas'); work.width=work.height=SIZE;
+const wctx=work.getContext('2d');
+const proc=document.createElement('canvas'); proc.width=proc.height=SIZE;
+const pctx=proc.getContext('2d');
+const MAXLEN=2*SIZE+16;
+const bufA=new Int32Array(MAXLEN), bufB=new Int32Array(MAXLEN);
+const DEMO_LION='https://image.qwenlm.ai/public_source/72e2c23c-9936-4365-bf62-582b69d671f4/1b5d3e0d4-3fbc-48b1-a2fc-5f10a96d750e.png';
+const DEMO_PORTRAIT='https://image.qwenlm.ai/public_source/72e2c23c-9936-4365-bf62-582b69d671f4/19d110cbc-f21d-410c-ac62-000e9a042479.png';
+
+const cfg={shape:'circle',nails:220,rotation:0,margin:14,polySides:6,mode:'dark',ink:'#141414',maxThreads:2500,weight:26,thickness:1,minSkip:12,stop:3,speed:5,brightness:0,contrast:20,invert:false,showNails:true,startNail:0};
+
+let img=null, N=0, nailX=new Int32Array(0), nailY=new Int32Array(0);
+let lum=null, target=null, err=null;
+let seq=[], cur=0, prev=-1, done=0, lastScore=0;
+let status='idle', running=false, rafId=0, elapsedMs=0, startedAt=0, compareOn=false;
+
+/* ---------- геометрия ---------- */
+function genNails(){
+  const n=Math.max(3,Math.round(cfg.nails)); N=n;
+  nailX=new Int32Array(n); nailY=new Int32Array(n);
+  const cx=SIZE/2, cy=SIZE/2, R=Math.max(10,SIZE/2-cfg.margin);
+  const rot=(cfg.rotation-90)*Math.PI/180;
+  if(cfg.shape==='circle'){
+    for(let i=0;i<n;i++){const a=rot+i*2*Math.PI/n;nailX[i]=Math.round(cx+R*Math.cos(a));nailY[i]=Math.round(cy+R*Math.sin(a));}
+  }else{
+    const sides=Math.max(3,Math.round(cfg.shape==='square'?4:cfg.shape==='triangle'?3:cfg.polySides));
+    const vx=[],vy=[];
+    for(let k=0;k<sides;k++){const a=rot+k*2*Math.PI/sides;vx.push(cx+R*Math.cos(a));vy.push(cy+R*Math.sin(a));}
+    const lens=[];let per=0;
+    for(let k=0;k<sides;k++){const L=Math.hypot(vx[(k+1)%sides]-vx[k],vy[(k+1)%sides]-vy[k]);lens.push(L);per+=L;}
+    const step=per/n;
+    for(let i=0;i<n;i++){
+      let d=i*step,e=0;
+      while(d>=lens[e%sides]){d-=lens[e%sides];e++;}
+      e%=sides;
+      const t=lens[e]>0?d/lens[e]:0, e2=(e+1)%sides;
+      nailX[i]=Math.round(vx[e]+(vx[e2]-vx[e])*t);
+      nailY[i]=Math.round(vy[e]+(vy[e2]-vy[e])*t);
+    }
+  }
+}
+
+/* ---------- обработка изображения ---------- */
+function processImage(){
+  if(!img)return;
+  const iw=img.naturalWidth, ih=img.naturalHeight, s=Math.min(iw,ih);
+  pctx.drawImage(img,(iw-s)/2,(ih-s)/2,s,s,0,0,SIZE,SIZE);
+  const id=pctx.getImageData(0,0,SIZE,SIZE), d=id.data;
+  const C=clamp(cfg.contrast,-255,255);
+  const f=(259*(C+255))/(255*(259-C));
+  lum=new Float32Array(SIZE*SIZE);
+  for(let i=0,p=0;i<SIZE*SIZE;i++,p+=4){
+    let v=0.2126*d[p]+0.7152*d[p+1]+0.0722*d[p+2];
+    v=f*(v-128)+128+cfg.brightness;
+    if(cfg.invert)v=255-v;
+    v=clamp(v,0,255); lum[i]=v;
+    d[p]=d[p+1]=d[p+2]=v; d[p+3]=255;
+  }
+  pctx.putImageData(id,0,0);
+  buildTarget();
+}
+function buildTarget(){
+  target=new Float32Array(SIZE*SIZE);
+  if(cfg.mode==='dark'){for(let i=0;i<target.length;i++)target[i]=255-lum[i];}
+  else target.set(lum);
+}
+
+/* ---------- алгоритм ---------- */
+function rasterLine(x0,y0,x1,y1,out){
+  let dx=Math.abs(x1-x0), dy=-Math.abs(y1-y0);
+  const sx=x0<x1?1:-1, sy=y0<y1?1:-1;
+  let e=dx+dy, x=x0, y=y0, n=0;
+  for(;;){
+    out[n++]=y*SIZE+x;
+    if(x===x1&&y===y1)break;
+    const e2=2*e;
+    if(e2>=dy){e+=dy;x+=sx;}
+    if(e2<=dx){e+=dx;y+=sy;}
+  }
+  return n;
+}
+function findBest(from,prev,skip){
+  let bestScore=-1,bestTo=-1;
+  const fx=nailX[from], fy=nailY[from], ex=err;
+  for(let i=0;i<N;i++){
+    if(i===from||i===prev)continue;
+    let d=i-from; if(d<0)d=-d;
+    const cd=d<N-d?d:N-d;
+    if(cd<skip)continue;
+    const len=rasterLine(fx,fy,nailX[i],nailY[i],bufA);
+    let sum=0,cnt=0;
+    for(let j=0;j<len;j+=2){sum+=ex[bufA[j]];cnt++;}
+    const sc=cnt?sum/cnt:0;
+    if(sc>bestScore){bestScore=sc;bestTo=i;}
+  }
+  return {to:bestTo,score:bestScore};
+}
+function inkStyle(){
+  const a=clamp(cfg.weight/90,.08,.65);
+  const h=cfg.ink.replace('#','');
+  return 'rgba('+parseInt(h.substr(0,2),16)+','+parseInt(h.substr(2,2),16)+','+parseInt(h.substr(4,2),16)+','+a+')';
+}
+function doThread(){
+  if(N<3)return false;
+  const skip=Math.min(cfg.minSkip,(N>>1)-1);
+  const r=findBest(cur,prev,Math.max(1,skip));
+  lastScore=r.score;
+  if(r.to<0||r.score<cfg.stop)return false;
+  const len=rasterLine(nailX[cur],nailY[cur],nailX[r.to],nailY[r.to],bufB);
+  const w=cfg.weight;
+  for(let j=0;j<len;j++){const p=bufB[j];const v=err[p]-w;err[p]=v>0?v:0;}
+  seq.push(r.to);
+  wctx.strokeStyle=inkStyle(); wctx.lineWidth=cfg.thickness; wctx.lineCap='round';
+  wctx.beginPath(); wctx.moveTo(nailX[cur],nailY[cur]); wctx.lineTo(nailX[r.to],nailY[r.to]); wctx.stroke();
+  prev=cur; cur=r.to; done++;
+  return true;
+}
+
+/* ---------- цикл ---------- */
+function tick(){
+  if(!running)return;
+  elapsedMs=performance.now()-startedAt;
+  let ok=true;
+  for(let k=0;k<cfg.speed;k++){
+    if(done>=cfg.maxThreads){ok=false;break;}
+    if(!doThread()){ok=false;break;}
+  }
+  render(); updateHUD();
+  if(!ok){
+    running=false; setStatus('done'); refreshRunBtn();
+    toast(done>=cfg.maxThreads?'Достигнут лимит нитей — готово!':'Сходимость достигнута — рисунок завершён','success');
+    return;
+  }
+  rafId=requestAnimationFrame(tick);
+}
+function toggleRun(){
+  if(!img){toast('Сначала загрузите изображение','warn');return;}
+  if(status==='running'){running=false;cancelAnimationFrame(rafId);setStatus('paused');refreshRunBtn();return;}
+  if(status==='done')hardReset();
+  running=true; startedAt=performance.now()-elapsedMs;
+  setStatus('running'); refreshRunBtn();
+  rafId=requestAnimationFrame(tick);
+}
+function hardReset(){
+  running=false; cancelAnimationFrame(rafId); elapsedMs=0;
+  if(target){ if(!err||err.length!==target.length)err=new Float32Array(target.length); err.set(target); }
+  seq=[]; done=0; lastScore=0; prev=-1; cur=N?cfg.startNail%N:0;
+  wctx.fillStyle=cfg.mode==='dark'?'#faf9f6':'#0b0c10';
+  wctx.fillRect(0,0,SIZE,SIZE);
+  setStatus('idle'); refreshRunBtn(); updateHUD(); render();
+}
+
+/* ---------- отрисовка ---------- */
+function ring(i,color){vctx.beginPath();vctx.arc(nailX[i],nailY[i],5.5,0,6.2832);vctx.strokeStyle=color;vctx.lineWidth=2;vctx.stroke();}
+function render(){
+  vctx.clearRect(0,0,SIZE,SIZE);
+  if(!img)return;
+  vctx.drawImage(work,0,0);
+  if(compareOn){vctx.globalAlpha=.85;vctx.drawImage(proc,0,0);vctx.globalAlpha=1;}
+  if(cfg.showNails&&N>0){
+    vctx.beginPath(); vctx.moveTo(nailX[0],nailY[0]);
+    for(let i=1;i<N;i++)vctx.lineTo(nailX[i],nailY[i]);
+    vctx.closePath();
+    vctx.strokeStyle=cfg.mode==='dark'?'rgba(100,116,139,.35)':'rgba(148,163,184,.3)';
+    vctx.lineWidth=1; vctx.stroke();
+    vctx.fillStyle=cfg.mode==='dark'?'rgba(51,65,85,.9)':'rgba(226,232,240,.85)';
+    for(let i=0;i<N;i++){vctx.beginPath();vctx.arc(nailX[i],nailY[i],2,0,6.2832);vctx.fill();}
+    if(seq.length===0)ring(cfg.startNail%N,'#10b981'); else ring(cur%N,'#f59e0b');
+  }
+}
+function updateHUD(){
+  $('statThreads').textContent=done;
+  $('statMax').textContent='/ '+cfg.maxThreads;
+  $('statError').textContent=seq.length?lastScore.toFixed(1):'—';
+  $('statNail').textContent=N?((cur%N)+1):'—';
+  $('statTime').textContent=fmtTime(elapsedMs);
+  const pct=Math.min(100,done/cfg.maxThreads*100);
+  $('progressFill').style.width=pct+'%';
+  $('progressPct').textContent=Math.round(pct)+'%';
+}
+function fmtTime(ms){const s=Math.floor(ms/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function setStatus(s){
+  status=s;
+  const map={
+    idle:{t:'Ожидание',chip:'ring-white/10 bg-slate-800/80 text-slate-300',dot:'bg-slate-400'},
+    running:{t:'Рисуем…',chip:'ring-emerald-400/20 bg-emerald-500/10 text-emerald-300',dot:'bg-emerald-400 animate-pulse'},
+    paused:{t:'Пауза',chip:'ring-amber-400/20 bg-amber-500/10 text-amber-300',dot:'bg-amber-400'},
+    done:{t:'Готово',chip:'ring-sky-400/20 bg-sky-500/10 text-sky-300',dot:'bg-sky-400'}
+  }[s];
+  $('statusChip').className='inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 '+map.chip;
+  $('statusDot').className='w-1.5 h-1.5 rounded-full '+map.dot;
+  $('statusText').textContent=map.t;
+}
+function refreshRunBtn(){
+  const labels={idle:'Старт',running:'Пауза',paused:'Продолжить',done:'Заново'};
+  $('runLabel').textContent=labels[status];
+  $('icoPlay').classList.toggle('hidden',status==='running');
+  $('icoPause').classList.toggle('hidden',status!=='running');
+}
+
+/* ---------- загрузка ---------- */
+function setSource(im,name){
+  img=im;
+  $('imgName').textContent=name;
+  $('imgDim').textContent=im.naturalWidth+'×'+im.naturalHeight;
+  $('imgInfo').classList.remove('hidden'); $('imgInfo').classList.add('flex');
+  $('empty').classList.add('hidden');
+  view.classList.add('cursor-crosshair');
+  processImage(); genNails(); cfg.startNail=0; hardReset();
+  toast('Изображение загружено — нажмите «Старт»','success');
+}
+function loadFileObj(f){
+  if(!f||!f.type.startsWith('image/')){toast('Это не изображение','error');return;}
+  const url=URL.createObjectURL(f), im=new Image();
+  im.onload=()=>{URL.revokeObjectURL(url);setSource(im,f.name);};
+  im.onerror=()=>toast('Не удалось прочитать файл','error');
+  im.src=url;
+}
+async function loadURL(url,name){
+  toast('Загружаем пример…','info');
+  try{
+    const res=await fetch(url,{mode:'cors'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const blob=await res.blob();
+    if(!blob.type.startsWith('image/'))throw new Error('not image');
+    const u=URL.createObjectURL(blob);
+    const im=new Image();
+    im.onload=()=>{URL.revokeObjectURL(u);setSource(im,name);};
+    im.onerror=()=>toast('Не удалось загрузить пример','error');
+    im.src=u;
+  }catch(err){
+    const im=new Image();
+    im.onload=()=>setSource(im,name);
+    im.onerror=()=>toast('Не удалось загрузить пример','error');
+    im.src=url;
+  }
+}
+
+/* ---------- экспорт ---------- */
+function downloadFile(href,name){
+  const a=document.createElement('a');
+  a.href=href; a.download=name;
+  a.rel='noopener';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>a.remove(),0);
+}
+function downloadPNG(){
+  if(!img){toast('Сначала загрузите изображение','warn');return;}
+  try{
+    downloadFile(work.toDataURL('image/png'),'string-art.png');
+    toast('PNG сохранён','success');
+  }catch(e){
+    toast('Не удалось сохранить PNG: холст содержит защищённые данные. Загрузите локальный файл вместо внешней ссылки.','error');
+  }
+}
+function downloadSeq(){
+  if(!img){toast('Сначала загрузите изображение','warn');return;}
+  if(!seq.length){toast('Сначала запустите генерацию','warn');return;}
+  const names={circle:'круг',square:'квадрат',triangle:'треугольник',poly:'многоугольник ('+cfg.polySides+')'};
+  const full=[cfg.startNail%N].concat(seq);
+  const L=['НИТЕГРАФ — порядок обхода гвоздей','================================','Форма: '+names[cfg.shape]+' · гвоздей: '+N+' · нитей: '+seq.length,'Режим: '+(cfg.mode==='dark'?'тёмные нити':'светлые нити')+' · дата: '+new Date().toLocaleString('ru-RU'),'','Последовательность (стартовый гвоздь первым):'];
+  for(let i=0;i<full.length;i+=24)L.push(full.slice(i,i+24).join(' '));
+  const blob=new Blob([L.join('\n')],{type:'text/plain;charset=utf-8'});
+  const href=URL.createObjectURL(blob);
+  downloadFile(href,'string-art-sequence.txt');
+  setTimeout(()=>URL.revokeObjectURL(href),5000);
+  toast('Последовательность сохранена','success');
+}
+
+/* ---------- тосты ---------- */
+function toast(msg,type){
+  type=type||'info';
+  const colors={info:'ring-sky-400/30 text-sky-200',success:'ring-emerald-400/30 text-emerald-200',warn:'ring-amber-400/30 text-amber-200',error:'ring-rose-400/30 text-rose-200'};
+  const el=document.createElement('div');
+  el.className='fade-up pointer-events-auto rounded-xl bg-slate-900/95 backdrop-blur px-4 py-2.5 text-xs font-medium ring-1 shadow-xl max-w-xs '+colors[type];
+  el.textContent=msg;
+  $('toasts').appendChild(el);
+  setTimeout(()=>{el.style.transition='opacity .4s, transform .4s';el.style.opacity='0';el.style.transform='translateY(6px)';setTimeout(()=>el.remove(),400);},3200);
+}
+
+/* ---------- привязка контролов ---------- */
+const geomChanged=debounce(()=>{if(!img)return;genNails();hardReset();},120);
+const imgChanged=debounce(()=>{if(!img)return;processImage();hardReset();},160);
+
+/* ползунок + редактируемое числовое поле: ввод значения выше шкалы расширяет максимум ползунка */
+function bindRange(rangeId,numId,apply,opt){
+  const el=$(rangeId), num=$(numId);
+  el.min=opt.min; el.max=opt.soft; el.step=opt.step||1;
+  num.min=opt.min; num.max=opt.hard;
+  if(opt.step)num.step=opt.step;
+  el.addEventListener('input',()=>{num.value=el.value;apply(parseFloat(el.value));});
+  num.addEventListener('change',()=>{
+    let v=parseFloat(num.value);
+    if(isNaN(v))v=parseFloat(el.value);
+    v=clamp(v,opt.min,opt.hard);
+    num.value=v;
+    if(v>parseFloat(el.max))el.max=v;   // расширяем максимум ползунка
+    el.value=v;
+    apply(v);
+  });
+  num.addEventListener('keydown',e=>{if(e.key==='Enter')num.blur();});
+  num.value=el.value;
+}
+bindRange('nailsRange','nailsNum',v=>{cfg.nails=v;geomChanged();},{min:48,soft:400,hard:1500});
+bindRange('marginRange','marginNum',v=>{cfg.margin=v;geomChanged();},{min:0,soft:90,hard:260});
+bindRange('rotRange','rotNum',v=>{cfg.rotation=v;geomChanged();},{min:0,soft:359,hard:359});
+bindRange('sidesRange','sidesNum',v=>{cfg.polySides=v;if(cfg.shape==='poly')geomChanged();},{min:3,soft:12,hard:64});
+bindRange('maxRange','maxNum',v=>{cfg.maxThreads=v;updateHUD();},{min:100,soft:6000,hard:50000,step:10});
+bindRange('weightRange','weightNum',v=>{cfg.weight=v;},{min:1,soft:60,hard:128});
+bindRange('thickRange','thickNum',v=>{cfg.thickness=v;},{min:0.25,soft:2.5,hard:8,step:0.05});
+bindRange('skipRange','skipNum',v=>{cfg.minSkip=v;},{min:1,soft:60,hard:500});
+bindRange('stopRange','stopNum',v=>{cfg.stop=v;},{min:0,soft:20,hard:64,step:0.5});
+bindRange('brightRange','brightNum',v=>{cfg.brightness=v;imgChanged();},{min:-255,soft:80,hard:255});
+bindRange('contrastRange','contrastNum',v=>{cfg.contrast=v;imgChanged();},{min:-255,soft:100,hard:255});
+
+$('invertChk').addEventListener('change',e=>{cfg.invert=e.target.checked;imgChanged();});
+$('showNailsChk').addEventListener('change',e=>{cfg.showNails=e.target.checked;render();});
+$('inkColor').addEventListener('input',e=>{cfg.ink=e.target.value;});
+$('speedSel').addEventListener('change',e=>{cfg.speed=+e.target.value;});
+
+document.querySelectorAll('#shapeSeg [data-shape]').forEach(b=>b.addEventListener('click',()=>{
+  cfg.shape=b.dataset.shape;
+  document.querySelectorAll('#shapeSeg [data-shape]').forEach(x=>x.classList.toggle('seg-active',x===b));
+  $('polyRow').classList.toggle('hidden',cfg.shape!=='poly');
+  if(img){genNails();hardReset();}
+}));
+document.querySelectorAll('#modeSeg [data-mode]').forEach(b=>b.addEventListener('click',()=>{
+  const m=b.dataset.mode; if(m===cfg.mode)return;
+  cfg.mode=m;
+  cfg.ink=m==='dark'?'#141414':'#f4f4f5'; $('inkColor').value=cfg.ink;
+  document.querySelectorAll('#modeSeg [data-mode]').forEach(x=>x.classList.toggle('seg-active',x===b));
+  if(img){buildTarget();hardReset();}
+}));
+
+$('btnRun').addEventListener('click',toggleRun);
+$('btnReset').addEventListener('click',()=>{if(!img){toast('Сначала загрузите изображение','warn');return;}hardReset();});
+$('btnPng').addEventListener('click',downloadPNG);
+$('btnSeq').addEventListener('click',downloadSeq);
+$('btnCompare').addEventListener('click',()=>{compareOn=!compareOn;$('btnCompare').classList.toggle('btn-active',compareOn);render();});
+$('demoLion').addEventListener('click',()=>loadURL(DEMO_LION,'Пример: лев'));
+$('demoPortrait').addEventListener('click',()=>loadURL(DEMO_PORTRAIT,'Пример: портрет'));
+
+const dz=$('dropzone');
+dz.addEventListener('click',()=>$('fileInput').click());
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
+dz.addEventListener('drop',e=>{loadFileObj(e.dataTransfer.files[0]);});
+const wrap=$('canvasWrap');
+['dragover','drop'].forEach(ev=>wrap.addEventListener(ev,e=>{e.preventDefault();if(ev==='drop')loadFileObj(e.dataTransfer.files[0]);}));
+$('fileInput').addEventListener('change',e=>{loadFileObj(e.target.files[0]);e.target.value='';});
+document.addEventListener('paste',e=>{
+  for(const it of e.clipboardData.items){
+    if(it.kind==='file'&&it.type.startsWith('image/')){loadFileObj(it.getAsFile());break;}
+  }
+});
+view.addEventListener('click',e=>{
+  if(!img||status==='running'||!N)return;
+  const r=view.getBoundingClientRect();
+  const x=(e.clientX-r.left)*SIZE/r.width, y=(e.clientY-r.top)*SIZE/r.height;
+  let bi=0,bd=Infinity;
+  for(let i=0;i<N;i++){const dx=nailX[i]-x,dy=nailY[i]-y,d=dx*dx+dy*dy;if(d<bd){bd=d;bi=i;}}
+  cfg.startNail=bi; hardReset();
+  toast('Стартовый гвоздь: №'+(bi+1),'info');
+});
+
+setStatus('idle'); refreshRunBtn(); updateHUD(); render();
+})();
+</script>
+</body>
+</html>
