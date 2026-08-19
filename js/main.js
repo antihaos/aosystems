@@ -133,9 +133,26 @@
             return;
          }
 
-         // Успех (демо-режим: данные не отправляются на сервер)
+         // Успех: формируем письмо через mailto и открываем почтовый клиент
+         const recipient = "support@aosystems.ru";
+         const subject = "Заявка с сайта AOSystems от " + name.value.trim();
+         const body = [
+            "Имя: " + name.value.trim(),
+            "Email: " + email.value.trim(),
+            "",
+            "Сообщение:",
+            message.value.trim(),
+         ].join("\n");
+
+         const mailtoUrl =
+            "mailto:" + recipient +
+            "?subject=" + encodeURIComponent(subject) +
+            "&body=" + encodeURIComponent(body);
+
+         window.location.href = mailtoUrl;
+
          status.classList.remove("error");
-         status.textContent = "Спасибо! Мы свяжемся с вами в ближайшее время.";
+         status.textContent = "Открываем ваш почтовый клиент…";
          form.reset();
       });
    }
