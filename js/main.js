@@ -156,4 +156,173 @@
          form.reset();
       });
    }
+
+   /* ---------- Фоновая анимация (опционально) ---------- */
+   (function initBackgroundAnimation() {
+      const canvas = document.getElementById("bg-canvas");
+      const toggle = document.getElementById("bg-toggle");
+      if (!canvas || !toggle) return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const STORAGE_KEY = "aosystems-bg-anim";
+      const prefersReducedMotion =
+         window.matchMedia &&
+         window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      let running = false;
+      let rafId = null;
+      let particles = [];
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+
+      // Цвета в стиле сайта (неон)
+      const COLORS = ["0, 229, 255", "138, 43, 226"];
+
+      function resize() {
+         dpr = Math.min(window.devicePixelRatio || 1, 2);
+         width = window.innerWidth;
+         height = window.innerHeight;
+         canvas.width = Math.floor(width * dpr);
+         canvas.height = Math.floor(height * dpr);
+         canvas.style.width = width + "px";
+         canvas.style.height = height + "px";
+         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function createParticles() {
+         // Плотность зависит от площади экрана, но ограничена для производительности
+         const count = Math.min(90, Math.max(28, Math.round((width * height) / 22000)));
+         particles = [];
+         for (let i = 0; i < count; i++) {
+            particles.push({
+               x: Math.random() * width,
+               y: Math.random() * height,
+               vx: (Math.random() - 0.5) * 0.4,
+               vy: (Math.random() - 0.5) * 0.4,
+               r: Math.random() * 1.8 + 0.8,
+               color: COLORS[i % COLORS.length],
+            });
+         }
+      }
+
+      function draw() {
+         ctx.clearRect(0, 0, width, height);
+
+         // Линии между близкими частицами
+         for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            for (let j = i + 1; j < particles.length; j++) {
+               const q = particles[j];
+               const dx = p.x - q.x;
+               const dy = p.y - q.y;
+               const dist = Math.sqrt(dx * dx + dy * dy);
+               if (dist < 130) {
+                  const alpha = (1 - dist / 130) * 0.35;
+                  ctx.strokeStyle = "rgba(" + p.color + "," + alpha + ")";
+                  ctx.lineWidth = 0.6;
+                  ctx.beginPath();
+                  ctx.moveTo(p.x, p.y);
+                  ctx.lineTo(q.x, q.y);
+                  ctx.stroke();
+               }
+            }
+         }
+
+         // Сами частицы
+         for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(" + p.color + ",0.85)";
+            ctx.fill();
+         }
+      }
+
+      function step() {
+         for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0 || p.x > width) p.vx = -p.vx;
+            if (p.y < 0 || p.y > height) p.vy = -p.vy;
+         }
+         draw();
+         rafId = requestAnimationFrame(step);
+      }
+
+      function start() {
+         if (running) return;
+         running = true;
+         resize();
+         createParticles();
+         rafId = requestAnimationFrame(step);
+         document.body.classList.add("bg-anim-on");
+         toggle.setAttribute("aria-pressed", "true");
+         toggle.setAttribute("aria-label", "Выключить фоновую анимацию");
+      }
+
+      function stop() {
+         if (!running) return;
+         running = false;
+         if (rafId) cancelAnimationFrame(rafId);
+         rafId = null;
+         ctx.clearRect(0, 0, width, height);
+         document.body.classList.remove("bg-anim-on");
+         toggle.setAttribute("aria-pressed", "false");
+         toggle.setAttribute("aria-label", "Включить фоновую анимацию");
+      }
+
+      function setEnabled(on) {
+         if (on) start();
+         else stop();
+         try {
+            localStorage.setItem(STORAGE_KEY, on ? "on" : "off");
+         } catch (e) {
+            /* localStorage может быть недоступен — игнорируем */
+         }
+      }
+
+      // Восстановление состояния из localStorage (по умолчанию — выключено)
+      let saved = null;
+      try {
+         saved = localStorage.getItem(STORAGE_KEY);
+      } catch (e) {
+         saved = null;
+      }
+      const shouldStart = saved === "on" && !prefersReducedMotion;
+
+      if (shouldStart) {
+         start();
+      }
+
+      toggle.addEventListener("click", function () {
+         setEnabled(!running);
+      });
+
+      // Пересчёт при изменении размера окна
+      let resizeTimer = null;
+      window.addEventListener("resize", function () {
+         if (!running) return;
+         clearTimeout(resizeTimer);
+         resizeTimer = setTimeout(function () {
+            resize();
+            createParticles();
+         }, 150);
+      });
+
+      // Пауза, когда вкладка неактивна — экономим ресурсы
+      document.addEventListener("visibilitychange", function () {
+         if (document.hidden) {
+            if (rafId) {
+               cancelAnimationFrame(rafId);
+               rafId = null;
+            }
+         } else if (running) {
+            rafId = requestAnimationFrame(step);
+         }
+      });
+   })();
 })();

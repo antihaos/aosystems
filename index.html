@@ -49,6 +49,17 @@
    <!-- Decorative neon background -->
    <div class="bg-glow" aria-hidden="true"></div>
 
+   <!-- Canvas для фоновой анимации (включается переключателем) -->
+   <canvas id="bg-canvas" class="bg-canvas" aria-hidden="true"></canvas>
+
+   <!-- Переключатель фоновой анимации -->
+   <button id="bg-toggle" class="bg-toggle" type="button" aria-pressed="false" aria-label="Включить фоновую анимацию" title="Фоновая анимация">
+     <svg class="bg-toggle-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+       <path d="M12 3 L14.5 9.5 L21 12 L14.5 14.5 L12 21 L9.5 14.5 L3 12 L9.5 9.5 Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+     </svg>
+     <span class="bg-toggle-label">Анимация</span>
+   </button>
+
    <!-- ===== HEADER ===== -->
    <header class="fixed top-0 inset-x-0 z-50 h-[72px] flex items-center bg-bg/70 backdrop-blur-md border-b border-neon-cyan/20">
      <div class="w-full max-w-6xl mx-auto px-6 flex items-center justify-between">

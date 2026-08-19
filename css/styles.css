@@ -15,6 +15,81 @@
       radial-gradient(500px circle at 50% 100%, rgba(0, 229, 255, 0.08), transparent 60%);
 }
 
+/* ---------- Background animation canvas ---------- */
+.bg-canvas {
+   position: fixed;
+   inset: 0;
+   z-index: -1;
+   pointer-events: none;
+   opacity: 0;
+   transition: opacity 0.6s ease;
+}
+
+/* Включено через body.bg-anim-on */
+body.bg-anim-on .bg-canvas {
+   opacity: 1;
+}
+
+/* ---------- Переключатель фоновой анимации ---------- */
+.bg-toggle {
+   position: fixed;
+   right: 1.25rem;
+   bottom: 1.25rem;
+   z-index: 60;
+   display: inline-flex;
+   align-items: center;
+   gap: 0.5rem;
+   padding: 0.625rem 0.9rem;
+   border-radius: 999px;
+   font-size: 0.8rem;
+   font-weight: 600;
+   letter-spacing: 0.02em;
+   color: #8b96ad;
+   background: rgba(19, 26, 43, 0.72);
+   border: 1px solid rgba(0, 229, 255, 0.25);
+   backdrop-filter: blur(10px);
+   -webkit-backdrop-filter: blur(10px);
+   cursor: pointer;
+   transition: color 0.3s ease, border-color 0.3s ease,
+      box-shadow 0.3s ease, background 0.3s ease, transform 0.3s ease;
+}
+
+.bg-toggle:hover {
+   color: #e6ecf7;
+   border-color: rgba(0, 229, 255, 0.5);
+   transform: translateY(-2px);
+}
+
+.bg-toggle-icon {
+   color: #00e5ff;
+   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      filter 0.3s ease, color 0.3s ease;
+}
+
+/* Активное состояние */
+body.bg-anim-on .bg-toggle {
+   color: #e6ecf7;
+   border-color: rgba(0, 229, 255, 0.6);
+   background: rgba(0, 229, 255, 0.1);
+   box-shadow: 0 0 20px rgba(0, 229, 255, 0.35);
+}
+
+body.bg-anim-on .bg-toggle-icon {
+   color: #00e5ff;
+   filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.7));
+   transform: rotate(180deg);
+}
+
+/* На мобильных прячем подпись, оставляем иконку */
+@media (max-width: 640px) {
+   .bg-toggle-label {
+      display: none;
+   }
+   .bg-toggle {
+      padding: 0.625rem;
+   }
+}
+
 /* subtle grid overlay */
 body::before {
    content: "";
