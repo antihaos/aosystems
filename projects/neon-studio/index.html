@@ -67,9 +67,19 @@
         .p-2 { padding: 0.5rem; } .p-3 { padding: 0.75rem; } .p-4 { padding: 1rem; } .p-6 { padding: 1.5rem; }
         .tracking-wider { letter-spacing: 0.05em; } .font-light { font-weight: 300; } .font-medium { font-weight: 500; } .font-bold { font-weight: 700; }
         .relative { position: relative; } .absolute { position: absolute; }
+
+        /* === ИСПРАВЛЕННЫЙ TOOLBAR === */
         .toolbar {
-            display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.5rem; background: rgba(0,0,0,0.3);
-            border-radius: 12px; border: 1px solid rgba(0,255,255,0.05); max-height: 120px; overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(0,255,255,0.05);
+            /* Убираем ограничение высоты, чтобы zoom-кнопки были видны */
+            /* overflow-y: auto; */
+            /* max-height: 240px; */
         }
         .toolbar::-webkit-scrollbar { width: 4px; }
         .toolbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
@@ -87,6 +97,7 @@
         }
         .zoom-controls button:hover { background: rgba(0,255,255,0.15); border-color: #0cf; }
         .zoom-controls span { color: #a5f3fc; font-size: 0.75rem; min-width: 40px; text-align: center; }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
             display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
@@ -116,18 +127,60 @@
         .modal-footer button { flex: 1; }
         .connection-info { position: absolute; bottom: 8px; right: 12px; color: rgba(103,232,249,0.3); font-size: 0.7rem; pointer-events: none; z-index: 10; }
         .pan-hint { position: absolute; bottom: 8px; left: 12px; color: rgba(103,232,249,0.2); font-size: 0.6rem; pointer-events: none; z-index: 10; letter-spacing: 0.03em; }
-        @media (max-width: 768px) {
-            .glass-panel { padding: 1rem; }
-            .toolbar { justify-content: center; max-height: 80px; }
-            .zoom-controls { margin-left: 0; width: 100%; justify-content: center; }
-            .modal { padding: 1.5rem; margin: 1rem; }
-            .pan-hint { display: none; }
+
+        /* Стили для панелей */
+        .toolbar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 0.7rem;
+            flex: 1 1 auto;
+            min-width: 250px;
         }
+        .toolbar-panel-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(165, 243, 252, 0.8);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+            padding-bottom: 0.4rem;
+        }
+        .toolbar-panel-title i { color: #22d3ee; font-size: 0.8rem; }
+        .toolbar-group { display: flex; flex-direction: column; gap: 0.25rem; }
+        .toolbar-group-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(165, 243, 252, 0.4);
+            margin-bottom: 0.2rem;
+        }
+        .toolbar-buttons { display: flex; flex-wrap: wrap; gap: 0.3rem; align-items: center; }
+        .preset-panel .toolbar-buttons { flex-wrap: nowrap; gap: 0.5rem; }
+
         .preset-select {
             background: rgba(0,200,255,0.06); border: 1px solid rgba(0,255,255,0.3); color: #d0f4ff;
             padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; cursor: pointer; outline: none;
         }
         .preset-select option { background: #1a1f2e; color: #d0f4ff; }
+
+        @media (max-width: 768px) {
+            .glass-panel { padding: 1rem; }
+            .toolbar {
+                max-height: 240px;      /* на мобильных включаем прокрутку */
+                overflow-y: auto;
+                justify-content: center;
+            }
+            .zoom-controls { margin-left: 0; width: 100%; justify-content: center; }
+            .modal { padding: 1.5rem; margin: 1rem; }
+            .pan-hint { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -138,7 +191,7 @@
                 <h1 class="text-2xl font-light tracking-wider neon-text">
                     <span class="font-bold">NEON</span> STUDIO <span style="font-size:0.7rem;color:rgba(165,243,252,0.4);">pro</span>
                 </h1>
-                <span class="badge-neon"><i class="fas fa-circle" style="font-size:8px;color:#22d3ee;margin-right:4px;"></i> отладка</span>
+                <span class="badge-neon"><i class="fas fa-circle" style="font-size:8px;color:#22d3ee;margin-right:4px;"></i> Собери цепочку фильтров и получи звук студийного качества</span>
             </div>
             <div class="flex-center gap-2 text-sm text-cyan-200/60">
                 <i class="fas fa-project-diagram"></i>
@@ -153,43 +206,96 @@
         </div>
 
         <div class="toolbar" id="toolbar">
-            <button class="node-btn" data-type="input"><i class="fas fa-arrow-right icon"></i>Вход</button>
-            <button class="node-btn" data-type="output"><i class="fas fa-arrow-left icon"></i>Выход</button>
-            <span style="color:rgba(255,255,255,0.1);padding:0 0.2rem;">|</span>
-            <button class="node-btn" data-type="lowpass"><i class="fas fa-filter icon"></i>НЧ</button>
-            <button class="node-btn" data-type="highpass"><i class="fas fa-filter icon"></i>ВЧ</button>
-            <button class="node-btn" data-type="bandpass"><i class="fas fa-filter icon"></i>Полосовой</button>
-            <button class="node-btn" data-type="notch"><i class="fas fa-filter icon"></i>Режектор</button>
-            <button class="node-btn" data-type="allpass"><i class="fas fa-filter icon"></i>Всепроп.</button>
-            <button class="node-btn" data-type="peaking"><i class="fas fa-sliders-h icon"></i>Полосной</button>
-            <button class="node-btn" data-type="lowshelf"><i class="fas fa-arrow-down icon"></i>НЧ-полка</button>
-            <button class="node-btn" data-type="highshelf"><i class="fas fa-arrow-up icon"></i>ВЧ-полка</button>
-            <button class="node-btn" data-type="gain"><i class="fas fa-volume-up icon"></i>Усиление</button>
-            <span style="color:rgba(255,255,255,0.1);padding:0 0.2rem;">|</span>
-            <button class="node-btn" data-type="reverb" style="border-color:rgba(200,100,255,0.3);color:#c9a0ff;"><i class="fas fa-cloud icon"></i>Реверб</button>
-            <button class="node-btn" data-type="delay" style="border-color:rgba(255,200,100,0.3);color:#ffd700;"><i class="fas fa-clock icon"></i>Задержка</button>
-            <button class="node-btn" data-type="echo" style="border-color:rgba(100,255,200,0.3);color:#7fffd4;"><i class="fas fa-repeat icon"></i>Эхо</button>
-            <button class="node-btn" data-type="chorus" style="border-color:rgba(255,100,200,0.3);color:#ff8cba;"><i class="fas fa-wave-square icon"></i>Хорус</button>
-            <button class="node-btn" data-type="flanger" style="border-color:rgba(100,200,255,0.3);color:#87ceeb;"><i class="fas fa-sync-alt icon"></i>Фленжер</button>
-            <button class="node-btn" data-type="phaser" style="border-color:rgba(255,150,100,0.3);color:#ffb07c;"><i class="fas fa-spinner icon"></i>Фейзер</button>
-            <button class="node-btn" data-type="tremolo" style="border-color:rgba(255,200,100,0.3);color:#ffc107;"><i class="fas fa-waveform icon"></i>Тремоло</button>
-            <button class="node-btn" data-type="vibrato" style="border-color:rgba(200,200,255,0.3);color:#b0b0ff;"><i class="fas fa-waveform icon"></i>Вибрато</button>
-            <button class="node-btn" data-type="compressor" style="border-color:rgba(255,150,150,0.3);color:#ff9999;"><i class="fas fa-compress-arrows-alt icon"></i>Компрессор</button>
-            <button class="node-btn" data-type="distortion" style="border-color:rgba(255,100,100,0.3);color:#ff6666;"><i class="fas fa-fan icon"></i>Дисторшн</button>
-            <span style="color:rgba(255,255,255,0.1);padding:0 0.2rem;">|</span>
-            <select id="presetSelect" class="preset-select">
-                <option value="">🎛 Пресеты...</option>
-                <option value="vocal">🎤 Студийный вокал</option>
-                <option value="warm">🔥 Тёплый ламповый</option>
-                <option value="crystal">💎 Кристальная чистота</option>
-                <option value="bass">🔊 Мощный бас</option>
-                <option value="chorus">🌊 Лёгкий хорус</option>
-                <option value="radio">📻 Радио-голос</option>
-            </select>
-            <button class="node-btn" id="applyPresetBtn" title="Применить выбранный пресет"><i class="fas fa-check-circle"></i> Применить</button>
-            <span style="color:rgba(255,255,255,0.1);padding:0 0.2rem;">|</span>
-            <button class="node-btn btn-danger" id="clearBtn"><i class="fas fa-trash icon"></i>Очистить</button>
-            <button class="node-btn btn-neon-primary" id="applyChainBtn"><i class="fas fa-check icon"></i>Применить</button>
+            <!-- Панель эффектов -->
+            <div class="toolbar-panel">
+                <div class="toolbar-panel-title"><i class="fas fa-music"></i> Эффекты</div>
+
+                <div class="toolbar-group">
+                    <div class="toolbar-group-label">Маршрутизация</div>
+                    <div class="toolbar-buttons">
+                        <button class="node-btn" data-type="input"><i class="fas fa-arrow-right icon"></i>Вход</button>
+                        <button class="node-btn" data-type="output"><i class="fas fa-arrow-left icon"></i>Выход</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group">
+                    <div class="toolbar-group-label">Фильтры</div>
+                    <div class="toolbar-buttons">
+                        <button class="node-btn" data-type="lowpass"><i class="fas fa-filter icon"></i>НЧ</button>
+                        <button class="node-btn" data-type="highpass"><i class="fas fa-filter icon"></i>ВЧ</button>
+                        <button class="node-btn" data-type="bandpass"><i class="fas fa-filter icon"></i>Полосовой</button>
+                        <button class="node-btn" data-type="notch"><i class="fas fa-filter icon"></i>Режектор</button>
+                        <button class="node-btn" data-type="allpass"><i class="fas fa-filter icon"></i>Всепроп.</button>
+                        <button class="node-btn" data-type="peaking"><i class="fas fa-sliders-h icon"></i>Полосной</button>
+                        <button class="node-btn" data-type="lowshelf"><i class="fas fa-arrow-down icon"></i>НЧ-полка</button>
+                        <button class="node-btn" data-type="highshelf"><i class="fas fa-arrow-up icon"></i>ВЧ-полка</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group">
+                    <div class="toolbar-group-label">Динамика</div>
+                    <div class="toolbar-buttons">
+                        <button class="node-btn" data-type="gain"><i class="fas fa-volume-up icon"></i>Усиление</button>
+                        <button class="node-btn" data-type="compressor" style="border-color:rgba(255,150,150,0.3);color:#ff9999;"><i class="fas fa-compress-arrows-alt icon"></i>Компрессор</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group">
+                    <div class="toolbar-group-label">Задержка и реверберация</div>
+                    <div class="toolbar-buttons">
+                        <button class="node-btn" data-type="reverb" style="border-color:rgba(200,100,255,0.3);color:#c9a0ff;"><i class="fas fa-cloud icon"></i>Реверб</button>
+                        <button class="node-btn" data-type="delay" style="border-color:rgba(255,200,100,0.3);color:#ffd700;"><i class="fas fa-clock icon"></i>Задержка</button>
+                        <button class="node-btn" data-type="echo" style="border-color:rgba(100,255,200,0.3);color:#7fffd4;"><i class="fas fa-repeat icon"></i>Эхо</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group">
+                    <div class="toolbar-group-label">Модуляция</div>
+                    <div class="toolbar-buttons">
+                        <button class="node-btn" data-type="chorus" style="border-color:rgba(255,100,200,0.3);color:#ff8cba;"><i class="fas fa-wave-square icon"></i>Хорус</button>
+                        <button class="node-btn" data-type="flanger" style="border-color:rgba(100,200,255,0.3);color:#87ceeb;"><i class="fas fa-sync-alt icon"></i>Фленжер</button>
+                        <button class="node-btn" data-type="phaser" style="border-color:rgba(255,150,100,0.3);color:#ffb07c;"><i class="fas fa-spinner icon"></i>Фейзер</button>
+                        <button class="node-btn" data-type="tremolo" style="border-color:rgba(255,200,100,0.3);color:#ffc107;"><i class="fas fa-waveform icon"></i>Тремоло</button>
+                        <button class="node-btn" data-type="vibrato" style="border-color:rgba(200,200,255,0.3);color:#b0b0ff;"><i class="fas fa-waveform icon"></i>Вибрато</button>
+                    </div>
+                </div>
+
+                <div class="toolbar-group">
+                    <div class="toolbar-group-label">Искажение</div>
+                    <div class="toolbar-buttons">
+                        <button class="node-btn" data-type="distortion" style="border-color:rgba(255,100,100,0.3);color:#ff6666;"><i class="fas fa-fan icon"></i>Дисторшн</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Панель пресетов и управления -->
+            <div class="toolbar-panel preset-panel">
+                <div class="toolbar-panel-title"><i class="fas fa-sliders-h"></i> Пресеты и управление</div>
+                <div class="toolbar-group">
+                    <div class="toolbar-group-label">Пресеты</div>
+                    <div class="toolbar-buttons">
+                        <select id="presetSelect" class="preset-select">
+                            <option value="">🎛 Выберите пресет...</option>
+                            <option value="vocal">🎤 Студийный вокал</option>
+                            <option value="warm">🔥 Тёплый ламповый</option>
+                            <option value="crystal">💎 Кристальная чистота</option>
+                            <option value="bass">🔊 Мощный бас</option>
+                            <option value="chorus">🌊 Лёгкий хорус</option>
+                            <option value="radio">📻 Радио-голос</option>
+                        </select>
+                        <button class="node-btn" id="applyPresetBtn" title="Применить выбранный пресет"><i class="fas fa-check-circle"></i> Применить</button>
+                    </div>
+                </div>
+                <div class="toolbar-group">
+                    <div class="toolbar-group-label">Действия</div>
+                    <div class="toolbar-buttons">
+                        <button class="node-btn btn-danger" id="clearBtn"><i class="fas fa-trash icon"></i>Очистить</button>
+                        <button class="node-btn btn-neon-primary" id="applyChainBtn"><i class="fas fa-check icon"></i>Применить</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zoom controls теперь всегда видимы -->
             <div class="zoom-controls">
                 <button id="zoomOutBtn" title="Уменьшить"><i class="fas fa-minus"></i></button>
                 <span id="zoomLevel">100%</span>
@@ -255,7 +361,7 @@
             "use strict";
 
             // ============================================================
-            // 1. РЕДАКТОР ГРАФА
+            // 1. РЕДАКТОР ГРАФА (с улучшениями)
             // ============================================================
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
@@ -1271,7 +1377,6 @@
                 const source = offlineCtx.createBufferSource();
                 source.buffer = audioBuffer;
 
-                // Создаем цепочку в офлайн-контексте
                 const offlineMap = {};
                 nodes.forEach(node => {
                     if (node.type === 'input' || node.type === 'output') return;
@@ -1311,7 +1416,6 @@
                 if (startIds.length === 0) startIds = Object.keys(offlineMap).map(Number);
 
                 startIds.forEach(id => source.connect(offlineMap[id].input));
-                // Если цепочка не содержит узлов, подключаем напрямую
                 if (startIds.length === 0) source.connect(offlineCtx.destination);
 
                 source.start(0);
@@ -1344,7 +1448,6 @@
                 }
                 let actualType = mimeType;
                 if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    // Попытка альтернативных типов
                     const alternatives = [
                         'audio/webm; codecs=opus',
                         'audio/ogg; codecs=opus',
@@ -1364,14 +1467,12 @@
                 const audioMap = window._audioMap || {};
                 const outputNode = nodes.find(n => n.type === 'output');
 
-                // Подключаем конечные узлы к MediaStreamDestination
                 endNodes.forEach(id => {
                     const audio = audioMap[id];
                     if (audio) {
                         try { audio.output.connect(dest); } catch(e) {}
                     }
                 });
-                // Также если есть явные соединения к выходу, они уже подключены к обычному destination, но их также нужно к MediaStream
                 connections.filter(c => c.to === outputNode.id).forEach(c => {
                     const fromAudio = audioMap[c.from];
                     if (fromAudio) {
@@ -1388,7 +1489,6 @@
                     statusDisplay.textContent = filename.split('.')[1].toUpperCase() + ' экспортирован';
                 };
 
-                // Создаем источник и запускаем
                 const source = audioCtx.createBufferSource();
                 source.buffer = audioBuffer;
                 const startNodeIds = window._startNodeIds || [];
@@ -1397,11 +1497,11 @@
                     if (audio) try { source.connect(audio.input); } catch(e) {}
                 });
 
-                source.connect(audioCtx.destination); // чтобы слышать тоже
+                source.connect(audioCtx.destination);
                 recorder.start();
                 source.start(0);
                 source.onended = () => {
-                    setTimeout(() => recorder.stop(), 100); // небольшая задержка для хвоста
+                    setTimeout(() => recorder.stop(), 100);
                 };
                 statusDisplay.textContent = 'Запись началась...';
             }
@@ -1412,11 +1512,9 @@
                 const length = buffer.length * numChannels * 2 + 44;
                 const arrayBuffer = new ArrayBuffer(length);
                 const view = new DataView(arrayBuffer);
-                // RIFF header
                 writeString(view, 0, 'RIFF');
                 view.setUint32(4, length - 8, true);
                 writeString(view, 8, 'WAVE');
-                // fmt chunk
                 writeString(view, 12, 'fmt ');
                 view.setUint32(16, 16, true);
                 view.setUint16(20, 1, true);
@@ -1425,7 +1523,6 @@
                 view.setUint32(28, sampleRate * numChannels * 2, true);
                 view.setUint16(32, numChannels * 2, true);
                 view.setUint16(34, 16, true);
-                // data chunk
                 writeString(view, 36, 'data');
                 view.setUint32(40, length - 44, true);
                 let offset = 44;
@@ -1515,7 +1612,7 @@
             selectedNodeId = null;
             draw();
 
-            console.log('NEON STUDIO PRO — пресеты и экспорт добавлены');
+            console.log('NEON STUDIO PRO — улучшенный UI, пресеты и экспорт готовы');
         })();
     </script>
 </body>
