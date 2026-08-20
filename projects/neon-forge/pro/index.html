@@ -47,7 +47,6 @@ tailwind.config = {
   html{ scrollbar-color:#1e293b #05060b; }
   body{ background:var(--bg); }
 
-  /* ---------- range ---------- */
   input[type=range]{
     -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:999px;
     background:linear-gradient(90deg, var(--acc,#00F0FF) var(--p,50%), rgba(148,163,184,.14) var(--p,50%));
@@ -65,7 +64,6 @@ tailwind.config = {
   }
   input[type=range]::-moz-range-track{ background:transparent; }
 
-  /* ---------- switch ---------- */
   .nswitch{ position:relative; display:inline-flex; cursor:pointer; }
   .nswitch input{ position:absolute; opacity:0; pointer-events:none; }
   .nswitch .track{ width:42px; height:22px; border-radius:999px; background:rgba(148,163,184,.12);
@@ -79,11 +77,9 @@ tailwind.config = {
   }
   .nswitch input:checked + .track .knob{ left:22px; background:var(--acc,#00F0FF); box-shadow:0 0 8px var(--acc,#00F0FF); }
 
-  /* ---------- modal ---------- */
   .modal-panel{ animation:fadeModal .25s ease both; }
   .disabled-body{ opacity:.35; filter:saturate(.3); pointer-events:none; }
 
-  /* ---------- chips / buttons ---------- */
   .chip.active{
     color:var(--neon-cyan)!important; border-color:var(--neon-cyan)!important;
     box-shadow:0 0 16px rgba(0,240,255,.35), inset 0 0 12px rgba(0,240,255,.08);
@@ -94,7 +90,6 @@ tailwind.config = {
     box-shadow:inset 0 0 18px rgba(0,240,255,.12);
   }
 
-  /* ---------- selects ---------- */
   .sel{
     background:#05060B; border:1px solid rgba(255,255,255,.12); border-radius:.55rem;
     padding:.4rem .7rem; font-family:'JetBrains Mono',monospace; font-size:.8rem;
@@ -102,18 +97,15 @@ tailwind.config = {
   }
   .sel:focus{ border-color:rgba(0,240,255,.6); box-shadow:0 0 12px rgba(0,240,255,.2); }
 
-  /* ---------- animations ---------- */
   @keyframes pulseGlow{ 0%,100%{ box-shadow:0 0 16px rgba(0,240,255,.45);} 50%{ box-shadow:0 0 36px rgba(0,240,255,.85);} }
   .play-btn.playing{ animation:pulseGlow 1.6s ease-in-out infinite; }
   .spin{ animation:spinSlow 4s linear infinite; }
   .orb-a{ animation:floatA 14s ease-in-out infinite; }
   .orb-b{ animation:floatB 18s ease-in-out infinite; }
 
-  /* ---------- dropzone ---------- */
   #drop.drag{ border-color:var(--neon-cyan)!important; background:rgba(0,240,255,.05)!important;
     box-shadow:0 0 40px -6px rgba(0,240,255,.4), inset 0 0 40px rgba(0,240,255,.05); }
 
-  /* ---------- toast ---------- */
   .toast{ border-left:3px solid var(--neon-cyan); background:rgba(10,14,24,.92);
     box-shadow:0 0 24px rgba(0,240,255,.18); animation:fadeUp .35s ease both; }
   .toast.err{ border-left-color:var(--neon-magenta); box-shadow:0 0 24px rgba(255,46,210,.2); }
@@ -142,7 +134,6 @@ tailwind.config = {
 
 <body class="font-display text-slate-200 min-h-screen antialiased selection:bg-neon-cyan/30">
 
-<!-- фоновые эффекты -->
 <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
   <div class="orb-a absolute -top-40 -left-24 w-[520px] h-[520px] rounded-full bg-neon-cyan/15 blur-[130px]"></div>
   <div class="orb-b absolute -bottom-48 -right-24 w-[560px] h-[560px] rounded-full bg-neon-magenta/12 blur-[140px]"></div>
@@ -154,7 +145,6 @@ tailwind.config = {
               -webkit-mask-image:radial-gradient(ellipse at center, black 25%, transparent 78%);"></div>
 </div>
 
-<!-- ШАПКА -->
 <header class="sticky top-0 z-40 backdrop-blur-md bg-ink-950/70 border-b border-white/5">
   <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
     <div class="flex items-center gap-3">
@@ -173,14 +163,13 @@ tailwind.config = {
         <span id="state-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
         <span id="ctx-state" class="font-mono text-xs text-slate-400">ожидание</span>
       </div>
-      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.3</div>
+      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.5</div>
     </div>
   </div>
 </header>
 
 <main class="max-w-7xl mx-auto px-6">
 
-  <!-- ЭКРАН ЗАГРУЗКИ -->
   <section id="hero" class="py-16 md:py-24">
     <div class="max-w-3xl mx-auto text-center animate-fadeUp">
       <div class="inline-flex items-center gap-2 rounded-full border border-neon-cyan/30 bg-neon-cyan/5 px-4 py-1.5 mb-8">
@@ -227,10 +216,8 @@ tailwind.config = {
     </div>
   </section>
 
-  <!-- СТУДИЯ -->
   <section id="studio" class="hidden pb-24 space-y-6">
 
-    <!-- панель файла -->
     <div class="card flex flex-wrap items-center gap-4 p-4">
       <div id="disc" class="w-12 h-12 rounded-full border-2 border-neon-violet/60 bg-ink-800 flex items-center justify-center shadow-[0_0_18px_rgba(139,92,246,.35)]">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="1.8">
@@ -247,7 +234,6 @@ tailwind.config = {
       </button>
     </div>
 
-    <!-- транспорт + волна -->
     <div class="card p-5">
       <div class="flex flex-wrap items-center gap-4 mb-4">
         <button id="btn-play" class="play-btn w-14 h-14 rounded-full bg-gradient-to-br from-neon-cyan to-neon-violet flex items-center justify-center text-ink-950 shadow-[0_0_24px_rgba(0,240,255,.5)] transition hover:brightness-110 active:scale-95">
@@ -270,16 +256,14 @@ tailwind.config = {
       <canvas id="wave" class="w-full h-28 rounded-xl bg-ink-950/60 border border-white/5 cursor-pointer"></canvas>
     </div>
 
-    <!-- видео-превью -->
     <div class="card p-5 hidden" id="vid-card">
       <div class="flex items-center justify-between mb-3">
         <h3 class="h3">Видео-превью · без звука</h3>
-        <span class="font-mono text-[10px] text-slate-600">звук идёт через цепь обработки · синхронно с транспортом</span>
+        <span class="font-mono text-[10px] text-slate-600">звук идёт через цепь обработки · видео автоматически синхронизируется со звуком</span>
       </div>
-      <video id="vid-preview" class="w-full max-h-[420px] rounded-xl bg-black" muted playsinline></video>
+      <video id="vid-preview" class="w-full max-h-[420px] rounded-xl bg-black" muted playsinline preload="auto"></video>
     </div>
 
-    <!-- ПАТЧ-ХОЛСТ: конструктор цепи -->
     <div class="card p-5">
       <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div class="min-w-0">
@@ -303,7 +287,6 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- анализаторы -->
     <div class="grid lg:grid-cols-3 gap-6">
       <div class="card p-5 lg:col-span-2">
         <div class="flex items-center justify-between mb-3">
@@ -321,7 +304,6 @@ tailwind.config = {
       </div>
     </div>
 
-    <!-- пресеты -->
     <div class="card p-5">
       <div class="flex items-center justify-between">
         <h3 class="h3">Пресеты обработки</h3>
@@ -346,7 +328,6 @@ tailwind.config = {
       <div class="mt-3 font-mono text-[10px] text-slate-600">Пресет настраивает параметры модулей — открыть их можно кликом по узлу на патч-холсте.</div>
     </div>
 
-    <!-- мастер / экспорт -->
     <div class="card p-6 grid lg:grid-cols-3 gap-8 items-start">
       <div>
         <h3 class="h3 mb-3">A/B сравнение</h3>
@@ -363,7 +344,6 @@ tailwind.config = {
           <span class="text-sm text-slate-300">Нормализация пика до −1 дБFS</span>
         </label>
 
-        <!-- аудио-настройки -->
         <div id="exp-audio-opts" class="grid grid-cols-2 gap-3">
           <div>
             <span class="lbl block mb-1.5">Формат</span>
@@ -400,7 +380,6 @@ tailwind.config = {
           </div>
         </div>
 
-        <!-- видео-настройки -->
         <div id="exp-video-opts" class="hidden">
           <div class="mb-3">
             <span class="lbl block mb-1.5">Контейнер</span>
@@ -457,7 +436,6 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- ФУТЕР: дизайн-спека -->
 <footer class="border-t border-white/5 py-8">
   <div class="max-w-7xl mx-auto px-6 flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-4 font-mono text-[10px] tracking-widest text-slate-600 uppercase">
@@ -476,12 +454,15 @@ tailwind.config = {
 <!-- Кодеры аудио: MP3 (lamejs) и OGG Vorbis -->
 <script src="https://cdn.jsdelivr.net/npm/@breezystack/lamejs@1.2.7/dist/lamejs.iife.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/higuma/ogg-vorbis-encoder-js@master/lib/OggVorbisEncoder.js"></script>
+<!-- FFmpeg WASM (UMD, глобал FFmpegWASM) -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
 
 <script>
 /* ============================================================
    NEONFORGE — студийный аудио/видео энхансер (SPA, один файл)
    Патч-движок · модальные параметры · пресеты · видео-ремукс
-   Экспорт: WAV / MP3 / OGG / видео (video copy + новый звук)
+   Надёжная синхронизация видео со звуком (мастер-часы — аудио)
+   FFmpeg WASM: UMD-загрузка, blob-воркер, прогресс без зависаний
    ============================================================ */
 'use strict';
 
@@ -501,6 +482,7 @@ const fmtPct= v=>`${Math.round(v)}%`;
 const fmtSec= v=>`${(Math.round(v*10)/10).toString().replace('.',',')} с`;
 const fmtX  = v=>`${(Math.round(v*10)/10).toString().replace('.',',')}:1`;
 const fmtQ  = v=>v.toFixed(1).replace('.',',');
+const fmtMB = b=>`${(b/1048576).toFixed(1).replace('.',',')} МБ`;
 const fmtTime = s=>{s=Math.max(0,s||0);const m=Math.floor(s/60);const sec=s-m*60;return `${String(m).padStart(2,'0')}:${sec<10?'0':''}${sec.toFixed(1)}`;};
 const freqToPos=(f,min,max)=>Math.round(1000*Math.log(Math.max(f,min)/min)/Math.log(max/min));
 const posToFreq=(p,min,max)=>min*Math.pow(max/min,p/1000);
@@ -512,6 +494,12 @@ function toast(msg,type){
   d.className='toast rounded-xl px-4 py-3 text-sm font-mono max-w-sm'+(type==='err'?' err':'');
   d.textContent=msg; box.appendChild(d);
   setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),400);},4200);
+}
+function withTimeout(promise,ms,msg){
+  return new Promise((res,rej)=>{
+    const t=setTimeout(()=>rej(new Error(msg)),ms);
+    promise.then(v=>{clearTimeout(t);res(v);},e=>{clearTimeout(t);rej(e);});
+  });
 }
 
 /* ---------- AudioWorklet: шумовой гейт (через Blob) ---------- */
@@ -1089,15 +1077,75 @@ function updateAB(){
   $('ab-proc').classList.toggle('active',!state.bypass);
 }
 
-/* ---------- синхронизация видео-превью ---------- */
+/* ============================================================
+   СИНХРОНИЗАЦИЯ ВИДЕО С ОБРАБОТАННЫМ ЗВУКОМ
+   Аудио — мастер-часы. Видео — ведомое:
+   • задержка вывода звука компенсируется (outputLatency)
+   • малый дрейф устраняется плавно через playbackRate (0.9–1.1)
+   • большой рассинхрон — редкая жёсткая перемотка (не чаще 2 р/с)
+   • никакие действия не выполняются во время seek видео
+   ============================================================ */
+let lastHardFix=0;
+function videoLatency(){
+  if(!live)return 0;
+  const l=live.ctx.outputLatency||live.ctx.baseLatency||0;
+  return clamp(l,0,0.2);
+}
 function syncVideo(action,time){
   if(state.videoKind!=='video')return;
   const v=$('vid-preview'); if(!v||!v.src)return;
+  const applyPos=()=>{
+    try{
+      const dur=isFinite(v.duration)?v.duration:Math.max(0,time||0);
+      const t=clamp((time||0)-videoLatency(),0,Math.max(0,dur));
+      if(isFinite(t))v.currentTime=t;
+    }catch(e){}
+  };
   try{
-    if(action==='play'){ v.loop=state.loop; if(isFinite(time))v.currentTime=clamp(time,0,Math.max(0,(v.duration||time))); v.play().catch(()=>{}); }
-    else if(action==='pause'){ v.pause(); }
-    else if(action==='seek'){ if(isFinite(time))v.currentTime=clamp(time,0,Math.max(0,(v.duration||time))); }
+    if(action==='pause'){ v.pause(); return; }
+    if(action==='play'){
+      v.loop=state.loop;
+      if(v.readyState>=1){ applyPos(); v.play().catch(()=>{}); }
+      else{
+        // метаданные ещё не загружены — стартуем, как только станут доступны
+        v.addEventListener('loadedmetadata',()=>{
+          if(state.playing){ applyPos(); v.play().catch(()=>{}); }
+        },{once:true});
+      }
+      return;
+    }
+    if(action==='seek'){
+      if(v.readyState>=1)applyPos();
+      else v.addEventListener('loadedmetadata',applyPos,{once:true});
+    }
   }catch(e){}
+}
+function syncVideoLoop(){
+  if(state.videoKind!=='video'||!state.buffer)return;
+  const v=$('vid-preview');
+  if(!v||!v.src)return;
+  if(!(state.playing&&live)){
+    if(v.playbackRate!==1)v.playbackRate=1;
+    return;
+  }
+  // ждём первый кадр и не вмешиваемся, пока видео само перематывается
+  if(v.readyState<2||v.seeking)return;
+  if(v.paused&&!v.ended){ v.play().catch(()=>{}); return; }
+  if(v.ended)return;
+  const target=clamp(getPos()-videoLatency(),0,state.buffer.duration);
+  const d=v.currentTime-target; // d>0 — видео опережает звук
+  const now=performance.now();
+  if(Math.abs(d)>0.3){
+    if(now-lastHardFix>500){
+      lastHardFix=now;
+      try{ v.currentTime=clamp(target,0,isFinite(v.duration)?v.duration:target); }catch(e){}
+      v.playbackRate=1;
+    }
+  }else if(Math.abs(d)>0.05){
+    v.playbackRate=clamp(1-d*0.5,0.9,1.1);
+  }else if(v.playbackRate!==1){
+    v.playbackRate=1;
+  }
 }
 
 /* ---------- воспроизведение ---------- */
@@ -1121,7 +1169,9 @@ async function play(){
   src.connect(live.abDry); src.connect(live.inGain);
   src._killed=false;
   src.onended=function(){ if(this._killed)return; state.playing=false; state.startOffset=0; syncVideo('pause'); updateTransport(); };
-  state.src=src; state.startedAt=c.currentTime-state.startOffset; state.playing=true;
+  state.src=src;
+  state.startedAt=c.currentTime-state.startOffset;
+  state.playing=true;
   src.start(0,state.startOffset);
   syncVideo('play',state.startOffset);
   updateTransport();
@@ -1184,7 +1234,8 @@ async function loadAudioFile(f){
     state.buffer=await live.ctx.decodeAudioData(ab);
     if(state.videoURL){ URL.revokeObjectURL(state.videoURL); state.videoURL=null; }
     state.videoKind='audio'; state.videoFile=null;
-    $('vid-card').classList.add('hidden'); $('vid-preview').removeAttribute('src');
+    $('vid-card').classList.add('hidden');
+    try{ $('vid-preview').removeAttribute('src'); $('vid-preview').load(); }catch(e){}
     finalizeLoad(f,'аудио');
     toast(`Загружено: ${f.name}`,'ok');
   }catch(err){
@@ -1213,7 +1264,8 @@ async function loadVideoFile(f){
     state.videoExt=((f.name.match(/\.([a-z0-9]+)$/i)||[,'mp4'])[1]).toLowerCase();
     state.videoURL=URL.createObjectURL(f);
     const v=$('vid-preview');
-    v.src=state.videoURL; v.muted=true; v.loop=state.loop; v.playsInline=true;
+    v.loop=state.loop; v.muted=true; v.playsInline=true;
+    v.src=state.videoURL;
     $('vid-card').classList.remove('hidden');
     finalizeLoad(f,`видео ${state.videoExt.toUpperCase()}`);
     toast(`Видео загружено: ${f.name}`,'ok');
@@ -1226,32 +1278,65 @@ async function loadVideoFile(f){
 }
 
 /* ============================================================
-   FFMPEG WASM: загрузка, извлечение аудио, ремукс видео
+   FFMPEG WASM — надёжная загрузка (UMD + blob-воркер)
    ============================================================ */
-let ffInst=null, ffPromise=null, ffProgressCb=null;
-function setFFStatus(txt){ const el=$('ff-status'); if(el)el.textContent='FFmpeg WASM: '+txt; }
+const FF_BASE='https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd';
+const CORE_BASE='https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist';
+let ffInst=null, ffPromise=null, ffProgressCb=null, ffBusy=false;
+
+function setFFStatus(txt){
+  const el=$('ff-status'); if(el)el.textContent='FFmpeg WASM: '+txt;
+  if(ffBusy)$('export-status').textContent='FFmpeg WASM: '+txt;
+}
+async function fetchToBlobURL(url,mime,onProgress){
+  const resp=await fetch(url);
+  if(!resp.ok)throw new Error('HTTP '+resp.status+' при загрузке '+url.split('/').pop());
+  const total=+resp.headers.get('Content-Length')||0;
+  if(!resp.body){
+    const b=await resp.blob();
+    if(onProgress)onProgress(b.size,b.size);
+    return URL.createObjectURL(new Blob([b],{type:mime}));
+  }
+  const reader=resp.body.getReader(); const parts=[]; let loaded=0;
+  for(;;){
+    const {done,value}=await reader.read();
+    if(done)break;
+    parts.push(value); loaded+=value.length;
+    if(onProgress)onProgress(loaded,total);
+  }
+  return URL.createObjectURL(new Blob(parts,{type:mime}));
+}
 async function ensureFFmpeg(){
   if(ffInst)return ffInst;
   if(ffPromise)return ffPromise;
-  setFFStatus('загрузка ядра (~31 МБ)…');
   ffPromise=(async()=>{
-    const [{FFmpeg},{toBlobURL}]=await Promise.all([
-      import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg/+esm'),
-      import('https://cdn.jsdelivr.net/npm/@ffmpeg/util/+esm')
-    ]);
+    if(!window.FFmpegWASM||!window.FFmpegWASM.FFmpeg)
+      throw new Error('скрипт FFmpeg не загрузился (проверьте доступ к CDN/сети)');
+    const {FFmpeg}=window.FFmpegWASM;
     const ff=new FFmpeg();
     ff.on('progress',ev=>{ if(ffProgressCb)ffProgressCb(ev.progress||0); });
-    const base='https://cdn.jsdelivr.net/npm/@ffmpeg/core/dist/umd';
-    await ff.load({
-      coreURL:await toBlobURL(base+'/ffmpeg-core.js','text/javascript'),
-      wasmURL:await toBlobURL(base+'/ffmpeg-core.wasm','application/wasm')
-    });
+    ff.on('log',ev=>{ try{console.debug('[ffmpeg]',ev.message);}catch(e){} });
+
+    setFFStatus('скачивание воркера…');
+    const classWorkerURL=await fetchToBlobURL(FF_BASE+'/814.ffmpeg.js','text/javascript');
+
+    setFFStatus('скачивание ядра…');
+    const coreURL=await fetchToBlobURL(CORE_BASE+'/esm/ffmpeg-core.js','text/javascript',
+      (l,t)=>setFFStatus(`скачивание ядра JS… ${fmtMB(l)}${t?' / '+fmtMB(t):''}`));
+
+    setFFStatus('скачивание WASM-модуля…');
+    const wasmURL=await fetchToBlobURL(CORE_BASE+'/umd/ffmpeg-core.wasm','application/wasm',
+      (l,t)=>setFFStatus(`скачивание WASM… ${fmtMB(l)}${t?' / '+fmtMB(t):''}`));
+
+    setFFStatus('инициализация WASM…');
+    await withTimeout(ff.load({classWorkerURL,coreURL,wasmURL}),120000,
+      'таймаут инициализации FFmpeg (>120 с)');
     ffInst=ff;
     setFFStatus('готов');
     return ff;
   })();
   try{ return await ffPromise; }
-  catch(e){ ffPromise=null; setFFStatus('ошибка загрузки'); throw e; }
+  catch(e){ ffPromise=null; setFFStatus('ошибка: '+e.message); throw e; }
 }
 function u8ToAB(u8){ return u8.buffer.slice(u8.byteOffset,u8.byteOffset+u8.byteLength); }
 async function extractAudioViaFFmpeg(bytes){
@@ -1632,11 +1717,14 @@ function initPatchEvents(){
   $('m-reset').addEventListener('click',resetModalModule);
 }
 
-/* ---------- главный цикл отрисовки ---------- */
+/* ---------- главный цикл ---------- */
 function frame(){
   requestAnimationFrame(frame);
   drawSpectrumFrame(); drawMeterFrame(); drawWaveFrame();
-  if(!$('studio').classList.contains('hidden'))drawPatchFrame();
+  if(!$('studio').classList.contains('hidden')){
+    drawPatchFrame();
+    syncVideoLoop();
+  }
   if(state.buffer)$('t-cur').textContent=fmtTime(getPos());
 }
 
@@ -1657,7 +1745,7 @@ function hasMp3(){ return !!(window.lamejs&&window.lamejs.Mp3Encoder); }
 function hasOgg(){ return !!window.OggVorbisEncoder; }
 
 function checkEncoders(){
-  const mp3=hasMp3(), ogg=hasOgg();
+  const mp3=hasMp3(), ogg=hasOgg(), ff=!!(window.FFmpegWASM&&window.FFmpegWASM.FFmpeg);
   const mp3Opt=document.querySelector('#sel-fmt option[value="mp3"]');
   const oggOpt=document.querySelector('#sel-fmt option[value="ogg"]');
   if(mp3Opt){ mp3Opt.disabled=!mp3; mp3Opt.textContent=mp3?'MP3':'MP3 (кодер недоступен)'; }
@@ -1666,9 +1754,10 @@ function checkEncoders(){
   if($('sel-fmt').value==='ogg'&&!ogg)$('sel-fmt').value='wav';
   updateExportUI();
   $('enc-status').innerHTML=
-    `Кодеры: MP3 <span class="${mp3?'text-neon-cyan':'text-neon-magenta'}">${mp3?'✓ lamejs':'✗'}</span>`+
-    ` · OGG <span class="${ogg?'text-neon-cyan':'text-neon-magenta'}">${ogg?'✓ libvorbis':'✗'}</span>`+
-    ` · WAV <span class="text-neon-cyan">✓ встроенный</span>`;
+    `Кодеры: MP3 <span class="${mp3?'text-neon-cyan':'text-neon-magenta'}">${mp3?'✓':'✗'}</span>`+
+    ` · OGG <span class="${ogg?'text-neon-cyan':'text-neon-magenta'}">${ogg?'✓':'✗'}</span>`+
+    ` · WAV <span class="text-neon-cyan">✓</span>`+
+    ` · FFmpeg-скрипт <span class="${ff?'text-neon-cyan':'text-neon-magenta'}">${ff?'✓':'✗'}</span>`;
 }
 function updateExportOptions(){
   const f=$('sel-fmt').value;
@@ -1801,7 +1890,6 @@ async function encodeOgg(abuf,quality,onProgress){
   return enc.finish('audio/ogg');
 }
 
-/* ---------- экспорт аудио (WAV/MP3/OGG), overrideFmt для кнопки «только аудио» ---------- */
 async function exportAudio(overrideFmt){
   if(!state.buffer){ toast('Сначала загрузите файл','err'); return; }
   const fmt=overrideFmt||$('sel-fmt').value;
@@ -1853,7 +1941,6 @@ async function exportAudio(overrideFmt){
   }
 }
 
-/* ---------- экспорт видео: video copy + новая аудиодорожка ---------- */
 async function exportVideo(){
   if(!state.buffer||state.videoKind!=='video'||!state.videoFile){
     toast('Сначала загрузите видеофайл','err'); return;
@@ -1861,17 +1948,20 @@ async function exportVideo(){
   const btn=$('btn-export');
   btn.disabled=true; $('spin-export').classList.remove('hidden'); $('dl-ico').classList.add('hidden');
   const setStat=t=>{ $('export-status').textContent=t; };
+  ffBusy=true;
+  const t0=performance.now();
+  const elapsed=()=>Math.round((performance.now()-t0)/1000);
   try{
-    setStat('Рендеринг обработанной дорожки…');
+    setStat('1/4 · Рендеринг обработанной дорожки…');
     await new Promise(r=>setTimeout(r,40));
     const rendered=await renderOffline();
     if($('chk-norm').checked)normalizePeak(rendered,db2lin(-1));
     const wav=encodeWav(rendered,16);
 
-    setStat('Загрузка FFmpeg WASM…');
+    setStat('2/4 · Подготовка FFmpeg WASM…');
     const ff=await ensureFFmpeg();
 
-    setStat('Запись файлов в память FFmpeg…');
+    setStat('2/4 · Запись файлов в память FFmpeg…');
     const inExt=state.videoExt;
     const inFile='src.'+inExt;
     await ff.writeFile(inFile,new Uint8Array(await state.videoFile.arrayBuffer()));
@@ -1889,8 +1979,8 @@ async function exportVideo(){
       a.push(outFile);
       return a;
     };
-    setStat('Ремукс: видео копируется, звук заменяется… 0%');
-    ffProgressCb=p=>{ setStat(`Ремукс: видео копируется, звук заменяется… ${Math.round(clamp(p,0,1)*100)}%`); };
+    setStat('3/4 · Ремукс: видео копируется, звук заменяется… 0%');
+    ffProgressCb=p=>{ setStat(`3/4 · Ремукс… ${Math.round(clamp(p,0,1)*100)}% · ${elapsed()} c`); };
     let rc;
     if(outExt==='webm'){
       rc=await ff.exec(buildArgs('libopus'));
@@ -1901,6 +1991,7 @@ async function exportVideo(){
     ffProgressCb=null;
     if(rc!==0)throw new Error('FFmpeg не смог собрать файл (неподдерживаемый кодек или контейнер)');
 
+    setStat('4/4 · Чтение результата…');
     const data=await ff.readFile(outFile);
     const mime=outExt==='webm'?'video/webm':(outExt==='mkv'?'video/x-matroska':(outExt==='avi'?'video/x-msvideo':'video/mp4'));
     const base=(state.fileName||'video').replace(/\.[^.]+$/,'');
@@ -1910,7 +2001,7 @@ async function exportVideo(){
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),8000);
-    setStat(`Готово: ${fname} · видео без перекодирования · ${(data.byteLength/1048576).toFixed(1).replace('.',',')} МБ`);
+    setStat(`Готово: ${fname} · видео без перекодирования · ${fmtMB(data.byteLength)} · ${elapsed()} c`);
     toast(`Видео сохранено: ${fname}`,'ok');
     try{await ff.deleteFile(inFile);}catch(e){}
     try{await ff.deleteFile('new.wav');}catch(e){}
@@ -1918,9 +2009,10 @@ async function exportVideo(){
   }catch(err){
     console.error(err);
     ffProgressCb=null;
-    setStat('Ошибка экспорта видео');
+    setStat('Ошибка экспорта видео: '+err.message);
     toast('Ошибка экспорта видео: '+err.message,'err');
   }finally{
+    ffBusy=false;
     btn.disabled=false; $('spin-export').classList.add('hidden'); $('dl-ico').classList.remove('hidden');
   }
 }
@@ -1943,6 +2035,12 @@ function init(){
   $('btn-reset').addEventListener('click',()=>applyPresetByName('Чистый сигнал'));
   document.querySelectorAll('.chip[data-preset]').forEach(ch=>
     ch.addEventListener('click',()=>applyPresetByName(ch.dataset.preset)));
+
+  // диагностика видео-элемента
+  $('vid-preview').addEventListener('error',()=>{
+    if(state.videoKind==='video'&&state.buffer)
+      toast('Превью недоступно для этого видеокодека — звук обрабатывается штатно','err');
+  });
 
   const wv=$('wave'); let wdrag=false;
   const seekEvt=e=>{
