@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEON STUDIO PRO · Пресеты и экспорт</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0b0d15;
+            font-family: 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .glass-panel {
+            background: rgba(18, 22, 33, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            box-shadow: 0 25px 50px -8px rgba(0, 0, 0, 0.8);
+            border-radius: 24px;
+            padding: 2rem;
+            max-width: 1400px;
+            width: 100%;
+        }
+        .neon-border { border: 1px solid rgba(0,255,255,0.25); box-shadow: 0 0 12px rgba(0,255,255,0.2), 0 0 4px rgba(0,255,255,0.1) inset; }
+        .neon-text { color: #b0f0ff; text-shadow: 0 0 8px rgba(0,255,255,0.5), 0 0 20px rgba(0,180,255,0.2); }
+        .file-drop-zone {
+            border: 2px dashed rgba(0,255,255,0.3); background: rgba(0,20,30,0.25); transition: all 0.2s;
+            border-radius: 16px; padding: 1.5rem; text-align: center; cursor: pointer;
+        }
+        .file-drop-zone:hover { border-color: #0cf; background: rgba(0,255,255,0.05); box-shadow: 0 0 30px rgba(0,255,255,0.1); }
+        .badge-neon { background: rgba(0,255,255,0.08); color: #9cf; border: 1px solid rgba(0,255,255,0.2); border-radius: 40px; padding: 0.2rem 0.8rem; font-size: 0.7rem; letter-spacing: 0.03em; }
+        .btn-neon {
+            background: rgba(0,200,255,0.08); border: 1px solid rgba(0,255,255,0.3); color: #d0f4ff;
+            padding: 0.5rem 1.2rem; border-radius: 40px; font-weight: 500; backdrop-filter: blur(4px);
+            transition: all 0.15s; cursor: pointer; font-size: 0.875rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .btn-neon:hover:not(:disabled) { background: rgba(0,255,255,0.15); border-color: #6cf; box-shadow: 0 0 30px rgba(0,180,255,0.3); color: white; transform: scale(1.02); }
+        .btn-neon:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-neon-primary { background: linear-gradient(145deg, rgba(0,200,255,0.2), rgba(0,100,200,0.1)); border: 1px solid #0cf; color: white; text-shadow: 0 0 12px rgba(0,255,255,0.4); }
+        .btn-danger { border-color: rgba(255,100,100,0.3); color: #f8a5a5; }
+        .btn-danger:hover:not(:disabled) { border-color: #ff6b6b; box-shadow: 0 0 30px rgba(255,100,100,0.2); }
+        .canvas-wrapper { background: rgba(0,0,0,0.5); border-radius: 16px; border: 1px solid rgba(0,255,255,0.1); position: relative; overflow: hidden; min-height: 450px; cursor: grab; }
+        .canvas-wrapper.panning { cursor: grabbing; }
+        #canvas { width: 100%; height: 100%; min-height: 450px; display: block; touch-action: none; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-center { display: flex; align-items: center; }
+        .gap-2 { gap: 0.5rem; } .gap-3 { gap: 0.75rem; } .gap-4 { gap: 1rem; }
+        .mt-1 { margin-top: 0.25rem; } .mt-3 { margin-top: 0.75rem; } .mt-4 { margin-top: 1rem; } .mt-6 { margin-top: 1.5rem; } .mb-6 { margin-bottom: 1.5rem; }
+        .text-xs { font-size: 0.75rem; } .text-sm { font-size: 0.875rem; } .text-2xl { font-size: 1.5rem; } .text-3xl { font-size: 1.875rem; }
+        .text-cyan-100 { color: #cffafe; } .text-cyan-200 { color: #a5f3fc; } .text-cyan-300 { color: #67e8f9; } .text-cyan-400 { color: #22d3ee; }
+        .text-cyan-300\/40 { color: rgba(103,232,249,0.4); } .text-cyan-300\/50 { color: rgba(103,232,249,0.5); } .text-cyan-300\/30 { color: rgba(103,232,249,0.3); }
+        .text-cyan-200\/60 { color: rgba(165,243,252,0.6); } .text-cyan-100\/80 { color: rgba(207,250,254,0.8); } .text-white { color: white; }
+        .bg-black\/30 { background: rgba(0,0,0,0.3); } .border-white\/5 { border-color: rgba(255,255,255,0.05); }
+        .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .w-full { width: 100%; } .max-w-7xl { max-width: 1280px; } .mx-auto { margin-left: auto; margin-right: auto; }
+        .flex { display: flex; } .flex-wrap { flex-wrap: wrap; } .flex-1 { flex: 1; } .flex-col { flex-direction: column; }
+        .items-center { align-items: center; } .justify-between { justify-content: space-between; } .justify-center { justify-content: center; }
+        .space-y-4>*+* { margin-top: 1rem; }
+        .hidden { display: none; } .block { display: block; }
+        .rounded-2xl { border-radius: 16px; } .rounded-3xl { border-radius: 24px; } .rounded-xl { border-radius: 12px; }
+        .p-2 { padding: 0.5rem; } .p-3 { padding: 0.75rem; } .p-4 { padding: 1rem; } .p-6 { padding: 1.5rem; }
+        .tracking-wider { letter-spacing: 0.05em; } .font-light { font-weight: 300; } .font-medium { font-weight: 500; } .font-bold { font-weight: 700; }
+        .relative { position: relative; } .absolute { position: absolute; }
+        .toolbar {
+            display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.5rem; background: rgba(0,0,0,0.3);
+            border-radius: 12px; border: 1px solid rgba(0,255,255,0.05); max-height: 120px; overflow-y: auto;
+        }
+        .toolbar::-webkit-scrollbar { width: 4px; }
+        .toolbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .toolbar::-webkit-scrollbar-thumb { background: rgba(0,255,255,0.2); border-radius: 4px; }
+        .node-btn {
+            background: rgba(0,200,255,0.06); border: 1px solid rgba(0,255,255,0.15); color: #a5f3fc;
+            padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.7rem; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        .node-btn:hover { background: rgba(0,255,255,0.12); border-color: #0cf; box-shadow: 0 0 20px rgba(0,180,255,0.15); }
+        .node-btn .icon { margin-right: 0.2rem; }
+        .zoom-controls { display: flex; align-items: center; gap: 0.5rem; margin-left: auto; }
+        .zoom-controls button {
+            background: rgba(0,200,255,0.06); border: 1px solid rgba(0,255,255,0.15); color: #a5f3fc; width: 28px; height: 28px;
+            border-radius: 50%; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; font-size: 0.875rem;
+        }
+        .zoom-controls button:hover { background: rgba(0,255,255,0.15); border-color: #0cf; }
+        .zoom-controls span { color: #a5f3fc; font-size: 0.75rem; min-width: 40px; text-align: center; }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: rgba(18,22,33,0.95); border: 1px solid rgba(0,255,255,0.2); border-radius: 24px; padding: 2rem;
+            max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(0,255,255,0.05); animation: modalSlide 0.25s ease;
+        }
+        .modal::-webkit-scrollbar { width: 4px; }
+        .modal::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .modal::-webkit-scrollbar-thumb { background: rgba(0,255,255,0.2); border-radius: 4px; }
+        @keyframes modalSlide { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(0,255,255,0.08); padding-bottom: 0.75rem; }
+        .modal-header h3 { color: #b0f0ff; font-weight: 500; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .modal-close { background: none; border: none; color: rgba(255,255,255,0.3); font-size: 1.5rem; cursor: pointer; transition: color 0.15s; }
+        .modal-close:hover { color: #fff; }
+        .modal-body { color: #a5f3fc; }
+        .modal-body .param-group { margin-bottom: 0.75rem; }
+        .modal-body label { display: block; font-size: 0.78rem; color: rgba(165,243,252,0.6); margin-bottom: 0.2rem; }
+        .modal-body input[type="range"] { width: 100%; accent-color: #0cf; background: #1e2538; height: 4px; border-radius: 8px; -webkit-appearance: none; appearance: none; }
+        .modal-body input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #0cf; box-shadow: 0 0 20px #0cf, 0 0 8px #0cf; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
+        .modal-body input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #0cf; box-shadow: 0 0 20px #0cf, 0 0 8px #0cf; cursor: pointer; border: 1px solid rgba(255,255,255,0.3); }
+        .modal-body .param-value { color: #67e8f9; font-size: 0.8rem; text-align: right; margin-top: 0.1rem; }
+        .modal-footer { display: flex; gap: 0.75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0,255,255,0.08); }
+        .modal-footer button { flex: 1; }
+        .connection-info { position: absolute; bottom: 8px; right: 12px; color: rgba(103,232,249,0.3); font-size: 0.7rem; pointer-events: none; z-index: 10; }
+        .pan-hint { position: absolute; bottom: 8px; left: 12px; color: rgba(103,232,249,0.2); font-size: 0.6rem; pointer-events: none; z-index: 10; letter-spacing: 0.03em; }
+        @media (max-width: 768px) {
+            .glass-panel { padding: 1rem; }
+            .toolbar { justify-content: center; max-height: 80px; }
+            .zoom-controls { margin-left: 0; width: 100%; justify-content: center; }
+            .modal { padding: 1.5rem; margin: 1rem; }
+            .pan-hint { display: none; }
+        }
+        .preset-select {
+            background: rgba(0,200,255,0.06); border: 1px solid rgba(0,255,255,0.3); color: #d0f4ff;
+            padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; cursor: pointer; outline: none;
+        }
+        .preset-select option { background: #1a1f2e; color: #d0f4ff; }
+    </style>
+</head>
+<body>
+    <div class="glass-panel neon-border max-w-7xl mx-auto">
+        <div class="flex-between flex-wrap mb-6" style="gap: 1rem;">
+            <div class="flex-center gap-3">
+                <i class="fas fa-microphone-alt text-3xl text-cyan-300" style="filter: drop-shadow(0 0 12px #0cf);"></i>
+                <h1 class="text-2xl font-light tracking-wider neon-text">
+                    <span class="font-bold">NEON</span> STUDIO <span style="font-size:0.7rem;color:rgba(165,243,252,0.4);">pro</span>
+                </h1>
+                <span class="badge-neon"><i class="fas fa-circle" style="font-size:8px;color:#22d3ee;margin-right:4px;"></i> отладка</span>
+            </div>
+            <div class="flex-center gap-2 text-sm text-cyan-200/60">
+                <i class="fas fa-project-diagram"></i>
+                <span>Shift+клик по порту → удалить связь</span>
+            </div>
+        </div>
+
+        <div class="canvas-wrapper" id="canvasWrapper">
+            <canvas id="canvas" width="1200" height="500"></canvas>
+            <div class="connection-info" id="connectionInfo">0 соединений</div>
+            <div class="pan-hint"><i class="fas fa-arrows-alt"></i> перетащите фон для панорамирования</div>
+        </div>
+
+        <div class="toolbar" id="toolbar">
+            <button class="node-btn" data-type="input"><i class="fas fa-arrow-right icon"></i>Вход</button>
+            <button class="node-btn" data-type="output"><i class="fas fa-arrow-left icon"></i>Выход</button>
+            <span style="color:rgba(255,255,255,0.1);padding:0 0.2rem;">|</span>
+            <button class="node-btn" data-type="lowpass"><i class="fas fa-filter icon"></i>НЧ</button>
+            <button class="node-btn" data-type="highpass"><i class="fas fa-filter icon"></i>ВЧ</button>
+            <button class="node-btn" data-type="bandpass"><i class="fas fa-filter icon"></i>Полосовой</button>
+            <button class="node-btn" data-type="notch"><i class="fas fa-filter icon"></i>Режектор</button>
+            <button class="node-btn" data-type="allpass"><i class="fas fa-filter icon"></i>Всепроп.</button>
+            <button class="node-btn" data-type="peaking"><i class="fas fa-sliders-h icon"></i>Полосной</button>
+            <button class="node-btn" data-type="lowshelf"><i class="fas fa-arrow-down icon"></i>НЧ-полка</button>
+            <button class="node-btn" data-type="highshelf"><i class="fas fa-arrow-up icon"></i>ВЧ-полка</button>
+            <button class="node-btn" data-type="gain"><i class="fas fa-volume-up icon"></i>Усиление</button>
+            <span style="color:rgba(255,255,255,0.1);padding:0 0.2rem;">|</span>
+            <button class="node-btn" data-type="reverb" style="border-color:rgba(200,100,255,0.3);color:#c9a0ff;"><i class="fas fa-cloud icon"></i>Реверб</button>
+            <button class="node-btn" data-type="delay" style="border-color:rgba(255,200,100,0.3);color:#ffd700;"><i class="fas fa-clock icon"></i>Задержка</button>
+            <button class="node-btn" data-type="echo" style="border-color:rgba(100,255,200,0.3);color:#7fffd4;"><i class="fas fa-repeat icon"></i>Эхо</button>
+            <button class="node-btn" data-type="chorus" style="border-color:rgba(255,100,200,0.3);color:#ff8cba;"><i class="fas fa-wave-square icon"></i>Хорус</button>
+            <button class="node-btn" data-type="flanger" style="border-color:rgba(100,200,255,0.3);color:#87ceeb;"><i class="fas fa-sync-alt icon"></i>Фленжер</button>
+            <button class="node-btn" data-type="phaser" style="border-color:rgba(255,150,100,0.3);color:#ffb07c;"><i class="fas fa-spinner icon"></i>Фейзер</button>
+            <button class="node-btn" data-type="tremolo" style="border-color:rgba(255,200,100,0.3);color:#ffc107;"><i class="fas fa-waveform icon"></i>Тремоло</button>
+            <button class="node-btn" data-type="vibrato" style="border-color:rgba(200,200,255,0.3);color:#b0b0ff;"><i class="fas fa-waveform icon"></i>Вибрато</button>
+            <button class="node-btn" data-type="compressor" style="border-color:rgba(255,150,150,0.3);color:#ff9999;"><i class="fas fa-compress-arrows-alt icon"></i>Компрессор</button>
+            <button class="node-btn" data-type="distortion" style="border-color:rgba(255,100,100,0.3);color:#ff6666;"><i class="fas fa-fan icon"></i>Дисторшн</button>
+            <span style="color:rgba(255,255,255,0.1);padding:0 0.2rem;">|</span>
+            <select id="presetSelect" class="preset-select">
+                <option value="">🎛 Пресеты...</option>
+                <option value="vocal">🎤 Студийный вокал</option>
+                <option value="warm">🔥 Тёплый ламповый</option>
+                <option value="crystal">💎 Кристальная чистота</option>
+                <option value="bass">🔊 Мощный бас</option>
+                <option value="chorus">🌊 Лёгкий хорус</option>
+                <option value="radio">📻 Радио-голос</option>
+            </select>
+            <button class="node-btn" id="applyPresetBtn" title="Применить выбранный пресет"><i class="fas fa-check-circle"></i> Применить</button>
+            <span style="color:rgba(255,255,255,0.1);padding:0 0.2rem;">|</span>
+            <button class="node-btn btn-danger" id="clearBtn"><i class="fas fa-trash icon"></i>Очистить</button>
+            <button class="node-btn btn-neon-primary" id="applyChainBtn"><i class="fas fa-check icon"></i>Применить</button>
+            <div class="zoom-controls">
+                <button id="zoomOutBtn" title="Уменьшить"><i class="fas fa-minus"></i></button>
+                <span id="zoomLevel">100%</span>
+                <button id="zoomInBtn" title="Увеличить"><i class="fas fa-plus"></i></button>
+                <button id="zoomResetBtn" title="Сбросить масштаб и позицию"><i class="fas fa-expand"></i></button>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+            <div class="file-drop-zone" id="dropZone">
+                <i class="fas fa-cloud-upload-alt text-2xl text-cyan-300/70 block" style="filter: drop-shadow(0 0 16px #0cf);"></i>
+                <p class="text-cyan-100/80 font-light text-sm">Загрузите аудиофайл</p>
+                <p class="text-cyan-300/40 text-xs">MP3, WAV, FLAC, OGG</p>
+                <input type="file" id="fileInput" accept="audio/*" style="display:none;" />
+                <div id="fileName" class="mt-1 text-xs text-cyan-300/50 truncate"></div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                    <button id="playBtn" class="btn-neon flex-1" disabled>
+                        <i class="fas fa-play"></i> <span>Воспроизвести</span>
+                    </button>
+                    <button id="resetBtn" class="btn-neon flex-1" disabled>
+                        <i class="fas fa-undo-alt"></i> Сброс
+                    </button>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                    <button id="exportWavBtn" class="btn-neon flex-1" disabled>
+                        <i class="fas fa-file-audio"></i> WAV
+                    </button>
+                    <button id="exportOggBtn" class="btn-neon flex-1" disabled>
+                        <i class="fas fa-file-audio"></i> OGG
+                    </button>
+                    <button id="exportMp3Btn" class="btn-neon flex-1" disabled>
+                        <i class="fas fa-file-audio"></i> MP3
+                    </button>
+                </div>
+                <div class="bg-black/30 rounded-xl p-2 border border-white/5 text-cyan-200/60 text-xs flex-between">
+                    <span><i class="far fa-clock mr-1"></i> <span id="durationDisplay">0:00</span></span>
+                    <span><i class="fas fa-signal"></i> <span id="statusDisplay">готов</span></span>
+                    <span><i class="fas fa-code-branch"></i> <span id="nodeCount">0</span> узлов</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle"><i class="fas fa-sliders-h"></i> Настройки узла</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn-neon btn-danger" id="modalDeleteBtn"><i class="fas fa-trash"></i> Удалить</button>
+                <button class="btn-neon btn-neon-primary" id="modalApplyBtn"><i class="fas fa-check"></i> Применить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // ============================================================
+            // 1. РЕДАКТОР ГРАФА
+            // ============================================================
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const wrapper = document.getElementById('canvasWrapper');
+
+            let nodes = [];
+            let connections = [];
+            let nodeIdCounter = 0;
+            let scale = 1;
+            let offsetX = 0;
+            let offsetY = 0;
+            let isPanning = false;
+            let panStartX = 0, panStartY = 0, panOffsetX = 0, panOffsetY = 0;
+            let selectedNodeId = null;
+
+            const NODE_W = 120;
+            const NODE_H = 50;
+            const PORT_R = 8;
+
+            const nodeTypes = {
+                input: { label: 'Вход', color: '#22d3ee', bg: 'rgba(34,211,238,0.15)', params: {} },
+                output: { label: 'Выход', color: '#f472b6', bg: 'rgba(244,114,182,0.15)', params: {} },
+                lowpass: { label: 'НЧ', color: '#60a5fa', bg: 'rgba(96,165,250,0.15)', params: { frequency: { label: 'Частота (Гц)', min: 20, max: 20000, default: 2000, step: 10 }, Q: { label: 'Q', min: 0.1, max: 20, default: 1, step: 0.1 }, gain: { label: 'Усиление (dB)', min: -40, max: 40, default: 0, step: 0.5 } } },
+                highpass: { label: 'ВЧ', color: '#34d399', bg: 'rgba(52,211,153,0.15)', params: { frequency: { label: 'Частота (Гц)', min: 20, max: 20000, default: 80, step: 10 }, Q: { label: 'Q', min: 0.1, max: 20, default: 1, step: 0.1 }, gain: { label: 'Усиление (dB)', min: -40, max: 40, default: 0, step: 0.5 } } },
+                bandpass: { label: 'Полосовой', color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', params: { frequency: { label: 'Центр (Гц)', min: 20, max: 20000, default: 1000, step: 10 }, Q: { label: 'Q', min: 0.1, max: 20, default: 1, step: 0.1 } } },
+                notch: { label: 'Режектор', color: '#f472b6', bg: 'rgba(244,114,182,0.15)', params: { frequency: { label: 'Центр (Гц)', min: 20, max: 20000, default: 1000, step: 10 }, Q: { label: 'Q', min: 0.1, max: 20, default: 1, step: 0.1 } } },
+                allpass: { label: 'Всепроп.', color: '#a78bfa', bg: 'rgba(167,139,250,0.15)', params: { frequency: { label: 'Частота (Гц)', min: 20, max: 20000, default: 1000, step: 10 }, Q: { label: 'Q', min: 0.1, max: 20, default: 1, step: 0.1 } } },
+                peaking: { label: 'Полосной', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', params: { frequency: { label: 'Центр (Гц)', min: 20, max: 20000, default: 1000, step: 10 }, gain: { label: 'Усиление (dB)', min: -40, max: 40, default: 6, step: 0.5 }, Q: { label: 'Q', min: 0.1, max: 20, default: 1, step: 0.1 } } },
+                lowshelf: { label: 'НЧ-полка', color: '#fb923c', bg: 'rgba(251,146,60,0.15)', params: { frequency: { label: 'Частота (Гц)', min: 20, max: 2000, default: 200, step: 10 }, gain: { label: 'Усиление (dB)', min: -40, max: 40, default: 4, step: 0.5 }, Q: { label: 'Q', min: 0.1, max: 10, default: 1, step: 0.1 } } },
+                highshelf: { label: 'ВЧ-полка', color: '#a78bfa', bg: 'rgba(167,139,250,0.15)', params: { frequency: { label: 'Частота (Гц)', min: 1000, max: 16000, default: 4000, step: 50 }, gain: { label: 'Усиление (dB)', min: -40, max: 40, default: 3, step: 0.5 }, Q: { label: 'Q', min: 0.1, max: 10, default: 1, step: 0.1 } } },
+                gain: { label: 'Усиление', color: '#f472b6', bg: 'rgba(244,114,182,0.15)', params: { gain: { label: 'Усиление (dB)', min: -60, max: 60, default: 0, step: 0.5 } } },
+                reverb: { label: 'Реверберация', color: '#c9a0ff', bg: 'rgba(200,150,255,0.15)', params: { decay: { label: 'Затухание (сек)', min: 0.1, max: 8, default: 1.5, step: 0.1 }, wet: { label: 'Wet', min: 0, max: 1, default: 0.5, step: 0.01 }, dry: { label: 'Dry', min: 0, max: 1, default: 0.5, step: 0.01 } } },
+                delay: { label: 'Задержка', color: '#ffd700', bg: 'rgba(255,200,100,0.15)', params: { delayTime: { label: 'Время (сек)', min: 0.01, max: 2, default: 0.3, step: 0.01 }, feedback: { label: 'Обратная связь', min: 0, max: 1, default: 0.4, step: 0.01 }, wet: { label: 'Wet', min: 0, max: 1, default: 0.5, step: 0.01 }, dry: { label: 'Dry', min: 0, max: 1, default: 0.5, step: 0.01 } } },
+                echo: { label: 'Эхо', color: '#7fffd4', bg: 'rgba(100,255,200,0.15)', params: { delayTime: { label: 'Время (сек)', min: 0.05, max: 3, default: 0.5, step: 0.05 }, feedback: { label: 'Обратная связь', min: 0, max: 0.9, default: 0.3, step: 0.01 }, wet: { label: 'Wet', min: 0, max: 1, default: 0.4, step: 0.01 }, dry: { label: 'Dry', min: 0, max: 1, default: 0.6, step: 0.01 } } },
+                chorus: { label: 'Хорус', color: '#ff8cba', bg: 'rgba(255,100,200,0.15)', params: { rate: { label: 'Скорость (Гц)', min: 0.05, max: 10, default: 1.5, step: 0.05 }, depth: { label: 'Глубина', min: 0.001, max: 0.05, default: 0.005, step: 0.001 }, feedback: { label: 'Обратная связь', min: 0, max: 0.9, default: 0.2, step: 0.01 }, wet: { label: 'Wet', min: 0, max: 1, default: 0.5, step: 0.01 }, dry: { label: 'Dry', min: 0, max: 1, default: 0.5, step: 0.01 } } },
+                flanger: { label: 'Фленжер', color: '#87ceeb', bg: 'rgba(100,200,255,0.15)', params: { rate: { label: 'Скорость (Гц)', min: 0.05, max: 10, default: 0.8, step: 0.05 }, depth: { label: 'Глубина', min: 0.001, max: 0.02, default: 0.003, step: 0.001 }, feedback: { label: 'Обратная связь', min: -1, max: 1, default: 0.5, step: 0.01 }, wet: { label: 'Wet', min: 0, max: 1, default: 0.5, step: 0.01 }, dry: { label: 'Dry', min: 0, max: 1, default: 0.5, step: 0.01 } } },
+                phaser: { label: 'Фейзер', color: '#ffb07c', bg: 'rgba(255,150,100,0.15)', params: { rate: { label: 'Скорость (Гц)', min: 0.05, max: 10, default: 0.5, step: 0.05 }, depth: { label: 'Глубина', min: 0.001, max: 0.02, default: 0.005, step: 0.001 }, feedback: { label: 'Обратная связь', min: -1, max: 1, default: 0.3, step: 0.01 }, wet: { label: 'Wet', min: 0, max: 1, default: 0.4, step: 0.01 }, dry: { label: 'Dry', min: 0, max: 1, default: 0.6, step: 0.01 } } },
+                tremolo: { label: 'Тремоло', color: '#ffc107', bg: 'rgba(255,193,7,0.15)', params: { rate: { label: 'Скорость (Гц)', min: 0.1, max: 20, default: 5, step: 0.1 }, depth: { label: 'Глубина', min: 0, max: 1, default: 0.8, step: 0.01 } } },
+                vibrato: { label: 'Вибрато', color: '#b0b0ff', bg: 'rgba(176,176,255,0.15)', params: { rate: { label: 'Скорость (Гц)', min: 0.1, max: 20, default: 5, step: 0.1 }, depth: { label: 'Глубина', min: 0.001, max: 0.02, default: 0.005, step: 0.001 } } },
+                compressor: { label: 'Компрессор', color: '#ff9999', bg: 'rgba(255,150,150,0.15)', params: { threshold: { label: 'Порог (dB)', min: -60, max: 0, default: -24, step: 0.5 }, knee: { label: 'Knee (dB)', min: 0, max: 40, default: 30, step: 1 }, ratio: { label: 'Ratio', min: 1, max: 20, default: 12, step: 0.5 }, attack: { label: 'Attack (сек)', min: 0.001, max: 0.5, default: 0.003, step: 0.001 }, release: { label: 'Release (сек)', min: 0.001, max: 0.5, default: 0.25, step: 0.001 } } },
+                distortion: { label: 'Дисторшн', color: '#ff6666', bg: 'rgba(255,100,100,0.15)', params: { drive: { label: 'Drive', min: 0, max: 1, default: 0.5, step: 0.01 }, wet: { label: 'Wet', min: 0, max: 1, default: 0.5, step: 0.01 }, dry: { label: 'Dry', min: 0, max: 1, default: 0.5, step: 0.01 } } }
+            };
+
+            function addConnection(fromId, toId) {
+                if (fromId === toId) return false;
+                if (connections.some(c => c.from === fromId && c.to === toId)) return false;
+                connections.push({ from: fromId, to: toId });
+                updateConnectionInfo();
+                draw();
+                return true;
+            }
+            function removeConnection(fromId, toId) {
+                const idx = connections.findIndex(c => c.from === fromId && c.to === toId);
+                if (idx === -1) return false;
+                connections.splice(idx, 1);
+                updateConnectionInfo();
+                draw();
+                return true;
+            }
+            function removeConnectionsForNode(nodeId) {
+                connections = connections.filter(c => c.from !== nodeId && c.to !== nodeId);
+                updateConnectionInfo();
+                draw();
+            }
+            function getConnectionsFrom(nodeId) { return connections.filter(c => c.from === nodeId); }
+            function getConnectionsTo(nodeId) { return connections.filter(c => c.to === nodeId); }
+            function updateConnectionInfo() { document.getElementById('connectionInfo').textContent = connections.length + ' соединений'; }
+
+            function getPortPos(node, port) { return { x: node.x + (port === 'out' ? NODE_W : 0), y: node.y + NODE_H / 2 }; }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(offsetX, offsetY);
+                ctx.scale(scale, scale);
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+                ctx.lineWidth = 1 / scale;
+                for (let gx = 0; gx < canvas.width / scale; gx += 40) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height / scale); ctx.stroke(); }
+                for (let gy = 0; gy < canvas.height / scale; gy += 40) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width / scale, gy); ctx.stroke(); }
+
+                connections.forEach(conn => {
+                    const from = nodes.find(n => n.id === conn.from);
+                    const to = nodes.find(n => n.id === conn.to);
+                    if (!from || !to) return;
+                    const start = getPortPos(from, 'out');
+                    const end = getPortPos(to, 'in');
+                    const color = (nodeTypes[from.type] || nodeTypes.lowpass).color;
+                    ctx.beginPath();
+                    ctx.moveTo(start.x, start.y);
+                    ctx.bezierCurveTo(start.x + (end.x - start.x) * 0.5, start.y, start.x + (end.x - start.x) * 0.5, end.y, end.x, end.y);
+                    ctx.strokeStyle = color + '80';
+                    ctx.lineWidth = 2.5 / scale;
+                    ctx.shadowColor = color + '40';
+                    ctx.shadowBlur = 10 / scale;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                    const angle = Math.atan2(end.y - start.y, end.x - start.x);
+                    const arrLen = 12 / scale;
+                    const arrX = end.x - 14 / scale * Math.cos(angle);
+                    const arrY = end.y - 14 / scale * Math.sin(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(arrX + arrLen * 0.5 * Math.cos(angle - 0.4), arrY + arrLen * 0.5 * Math.sin(angle - 0.4));
+                    ctx.lineTo(arrX, arrY);
+                    ctx.lineTo(arrX + arrLen * 0.5 * Math.cos(angle + 0.4), arrY + arrLen * 0.5 * Math.sin(angle + 0.4));
+                    ctx.strokeStyle = color + 'CC';
+                    ctx.lineWidth = 2 / scale;
+                    ctx.stroke();
+                });
+
+                nodes.forEach(node => {
+                    const type = nodeTypes[node.type] || nodeTypes.lowpass;
+                    const x = node.x, y = node.y, w = NODE_W, h = NODE_H;
+                    const hasInput = getConnectionsTo(node.id).length > 0;
+                    const hasOutput = getConnectionsFrom(node.id).length > 0;
+
+                    ctx.shadowColor = type.color + '40';
+                    ctx.shadowBlur = 20 / scale;
+                    const grad = ctx.createLinearGradient(x, y, x + w, y + h);
+                    grad.addColorStop(0, type.bg);
+                    grad.addColorStop(1, 'rgba(0,0,0,0.4)');
+                    ctx.fillStyle = grad;
+                    ctx.shadowBlur = 15 / scale;
+                    ctx.shadowColor = 'rgba(0,255,255,0.1)';
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, w, h, 8);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                    ctx.strokeStyle = hasInput || hasOutput ? type.color + '80' : type.color + '40';
+                    ctx.lineWidth = 1.5 / scale;
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, w, h, 8);
+                    ctx.stroke();
+
+                    if (selectedNodeId === node.id) {
+                        ctx.save();
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 2 / scale;
+                        ctx.setLineDash([4 / scale, 4 / scale]);
+                        ctx.beginPath();
+                        ctx.roundRect(x - 2 / scale, y - 2 / scale, w + 4 / scale, h + 4 / scale, 10);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+                    ctx.fillStyle = type.color;
+                    ctx.font = (10 / scale) + 'px Inter, system-ui, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(type.label, x + w / 2, y + h / 2 - 4 / scale);
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                    ctx.font = (7 / scale) + 'px monospace';
+                    ctx.fillText('#' + node.id, x + w / 2, y + h / 2 + 14 / scale);
+
+                    const outCount = getConnectionsFrom(node.id).length;
+                    if (outCount > 1) {
+                        ctx.fillStyle = 'rgba(255,200,100,0.5)';
+                        ctx.font = (7 / scale) + 'px monospace';
+                        ctx.textAlign = 'right';
+                        ctx.fillText('×' + outCount, x + w - 4 / scale, y + h - 4 / scale);
+                    }
+
+                    const pr = PORT_R / scale;
+                    ctx.beginPath();
+                    ctx.arc(x, y + h / 2, pr, 0, Math.PI * 2);
+                    ctx.fillStyle = hasInput ? 'rgba(34,211,238,0.5)' : 'rgba(34,211,238,0.2)';
+                    ctx.fill();
+                    ctx.strokeStyle = hasInput ? '#22d3ee' : 'rgba(34,211,238,0.4)';
+                    ctx.lineWidth = 1.5 / scale;
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(x + w, y + h / 2, pr, 0, Math.PI * 2);
+                    ctx.fillStyle = hasOutput ? 'rgba(244,114,182,0.5)' : 'rgba(244,114,182,0.2)';
+                    ctx.fill();
+                    ctx.strokeStyle = hasOutput ? '#f472b6' : 'rgba(244,114,182,0.4)';
+                    ctx.lineWidth = 1.5 / scale;
+                    ctx.stroke();
+                    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                    ctx.font = (6 / scale) + 'px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('in', x - 10 / scale, y + h / 2 + 2 / scale);
+                    ctx.fillText('out', x + w + 10 / scale, y + h / 2 + 2 / scale);
+                });
+
+                ctx.restore();
+                document.getElementById('nodeCount').textContent = nodes.length;
+                updateConnectionInfo();
+            }
+
+            if (!CanvasRenderingContext2D.prototype.roundRect) {
+                CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                    if (r > w / 2) r = w / 2;
+                    if (r > h / 2) r = h / 2;
+                    this.moveTo(x + r, y);
+                    this.arcTo(x + w, y, x + w, y + h, r);
+                    this.arcTo(x + w, y + h, x, y + h, r);
+                    this.arcTo(x, y + h, x, y, r);
+                    this.arcTo(x, y, x + w, y, r);
+                    return this;
+                };
+            }
+
+            function screenToCanvas(cx, cy) {
+                const rect = canvas.getBoundingClientRect();
+                const sx = (cx - rect.left) * (canvas.width / rect.width);
+                const sy = (cy - rect.top) * (canvas.height / rect.height);
+                return { x: (sx - offsetX) / scale, y: (sy - offsetY) / scale };
+            }
+            function hitTestNode(mx, my) {
+                for (let i = nodes.length - 1; i >= 0; i--) {
+                    const n = nodes[i];
+                    if (mx >= n.x && mx <= n.x + NODE_W && my >= n.y && my <= n.y + NODE_H) return n;
+                }
+                return null;
+            }
+            function hitTestPort(mx, my, node) {
+                const inP = { x: node.x, y: node.y + NODE_H / 2 };
+                const outP = { x: node.x + NODE_W, y: node.y + NODE_H / 2 };
+                const dIn = Math.hypot(mx - inP.x, my - inP.y);
+                const dOut = Math.hypot(mx - outP.x, my - outP.y);
+                const th = PORT_R + 12;
+                if (dIn < th) return 'in';
+                if (dOut < th) return 'out';
+                return null;
+            }
+
+            let dragState = null;
+            let connectState = null;
+
+            canvas.addEventListener('mousedown', function(e) {
+                const pos = screenToCanvas(e.clientX, e.clientY);
+                const node = hitTestNode(pos.x, pos.y);
+
+                if (e.button === 1 || (e.button === 0 && (e.ctrlKey || e.metaKey))) {
+                    isPanning = true;
+                    panStartX = e.clientX; panStartY = e.clientY;
+                    panOffsetX = offsetX; panOffsetY = offsetY;
+                    wrapper.classList.add('panning');
+                    canvas.style.cursor = 'grabbing';
+                    return;
+                }
+
+                if (node) {
+                    selectedNodeId = node.id;
+                    draw();
+                    const port = hitTestPort(pos.x, pos.y, node);
+
+                    if (e.shiftKey) {
+                        if (port === 'in') {
+                            const toRemove = connections.filter(c => c.to === node.id);
+                            toRemove.forEach(c => removeConnection(c.from, c.to));
+                            statusDisplay.textContent = 'удалены входящие соединения для #' + node.id;
+                            draw();
+                            return;
+                        } else if (port === 'out') {
+                            const toRemove = connections.filter(c => c.from === node.id);
+                            toRemove.forEach(c => removeConnection(c.from, c.to));
+                            statusDisplay.textContent = 'удалены исходящие соединения для #' + node.id;
+                            draw();
+                            return;
+                        }
+                        return;
+                    }
+
+                    if (port === 'out') {
+                        connectState = { fromNodeId: node.id, mouseX: pos.x, mouseY: pos.y };
+                        return;
+                    } else if (port === 'in') {
+                        if (connectState) {
+                            const fromNode = nodes.find(n => n.id === connectState.fromNodeId);
+                            if (fromNode && fromNode.id !== node.id) {
+                                if (addConnection(connectState.fromNodeId, node.id)) {
+                                    statusDisplay.textContent = 'соединение #' + connectState.fromNodeId + ' → #' + node.id;
+                                } else {
+                                    statusDisplay.textContent = 'соединение уже существует';
+                                }
+                            }
+                            connectState = null;
+                            draw();
+                            return;
+                        }
+                        return;
+                    }
+
+                    if (!connectState && !e.shiftKey) {
+                        dragState = { nodeId: node.id, offsetX: pos.x - node.x, offsetY: pos.y - node.y };
+                        canvas.style.cursor = 'grabbing';
+                    }
+                } else {
+                    selectedNodeId = null;
+                    draw();
+                }
+                if (connectState) { connectState = null; draw(); return; }
+            });
+
+            canvas.addEventListener('mousemove', function(e) {
+                const pos = screenToCanvas(e.clientX, e.clientY);
+                if (isPanning) {
+                    offsetX = panOffsetX + (e.clientX - panStartX);
+                    offsetY = panOffsetY + (e.clientY - panStartY);
+                    draw();
+                    return;
+                }
+                if (connectState) {
+                    connectState.mouseX = pos.x;
+                    connectState.mouseY = pos.y;
+                    draw();
+                    ctx.save();
+                    ctx.translate(offsetX, offsetY);
+                    ctx.scale(scale, scale);
+                    const from = nodes.find(n => n.id === connectState.fromNodeId);
+                    if (from) {
+                        const start = getPortPos(from, 'out');
+                        ctx.beginPath();
+                        ctx.moveTo(start.x, start.y);
+                        ctx.lineTo(connectState.mouseX, connectState.mouseY);
+                        ctx.strokeStyle = 'rgba(34,211,238,0.3)';
+                        ctx.lineWidth = 2 / scale;
+                        ctx.setLineDash([6 / scale, 6 / scale]);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    }
+                    ctx.restore();
+                    return;
+                }
+                if (dragState) {
+                    const node = nodes.find(n => n.id === dragState.nodeId);
+                    if (node) {
+                        let newX = pos.x - dragState.offsetX;
+                        let newY = pos.y - dragState.offsetY;
+                        newX = Math.max(0, Math.min(canvas.width / scale - NODE_W, newX));
+                        newY = Math.max(0, Math.min(canvas.height / scale - NODE_H, newY));
+                        if (!e.altKey) {
+                            newX = Math.round(newX / 10) * 10;
+                            newY = Math.round(newY / 10) * 10;
+                        }
+                        node.x = newX;
+                        node.y = newY;
+                        draw();
+                    }
+                    return;
+                }
+                const hoverNode = hitTestNode(pos.x, pos.y);
+                canvas.style.cursor = hoverNode ? 'grab' : 'default';
+            });
+
+            canvas.addEventListener('mouseup', function(e) {
+                if (isPanning) { isPanning = false; wrapper.classList.remove('panning'); canvas.style.cursor = 'default'; return; }
+                if (dragState) { dragState = null; canvas.style.cursor = 'default'; draw(); }
+                if (connectState) {
+                    const pos = screenToCanvas(e.clientX, e.clientY);
+                    const node = hitTestNode(pos.x, pos.y);
+                    if (node && node.id !== connectState.fromNodeId) {
+                        const port = hitTestPort(pos.x, pos.y, node);
+                        if (port === 'in') {
+                            if (addConnection(connectState.fromNodeId, node.id)) {
+                                statusDisplay.textContent = 'соединение #' + connectState.fromNodeId + ' → #' + node.id;
+                            }
+                        }
+                    }
+                    connectState = null;
+                    draw();
+                }
+            });
+
+            canvas.addEventListener('mouseleave', function() {
+                if (isPanning) { isPanning = false; wrapper.classList.remove('panning'); canvas.style.cursor = 'default'; }
+                if (dragState) { dragState = null; canvas.style.cursor = 'default'; }
+                if (connectState) { connectState = null; draw(); }
+            });
+
+            canvas.addEventListener('contextmenu', e => e.preventDefault());
+            canvas.addEventListener('dblclick', function(e) {
+                const pos = screenToCanvas(e.clientX, e.clientY);
+                const node = hitTestNode(pos.x, pos.y);
+                if (node) openModal(node);
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    if (modalNode) return;
+                    if (selectedNodeId !== null) {
+                        const nodeToDelete = nodes.find(n => n.id === selectedNodeId);
+                        if (nodeToDelete) {
+                            deleteNode(selectedNodeId);
+                            selectedNodeId = null;
+                            statusDisplay.textContent = 'узел удалён';
+                        }
+                    }
+                } else if (e.key === 'Escape') {
+                    closeModal();
+                    selectedNodeId = null;
+                    draw();
+                }
+            });
+
+            function setZoom(newScale, cx, cy) {
+                const old = scale;
+                scale = Math.max(0.2, Math.min(3, newScale));
+                if (cx !== undefined && cy !== undefined) {
+                    const rect = canvas.getBoundingClientRect();
+                    const cxx = (cx - rect.left) * (canvas.width / rect.width);
+                    const cyy = (cy - rect.top) * (canvas.height / rect.height);
+                    offsetX = cxx - (cxx - offsetX) * (scale / old);
+                    offsetY = cyy - (cyy - offsetY) * (scale / old);
+                }
+                document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%';
+                draw();
+            }
+            document.getElementById('zoomInBtn').addEventListener('click', () => setZoom(scale + 0.1));
+            document.getElementById('zoomOutBtn').addEventListener('click', () => setZoom(scale - 0.1));
+            document.getElementById('zoomResetBtn').addEventListener('click', () => { setZoom(1); offsetX = 0; offsetY = 0; draw(); });
+            canvas.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                setZoom(Math.max(0.2, Math.min(3, scale + delta)), e.clientX, e.clientY);
+            }, { passive: false });
+
+            function addNode(type, x, y) {
+                if (!nodeTypes[type]) return null;
+                const id = ++nodeIdCounter;
+                const count = nodes.length;
+                const px = x || (canvas.width / (2 * scale) - NODE_W / 2 + (count % 5) * (NODE_W + 40) - 200);
+                const py = y || (80 + Math.floor(count / 5) * (NODE_H + 40));
+                const node = {
+                    id, type,
+                    x: Math.max(0, Math.min(canvas.width / scale - NODE_W, px)),
+                    y: Math.max(0, Math.min(canvas.height / scale - NODE_H, py)),
+                    params: {}
+                };
+                const info = nodeTypes[type];
+                if (info && info.params) {
+                    Object.keys(info.params).forEach(k => { node.params[k] = info.params[k].default; });
+                }
+                nodes.push(node);
+                selectedNodeId = id;
+                draw();
+                return node;
+            }
+
+            function deleteNode(id) {
+                const node = nodes.find(n => n.id === id);
+                if (!node) return;
+                if (node.type === 'input' && nodes.length > 1) {
+                    statusDisplay.textContent = 'нельзя удалить входной узел';
+                    return;
+                }
+                removeConnectionsForNode(id);
+                nodes = nodes.filter(n => n.id !== id);
+                if (selectedNodeId === id) selectedNodeId = null;
+                if (modalNode && modalNode.id === id) closeModal();
+                draw();
+                statusDisplay.textContent = 'узел #' + id + ' удалён';
+            }
+
+            function clearAll() {
+                nodes = [];
+                connections = [];
+                connectState = null;
+                nodeIdCounter = 0;
+                selectedNodeId = null;
+                draw();
+                statusDisplay.textContent = 'всё очищено';
+            }
+
+            document.querySelectorAll('.node-btn[data-type]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const type = this.dataset.type;
+                    const node = addNode(type);
+                    if (node) statusDisplay.textContent = 'добавлен ' + nodeTypes[type].label + ' #' + node.id;
+                });
+            });
+
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                if (nodes.length === 0) return;
+                if (confirm('Удалить все узлы и соединения?')) clearAll();
+            });
+
+            // ---------- ПРЕСЕТЫ ----------
+            const presets = {
+                vocal: {
+                    name: 'Студийный вокал',
+                    nodes: [
+                        { type: 'input', x: 30, y: 250 },
+                        { type: 'highpass', x: 180, y: 200, params: { frequency: 80, Q: 1 } },
+                        { type: 'compressor', x: 330, y: 200, params: { threshold: -18, knee: 10, ratio: 3, attack: 0.005, release: 0.15 } },
+                        { type: 'peaking', x: 480, y: 200, params: { frequency: 3000, gain: 4, Q: 1.2 } },
+                        { type: 'reverb', x: 630, y: 200, params: { decay: 1.2, wet: 0.25, dry: 0.85 } },
+                        { type: 'output', x: 780, y: 250 }
+                    ],
+                    connections: [[1,2],[2,3],[3,4],[4,5],[5,6]]
+                },
+                warm: {
+                    name: 'Тёплый ламповый',
+                    nodes: [
+                        { type: 'input', x: 30, y: 250 },
+                        { type: 'lowshelf', x: 180, y: 200, params: { frequency: 200, gain: 3, Q: 1 } },
+                        { type: 'distortion', x: 330, y: 200, params: { drive: 0.2, wet: 0.3, dry: 0.7 } },
+                        { type: 'lowpass', x: 480, y: 200, params: { frequency: 12000, Q: 1 } },
+                        { type: 'output', x: 630, y: 250 }
+                    ],
+                    connections: [[1,2],[2,3],[3,4],[4,5]]
+                },
+                crystal: {
+                    name: 'Кристальная чистота',
+                    nodes: [
+                        { type: 'input', x: 30, y: 250 },
+                        { type: 'highpass', x: 180, y: 200, params: { frequency: 60, Q: 1 } },
+                        { type: 'compressor', x: 330, y: 200, params: { threshold: -30, knee: 5, ratio: 2, attack: 0.002, release: 0.1 } },
+                        { type: 'highshelf', x: 480, y: 200, params: { frequency: 8000, gain: 3, Q: 1 } },
+                        { type: 'output', x: 630, y: 250 }
+                    ],
+                    connections: [[1,2],[2,3],[3,4],[4,5]]
+                },
+                bass: {
+                    name: 'Мощный бас',
+                    nodes: [
+                        { type: 'input', x: 30, y: 250 },
+                        { type: 'lowpass', x: 180, y: 200, params: { frequency: 200, Q: 1 } },
+                        { type: 'compressor', x: 330, y: 200, params: { threshold: -20, knee: 15, ratio: 4, attack: 0.01, release: 0.2 } },
+                        { type: 'lowshelf', x: 480, y: 200, params: { frequency: 100, gain: 6, Q: 1 } },
+                        { type: 'output', x: 630, y: 250 }
+                    ],
+                    connections: [[1,2],[2,3],[3,4],[4,5]]
+                },
+                chorus: {
+                    name: 'Лёгкий хорус',
+                    nodes: [
+                        { type: 'input', x: 30, y: 250 },
+                        { type: 'chorus', x: 180, y: 200, params: { rate: 1.2, depth: 0.004, feedback: 0.15, wet: 0.35, dry: 0.75 } },
+                        { type: 'reverb', x: 330, y: 200, params: { decay: 1.8, wet: 0.3, dry: 0.8 } },
+                        { type: 'output', x: 480, y: 250 }
+                    ],
+                    connections: [[1,2],[2,3],[3,4]]
+                },
+                radio: {
+                    name: 'Радио-голос',
+                    nodes: [
+                        { type: 'input', x: 30, y: 250 },
+                        { type: 'highpass', x: 180, y: 200, params: { frequency: 200, Q: 1 } },
+                        { type: 'compressor', x: 330, y: 200, params: { threshold: -12, knee: 20, ratio: 5, attack: 0.001, release: 0.1 } },
+                        { type: 'distortion', x: 480, y: 200, params: { drive: 0.3, wet: 0.4, dry: 0.6 } },
+                        { type: 'lowpass', x: 630, y: 200, params: { frequency: 4000, Q: 1 } },
+                        { type: 'output', x: 780, y: 250 }
+                    ],
+                    connections: [[1,2],[2,3],[3,4],[4,5],[5,6]]
+                }
+            };
+
+            function applyPreset(presetKey) {
+                const preset = presets[presetKey];
+                if (!preset) return;
+                if (nodes.length > 0 && !confirm('Применить пресет? Все текущие узлы будут удалены.')) return;
+                clearAll();
+                const idMap = [];
+                preset.nodes.forEach((n, idx) => {
+                    const node = addNode(n.type, n.x, n.y);
+                    if (n.params) {
+                        Object.keys(n.params).forEach(k => { node.params[k] = n.params[k]; });
+                    }
+                    idMap[idx] = node.id;
+                });
+                preset.connections.forEach(conn => {
+                    addConnection(idMap[conn[0]-1], idMap[conn[1]-1]);
+                });
+                selectedNodeId = null;
+                draw();
+                statusDisplay.textContent = 'пресет "' + preset.name + '" применён';
+            }
+
+            document.getElementById('applyPresetBtn').addEventListener('click', function() {
+                const select = document.getElementById('presetSelect');
+                const key = select.value;
+                if (key) applyPreset(key);
+                else alert('Выберите пресет из списка');
+            });
+
+            // ---------- МОДАЛЬНОЕ ОКНО ----------
+            let modalNode = null;
+
+            function openModal(node) {
+                modalNode = node;
+                selectedNodeId = node.id;
+                draw();
+                const overlay = document.getElementById('modalOverlay');
+                const title = document.getElementById('modalTitle');
+                const body = document.getElementById('modalBody');
+                const info = nodeTypes[node.type];
+                title.innerHTML = '<i class="fas fa-sliders-h"></i> ' + info.label + ' #' + node.id;
+
+                let html = '';
+                if (info.params && Object.keys(info.params).length > 0) {
+                    Object.keys(info.params).forEach(key => {
+                        const p = info.params[key];
+                        const val = node.params[key] !== undefined ? node.params[key] : p.default;
+                        html += '<div class="param-group">';
+                        html += '<label>' + p.label + '</label>';
+                        html += '<input type="range" data-key="' + key + '" min="' + p.min + '" max="' + p.max +
+                            '" step="' + p.step + '" value="' + val + '" />';
+                        html += '<div class="param-value" id="paramVal_' + key + '">' + val + '</div>';
+                        html += '</div>';
+                    });
+                } else {
+                    html = '<p style="color:rgba(165,243,252,0.4);font-size:0.9rem;">Нет настраиваемых параметров</p>';
+                }
+                const inConns = getConnectionsTo(node.id);
+                const outConns = getConnectionsFrom(node.id);
+                html += '<div style="margin-top:1rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.05);font-size:0.75rem;color:rgba(165,243,252,0.4);">';
+                html += '<div>← входящие: ' + inConns.length + '</div>';
+                html += '<div>→ исходящие: ' + outConns.length + '</div>';
+                html += '</div>';
+
+                body.innerHTML = html;
+                body.querySelectorAll('input[type="range"]').forEach(inp => {
+                    inp.addEventListener('input', function() {
+                        const key = this.dataset.key;
+                        const val = parseFloat(this.value);
+                        const disp = document.getElementById('paramVal_' + key);
+                        if (disp) disp.textContent = val;
+                        if (modalNode) modalNode.params[key] = val;
+                    });
+                });
+                overlay.classList.add('active');
+            }
+
+            function closeModal() {
+                document.getElementById('modalOverlay').classList.remove('active');
+                modalNode = null;
+            }
+            document.getElementById('modalClose').addEventListener('click', closeModal);
+            document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === e.currentTarget) closeModal(); });
+            document.getElementById('modalApplyBtn').addEventListener('click', closeModal);
+            document.getElementById('modalDeleteBtn').addEventListener('click', function() {
+                if (modalNode) { const id = modalNode.id; closeModal(); deleteNode(id); }
+            });
+
+            // ============================================================
+            // 2. АУДИОДВИЖОК (с экспортом)
+            // ============================================================
+            let audioCtx = null;
+            let sourceNode = null;
+            let audioBuffer = null;
+            let isPlaying = false;
+            let isChainBuilt = false;
+            let chainNodes = [];
+            window._startNodeIds = [];
+            window._audioMap = {};
+            window._endNodeIds = [];
+
+            const fileInput = document.getElementById('fileInput');
+            const dropZone = document.getElementById('dropZone');
+            const fileNameEl = document.getElementById('fileName');
+            const durationDisplay = document.getElementById('durationDisplay');
+            const statusDisplay = document.getElementById('statusDisplay');
+            const playBtn = document.getElementById('playBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const exportWavBtn = document.getElementById('exportWavBtn');
+            const exportOggBtn = document.getElementById('exportOggBtn');
+            const exportMp3Btn = document.getElementById('exportMp3Btn');
+
+            function createBiquadFilter(ctx, type, params) {
+                const filter = ctx.createBiquadFilter();
+                filter.type = type;
+                filter.frequency.value = params.frequency || 1000;
+                filter.Q.value = params.Q || 1;
+                if (type === 'peaking' || type === 'lowshelf' || type === 'highshelf') filter.gain.value = params.gain || 0;
+                return filter;
+            }
+
+            function createEffectNode(ctx, type, params) {
+                const input = ctx.createGain();
+                const output = ctx.createGain();
+                let effect = null;
+
+                switch (type) {
+                    case 'reverb': {
+                        const convolver = ctx.createConvolver();
+                        const sr = ctx.sampleRate;
+                        const len = Math.floor(sr * (params.decay || 1.5));
+                        const impulse = ctx.createBuffer(2, len, sr);
+                        const L = impulse.getChannelData(0);
+                        const R = impulse.getChannelData(1);
+                        for (let i = 0; i < len; i++) {
+                            const n = i / len;
+                            const decay = Math.exp(-n * 3);
+                            const val = (Math.random() * 2 - 1) * decay;
+                            L[i] = val;
+                            R[i] = val * 0.8;
+                        }
+                        convolver.buffer = impulse;
+                        const wet = ctx.createGain(); wet.gain.value = params.wet !== undefined ? params.wet : 0.5;
+                        const dry = ctx.createGain(); dry.gain.value = params.dry !== undefined ? params.dry : 0.5;
+                        input.connect(convolver); input.connect(dry);
+                        convolver.connect(wet); wet.connect(output);
+                        dry.connect(output);
+                        effect = { input, output };
+                        break;
+                    }
+                    case 'delay':
+                    case 'echo': {
+                        const delay = ctx.createDelay(5.0);
+                        delay.delayTime.value = params.delayTime || 0.3;
+                        const feedback = ctx.createGain(); feedback.gain.value = params.feedback || 0.4;
+                        const wet = ctx.createGain(); wet.gain.value = params.wet !== undefined ? params.wet : 0.5;
+                        const dry = ctx.createGain(); dry.gain.value = params.dry !== undefined ? params.dry : 0.5;
+                        input.connect(delay); input.connect(dry);
+                        delay.connect(feedback); feedback.connect(delay);
+                        delay.connect(wet); wet.connect(output);
+                        dry.connect(output);
+                        effect = { input, output };
+                        break;
+                    }
+                    case 'chorus':
+                    case 'flanger': {
+                        const osc = ctx.createOscillator();
+                        osc.frequency.value = params.rate || 1.5;
+                        const depthGain = ctx.createGain(); depthGain.gain.value = params.depth || 0.005;
+                        const delay = ctx.createDelay(0.1); delay.delayTime.value = 0.005;
+                        const feedback = ctx.createGain(); feedback.gain.value = params.feedback || 0.2;
+                        const wet = ctx.createGain(); wet.gain.value = params.wet !== undefined ? params.wet : 0.5;
+                        const dry = ctx.createGain(); dry.gain.value = params.dry !== undefined ? params.dry : 0.5;
+                        osc.connect(depthGain); depthGain.connect(delay.delayTime); osc.start();
+                        input.connect(delay); input.connect(dry);
+                        delay.connect(feedback); feedback.connect(delay);
+                        delay.connect(wet); wet.connect(output);
+                        dry.connect(output);
+                        effect = { input, output, oscillator: osc };
+                        break;
+                    }
+                    case 'phaser': {
+                        const osc = ctx.createOscillator();
+                        osc.frequency.value = params.rate || 0.5;
+                        const depthGain = ctx.createGain(); depthGain.gain.value = params.depth || 0.005;
+                        const filter = ctx.createBiquadFilter(); filter.type = 'allpass'; filter.frequency.value = 800;
+                        const feedback = ctx.createGain(); feedback.gain.value = params.feedback || 0.3;
+                        const wet = ctx.createGain(); wet.gain.value = params.wet !== undefined ? params.wet : 0.4;
+                        const dry = ctx.createGain(); dry.gain.value = params.dry !== undefined ? params.dry : 0.6;
+                        osc.connect(depthGain); depthGain.connect(filter.frequency); osc.start();
+                        input.connect(filter); input.connect(dry);
+                        filter.connect(feedback); feedback.connect(filter);
+                        filter.connect(wet); wet.connect(output);
+                        dry.connect(output);
+                        effect = { input, output, oscillator: osc };
+                        break;
+                    }
+                    case 'tremolo': {
+                        const osc = ctx.createOscillator();
+                        osc.frequency.value = params.rate || 5;
+                        const modGain = ctx.createGain(); modGain.gain.value = 0.5;
+                        const gainNode = ctx.createGain(); gainNode.gain.value = 1;
+                        osc.connect(modGain); modGain.connect(gainNode.gain); osc.start();
+                        input.connect(gainNode); gainNode.connect(output);
+                        effect = { input, output, oscillator: osc };
+                        break;
+                    }
+                    case 'vibrato': {
+                        const osc = ctx.createOscillator();
+                        osc.frequency.value = params.rate || 5;
+                        const depthGain = ctx.createGain(); depthGain.gain.value = params.depth || 0.005;
+                        const delay = ctx.createDelay(0.02); delay.delayTime.value = 0.005;
+                        osc.connect(depthGain); depthGain.connect(delay.delayTime); osc.start();
+                        input.connect(delay); delay.connect(output);
+                        effect = { input, output, oscillator: osc };
+                        break;
+                    }
+                    case 'compressor': {
+                        const comp = ctx.createDynamicsCompressor();
+                        comp.threshold.value = params.threshold !== undefined ? params.threshold : -24;
+                        comp.knee.value = params.knee !== undefined ? params.knee : 30;
+                        comp.ratio.value = params.ratio !== undefined ? params.ratio : 12;
+                        comp.attack.value = params.attack !== undefined ? params.attack : 0.003;
+                        comp.release.value = params.release !== undefined ? params.release : 0.25;
+                        input.connect(comp); comp.connect(output);
+                        effect = { input, output };
+                        break;
+                    }
+                    case 'distortion': {
+                        const waveshaper = ctx.createWaveShaper();
+                        const drive = params.drive !== undefined ? params.drive : 0.5;
+                        const wet = ctx.createGain(); wet.gain.value = params.wet !== undefined ? params.wet : 0.5;
+                        const dry = ctx.createGain(); dry.gain.value = params.dry !== undefined ? params.dry : 0.5;
+                        const curveLength = 44100;
+                        const curve = new Float32Array(curveLength);
+                        for (let j = 0; j < curveLength; j++) {
+                            const x = (j / curveLength) * 2 - 1;
+                            const k = drive * 2;
+                            curve[j] = (1 + k) * x / (1 + k * Math.abs(x));
+                        }
+                        waveshaper.curve = curve;
+                        waveshaper.oversample = '4x';
+                        input.connect(waveshaper); input.connect(dry);
+                        waveshaper.connect(wet); wet.connect(output);
+                        dry.connect(output);
+                        effect = { input, output };
+                        break;
+                    }
+                    default: return null;
+                }
+                return effect;
+            }
+
+            function createAudioNodeForType(type, params) {
+                const ctx = audioCtx;
+                if (type === 'gain') {
+                    const gain = ctx.createGain();
+                    gain.gain.value = Math.pow(10, (params.gain || 0) / 20);
+                    return { input: gain, output: gain };
+                }
+                const effectTypes = ['reverb','delay','echo','chorus','flanger','phaser','tremolo','vibrato','compressor','distortion'];
+                if (effectTypes.includes(type)) return createEffectNode(ctx, type, params);
+                const filter = createBiquadFilter(ctx, type, params);
+                return { input: filter, output: filter };
+            }
+
+            function buildChain() {
+                if (!audioCtx || !audioBuffer) {
+                    statusDisplay.textContent = 'сначала загрузите аудио';
+                    return false;
+                }
+                const inputNode = nodes.find(n => n.type === 'input');
+                const outputNode = nodes.find(n => n.type === 'output');
+                if (!inputNode || !outputNode) {
+                    statusDisplay.textContent = 'добавьте узлы "Вход" и "Выход"';
+                    return false;
+                }
+                chainNodes.forEach(item => {
+                    if (item.audioNode && item.audioNode.oscillator) {
+                        try { item.audioNode.oscillator.stop(); item.audioNode.oscillator.disconnect(); } catch(e) {}
+                    }
+                });
+                chainNodes = [];
+
+                const audioMap = {};
+                nodes.forEach(node => {
+                    if (node.type === 'input' || node.type === 'output') return;
+                    const audio = createAudioNodeForType(node.type, node.params);
+                    if (audio) audioMap[node.id] = audio;
+                });
+
+                if (Object.keys(audioMap).length === 0) {
+                    statusDisplay.textContent = 'нет обрабатываемых узлов';
+                    return false;
+                }
+
+                const outgoing = {};
+                connections.forEach(c => {
+                    if (!outgoing[c.from]) outgoing[c.from] = [];
+                    outgoing[c.from].push(c.to);
+                });
+
+                connections.forEach(conn => {
+                    const fromAudio = audioMap[conn.from];
+                    const toAudio = audioMap[conn.to];
+                    if (fromAudio && toAudio) {
+                        fromAudio.output.connect(toAudio.input);
+                    } else if (fromAudio && conn.to === outputNode.id) {
+                        fromAudio.output.connect(audioCtx.destination);
+                    }
+                });
+
+                let startNodeIds = [];
+                const hasIncoming = new Set();
+                connections.forEach(c => {
+                    if (c.from !== inputNode.id && c.to !== outputNode.id) hasIncoming.add(c.to);
+                });
+                Object.keys(audioMap).forEach(id => {
+                    if (!hasIncoming.has(parseInt(id))) startNodeIds.push(parseInt(id));
+                });
+                if (startNodeIds.length === 0) startNodeIds = Object.keys(audioMap).map(Number);
+
+                let endNodeIds = [];
+                const hasOutgoing = new Set(Object.keys(outgoing));
+                Object.keys(audioMap).forEach(id => {
+                    if (!hasOutgoing.has(parseInt(id))) endNodeIds.push(parseInt(id));
+                });
+                if (endNodeIds.length === 0) endNodeIds = Object.keys(audioMap).map(Number);
+
+                endNodeIds.forEach(id => {
+                    const hasExplicitOutputConnection = connections.some(c => c.from === id && c.to === outputNode.id);
+                    if (!hasExplicitOutputConnection) audioMap[id].output.connect(audioCtx.destination);
+                });
+
+                chainNodes = Object.keys(audioMap).map(id => ({
+                    nodeId: parseInt(id),
+                    audioNode: audioMap[id],
+                    type: nodes.find(n => n.id === parseInt(id)).type
+                }));
+                window._startNodeIds = startNodeIds;
+                window._audioMap = audioMap;
+                window._endNodeIds = endNodeIds;
+
+                isChainBuilt = true;
+                statusDisplay.textContent = `цепочка применена (${chainNodes.length} узлов, ${startNodeIds.length} входов)`;
+                draw();
+                return true;
+            }
+
+            function playWithChain() {
+                if (!audioCtx || !audioBuffer) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (sourceNode) { try { sourceNode.stop(); sourceNode.disconnect(); } catch(e) {} sourceNode = null; }
+
+                if (!isChainBuilt || chainNodes.length === 0) {
+                    statusDisplay.textContent = 'сначала примените цепочку';
+                    return;
+                }
+
+                const startNodeIds = window._startNodeIds || [];
+                if (startNodeIds.length === 0) {
+                    statusDisplay.textContent = 'не найдены стартовые узлы';
+                    return;
+                }
+
+                sourceNode = audioCtx.createBufferSource();
+                sourceNode.buffer = audioBuffer;
+                const audioMap = window._audioMap || {};
+                startNodeIds.forEach(id => {
+                    const audio = audioMap[id];
+                    if (audio) try { sourceNode.connect(audio.input); } catch(e) { console.error(e); }
+                });
+                sourceNode.start(0);
+                isPlaying = true;
+                playBtn.innerHTML = '<i class="fas fa-pause"></i> <span>Пауза</span>';
+                statusDisplay.textContent = 'воспроизведение';
+                sourceNode.onended = function() {
+                    if (isPlaying) {
+                        isPlaying = false;
+                        playBtn.innerHTML = '<i class="fas fa-play"></i> <span>Воспроизвести</span>';
+                        statusDisplay.textContent = 'воспроизведение завершено';
+                    }
+                    sourceNode = null;
+                };
+            }
+
+            function togglePlay() {
+                if (!audioCtx || !audioBuffer) return;
+                if (isPlaying) {
+                    if (sourceNode) { try { sourceNode.stop(); sourceNode.disconnect(); } catch(e) {} sourceNode = null; }
+                    isPlaying = false;
+                    playBtn.innerHTML = '<i class="fas fa-play"></i> <span>Воспроизвести</span>';
+                    statusDisplay.textContent = 'на паузе';
+                    return;
+                }
+                playWithChain();
+            }
+
+            function loadAudio(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const ab = e.target.result;
+                        if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                        audioBuffer = await audioCtx.decodeAudioData(ab);
+                        const dur = audioBuffer.duration;
+                        const min = Math.floor(dur / 60);
+                        const sec = Math.floor(dur % 60);
+                        durationDisplay.textContent = min + ':' + sec.toString().padStart(2, '0');
+                        statusDisplay.textContent = 'загружен';
+                        fileNameEl.textContent = file.name;
+                        playBtn.disabled = false;
+                        resetBtn.disabled = false;
+                        exportWavBtn.disabled = false;
+                        exportOggBtn.disabled = false;
+                        exportMp3Btn.disabled = false;
+                        isChainBuilt = false;
+                        chainNodes = [];
+                        if (sourceNode) { try { sourceNode.stop(); sourceNode.disconnect(); } catch(e) {} }
+                        sourceNode = null;
+                        isPlaying = false;
+                        playBtn.innerHTML = '<i class="fas fa-play"></i> <span>Воспроизвести</span>';
+                    } catch (err) {
+                        console.error(err);
+                        statusDisplay.textContent = 'ошибка декодирования';
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            document.getElementById('applyChainBtn').addEventListener('click', buildChain);
+            playBtn.addEventListener('click', togglePlay);
+            resetBtn.addEventListener('click', function() {
+                if (audioCtx && audioBuffer) {
+                    if (sourceNode) { try { sourceNode.stop(); sourceNode.disconnect(); } catch(e) {} }
+                    sourceNode = null;
+                    isPlaying = false;
+                    playBtn.innerHTML = '<i class="fas fa-play"></i> <span>Воспроизвести</span>';
+                    isChainBuilt = false;
+                    chainNodes = [];
+                    statusDisplay.textContent = 'сброшено';
+                }
+            });
+
+            // ---------- ЭКСПОРТ ----------
+            function getOutputNodes() {
+                const outputNode = nodes.find(n => n.type === 'output');
+                const endNodeIds = window._endNodeIds || [];
+                if (endNodeIds.length === 0) return [];
+                return endNodeIds.filter(id => {
+                    const audio = window._audioMap[id];
+                    return audio && !connections.some(c => c.from === id && c.to === outputNode.id);
+                });
+            }
+
+            function exportWAV() {
+                if (!audioCtx || !audioBuffer || !isChainBuilt || chainNodes.length === 0) {
+                    statusDisplay.textContent = 'сначала загрузите аудио и примените цепочку';
+                    return;
+                }
+                const sampleRate = audioCtx.sampleRate;
+                const length = Math.ceil(audioBuffer.duration * sampleRate);
+                const offlineCtx = new OfflineAudioContext(2, length, sampleRate);
+                const source = offlineCtx.createBufferSource();
+                source.buffer = audioBuffer;
+
+                // Создаем цепочку в офлайн-контексте
+                const offlineMap = {};
+                nodes.forEach(node => {
+                    if (node.type === 'input' || node.type === 'output') return;
+                    const ctx = offlineCtx;
+                    let audioNode;
+                    const type = node.type;
+                    if (type === 'gain') {
+                        const gain = ctx.createGain();
+                        gain.gain.value = Math.pow(10, (node.params.gain || 0) / 20);
+                        audioNode = { input: gain, output: gain };
+                    } else if (['reverb','delay','echo','chorus','flanger','phaser','tremolo','vibrato','compressor','distortion'].includes(type)) {
+                        audioNode = createEffectNode(ctx, type, node.params);
+                    } else {
+                        const filter = createBiquadFilter(ctx, type, node.params);
+                        audioNode = { input: filter, output: filter };
+                    }
+                    if (audioNode) offlineMap[node.id] = audioNode;
+                });
+
+                const inputNode = nodes.find(n => n.type === 'input');
+                const outputNode = nodes.find(n => n.type === 'output');
+
+                connections.forEach(conn => {
+                    const fromAudio = offlineMap[conn.from];
+                    const toAudio = offlineMap[conn.to];
+                    if (fromAudio && toAudio) {
+                        fromAudio.output.connect(toAudio.input);
+                    } else if (fromAudio && conn.to === outputNode.id) {
+                        fromAudio.output.connect(offlineCtx.destination);
+                    }
+                });
+
+                let startIds = [];
+                const hasIncoming = new Set();
+                connections.forEach(c => { if (c.from !== inputNode.id && c.to !== outputNode.id) hasIncoming.add(c.to); });
+                Object.keys(offlineMap).forEach(id => { if (!hasIncoming.has(parseInt(id))) startIds.push(parseInt(id)); });
+                if (startIds.length === 0) startIds = Object.keys(offlineMap).map(Number);
+
+                startIds.forEach(id => source.connect(offlineMap[id].input));
+                // Если цепочка не содержит узлов, подключаем напрямую
+                if (startIds.length === 0) source.connect(offlineCtx.destination);
+
+                source.start(0);
+                offlineCtx.startRendering().then(renderedBuffer => {
+                    const wav = audioBufferToWav(renderedBuffer);
+                    const blob = new Blob([wav], { type: 'audio/wav' });
+                    downloadBlob(blob, 'processed.wav');
+                    statusDisplay.textContent = 'WAV экспортирован';
+                }).catch(err => {
+                    console.error(err);
+                    statusDisplay.textContent = 'ошибка экспорта WAV';
+                });
+            }
+
+            function exportOGG() {
+                exportWithMediaRecorder('audio/ogg; codecs=opus', 'processed.ogg');
+            }
+            function exportMP3() {
+                exportWithMediaRecorder('audio/mpeg', 'processed.mp3');
+            }
+
+            function exportWithMediaRecorder(mimeType, filename) {
+                if (!audioCtx || !audioBuffer || !isChainBuilt || chainNodes.length === 0) {
+                    statusDisplay.textContent = 'сначала загрузите аудио и примените цепочку';
+                    return;
+                }
+                if (!window.MediaRecorder) {
+                    alert('MediaRecorder не поддерживается в этом браузере');
+                    return;
+                }
+                let actualType = mimeType;
+                if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    // Попытка альтернативных типов
+                    const alternatives = [
+                        'audio/webm; codecs=opus',
+                        'audio/ogg; codecs=opus',
+                        'audio/mp4',
+                        'audio/webm',
+                        'audio/ogg'
+                    ];
+                    actualType = alternatives.find(t => MediaRecorder.isTypeSupported(t));
+                    if (!actualType) {
+                        alert('Ни один формат для ' + mimeType + ' не поддерживается. Используйте WAV.');
+                        return;
+                    }
+                }
+
+                const dest = audioCtx.createMediaStreamDestination();
+                const endNodes = getOutputNodes();
+                const audioMap = window._audioMap || {};
+                const outputNode = nodes.find(n => n.type === 'output');
+
+                // Подключаем конечные узлы к MediaStreamDestination
+                endNodes.forEach(id => {
+                    const audio = audioMap[id];
+                    if (audio) {
+                        try { audio.output.connect(dest); } catch(e) {}
+                    }
+                });
+                // Также если есть явные соединения к выходу, они уже подключены к обычному destination, но их также нужно к MediaStream
+                connections.filter(c => c.to === outputNode.id).forEach(c => {
+                    const fromAudio = audioMap[c.from];
+                    if (fromAudio) {
+                        try { fromAudio.output.connect(dest); } catch(e) {}
+                    }
+                });
+
+                const recorder = new MediaRecorder(dest.stream, { mimeType: actualType });
+                const chunks = [];
+                recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+                recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: actualType });
+                    downloadBlob(blob, filename);
+                    statusDisplay.textContent = filename.split('.')[1].toUpperCase() + ' экспортирован';
+                };
+
+                // Создаем источник и запускаем
+                const source = audioCtx.createBufferSource();
+                source.buffer = audioBuffer;
+                const startNodeIds = window._startNodeIds || [];
+                startNodeIds.forEach(id => {
+                    const audio = audioMap[id];
+                    if (audio) try { source.connect(audio.input); } catch(e) {}
+                });
+
+                source.connect(audioCtx.destination); // чтобы слышать тоже
+                recorder.start();
+                source.start(0);
+                source.onended = () => {
+                    setTimeout(() => recorder.stop(), 100); // небольшая задержка для хвоста
+                };
+                statusDisplay.textContent = 'Запись началась...';
+            }
+
+            function audioBufferToWav(buffer) {
+                const numChannels = buffer.numberOfChannels;
+                const sampleRate = buffer.sampleRate;
+                const length = buffer.length * numChannels * 2 + 44;
+                const arrayBuffer = new ArrayBuffer(length);
+                const view = new DataView(arrayBuffer);
+                // RIFF header
+                writeString(view, 0, 'RIFF');
+                view.setUint32(4, length - 8, true);
+                writeString(view, 8, 'WAVE');
+                // fmt chunk
+                writeString(view, 12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, numChannels, true);
+                view.setUint32(24, sampleRate, true);
+                view.setUint32(28, sampleRate * numChannels * 2, true);
+                view.setUint16(32, numChannels * 2, true);
+                view.setUint16(34, 16, true);
+                // data chunk
+                writeString(view, 36, 'data');
+                view.setUint32(40, length - 44, true);
+                let offset = 44;
+                for (let i = 0; i < buffer.length; i++) {
+                    for (let ch = 0; ch < numChannels; ch++) {
+                        const sample = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
+                        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                        offset += 2;
+                    }
+                }
+                return arrayBuffer;
+            }
+
+            function writeString(view, offset, str) {
+                for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+            }
+
+            function downloadBlob(blob, filename) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            exportWavBtn.addEventListener('click', exportWAV);
+            exportOggBtn.addEventListener('click', exportOGG);
+            exportMp3Btn.addEventListener('click', exportMP3);
+
+            // ---------- FILE DROP ----------
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.borderColor = '#0cf'; });
+            dropZone.addEventListener('dragleave', () => dropZone.style.borderColor = 'rgba(0,255,255,0.3)');
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.style.borderColor = 'rgba(0,255,255,0.3)';
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    loadAudio(e.dataTransfer.files[0]);
+                }
+            });
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length) loadAudio(e.target.files[0]);
+                e.target.value = '';
+            });
+
+            // ---------- RESIZE ----------
+            function resizeCanvas() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                const w = rect.width || 1200;
+                const h = Math.max(450, rect.height || 500);
+                canvas.width = w;
+                canvas.height = h;
+                canvas.style.width = w + 'px';
+                canvas.style.height = h + 'px';
+                draw();
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // ---------- ДЕМО-ЦЕПОЧКА ----------
+            const demoNodes = [
+                { type: 'input', x: 30, y: 200 },
+                { type: 'lowpass', x: 200, y: 80 },
+                { type: 'highpass', x: 200, y: 200 },
+                { type: 'peaking', x: 200, y: 320 },
+                { type: 'delay', x: 380, y: 80 },
+                { type: 'chorus', x: 380, y: 320 },
+                { type: 'output', x: 580, y: 200 }
+            ];
+            const addedDemoNodes = [];
+            demoNodes.forEach(n => {
+                const node = addNode(n.type, n.x, n.y);
+                if (node) addedDemoNodes.push(node);
+            });
+            if (addedDemoNodes.length >= 7) {
+                addConnection(addedDemoNodes[0].id, addedDemoNodes[1].id);
+                addConnection(addedDemoNodes[1].id, addedDemoNodes[2].id);
+                addConnection(addedDemoNodes[2].id, addedDemoNodes[3].id);
+                addConnection(addedDemoNodes[3].id, addedDemoNodes[4].id);
+                addConnection(addedDemoNodes[4].id, addedDemoNodes[5].id);
+                addConnection(addedDemoNodes[5].id, addedDemoNodes[6].id);
+            }
+            selectedNodeId = null;
+            draw();
+
+            console.log('NEON STUDIO PRO — пресеты и экспорт добавлены');
+        })();
+    </script>
+</body>
+</html>
