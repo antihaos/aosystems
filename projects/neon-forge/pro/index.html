@@ -1,10 +1,11 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>NEONFORGE — студийный аудио-энхансер</title>
-<meta name="description" content="Локальная студийная обработка аудио и видеодорожек: визуальный конструктор цепи с пан/зумом, модули с параметрами, пресеты, экспорт WAV / MP3 / OGG и ремукс видео.">
+<meta name="description" content="Локальная студийная обработка аудио и видеодорожек: модульный конструктор цепи с палитрой из 15 процессоров, пан/зум, пресеты, экспорт WAV / MP3 / OGG и ремукс видео.">
 
 <!-- Шрифты (fontsource CDN) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5/index.css">
@@ -105,6 +106,36 @@ tailwind.config = {
   }
   .tbtn:hover{ color:#00F0FF; background:rgba(0,240,255,.08); box-shadow:0 0 12px rgba(0,240,255,.25); }
   .tbtn:active{ transform:scale(.9); }
+  .tbtn.lit{ color:#00F0FF; background:rgba(0,240,255,.1); box-shadow:0 0 12px rgba(0,240,255,.3); }
+
+  /* ---------- палитра модулей ---------- */
+  #palette{ transition:transform .28s ease,opacity .28s ease; }
+  .palette-hidden{ transform:translateX(-112%); opacity:0; pointer-events:none; }
+  .pal-group{
+    font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.18em;
+    text-transform:uppercase; color:#64748B; padding:7px 4px 3px;
+  }
+  .pal-item{
+    display:flex; align-items:center; gap:8px; padding:7px 9px;
+    border-radius:9px; border:1px solid rgba(148,163,184,.14);
+    background:rgba(255,255,255,.02); font-size:12px; color:#cbd5e1;
+    cursor:grab; transition:.2s; user-select:none; -webkit-user-select:none; touch-action:pan-y;
+  }
+  .pal-item:hover{
+    border-color:var(--acc,#00F0FF); color:#fff;
+    box-shadow:0 0 14px color-mix(in srgb, var(--acc,#00F0FF) 30%, transparent);
+    background:color-mix(in srgb, var(--acc,#00F0FF) 7%, transparent);
+  }
+  .pal-item:active{ cursor:grabbing; transform:scale(.97); }
+  .pal-dot{ width:7px; height:7px; border-radius:50%; flex:none; }
+  .pal-plus{ font-family:'JetBrains Mono',monospace; font-size:11px; color:#64748b; }
+  .pal-item:hover .pal-plus{ color:#00F0FF; }
+  .pal-ghost{
+    position:fixed; z-index:70; pointer-events:none; transform:translate(-50%,-130%);
+    padding:6px 12px; border-radius:10px; background:rgba(10,14,24,.95);
+    border:1.5px solid #00F0FF; color:#fff; font-size:12px; font-weight:600;
+    box-shadow:0 8px 30px rgba(0,0,0,.55), 0 0 18px rgba(0,240,255,.35);
+  }
 
   @keyframes pulseGlow{ 0%,100%{ box-shadow:0 0 16px rgba(0,240,255,.45);} 50%{ box-shadow:0 0 36px rgba(0,240,255,.85);} }
   .play-btn.playing{ animation:pulseGlow 1.6s ease-in-out infinite; }
@@ -172,7 +203,7 @@ tailwind.config = {
         <span id="state-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
         <span id="ctx-state" class="font-mono text-xs text-slate-400">ожидание</span>
       </div>
-      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.6</div>
+      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.7</div>
     </div>
   </div>
 </header>
@@ -189,9 +220,9 @@ tailwind.config = {
         Студийный звук —<br>даже <span class="bg-gradient-to-r from-neon-cyan via-neon-violet to-neon-magenta bg-clip-text text-transparent">для вашего видео</span>
       </h1>
       <p class="mt-6 text-slate-400 text-lg max-w-xl mx-auto">
-        Загрузите аудио или видеофайл: для видео мы обработаем звуковую дорожку и сохраним ролик
-        с улучшенным звуком, не перекодируя картинку. Собирайте цепь фильтров на холсте,
-        выбирайте пресеты, экспортируйте в WAV, MP3, OGG или обратно в видео.
+        Загрузите аудио или видеофайл, соберите цепь из 15 модулей обработки на холсте,
+        настройте параметры и экспортируйте результат в WAV, MP3, OGG — или сохраните видео
+        с улучшенным звуком без перекодирования картинки.
       </p>
 
       <div id="drop" class="mt-12 cursor-pointer rounded-3xl border-2 border-dashed border-white/15 bg-ink-900/60 p-10 md:p-14 transition hover:border-neon-cyan/60 hover:bg-neon-cyan/[0.03]">
@@ -212,14 +243,12 @@ tailwind.config = {
 
       <div class="mt-10 flex flex-wrap justify-center gap-2">
         <span class="chip pointer-events-none">🎬 Видео-режим</span>
-        <span class="chip pointer-events-none">🔗 Конструктор цепи</span>
-        <span class="chip pointer-events-none">🎚 Гейт</span>
-        <span class="chip pointer-events-none">🎛 Эквалайзер</span>
-        <span class="chip pointer-events-none">✨ Де-эссер</span>
-        <span class="chip pointer-events-none">🗜 Компрессор</span>
-        <span class="chip pointer-events-none">🌊 Реверберация</span>
-        <span class="chip pointer-events-none">🎧 Стерео M/S</span>
-        <span class="chip pointer-events-none">🧱 Лимитер</span>
+        <span class="chip pointer-events-none">🔗 15 модулей обработки</span>
+        <span class="chip pointer-events-none">🧩 Палитра и конструктор</span>
+        <span class="chip pointer-events-none">🎛 Эквалайзеры</span>
+        <span class="chip pointer-events-none">🗜 Динамика</span>
+        <span class="chip pointer-events-none">🌊 Пространство</span>
+        <span class="chip pointer-events-none">📼 Сатурация</span>
         <span class="chip pointer-events-none">💾 WAV / MP3 / OGG / видео</span>
       </div>
     </div>
@@ -287,7 +316,18 @@ tailwind.config = {
       </div>
 
       <div class="relative rounded-xl border border-white/5 bg-ink-950/70 overflow-hidden">
-        <canvas id="patch" class="block w-full h-80 md:h-[400px] touch-none select-none"></canvas>
+        <canvas id="patch" class="block w-full h-80 md:h-[420px] touch-none select-none"></canvas>
+
+        <!-- палитра модулей -->
+        <button id="btn-palette" class="tbtn absolute top-2.5 left-2.5 z-20 border border-white/10 bg-ink-950/85 backdrop-blur" title="Панель модулей">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h11"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg>
+        </button>
+        <div id="palette" class="palette-hidden absolute left-2.5 top-12 bottom-2.5 w-44 z-10 rounded-xl border border-white/10 bg-ink-950/95 backdrop-blur flex flex-col shadow-[0_8px_40px_rgba(0,0,0,.5)]">
+          <div class="px-3 pt-3 pb-1 font-mono text-[10px] tracking-[0.22em] text-slate-500 uppercase">Модули</div>
+          <div id="palette-list" class="flex-1 overflow-y-auto px-2.5 pb-2 space-y-1.5"></div>
+          <div class="px-3 py-2 border-t border-white/5 font-mono text-[9px] text-slate-600 leading-relaxed">клик — добавить в центр<br>перетаскивание — в нужное место</div>
+        </div>
+
         <!-- панель управления видом -->
         <div class="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-xl border border-white/10 bg-ink-950/85 backdrop-blur px-1.5 py-1.5 shadow-[0_4px_24px_rgba(0,0,0,.5)]">
           <button id="btn-zoom-out" class="tbtn" title="Уменьшить" aria-label="Уменьшить">
@@ -306,13 +346,13 @@ tailwind.config = {
       </div>
 
       <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[10px] text-slate-600">
-        <span>◦ колесо мыши / пинч — масштаб</span>
-        <span>◦ тяните фон — перемещение вида</span>
-        <span>◦ перетаскивайте узлы</span>
-        <span>◦ тяните от выхода ● к входу ● — кабель</span>
+        <span>◦ панель слева — добавить модуль</span>
+        <span>◦ × на узле / Del — удалить</span>
+        <span>◦ колесо / пинч — масштаб</span>
+        <span>◦ тяните фон — обзор</span>
+        <span>◦ тяните от ● к ● — кабель</span>
         <span>◦ клик по узлу — параметры</span>
         <span>◦ двойной клик — вкл/выкл</span>
-        <span>◦ клик по кабелю + Del — удалить</span>
       </div>
     </div>
 
@@ -354,7 +394,7 @@ tailwind.config = {
         <button class="chip" data-preset="Lo-Fi ретро">📼 Lo-Fi ретро</button>
         <button class="chip" data-preset="Чистый сигнал">⭕ Чистый сигнал</button>
       </div>
-      <div class="mt-3 font-mono text-[10px] text-slate-600">Пресет настраивает параметры модулей — открыть их можно кликом по узлу на патч-холсте.</div>
+      <div class="mt-3 font-mono text-[10px] text-slate-600">Пресет собирает готовую цепь модулей — параметры каждого можно менять кликом по узлу.</div>
     </div>
 
     <div class="card p-6 grid lg:grid-cols-3 gap-8 items-start">
@@ -459,7 +499,10 @@ tailwind.config = {
     </div>
     <div id="modal-body" class="p-6 space-y-5 max-h-[62vh] overflow-y-auto"></div>
     <div class="flex items-center justify-between gap-3 px-6 py-3.5 border-t border-white/5">
-      <button id="m-reset" class="btn-ghost !py-1.5 !px-3 text-xs">⟲ Сброс модуля</button>
+      <div class="flex items-center gap-2">
+        <button id="m-reset" class="btn-ghost !py-1.5 !px-3 text-xs">⟲ Сброс</button>
+        <button id="m-delete" class="btn-ghost !py-1.5 !px-3 text-xs hidden !text-neon-magenta !border-neon-magenta/40 hover:!border-neon-magenta">✕ Удалить</button>
+      </div>
       <span class="font-mono text-[10px] text-slate-600 text-right">изменения применяются на лету · Esc — закрыть</span>
     </div>
   </div>
@@ -489,7 +532,7 @@ tailwind.config = {
 <script>
 /* ============================================================
    NEONFORGE — студийный аудио/видео энхансер (SPA, один файл)
-   Патч-движок с камерой: пан / зум / автомасштаб / мультитач
+   Модульный патч-движок: 15 процессоров, палитра, камера
    ============================================================ */
 'use strict';
 
@@ -501,6 +544,7 @@ const lin2db = l => 20*Math.log10(Math.max(l,1e-9));
 const getPath = (o,p)=>p.split('.').reduce((a,k)=>a[k],o);
 const setPath = (o,p,v)=>{const ks=p.split('.');const last=ks.pop();ks.reduce((a,k)=>a[k],o)[last]=v;};
 const deepAssign=(t,s)=>{for(const k in s){if(s[k]&&typeof s[k]==='object'){t[k]=t[k]||{};deepAssign(t[k],s[k]);}else t[k]=s[k];}return t;};
+const cloneJSON=o=>JSON.parse(JSON.stringify(o));
 
 const fmtDb = v=>`${v>0?'+':''}${(Math.round(v*10)/10).toString().replace('.',',')} дБ`;
 const fmtHz = v=>v>=1000?`${(v/1000).toFixed(2).replace('.',',')} кГц`:`${Math.round(v)} Гц`;
@@ -509,6 +553,7 @@ const fmtPct= v=>`${Math.round(v)}%`;
 const fmtSec= v=>`${(Math.round(v*10)/10).toString().replace('.',',')} с`;
 const fmtX  = v=>`${(Math.round(v*10)/10).toString().replace('.',',')}:1`;
 const fmtQ  = v=>v.toFixed(1).replace('.',',');
+const fmtRate=v=>`${v.toFixed(1).replace('.',',')} Гц`;
 const fmtMB = b=>`${(b/1048576).toFixed(1).replace('.',',')} МБ`;
 const fmtTime = s=>{s=Math.max(0,s||0);const m=Math.floor(s/60);const sec=s-m*60;return `${String(m).padStart(2,'0')}:${sec<10?'0':''}${sec.toFixed(1)}`;};
 const freqToPos=(f,min,max)=>Math.round(1000*Math.log(Math.max(f,min)/min)/Math.log(max/min));
@@ -573,119 +618,237 @@ const state = { buffer:null, fileName:'', fileSize:0, playing:false,
   startOffset:0, startedAt:0, loop:false, bypass:false, src:null,
   videoKind:'audio', videoFile:null, videoURL:null, videoExt:'mp4' };
 
-function defaultParams(){ return {
-  inGain:{db:0}, makeup:{db:0},
-  gate:{on:false, threshold:-50, attack:3, release:180},
-  highpass:{on:false, freq:60},
-  eq:{on:false, lf:110, lg:0, mf:2500, mg:0, mq:1.1, hf:10000, hg:0},
-  deesser:{on:false, freq:7000, gain:-6, q:2.5},
-  comp:{on:false, threshold:-24, ratio:3, attack:10, release:250, knee:12},
-  reverb:{on:false, mix:15, decay:1.6},
-  width:{on:false, amount:110},
-  limiter:{on:false, threshold:-1.5}
-};}
-let params = defaultParams();
+// глобальные уровни входа/выхода (узлы src и dst)
+let params = { inGain:{db:0}, makeup:{db:0} };
 
-/* ---------- пресеты ---------- */
+/* ============================================================
+   КАТАЛОГ МОДУЛЕЙ
+   ============================================================ */
+const MODULE_TYPES = {
+  gate:{ title:'Шумовой гейт', acc:'#FF2ED2',
+    defaults:{on:false,threshold:-50,attack:3,release:180},
+    status:p=>`${Math.round(p.threshold)} дБ`,
+    ctrls:[
+      {label:'Порог',path:'threshold',min:-80,max:-20,step:1,fmt:fmtDb},
+      {label:'Атака',path:'attack',min:0.5,max:40,step:0.5,fmt:fmtMs},
+      {label:'Отпускание',path:'release',min:40,max:600,step:10,fmt:fmtMs}],
+    hint:'Закрывает сигнал ниже порога — убирает шум и фон в паузах.' },
+  comp:{ title:'Компрессор', acc:'#8B5CF6',
+    defaults:{on:true,threshold:-24,ratio:3,attack:10,release:250,knee:12},
+    status:p=>fmtX(p.ratio),
+    ctrls:[
+      {label:'Порог',path:'threshold',min:-50,max:0,step:0.5,fmt:fmtDb},
+      {label:'Коэффициент',path:'ratio',min:1.5,max:10,step:0.1,fmt:fmtX},
+      {label:'Атака',path:'attack',min:1,max:60,step:1,fmt:fmtMs},
+      {label:'Отпускание',path:'release',min:60,max:800,step:10,fmt:fmtMs},
+      {label:'Колено',path:'knee',min:0,max:24,step:1,fmt:v=>Math.round(v)+' дБ'}],
+    hint:'Выравнивает динамику: тихое громче, пики под контролем.' },
+  lim:{ title:'Лимитер', acc:'#FF2ED2',
+    defaults:{on:true,threshold:-1.5},
+    status:p=>fmtDb(p.threshold),
+    ctrls:[{label:'Потолок',path:'threshold',min:-12,max:0,step:0.1,fmt:fmtDb}],
+    hint:'20:1 · атака 1 мс · защита от клиппинга.' },
+  hp:{ title:'Фильтр ВЧ-срез', acc:'#00F0FF',
+    defaults:{on:true,freq:60,q:0.71},
+    status:p=>fmtHz(p.freq),
+    ctrls:[
+      {label:'Частота среза',path:'freq',min:20,max:600,step:1,log:true,fmt:fmtHz},
+      {label:'Добротность Q',path:'q',min:0.4,max:3,step:0.05,fmt:fmtQ}],
+    hint:'Убирает гул и низкочастотный мусор (12 дБ/окт).' },
+  lowpass:{ title:'Фильтр НЧ-срез', acc:'#00F0FF',
+    defaults:{on:true,freq:12000,q:0.71},
+    status:p=>fmtHz(p.freq),
+    ctrls:[
+      {label:'Частота среза',path:'freq',min:100,max:16000,step:1,log:true,fmt:fmtHz},
+      {label:'Добротность Q',path:'q',min:0.4,max:3,step:0.05,fmt:fmtQ}],
+    hint:'Срезает высокие частоты — смягчение и эффект «телефона».' },
+  peq:{ title:'Параметрик', acc:'#00F0FF',
+    defaults:{on:true,freq:1000,gain:0,q:1},
+    status:p=>fmtDb(p.gain),
+    ctrls:[
+      {label:'Частота',path:'freq',min:20,max:16000,step:1,log:true,fmt:fmtHz},
+      {label:'Усиление',path:'gain',min:-15,max:15,step:0.5,fmt:fmtDb},
+      {label:'Добротность Q',path:'q',min:0.3,max:8,step:0.1,fmt:fmtQ}],
+    hint:'Одна параметрическая полоса. Можно добавить несколько экземпляров.' },
+  eq:{ title:'Эквалайзер 3-полосный', acc:'#00F0FF',
+    defaults:{on:true,lf:110,lg:0,mf:2500,mg:0,mq:1.1,hf:10000,hg:0},
+    status:()=>'3 полосы',
+    ctrls:[
+      {label:'Частота',path:'lf',min:40,max:300,step:1,log:true,fmt:fmtHz,section:'Низ · полка'},
+      {label:'Усиление',path:'lg',min:-12,max:12,step:0.5,fmt:fmtDb},
+      {label:'Частота',path:'mf',min:200,max:8000,step:1,log:true,fmt:fmtHz,section:'Середина · параметрик'},
+      {label:'Усиление',path:'mg',min:-12,max:12,step:0.5,fmt:fmtDb},
+      {label:'Добротность Q',path:'mq',min:0.4,max:4,step:0.1,fmt:fmtQ},
+      {label:'Частота',path:'hf',min:3000,max:16000,step:1,log:true,fmt:fmtHz,section:'Верх · полка'},
+      {label:'Усиление',path:'hg',min:-12,max:12,step:0.5,fmt:fmtDb}],
+    hint:'Низ и верх — полки, середина — параметрическая полоса.' },
+  de:{ title:'Де-эссер', acc:'#FF2ED2',
+    defaults:{on:true,freq:7000,gain:-6,q:2.5},
+    status:p=>fmtDb(p.gain),
+    ctrls:[
+      {label:'Частота сибилянтов',path:'freq',min:4000,max:12000,step:1,log:true,fmt:fmtHz},
+      {label:'Подавление',path:'gain',min:-15,max:0,step:0.5,fmt:fmtDb},
+      {label:'Добротность Q',path:'q',min:1,max:5,step:0.1,fmt:fmtQ}],
+    hint:'Узкий вырез против свистящих «с», «ц», «щ».' },
+  rv:{ title:'Реверберация', acc:'#8B5CF6',
+    defaults:{on:true,mix:15,decay:1.6},
+    status:p=>fmtPct(p.mix),
+    ctrls:[
+      {label:'Подмешивание',path:'mix',min:0,max:60,step:1,fmt:fmtPct},
+      {label:'Время затухания',path:'decay',min:0.3,max:5,step:0.01,log:true,fmt:fmtSec}],
+    hint:'Конволюционная реверберация с генерируемым импульсом.' },
+  delay:{ title:'Дилэй / эхо', acc:'#8B5CF6',
+    defaults:{on:true,time:250,feedback:35,mix:25},
+    status:p=>`${Math.round(p.time)} мс`,
+    ctrls:[
+      {label:'Время задержки',path:'time',min:20,max:1000,step:5,log:true,fmt:v=>Math.round(v)+' мс'},
+      {label:'Обратная связь',path:'feedback',min:0,max:90,step:1,fmt:fmtPct},
+      {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Классическое эхо с feedback-контуром.' },
+  chorus:{ title:'Хорус', acc:'#8B5CF6',
+    defaults:{on:true,rate:1.2,depth:40,mix:50},
+    status:p=>fmtRate(p.rate),
+    ctrls:[
+      {label:'Скорость LFO',path:'rate',min:0.1,max:8,step:0.1,fmt:fmtRate},
+      {label:'Глубина',path:'depth',min:0,max:100,step:1,fmt:fmtPct},
+      {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Модулированная задержка — уплотняет и расширяет звук.' },
+  tremolo:{ title:'Тремоло', acc:'#8B5CF6',
+    defaults:{on:true,rate:5,depth:50},
+    status:p=>fmtRate(p.rate),
+    ctrls:[
+      {label:'Скорость LFO',path:'rate',min:0.5,max:20,step:0.1,fmt:fmtRate},
+      {label:'Глубина',path:'depth',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Амплитудная модуляция — пульсация громкости.' },
+  sat:{ title:'Сатурация', acc:'#FF2ED2',
+    defaults:{on:true,drive:25,mix:100},
+    status:p=>`${Math.round(p.drive)}%`,
+    ctrls:[
+      {label:'Драйв',path:'drive',min:0,max:100,step:1,fmt:fmtPct},
+      {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Мягкое «ленточное» насыщение — тепло и плотность.' },
+  gain:{ title:'Уровень', acc:'#00F0FF',
+    defaults:{on:true,db:0},
+    status:p=>fmtDb(p.db),
+    ctrls:[{label:'Усиление',path:'db',min:-24,max:24,step:0.5,fmt:fmtDb}],
+    hint:'Трим громкости для гейн-стейджинга между модулями.' },
+  width:{ title:'Стерео-расширение', acc:'#00F0FF',
+    defaults:{on:true,amount:110},
+    status:p=>fmtPct(p.amount),
+    ctrls:[{label:'Ширина',path:'amount',min:0,max:200,step:1,fmt:fmtPct}],
+    hint:'M/S-матрица · 0% — моно, 100% — исходник.' }
+};
+const PALETTE_GROUPS=[
+  {name:'Динамика', items:['gate','comp','lim']},
+  {name:'Фильтры и EQ', items:['hp','lowpass','peq','eq','de']},
+  {name:'Эффекты и пространство', items:['rv','delay','chorus','tremolo','sat']},
+  {name:'Уровень и стерео', items:['gain','width']}
+];
+const MAX_NODES=18;
+
+/* ---------- пресеты = готовые цепочки ---------- */
+const DEFAULT_SPEC=[['gate',{}],['hp',{}],['eq',{}],['de',{}],['comp',{}],['rv',{}],['width',{}],['lim',{}]];
 const PRESETS = {
- 'Чистый сигнал':{},
- 'Студийный вокал':{ gate:{on:true,threshold:-52,attack:3,release:200}, highpass:{on:true,freq:80},
-   eq:{on:true,lf:110,lg:2,mf:2800,mg:3,mq:1.2,hf:9500,hg:2.5},
-   deesser:{on:true,freq:7200,gain:-5,q:2.5},
-   comp:{on:true,threshold:-26,ratio:3.2,attack:8,release:220,knee:10},
-   reverb:{on:true,mix:12,decay:1.4}, width:{on:true,amount:108},
-   limiter:{on:true,threshold:-1.5}, makeup:{db:2.5} },
- 'Яркий вокал':{ gate:{on:true,threshold:-55,attack:3,release:180}, highpass:{on:true,freq:70},
-   eq:{on:true,lf:100,lg:1,mf:3500,mg:2,mq:1.3,hf:10000,hg:5},
-   deesser:{on:true,freq:7500,gain:-6,q:3},
-   comp:{on:true,threshold:-24,ratio:3.5,attack:7,release:200,knee:10},
-   reverb:{on:true,mix:15,decay:1.6}, width:{on:true,amount:115},
-   limiter:{on:true,threshold:-1.5}, makeup:{db:2.5} },
- 'Подкаст':{ gate:{on:true,threshold:-48,attack:2,release:160}, highpass:{on:true,freq:95},
-   eq:{on:true,lf:120,lg:-1,mf:2400,mg:4,mq:1.0,hf:8000,hg:2},
-   deesser:{on:true,freq:6800,gain:-4,q:2.2},
-   comp:{on:true,threshold:-22,ratio:4,attack:5,release:180,knee:8},
-   reverb:{on:false}, width:{on:false,amount:100},
-   limiter:{on:true,threshold:-1.2}, makeup:{db:3} },
- 'Видеоблог':{ gate:{on:true,threshold:-50,attack:3,release:180}, highpass:{on:true,freq:85},
-   eq:{on:true,lf:120,lg:1.5,mf:2600,mg:3,mq:1.1,hf:9000,hg:3},
-   deesser:{on:true,freq:7000,gain:-5,q:2.5},
-   comp:{on:true,threshold:-24,ratio:3.5,attack:8,release:200,knee:10},
-   reverb:{on:false}, width:{on:true,amount:105},
-   limiter:{on:true,threshold:-1.5}, makeup:{db:2.5} },
- 'Диктор и кино':{ gate:{on:true,threshold:-48,attack:2,release:160}, highpass:{on:true,freq:60},
-   eq:{on:true,lf:100,lg:3,mf:1800,mg:2.5,mq:1.0,hf:8000,hg:1.5},
-   deesser:{on:true,freq:6500,gain:-3,q:2},
-   comp:{on:true,threshold:-22,ratio:4,attack:5,release:160,knee:8},
-   reverb:{on:true,mix:8,decay:1.1}, width:{on:true,amount:95},
-   limiter:{on:true,threshold:-1.2}, makeup:{db:3} },
- 'Радио-эфир':{ gate:{on:true,threshold:-45,attack:2,release:140}, highpass:{on:true,freq:110},
-   eq:{on:true,lf:120,lg:-2,mf:2000,mg:3,mq:1.0,hf:7000,hg:1},
-   deesser:{on:true,freq:6500,gain:-3,q:2},
-   comp:{on:true,threshold:-20,ratio:6,attack:3,release:120,knee:6},
-   reverb:{on:false}, width:{on:true,amount:80},
-   limiter:{on:true,threshold:-1}, makeup:{db:3.5} },
- 'Ночной эфир':{ highpass:{on:true,freq:75},
-   eq:{on:true,lf:110,lg:2,mf:2200,mg:1.5,mq:1.0,hf:9500,hg:1},
-   comp:{on:true,threshold:-26,ratio:2.5,attack:12,release:280,knee:14},
-   reverb:{on:true,mix:10,decay:1.3}, width:{on:true,amount:100},
-   limiter:{on:true,threshold:-2}, makeup:{db:1.5} },
- 'ASMR':{ gate:{on:false}, highpass:{on:true,freq:40},
-   eq:{on:true,lf:100,lg:1,mf:3000,mg:1,mq:1.0,hf:12000,hg:1.5},
-   comp:{on:true,threshold:-30,ratio:1.8,attack:15,release:400,knee:20},
-   reverb:{on:false}, width:{on:true,amount:135},
-   limiter:{on:true,threshold:-3}, makeup:{db:2.5} },
- 'Тёплая музыка':{ highpass:{on:true,freq:35},
-   eq:{on:true,lf:100,lg:3,mf:500,mg:-1,mq:0.9,hf:12000,hg:1.5},
-   comp:{on:true,threshold:-18,ratio:2,attack:25,release:300,knee:18},
-   reverb:{on:true,mix:20,decay:2.2}, width:{on:true,amount:125},
-   limiter:{on:true,threshold:-2}, makeup:{db:1} },
- 'Акустика':{ highpass:{on:true,freq:70},
-   eq:{on:true,lf:120,lg:2,mf:700,mg:-1.5,mq:1.2,hf:8500,hg:2.5},
-   comp:{on:true,threshold:-18,ratio:2.2,attack:20,release:300,knee:18},
-   reverb:{on:true,mix:22,decay:2.4}, width:{on:true,amount:130},
-   limiter:{on:true,threshold:-2}, makeup:{db:1.5} },
- 'Электронный бит':{ highpass:{on:true,freq:30},
-   eq:{on:true,lf:90,lg:4,mf:1000,mg:-1,mq:0.9,hf:12000,hg:2},
-   comp:{on:true,threshold:-16,ratio:2,attack:30,release:250,knee:20},
-   reverb:{on:true,mix:10,decay:1.8}, width:{on:true,amount:145},
-   limiter:{on:true,threshold:-1}, makeup:{db:1} },
- 'Живой концерт':{ gate:{on:true,threshold:-42,attack:2,release:140}, highpass:{on:true,freq:90},
-   eq:{on:true,lf:110,lg:1,mf:2500,mg:2,mq:1.2,hf:7000,hg:1.5},
-   deesser:{on:true,freq:6800,gain:-4,q:2},
-   comp:{on:true,threshold:-20,ratio:4.5,attack:4,release:140,knee:6},
-   reverb:{on:true,mix:18,decay:2.0}, width:{on:true,amount:90},
-   limiter:{on:true,threshold:-1}, makeup:{db:3} },
- 'Lo-Fi ретро':{ highpass:{on:true,freq:150},
-   eq:{on:true,lf:200,lg:-3,mf:1500,mg:4,mq:0.8,hf:8000,hg:-4},
-   comp:{on:true,threshold:-20,ratio:5,attack:10,release:150,knee:6},
-   reverb:{on:true,mix:12,decay:1.2}, width:{on:true,amount:65},
-   limiter:{on:true,threshold:-2}, makeup:{db:2} }
+ 'Чистый сигнал':{chain:[]},
+ 'Студийный вокал':{chain:[
+   ['gate',{threshold:-52,attack:3,release:200}],['hp',{freq:80}],
+   ['eq',{lf:110,lg:2,mf:2800,mg:3,mq:1.2,hf:9500,hg:2.5}],
+   ['de',{freq:7200,gain:-5,q:2.5}],
+   ['comp',{threshold:-26,ratio:3.2,attack:8,release:220,knee:10}],
+   ['rv',{mix:12,decay:1.4}],['width',{amount:108}],
+   ['lim',{threshold:-1.5}],['gain',{db:2.5}]]},
+ 'Яркий вокал':{chain:[
+   ['gate',{threshold:-55,attack:3,release:180}],['hp',{freq:70}],
+   ['eq',{lf:100,lg:1,mf:3500,mg:2,mq:1.3,hf:10000,hg:5}],
+   ['de',{freq:7500,gain:-6,q:3}],
+   ['comp',{threshold:-24,ratio:3.5,attack:7,release:200,knee:10}],
+   ['rv',{mix:15,decay:1.6}],['width',{amount:115}],
+   ['lim',{threshold:-1.5}],['gain',{db:2.5}]]},
+ 'Подкаст':{chain:[
+   ['gate',{threshold:-48,attack:2,release:160}],['hp',{freq:95}],
+   ['eq',{lf:120,lg:-1,mf:2400,mg:4,mq:1.0,hf:8000,hg:2}],
+   ['de',{freq:6800,gain:-4,q:2.2}],
+   ['comp',{threshold:-22,ratio:4,attack:5,release:180,knee:8}],
+   ['width',{amount:100}],['lim',{threshold:-1.2}],['gain',{db:3}]]},
+ 'Видеоблог':{chain:[
+   ['gate',{threshold:-50,attack:3,release:180}],['hp',{freq:85}],
+   ['eq',{lf:120,lg:1.5,mf:2600,mg:3,mq:1.1,hf:9000,hg:3}],
+   ['de',{freq:7000,gain:-5,q:2.5}],
+   ['comp',{threshold:-24,ratio:3.5,attack:8,release:200,knee:10}],
+   ['width',{amount:105}],['lim',{threshold:-1.5}],['gain',{db:2.5}]]},
+ 'Диктор и кино':{chain:[
+   ['gate',{threshold:-48,attack:2,release:160}],['hp',{freq:60}],
+   ['eq',{lf:100,lg:3,mf:1800,mg:2.5,mq:1.0,hf:8000,hg:1.5}],
+   ['de',{freq:6500,gain:-3,q:2}],
+   ['comp',{threshold:-22,ratio:4,attack:5,release:160,knee:8}],
+   ['rv',{mix:8,decay:1.1}],['width',{amount:95}],
+   ['lim',{threshold:-1.2}],['gain',{db:3}]]},
+ 'Радио-эфир':{chain:[
+   ['gate',{threshold:-45,attack:2,release:140}],['hp',{freq:110}],
+   ['eq',{lf:120,lg:-2,mf:2000,mg:3,mq:1.0,hf:7000,hg:1}],
+   ['de',{freq:6500,gain:-3,q:2}],
+   ['comp',{threshold:-20,ratio:6,attack:3,release:120,knee:6}],
+   ['width',{amount:80}],['lim',{threshold:-1}],['gain',{db:3.5}]]},
+ 'Ночной эфир':{chain:[
+   ['hp',{freq:75}],
+   ['eq',{lf:110,lg:2,mf:2200,mg:1.5,mq:1.0,hf:9500,hg:1}],
+   ['comp',{threshold:-26,ratio:2.5,attack:12,release:280,knee:14}],
+   ['rv',{mix:10,decay:1.3}],['width',{amount:100}],
+   ['lim',{threshold:-2}],['gain',{db:1.5}]]},
+ 'ASMR':{chain:[
+   ['hp',{freq:40}],
+   ['eq',{lf:100,lg:1,mf:3000,mg:1,mq:1.0,hf:12000,hg:1.5}],
+   ['comp',{threshold:-30,ratio:1.8,attack:15,release:400,knee:20}],
+   ['width',{amount:135}],['lim',{threshold:-3}],['gain',{db:2.5}]]},
+ 'Тёплая музыка':{chain:[
+   ['hp',{freq:35}],
+   ['eq',{lf:100,lg:3,mf:500,mg:-1,mq:0.9,hf:12000,hg:1.5}],
+   ['comp',{threshold:-18,ratio:2,attack:25,release:300,knee:18}],
+   ['rv',{mix:20,decay:2.2}],['width',{amount:125}],
+   ['lim',{threshold:-2}],['gain',{db:1}]]},
+ 'Акустика':{chain:[
+   ['hp',{freq:70}],
+   ['eq',{lf:120,lg:2,mf:700,mg:-1.5,mq:1.2,hf:8500,hg:2.5}],
+   ['chorus',{rate:0.8,depth:30,mix:25}],
+   ['comp',{threshold:-18,ratio:2.2,attack:20,release:300,knee:18}],
+   ['rv',{mix:22,decay:2.4}],['width',{amount:130}],
+   ['lim',{threshold:-2}],['gain',{db:1.5}]]},
+ 'Электронный бит':{chain:[
+   ['hp',{freq:30}],
+   ['eq',{lf:90,lg:4,mf:1000,mg:-1,mq:0.9,hf:12000,hg:2}],
+   ['sat',{drive:20,mix:100}],
+   ['comp',{threshold:-16,ratio:2,attack:30,release:250,knee:20}],
+   ['rv',{mix:10,decay:1.8}],['width',{amount:145}],
+   ['lim',{threshold:-1}],['gain',{db:1}]]},
+ 'Живой концерт':{chain:[
+   ['gate',{threshold:-42,attack:2,release:140}],['hp',{freq:90}],
+   ['eq',{lf:110,lg:1,mf:2500,mg:2,mq:1.2,hf:7000,hg:1.5}],
+   ['de',{freq:6800,gain:-4,q:2}],
+   ['comp',{threshold:-20,ratio:4.5,attack:4,release:140,knee:6}],
+   ['rv',{mix:18,decay:2.0}],['width',{amount:90}],
+   ['lim',{threshold:-1}],['gain',{db:3}]]},
+ 'Lo-Fi ретро':{chain:[
+   ['hp',{freq:150}],['lowpass',{freq:7000,q:0.71}],
+   ['eq',{lf:200,lg:-3,mf:1500,mg:4,mq:0.8,hf:8000,hg:-4}],
+   ['sat',{drive:35,mix:100}],
+   ['comp',{threshold:-20,ratio:5,attack:10,release:150,knee:6}],
+   ['rv',{mix:12,decay:1.2}],['width',{amount:65}],
+   ['lim',{threshold:-2}],['gain',{db:2}]]}
 };
 
 function clearPreset(){document.querySelectorAll('.chip[data-preset]').forEach(c=>c.classList.remove('active'));}
 
 /* ============================================================
-   ПАТЧ-МОДЕЛЬ + КАМЕРА (пан/зум)
+   ПАТЧ-МОДЕЛЬ + КАМЕРА
    ============================================================ */
-const DEFAULT_ORDER = ['gate','hp','eq','de','comp','rv','width','lim'];
 const NODE_W = 124, NODE_H = 58;
-const NODE_META = {
-  src:  { title:'Источник',      acc:'#00F0FF' },
-  gate: { title:'Гейт',          acc:'#FF2ED2', param:'gate' },
-  hp:   { title:'Фильтр НЧ',     acc:'#00F0FF', param:'highpass' },
-  eq:   { title:'Эквалайзер',    acc:'#00F0FF', param:'eq' },
-  de:   { title:'Де-эссер',      acc:'#FF2ED2', param:'deesser' },
-  comp: { title:'Компрессор',    acc:'#8B5CF6', param:'comp' },
-  rv:   { title:'Реверберация',  acc:'#8B5CF6', param:'reverb' },
-  width:{ title:'Стерео',        acc:'#00F0FF', param:'width' },
-  lim:  { title:'Лимитер',       acc:'#FF2ED2', param:'limiter' },
-  dst:  { title:'Выход',         acc:'#FF2ED2' }
+const NODE_EDGE = {
+  src:{title:'Источник',acc:'#00F0FF'},
+  dst:{title:'Выход',acc:'#FF2ED2'}
 };
 const patch = { nodes:[], edges:[], selected:null, selEdge:null, drag:null, hoverPort:null };
-let patchReady=false, lastOrder=[...DEFAULT_ORDER];
+let patchReady=false, lastOrder=[], nodeSeq=0;
 
-// камера: экранные координаты = мировые * scale + offset
 const cam = { ox:0, oy:0, scale:1 };
 const CAM_MIN=0.3, CAM_MAX=3;
 const w2sX=x=>x*cam.scale+cam.ox;
@@ -695,14 +858,14 @@ const s2w=p=>({x:(p.x-cam.ox)/cam.scale, y:(p.y-cam.oy)/cam.scale});
 const nodeById = id=>patch.nodes.find(n=>n.id===id);
 const patchW = ()=> $('patch').clientWidth;
 const patchH = ()=> $('patch').clientHeight;
+const isModule=nd=>nd&&!!MODULE_TYPES[nd.type];
+const titleOf=nd=>nd.type==='src'?'Источник':(nd.type==='dst'?'Выход':MODULE_TYPES[nd.type].title);
 
 function updateZoomLabel(){ $('zoom-label').textContent=Math.round(cam.scale*100)+'%'; }
 function zoomAt(sp,factor){
   const ns=clamp(cam.scale*factor,CAM_MIN,CAM_MAX);
   const wx=(sp.x-cam.ox)/cam.scale, wy=(sp.y-cam.oy)/cam.scale;
-  cam.scale=ns;
-  cam.ox=sp.x-wx*ns;
-  cam.oy=sp.y-wy*ns;
+  cam.scale=ns; cam.ox=sp.x-wx*ns; cam.oy=sp.y-wy*ns;
   updateZoomLabel();
 }
 function zoomCenter(factor){ zoomAt({x:patchW()/2,y:patchH()/2},factor); }
@@ -723,38 +886,69 @@ function fitToView(){
   updateZoomLabel();
 }
 
-function initPatch(){
-  patch.nodes=[{id:'src',type:'src',x:16,y:130},
-    ...DEFAULT_ORDER.map(id=>({id,type:id,x:0,y:0})),
-    {id:'dst',type:'dst',x:0,y:0}];
-  resetPatchEdges();
-}
-function resetPatchEdges(){
-  patch.edges=[];
-  const seq=['src',...DEFAULT_ORDER,'dst'];
-  for(let i=0;i<seq.length-1;i++)patch.edges.push({from:seq[i],to:seq[i+1]});
-}
-function layoutPatch(){
-  const w=940; // мировая опорная ширина раскладки
-  const step=clamp((w-440)/3,140,210);
-  DEFAULT_ORDER.forEach((id,i)=>{
-    const nd=nodeById(id); if(!nd)return;
-    nd.x=150+(i%4)*step;
-    nd.y=Math.floor(i/4)===0?50:212;
+/* ---------- построение цепи из спецификации ---------- */
+function buildChainFromSpec(spec){
+  const mods=(spec||[]).map(([t,ov])=>{
+    const pr=deepAssign(cloneJSON(MODULE_TYPES[t].defaults),ov||{});
+    pr.on=true;
+    return {id:'n'+(++nodeSeq),type:t,x:0,y:0,params:pr};
   });
-  const s=nodeById('src'); s.x=16; s.y=130;
-  const d=nodeById('dst'); d.x=w-NODE_W-18; d.y=130;
+  patch.nodes=[{id:'src',type:'src',x:16,y:130},...mods,{id:'dst',type:'dst',x:0,y:0}];
+  patch.edges=[];
+  const seq=['src',...mods.map(m=>m.id),'dst'];
+  for(let i=0;i<seq.length-1;i++)patch.edges.push({from:seq[i],to:seq[i+1]});
+  patch.selected=null; patch.selEdge=null; patch.drag=null;
+  layoutCurrentChain();
+  if(patchReady&&patchW()>0)fitToView();
+  updateChainLine();
+  if(live)rebuildLiveChain();
 }
+function layoutCurrentChain(){
+  const w=940;
+  const mods=patch.nodes.filter(isModule);
+  const step=clamp((w-440)/3,140,210);
+  let maxX=0;
+  mods.forEach((nd,i)=>{
+    nd.x=150+(i%4)*step;
+    nd.y=50+Math.floor(i/4)*84;
+    maxX=Math.max(maxX,nd.x+NODE_W);
+  });
+  const rows=Math.max(1,Math.ceil(mods.length/4));
+  const midY=50+(rows*84-NODE_H)/2-NODE_H/2+NODE_H/2;
+  const s=nodeById('src'); s.x=16; s.y=50+((rows-1)*84)/2+ (84-NODE_H)/2;
+  const d=nodeById('dst'); d.x=mods.length?Math.max(w-NODE_W-18,maxX+60):w-NODE_W-18; d.y=s.y;
+}
+function addNode(type,wp){
+  const mods=patch.nodes.filter(isModule).length;
+  if(mods>=MAX_NODES){ toast(`Максимум ${MAX_NODES} модулей на холсте`,'err'); return; }
+  const nd={id:'n'+(++nodeSeq),type,x:wp.x-NODE_W/2,y:wp.y-NODE_H/2,params:cloneJSON(MODULE_TYPES[type].defaults)};
+  patch.nodes.push(nd);
+  patch.selected=nd.id; patch.selEdge=null;
+}
+function deleteNode(id){
+  const nd=nodeById(id);
+  if(!nd||!isModule(nd))return;
+  const ins=patch.edges.filter(e=>e.to===id), outs=patch.edges.filter(e=>e.from===id);
+  patch.edges=patch.edges.filter(e=>e.from!==id&&e.to!==id);
+  if(ins.length===1&&outs.length===1&&ins[0].from!==outs[0].to)
+    patch.edges.push({from:ins[0].from,to:outs[0].to});
+  patch.nodes=patch.nodes.filter(n=>n.id!==id);
+  if(patch.selected===id)patch.selected=null;
+  if(patch.selEdge&&(patch.selEdge.from===id||patch.selEdge.to===id))patch.selEdge=null;
+  if(modalNode===id)closeModal();
+  onEdgesChanged();
+}
+
 function computePath(){
   const out=new Map();
   patch.edges.forEach(e=>out.set(e.from,e.to));
   const path=['src']; let cur='src';
-  while(out.has(cur)){ cur=out.get(cur); path.push(cur); if(path.length>32)break; }
+  while(out.has(cur)){ cur=out.get(cur); path.push(cur); if(path.length>40)break; }
   return {path, complete:cur==='dst'};
 }
 function updateChainLine(){
   const {path,complete}=computePath();
-  const names=path.map(id=>NODE_META[id].title);
+  const names=path.map(id=>{const nd=nodeById(id);return nd?titleOf(nd):'?';});
   const el=$('chain-line');
   if(complete){
     el.textContent='Сигнал: '+names.join(' → ');
@@ -776,7 +970,7 @@ function onEdgesChanged(){
   updateChainLine();
 }
 
-/* ---------- хит-тесты в экранных координатах ---------- */
+/* ---------- хит-тесты (экранные координаты) ---------- */
 function outPort(nd){ return {x:nd.x+NODE_W,y:nd.y+NODE_H/2}; }
 function inPort(nd){ return {x:nd.x,y:nd.y+NODE_H/2}; }
 function portAt(sp){
@@ -814,73 +1008,52 @@ function edgeAt(sp){
   }
   return null;
 }
+function delBadgePos(nd){ return {x:w2sX(nd.x+NODE_W)-2,y:w2sY(nd.y)+2}; }
 
 /* ============================================================
    МОДАЛЬНОЕ ОКНО ПАРАМЕТРОВ УЗЛА
    ============================================================ */
-const MODAL_SPECS = {
-  src:{ sub:'вход цепи', ctrls:[
-    {id:'m-in-gain',label:'Входное усиление',path:'inGain.db',min:-12,max:12,step:0.5,fmt:fmtDb}],
-    hint:'Поднимает или ослабляет сигнал перед цепью обработки.' },
-  gate:{ param:'gate', sub:'модуль обработки', ctrls:[
-    {id:'m-gate-thr',label:'Порог',path:'gate.threshold',min:-80,max:-20,step:1,fmt:fmtDb},
-    {id:'m-gate-atk',label:'Атака',path:'gate.attack',min:0.5,max:40,step:0.5,fmt:fmtMs},
-    {id:'m-gate-rel',label:'Отпускание',path:'gate.release',min:40,max:600,step:10,fmt:fmtMs}],
-    hint:'Закрывает сигнал ниже порога — убирает шум и фон в паузах.' },
-  hp:{ param:'highpass', sub:'модуль обработки', ctrls:[
-    {id:'m-hp-freq',label:'Частота среза',path:'highpass.freq',min:20,max:600,step:1,log:true,fmt:fmtHz}],
-    hint:'12 дБ/окт · убирает гул и низкочастотный мусор.' },
-  eq:{ param:'eq', sub:'модуль обработки · 3 полосы', ctrls:[
-    {id:'m-eq-lf',label:'Частота',path:'eq.lf',min:40,max:300,step:1,log:true,fmt:fmtHz,section:'Низ · полка'},
-    {id:'m-eq-lg',label:'Усиление',path:'eq.lg',min:-12,max:12,step:0.5,fmt:fmtDb},
-    {id:'m-eq-mf',label:'Частота',path:'eq.mf',min:200,max:8000,step:1,log:true,fmt:fmtHz,section:'Середина · параметрик'},
-    {id:'m-eq-mg',label:'Усиление',path:'eq.mg',min:-12,max:12,step:0.5,fmt:fmtDb},
-    {id:'m-eq-mq',label:'Добротность Q',path:'eq.mq',min:0.4,max:4,step:0.1,fmt:fmtQ},
-    {id:'m-eq-hf',label:'Частота',path:'eq.hf',min:3000,max:16000,step:1,log:true,fmt:fmtHz,section:'Верх · полка'},
-    {id:'m-eq-hg',label:'Усиление',path:'eq.hg',min:-12,max:12,step:0.5,fmt:fmtDb}],
-    hint:'Низ и верх — полочные фильтры, середина — параметрическая.' },
-  de:{ param:'deesser', sub:'модуль обработки', ctrls:[
-    {id:'m-de-freq',label:'Частота сибилянтов',path:'deesser.freq',min:4000,max:12000,step:1,log:true,fmt:fmtHz},
-    {id:'m-de-gain',label:'Подавление',path:'deesser.gain',min:-15,max:0,step:0.5,fmt:fmtDb},
-    {id:'m-de-q',label:'Добротность Q',path:'deesser.q',min:1,max:5,step:0.1,fmt:fmtQ}],
-    hint:'Узкий вырез против свистящих «с», «ц», «щ» в вокале.' },
-  comp:{ param:'comp', sub:'модуль обработки', ctrls:[
-    {id:'m-comp-thr',label:'Порог',path:'comp.threshold',min:-50,max:0,step:0.5,fmt:fmtDb},
-    {id:'m-comp-ratio',label:'Коэффициент',path:'comp.ratio',min:1.5,max:10,step:0.1,fmt:fmtX},
-    {id:'m-comp-atk',label:'Атака',path:'comp.attack',min:1,max:60,step:1,fmt:fmtMs},
-    {id:'m-comp-rel',label:'Отпускание',path:'comp.release',min:60,max:800,step:10,fmt:fmtMs},
-    {id:'m-comp-knee',label:'Колено',path:'comp.knee',min:0,max:24,step:1,fmt:v=>Math.round(v)+' дБ'}],
-    hint:'Выравнивает динамику: тихое становится громче, пики — под контролем.' },
-  rv:{ param:'reverb', sub:'модуль обработки', ctrls:[
-    {id:'m-rv-mix',label:'Подмешивание',path:'reverb.mix',min:0,max:60,step:1,fmt:fmtPct},
-    {id:'m-rv-decay',label:'Время затухания',path:'reverb.decay',min:0.3,max:5,step:0.01,log:true,fmt:fmtSec}],
-    hint:'Конволюционная реверберация с генерируемым импульсом студии.' },
-  width:{ param:'width', sub:'модуль обработки', ctrls:[
-    {id:'m-w-amt',label:'Ширина',path:'width.amount',min:0,max:200,step:1,fmt:fmtPct}],
-    hint:'M/S-матрица · 0% — моно, 100% — исходная ширина, выше — расширение.' },
-  lim:{ param:'limiter', sub:'модуль обработки', ctrls:[
-    {id:'m-lim-thr',label:'Потолок',path:'limiter.threshold',min:-12,max:0,step:0.1,fmt:fmtDb}],
-    hint:'20:1 · атака 1 мс · защита от клиппинга перед выходом.' },
-  dst:{ sub:'выход цепи', ctrls:[
-    {id:'m-makeup',label:'Выходная коррекция',path:'makeup.db',min:-12,max:12,step:0.5,fmt:fmtDb}],
-    hint:'Финальная подстройка громкости обработанного сигнала.' }
-};
-
-let modalNode=null, modalCtrls=[];
+let modalNode=null, modalCtrls=[], modalTarget=null;
 
 function ctrlRowHTML(c,acc){
+  const id='c-'+c.path.replace(/[^a-z0-9]/gi,'');
   return `<div>
     <div class="flex justify-between mb-1.5">
       <label class="lbl">${c.label}</label>
-      <span class="val" id="${c.id}-v" style="color:${acc}"></span>
+      <span class="val" id="${id}-v" style="color:${acc}"></span>
     </div>
-    <input type="range" id="${c.id}" min="${c.log?0:c.min}" max="${c.log?1000:c.max}" step="${c.log?1:c.step}" style="--acc:${acc}">
+    <input type="range" id="${id}" min="${c.log?0:c.min}" max="${c.log?1000:c.max}" step="${c.log?1:c.step}" style="--acc:${acc}">
   </div>`;
 }
-function buildModalBody(type,acc){
-  const spec=MODAL_SPECS[type]; const html=[];
+function openNodeModal(id){
+  const nd=nodeById(id); if(!nd)return;
+  modalNode=id; patch.selected=id;
+  const isMod=isModule(nd);
+  let title,sub,acc,ctrls,hint;
+  if(isMod){
+    const m=MODULE_TYPES[nd.type];
+    title=m.title; sub='модуль обработки'; acc=m.acc; ctrls=m.ctrls; hint=m.hint; modalTarget=nd.params;
+  }else if(nd.type==='src'){
+    title='Источник'; sub='вход цепи'; acc='#00F0FF'; modalTarget=params;
+    ctrls=[{label:'Входное усиление',path:'inGain.db',min:-12,max:12,step:0.5,fmt:fmtDb}];
+    hint='Поднимает или ослабляет сигнал перед цепью обработки.';
+  }else{
+    title='Выход'; sub='выход цепи'; acc='#FF2ED2'; modalTarget=params;
+    ctrls=[{label:'Выходная коррекция',path:'makeup.db',min:-12,max:12,step:0.5,fmt:fmtDb}];
+    hint='Финальная подстройка громкости перед экспортом.';
+  }
+  $('m-title').textContent=title;
+  $('m-sub').textContent=sub;
+  const dot=$('m-dot'); dot.style.background=acc; dot.style.boxShadow=`0 0 10px ${acc}`;
+  const panel=$('modal-panel');
+  panel.style.borderColor=acc+'55';
+  panel.style.boxShadow=`0 0 48px -8px ${acc}66, inset 0 0 40px ${acc}0D`;
+  $('m-switch-wrap').style.setProperty('--acc',acc);
+  $('m-switch-wrap').classList.toggle('hidden',!isMod);
+  $('m-delete').classList.toggle('hidden',!isMod);
+  const html=[];
   let lastSec=null, first=true;
-  spec.ctrls.forEach(c=>{
+  ctrls.forEach(c=>{
     if(c.section&&c.section!==lastSec){
       html.push(`<div class="${first?'':'border-t border-white/5 pt-4'} font-mono text-[10px] tracking-[0.25em] uppercase" style="color:${acc}B3">${c.section}</div>`);
       lastSec=c.section;
@@ -888,55 +1061,43 @@ function buildModalBody(type,acc){
     html.push(ctrlRowHTML(c,acc));
     first=false;
   });
-  if(spec.hint)html.push(`<div class="font-mono text-[11px] text-slate-600 leading-relaxed">${spec.hint}</div>`);
-  if(type==='gate'&&live&&!live.gateOK)
+  if(hint)html.push(`<div class="font-mono text-[11px] text-slate-600 leading-relaxed">${hint}</div>`);
+  if(nd.type==='gate'&&live&&!live.gateOK)
     html.push(`<div class="text-xs text-neon-magenta font-mono">⚠ AudioWorklet недоступен в этом браузере — гейт не обрабатывает сигнал</div>`);
-  return html.join('');
-}
-function openNodeModal(id){
-  const nd=nodeById(id); if(!nd)return;
-  const spec=MODAL_SPECS[nd.type], meta=NODE_META[nd.type], acc=meta.acc;
-  modalNode=id; patch.selected=id;
-  $('m-title').textContent=meta.title;
-  $('m-sub').textContent=spec.sub||'модуль обработки';
-  const dot=$('m-dot'); dot.style.background=acc; dot.style.boxShadow=`0 0 10px ${acc}`;
-  const panel=$('modal-panel');
-  panel.style.borderColor=acc+'55';
-  panel.style.boxShadow=`0 0 48px -8px ${acc}66, inset 0 0 40px ${acc}0D`;
-  $('m-switch-wrap').style.setProperty('--acc',acc);
-  $('m-switch-wrap').classList.toggle('hidden',!spec.param);
-  $('modal-body').innerHTML=buildModalBody(nd.type,acc);
+  $('modal-body').innerHTML=html.join('');
   modalCtrls=[];
-  spec.ctrls.forEach(c=>{
-    const el=$(c.id), lab=$(c.id+'-v'); if(!el)return;
-    const v=getPath(params,c.path);
+  ctrls.forEach(c=>{
+    const el=$('c-'+c.path.replace(/[^a-z0-9]/gi,''));
+    const lab=$(el.id+'-v');
+    if(!el)return;
+    const v=getPath(modalTarget,c.path);
     el.value=c.log?freqToPos(v,c.min,c.max):v;
     lab.textContent=c.fmt(v); paintRange(el);
     el.addEventListener('input',()=>{
       const val=c.log?posToFreq(+el.value,c.min,c.max):+el.value;
-      setPath(params,c.path,val); paintRange(el); lab.textContent=c.fmt(val);
+      setPath(modalTarget,c.path,val); paintRange(el); lab.textContent=c.fmt(val);
       clearPreset(); applyLive();
     });
     modalCtrls.push({el,lab,...c});
   });
-  if(spec.param){ $('m-power').checked=getPath(params,spec.param+'.on'); updateModalPower(); }
-  else $('modal-body').classList.remove('disabled-body');
+  if(isMod)$('m-power').checked=!!nd.params.on;
+  updateModalPower();
   $('modal-backdrop').classList.remove('hidden');
   document.body.style.overflow='hidden';
 }
 function updateModalPower(){
-  if(!modalNode)return;
-  const nd=nodeById(modalNode); if(!nd)return;
-  const spec=MODAL_SPECS[nd.type];
-  if(!spec||!spec.param)return;
-  const on=getPath(params,spec.param+'.on');
-  $('m-power').checked=on;
-  $('modal-body').classList.toggle('disabled-body',!on);
+  const has=modalTarget&&('on' in modalTarget);
+  if(has){
+    $('m-power').checked=!!modalTarget.on;
+    $('modal-body').classList.toggle('disabled-body',!modalTarget.on);
+  }else{
+    $('modal-body').classList.remove('disabled-body');
+  }
 }
 function refreshModal(){
-  if(!modalNode)return;
+  if(!modalTarget)return;
   modalCtrls.forEach(c=>{
-    const v=getPath(params,c.path);
+    const v=getPath(modalTarget,c.path);
     c.el.value=c.log?freqToPos(v,c.min,c.max):v;
     c.lab.textContent=c.fmt(v); paintRange(c.el);
   });
@@ -945,29 +1106,79 @@ function refreshModal(){
 function closeModal(){
   $('modal-backdrop').classList.add('hidden');
   document.body.style.overflow='';
-  modalNode=null; modalCtrls=[]; patch.selected=null;
+  modalNode=null; modalCtrls=[]; modalTarget=null;
 }
 function toggleNodePower(id){
-  const nd=nodeById(id); if(!nd)return;
-  const spec=MODAL_SPECS[nd.type];
-  if(!spec||!spec.param)return;
-  if(nd.type==='gate'&&live&&!live.gateOK){ toast('Гейт недоступен в этом браузере','err'); return; }
-  setPath(params,spec.param+'.on',!getPath(params,spec.param+'.on'));
+  const nd=nodeById(id);
+  if(!isModule(nd))return;
+  nd.params.on=!nd.params.on;
   clearPreset(); applyLive();
   if(modalNode===id)updateModalPower();
 }
-function resetModalModule(){
-  if(!modalNode)return;
-  const nd=nodeById(modalNode), spec=MODAL_SPECS[nd.type];
-  const def=defaultParams();
-  if(spec.param)params[spec.param]=JSON.parse(JSON.stringify(def[spec.param]));
-  if(nd.type==='src')params.inGain=def.inGain;
-  if(nd.type==='dst')params.makeup=def.makeup;
-  refreshModal(); clearPreset(); applyLive();
+
+/* ============================================================
+   ПАЛИТРА МОДУЛЕЙ
+   ============================================================ */
+let paletteOpen=window.matchMedia&&window.matchMedia('(min-width:768px)').matches;
+function setPalette(open){
+  paletteOpen=open;
+  $('palette').classList.toggle('palette-hidden',!open);
+  $('btn-palette').classList.toggle('lit',open);
+}
+function initPalette(){
+  const list=$('palette-list');
+  list.innerHTML='';
+  PALETTE_GROUPS.forEach(gr=>{
+    const h=document.createElement('div');
+    h.className='pal-group'; h.textContent=gr.name;
+    list.appendChild(h);
+    gr.items.forEach(t=>{
+      const m=MODULE_TYPES[t];
+      const el=document.createElement('div');
+      el.className='pal-item';
+      el.style.setProperty('--acc',m.acc);
+      el.innerHTML=`<span class="pal-dot" style="background:${m.acc};box-shadow:0 0 8px ${m.acc}"></span><span class="flex-1 truncate">${m.title}</span><span class="pal-plus">+</span>`;
+      list.appendChild(el);
+      el.addEventListener('pointerdown',e=>startPaletteDrag(e,t));
+    });
+  });
+  $('btn-palette').addEventListener('click',()=>setPalette(!paletteOpen));
+  setPalette(paletteOpen);
+}
+function startPaletteDrag(e,type){
+  if(!patchReady){ toast('Сначала загрузите файл','err'); return; }
+  let moved=0, ghost=null;
+  const move=ev=>{
+    moved+=(Math.abs(ev.movementX||0)+Math.abs(ev.movementY||0));
+    if(!ghost&&moved>8){
+      ghost=document.createElement('div');
+      ghost.className='pal-ghost';
+      ghost.style.borderColor=MODULE_TYPES[type].acc;
+      ghost.textContent=MODULE_TYPES[type].title;
+      document.body.appendChild(ghost);
+    }
+    if(ghost){ ghost.style.left=ev.clientX+'px'; ghost.style.top=ev.clientY+'px'; }
+  };
+  const up=ev=>{
+    window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',up);
+    window.removeEventListener('pointercancel',up);
+    if(ghost)ghost.remove();
+    const cv=$('patch'), r=cv.getBoundingClientRect();
+    const over=ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
+    if(over){
+      addNode(type,s2w({x:ev.clientX-r.left,y:ev.clientY-r.top}));
+    }else if(moved<8){
+      addNode(type,s2w({x:patchW()/2,y:patchH()/2}));
+    }
+  };
+  window.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',up);
+  window.addEventListener('pointercancel',up);
 }
 
 /* ============================================================
-   АУДИО-БЛОКИ
+   АУДИО-БЛОКИ (по экземпляру узла)
    ============================================================ */
 function bq(actx,type,freq,gain=0,q=0.707){const n=actx.createBiquadFilter();n.type=type;n.frequency.value=freq;n.gain.value=gain;n.Q.value=q;return n;}
 function mkGainNode(actx,v){const g=actx.createGain();g.gain.value=v;return g;}
@@ -978,11 +1189,19 @@ function makeIR(actx,seconds){
     for(let i=pre;i<len;i++){const t=(i-pre)/tail;d[i]=(Math.random()*2-1)*Math.exp(-6.908*t);} }
   return buf;
 }
+function makeSatCurve(drive){
+  const k=1+Math.max(0,drive)*0.12, n=1024;
+  const curve=new Float32Array(n);
+  const nk=Math.tanh(k);
+  for(let i=0;i<n;i++){const x=i/(n-1)*2-1;curve[i]=Math.tanh(k*x)/nk;}
+  return curve;
+}
+function newBlock(type){ return {type,nodes:[],oscs:[],input:null,output:null}; }
 
-function createBlock(type, actx, gateOK){
-  const B={type, nodes:[]};
+function createBlockFor(nd,actx,gateOK){
+  const p=nd.params, B=newBlock(nd.type);
   const reg=(...ns)=>{ns.forEach(n=>B.nodes.push(n));};
-  switch(type){
+  switch(nd.type){
     case 'gate':{
       B.input=mkGainNode(actx,1); reg(B.input);
       if(gateOK){ try{
@@ -990,20 +1209,62 @@ function createBlock(type, actx, gateOK){
         B.input.connect(B.gate); B.output=B.gate; reg(B.gate);
       }catch(e){ B.output=B.input; } } else B.output=B.input;
       break; }
-    case 'hp':{ const f=bq(actx,'highpass',10); B.input=B.output=f; reg(f); break; }
+    case 'hp':{ const f=bq(actx,'highpass',p.freq,0,p.q); B.input=B.output=f; reg(f); break; }
+    case 'lowpass':{ const f=bq(actx,'lowpass',p.freq,0,p.q); B.input=B.output=f; reg(f); break; }
+    case 'peq':{ const f=bq(actx,'peaking',p.freq,p.gain,p.q); B.input=B.output=f; reg(f); break; }
+    case 'de':{ const f=bq(actx,'peaking',p.freq,p.gain,p.q); B.input=B.output=f; reg(f); break; }
     case 'eq':{
-      const low=bq(actx,'lowshelf',110), mid=bq(actx,'peaking',2500,0,1.1), high=bq(actx,'highshelf',10000);
+      const low=bq(actx,'lowshelf',p.lf,p.lg), mid=bq(actx,'peaking',p.mf,p.mg,p.mq), high=bq(actx,'highshelf',p.hf,p.hg);
       low.connect(mid); mid.connect(high);
       B.input=low; B.output=high; B.low=low; B.mid=mid; B.high=high; reg(low,mid,high); break; }
-    case 'de':{ const f=bq(actx,'peaking',7000,0,2.5); B.input=B.output=f; reg(f); break; }
     case 'comp':{ const c=actx.createDynamicsCompressor(); B.input=B.output=c; B.comp=c; reg(c); break; }
+    case 'lim':{ const c=actx.createDynamicsCompressor(); B.input=B.output=c; B.comp=c; reg(c); break; }
+    case 'gain':{ const g=mkGainNode(actx,db2lin(p.db)); B.input=B.output=g; reg(g); break; }
     case 'rv':{
       const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), conv=actx.createConvolver(),
             wet=mkGainNode(actx,0), sum=mkGainNode(actx,0.9);
-      conv.buffer=makeIR(actx,params.reverb.decay);
+      conv.buffer=makeIR(actx,p.decay);
       inG.connect(dry); dry.connect(sum); inG.connect(conv); conv.connect(wet); wet.connect(sum);
-      B.input=inG; B.output=sum; B.rvDry=dry; B.rvWet=wet; B.convolver=conv; B.irDecay=params.reverb.decay;
+      B.input=inG; B.output=sum; B.rvDry=dry; B.rvWet=wet; B.convolver=conv; B.irDecay=p.decay;
       reg(inG,dry,conv,wet,sum); break; }
+    case 'delay':{
+      const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
+      const dl=actx.createDelay(2); dl.delayTime.value=p.time/1000;
+      const fb=mkGainNode(actx,p.feedback/100);
+      inG.connect(dry); dry.connect(sum);
+      inG.connect(dl); dl.connect(wet); wet.connect(sum);
+      dl.connect(fb); fb.connect(dl);
+      B.input=inG; B.output=sum; B.dry=dry; B.wet=wet; B.delay=dl; B.fb=fb;
+      reg(inG,dry,wet,sum,dl,fb); break; }
+    case 'chorus':{
+      const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
+      const dl=actx.createDelay(0.1); dl.delayTime.value=0.02;
+      const lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=p.rate;
+      const lfoG=mkGainNode(actx,(p.depth/100)*0.008);
+      lfo.connect(lfoG); lfoG.connect(dl.delayTime);
+      try{lfo.start(0);}catch(e){}
+      inG.connect(dry); dry.connect(sum);
+      inG.connect(dl); dl.connect(wet); wet.connect(sum);
+      B.input=inG; B.output=sum; B.dry=dry; B.wet=wet; B.lfo=lfo; B.lfoG=lfoG;
+      reg(inG,dry,wet,sum,dl,lfoG); B.oscs.push(lfo); break; }
+    case 'tremolo':{
+      const vca=mkGainNode(actx,1);
+      const lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=p.rate;
+      const lfoG=mkGainNode(actx,p.depth/200);
+      vca.gain.value=1-p.depth/200;
+      lfo.connect(lfoG); lfoG.connect(vca.gain);
+      try{lfo.start(0);}catch(e){}
+      B.input=B.output=vca; B.vca=vca; B.lfo=lfo; B.lfoG=lfoG;
+      reg(vca,lfoG); B.oscs.push(lfo); break; }
+    case 'sat':{
+      const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
+      const pre=mkGainNode(actx,1+p.drive/20);
+      const shaper=actx.createWaveShaper(); shaper.oversample='4x'; shaper.curve=makeSatCurve(p.drive);
+      const post=mkGainNode(actx,1/(1+p.drive/30));
+      inG.connect(dry); dry.connect(sum);
+      inG.connect(pre); pre.connect(shaper); shaper.connect(post); post.connect(wet); wet.connect(sum);
+      B.input=inG; B.output=sum; B.dry=dry; B.wet=wet; B.pre=pre; B.post=post; B.shaper=shaper; B.lastDrive=p.drive;
+      reg(inG,dry,wet,sum,pre,shaper,post); break; }
     case 'width':{
       const inG=mkGainNode(actx,1), split=actx.createChannelSplitter(2), merge=actx.createChannelMerger(2);
       inG.connect(split);
@@ -1018,89 +1279,107 @@ function createBlock(type, actx, gateOK){
       side.connect(sR); sR.connect(merge,0,1);
       B.input=inG; B.output=merge; B.wSideL=sL; B.wSideR=sR;
       reg(inG,split,merge,gLM,gRM,gLS,gRS,mid,side,sL,sR); break; }
-    case 'lim':{ const c=actx.createDynamicsCompressor(); B.input=B.output=c; B.comp=c; reg(c); break; }
   }
   return B;
 }
 
-function applyBlockParams(actx, B, p, smooth){
+function applyBlockFor(actx,B,nd,smooth){
+  if(!nd)return;
+  const p=nd.params;
   const t=actx.currentTime;
   const set=(apm,v)=>{ if(smooth&&apm.setTargetAtTime)apm.setTargetAtTime(v,t,0.015); else apm.value=v; };
-  switch(B.type){
+  const mixGains=(mixPct,on)=>{
+    const m=(on?mixPct:0)/100, x=clamp(m,0,1)*Math.PI/2;
+    set(B.wet.gain,Math.sin(x)); set(B.dry.gain,Math.cos(x));
+  };
+  switch(nd.type){
     case 'gate': if(B.gate){ const P=B.gate.parameters;
-      set(P.get('active'), p.gate.on?1:0);
-      set(P.get('threshold'), p.gate.threshold);
-      set(P.get('attack'), p.gate.attack);
-      set(P.get('release'), p.gate.release); } break;
-    case 'hp': set(B.input.frequency, p.highpass.on?p.highpass.freq:10); break;
+      set(P.get('active'), p.on?1:0);
+      set(P.get('threshold'), p.threshold);
+      set(P.get('attack'), p.attack);
+      set(P.get('release'), p.release); } break;
+    case 'hp': set(B.input.frequency, p.on?p.freq:10); set(B.input.Q,p.q); break;
+    case 'lowpass': set(B.input.frequency, p.on?p.freq:20000); set(B.input.Q,p.q); break;
+    case 'peq':
+    case 'de': set(B.input.frequency,p.freq); set(B.input.Q,p.q); set(B.input.gain,p.on?p.gain:0); break;
     case 'eq':
-      set(B.low.frequency,p.eq.lf);  set(B.low.gain,p.eq.on?p.eq.lg:0);
-      set(B.mid.frequency,p.eq.mf);  set(B.mid.gain,p.eq.on?p.eq.mg:0); set(B.mid.Q,p.eq.mq);
-      set(B.high.frequency,p.eq.hf); set(B.high.gain,p.eq.on?p.eq.hg:0); break;
-    case 'de': set(B.input.frequency,p.deesser.freq); set(B.input.Q,p.deesser.q);
-      set(B.input.gain,p.deesser.on?p.deesser.gain:0); break;
+      set(B.low.frequency,p.lf);  set(B.low.gain,p.on?p.lg:0);
+      set(B.mid.frequency,p.mf);  set(B.mid.gain,p.on?p.mg:0); set(B.mid.Q,p.mq);
+      set(B.high.frequency,p.hf); set(B.high.gain,p.on?p.hg:0); break;
     case 'comp':
-      if(p.comp.on){ set(B.comp.threshold,p.comp.threshold); set(B.comp.ratio,p.comp.ratio);
-        set(B.comp.attack,p.comp.attack/1000); set(B.comp.release,p.comp.release/1000); set(B.comp.knee,p.comp.knee);
+      if(p.on){ set(B.comp.threshold,p.threshold); set(B.comp.ratio,p.ratio);
+        set(B.comp.attack,p.attack/1000); set(B.comp.release,p.release/1000); set(B.comp.knee,p.knee);
       } else { set(B.comp.threshold,0); set(B.comp.ratio,1); set(B.comp.attack,.003); set(B.comp.release,.25); set(B.comp.knee,0); }
       break;
-    case 'rv':{ const m=(p.reverb.on?p.reverb.mix:0)/100, x=m*Math.PI/2;
-      set(B.rvWet.gain,Math.sin(x)); set(B.rvDry.gain,Math.cos(x)); break; }
-    case 'width':{ const w=p.width.on?p.width.amount/100:1;
-      set(B.wSideL.gain,w); set(B.wSideR.gain,-w); break; }
     case 'lim':
-      if(p.limiter.on){ set(B.comp.threshold,p.limiter.threshold); set(B.comp.ratio,20);
+      if(p.on){ set(B.comp.threshold,p.threshold); set(B.comp.ratio,20);
         set(B.comp.attack,.001); set(B.comp.release,.08); set(B.comp.knee,0);
       } else { set(B.comp.threshold,0); set(B.comp.ratio,1); set(B.comp.attack,.003); set(B.comp.release,.25); set(B.comp.knee,0); }
       break;
+    case 'gain': set(B.input.gain, p.on?db2lin(p.db):1); break;
+    case 'rv':{
+      mixGains(p.mix,p.on);
+      if(Math.abs(p.decay-(B.irDecay||0))>0.01){ B.irDecay=p.decay;
+        try{B.convolver.buffer=makeIR(actx,p.decay);}catch(e){} }
+      break; }
+    case 'delay': set(B.delay.delayTime,clamp(p.time,1,2000)/1000);
+      set(B.fb.gain,clamp(p.feedback,0,95)/100); mixGains(p.mix,p.on); break;
+    case 'chorus': set(B.lfo.frequency,clamp(p.rate,0.05,12));
+      set(B.lfoG.gain,(clamp(p.depth,0,100)/100)*0.008); mixGains(p.mix,p.on); break;
+    case 'tremolo': set(B.lfo.frequency,clamp(p.rate,0.1,30));
+      if(p.on){ set(B.vca.gain,1-p.depth/200); set(B.lfoG.gain,p.depth/200); }
+      else { set(B.vca.gain,1); set(B.lfoG.gain,0); }
+      break;
+    case 'sat': set(B.pre.gain,1+p.drive/20); set(B.post.gain,1/(1+p.drive/30));
+      if(Math.abs(p.drive-(B.lastDrive||0))>0.5){ B.lastDrive=p.drive;
+        try{B.shaper.curve=makeSatCurve(p.drive);}catch(e){} }
+      mixGains(p.mix,p.on); break;
+    case 'width':{ const w=p.on?p.amount/100:1;
+      set(B.wSideL.gain,w); set(B.wSideR.gain,-w); break; }
   }
 }
 
 function disposeBlocks(blocks){
   if(!blocks)return;
-  for(const k in blocks){ blocks[k].nodes.forEach(n=>{try{n.disconnect();}catch(e){}}); }
+  for(const k in blocks){
+    const B=blocks[k];
+    (B.oscs||[]).forEach(o=>{try{o.stop();}catch(e){}});
+    B.nodes.forEach(n=>{try{n.disconnect();}catch(e){}});
+  }
 }
 
 /* ============================================================
    АУДИО-ДВИЖОК
    ============================================================ */
-let live=null, specBuf=null, mBufL=null, mBufR=null, holdL=-90, holdR=-90, irTimer=null;
+let live=null, specBuf=null, mBufL=null, mBufR=null, holdL=-90, holdR=-90;
 
 function rebuildLiveChain(){
   if(!live)return;
   const {path,complete}=computePath();
   let order;
   if(complete){ order=path.filter(id=>id!=='src'&&id!=='dst'); lastOrder=order.slice(); }
-  else order=lastOrder;
+  else order=lastOrder.filter(id=>isModule(nodeById(id)));
   live.order=order;
   disposeBlocks(live.blocks);
   live.blocks={};
-  order.forEach(k=>{ live.blocks[k]=createBlock(k,live.ctx,live.gateOK); });
+  order.forEach(id=>{ live.blocks[id]=createBlockFor(nodeById(id),live.ctx,live.gateOK); });
   let prev=live.inGain;
-  order.forEach(k=>{ const B=live.blocks[k]; prev.connect(B.input); prev=B.output; });
+  order.forEach(id=>{ const B=live.blocks[id]; prev.connect(B.input); prev=B.output; });
   prev.connect(live.makeup);
   applyLiveParams(true);
 }
-
 function applyLiveParams(smooth){
   if(!live)return;
   const t=live.ctx.currentTime;
   const set=(apm,v)=>{ if(smooth&&apm.setTargetAtTime)apm.setTargetAtTime(v,t,0.015); else apm.value=v; };
   set(live.inGain.gain, db2lin(params.inGain.db));
   set(live.makeup.gain, db2lin(params.makeup.db));
-  if(live.blocks)for(const k in live.blocks)applyBlockParams(live.ctx,live.blocks[k],params,smooth);
-}
-function applyLive(){ if(!live)return; applyLiveParams(true); maybeIR(); }
-function maybeIR(){
-  if(!live||!live.blocks||!live.blocks.rv)return;
-  const B=live.blocks.rv;
-  if(Math.abs(params.reverb.decay-(B.irDecay||0))>0.01){
-    clearTimeout(irTimer);
-    irTimer=setTimeout(()=>{ if(live&&live.blocks&&live.blocks.rv){
-      live.blocks.rv.convolver.buffer=makeIR(live.ctx,params.reverb.decay);
-      live.blocks.rv.irDecay=params.reverb.decay; } },250);
+  if(live.blocks)for(const id in live.blocks){
+    const nd=nodeById(id);
+    if(nd)applyBlockFor(live.ctx,live.blocks[id],nd,smooth);
   }
 }
+function applyLive(){ if(!live)return; applyLiveParams(true); }
 
 async function ensureLive(){
   if(live) return live;
@@ -1124,7 +1403,6 @@ async function ensureLive(){
   updateAB();
   return live;
 }
-
 function updateAB(){
   if(live){ const t=live.ctx.currentTime;
     live.abWet.gain.setTargetAtTime(state.bypass?0:1,t,0.025);
@@ -1238,7 +1516,6 @@ function seek(sec){
   syncVideo('seek',sec);
   if(was)play(); else updateTransport();
 }
-
 function updateTransport(){
   const p=state.playing;
   $('ic-play').classList.toggle('hidden',p);
@@ -1267,7 +1544,7 @@ function finalizeLoad(f,kindLabel){
   $('f-meta').textContent=`${kindLabel} · ${fmtTime(state.buffer.duration)} · ${(state.buffer.sampleRate/1000).toFixed(1).replace('.',',')} кГц · ${state.buffer.numberOfChannels===1?'моно':'стерео'} · ${(f.size/1048576).toFixed(1).replace('.',',')} МБ`;
   requestAnimationFrame(()=>{
     fitAllCanvases(); buildWave();
-    if(!patchReady){ layoutPatch(); patchReady=true; fitToView(); }
+    if(!patchReady){ patchReady=true; layoutCurrentChain(); fitToView(); }
     updateChainLine(); updateTransport(); updateExportUI();
   });
 }
@@ -1550,19 +1827,6 @@ function roundRectPath(g,x,y,w,h,r){
   g.arcTo(x,y,x+w,y,r);
   g.closePath();
 }
-function nodeStatus(type){
-  switch(type){
-    case 'gate':  return `${Math.round(params.gate.threshold)} дБ`;
-    case 'hp':    return fmtHz(params.highpass.freq);
-    case 'eq':    return '3 полосы';
-    case 'de':    return fmtDb(params.deesser.gain);
-    case 'comp':  return fmtX(params.comp.ratio);
-    case 'rv':    return fmtPct(params.reverb.mix);
-    case 'width': return fmtPct(params.width.amount);
-    case 'lim':   return fmtDb(params.limiter.threshold);
-  }
-  return '';
-}
 function drawPort(g,x,y,acc){
   g.beginPath(); g.arc(x,y,5,0,7);
   g.fillStyle='#05060B'; g.fill();
@@ -1598,8 +1862,9 @@ function drawEdge(g,ed,active,time){
   }
 }
 function drawNode(g,nd){
-  const meta=NODE_META[nd.type];
-  const enabled=meta.param?!!getPath(params,meta.param+'.on'):true;
+  const isMod=isModule(nd);
+  const meta=isMod?MODULE_TYPES[nd.type]:NODE_EDGE[nd.type];
+  const enabled=isMod?!!nd.params.on:true;
   const acc=meta.acc, sel=patch.selected===nd.id;
   g.save();
   g.beginPath(); roundRectPath(g,nd.x,nd.y,NODE_W,NODE_H,12);
@@ -1615,7 +1880,9 @@ function drawNode(g,nd){
   g.fillStyle=enabled?'#E2E8F0':'#64748B';
   g.font='700 12px "Space Grotesk", sans-serif'; g.textAlign='left';
   g.fillText(meta.title,nd.x+12,nd.y+24,NODE_W-34);
-  const st=meta.param?(enabled?nodeStatus(nd.type):'выкл'):(nd.type==='src'?fmtDb(params.inGain.db):fmtDb(params.makeup.db));
+  const st=isMod
+    ?(enabled?MODULE_TYPES[nd.type].status(nd.params):'выкл')
+    :(nd.type==='src'?fmtDb(params.inGain.db):fmtDb(params.makeup.db));
   g.font='10px "JetBrains Mono", monospace';
   g.fillStyle=enabled?acc:'rgba(100,116,139,.7)';
   g.fillText(st,nd.x+12,nd.y+42,NODE_W-34);
@@ -1636,7 +1903,6 @@ function drawPatchFrame(){
   g.save();
   g.translate(cam.ox,cam.oy);
   g.scale(cam.scale,cam.scale);
-  // адаптивная мировая сетка в видимой области
   const wx0=(-cam.ox)/cam.scale, wy0=(-cam.oy)/cam.scale;
   const wx1=(w-cam.ox)/cam.scale, wy1=(h-cam.oy)/cam.scale;
   let step=24;
@@ -1647,7 +1913,6 @@ function drawPatchFrame(){
   for(let x=sx;x<wx1;x+=step)
     for(let y=sy;y<wy1;y+=step)
       g.fillRect(x,y,ds,ds);
-  // содержимое
   const {path}=computePath();
   const activeSet=new Set();
   for(let i=0;i<path.length-1;i++)activeSet.add(path[i]+'>'+path[i+1]);
@@ -1674,10 +1939,24 @@ function drawPatchFrame(){
   }
   patch.nodes.forEach(nd=>drawNode(g,nd));
   g.restore();
+  // значок удаления выбранного модуля (в экранных координатах)
+  if(patch.selected){
+    const nd=nodeById(patch.selected);
+    if(isModule(nd)){
+      const b=delBadgePos(nd);
+      g.beginPath(); g.arc(b.x,b.y,9,0,7);
+      g.fillStyle='#FF2ED2'; g.shadowColor='#FF2ED2'; g.shadowBlur=10; g.fill(); g.shadowBlur=0;
+      g.strokeStyle='#05060B'; g.lineWidth=1.8; g.lineCap='round';
+      g.beginPath();
+      g.moveTo(b.x-3,b.y-3); g.lineTo(b.x+3,b.y+3);
+      g.moveTo(b.x+3,b.y-3); g.lineTo(b.x-3,b.y+3);
+      g.stroke();
+    }
+  }
 }
 
 /* ============================================================
-   ИНТЕРАКТИВ ПАТЧ-ХОЛСТА: узлы, кабели, пан, зум, мультитач
+   ИНТЕРАКТИВ ПАТЧ-ХОЛСТА
    ============================================================ */
 let clickTimer=null;
 const pointers=new Map();
@@ -1700,7 +1979,6 @@ function initPatchEvents(){
     const sp=patchPos(e);
     pointers.set(e.pointerId,sp);
     if(pointers.size===2){
-      // начался пинч — отменяем одиночные действия
       patch.drag=null;
       const [a,b]=[...pointers.values()];
       const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
@@ -1708,6 +1986,14 @@ function initPatchEvents(){
       return;
     }
     if(pointers.size>2)return;
+    // значок удаления выбранного модуля
+    if(patch.selected){
+      const sel=nodeById(patch.selected);
+      if(isModule(sel)){
+        const b=delBadgePos(sel);
+        if(Math.hypot(sp.x-b.x,sp.y-b.y)<12){ deleteNode(sel.id); return; }
+      }
+    }
     const port=portAt(sp);
     if(port){
       if(port.kind==='out'){ const wp=s2w(sp); patch.drag={kind:'edge',from:port.nodeId,x:wp.x,y:wp.y}; }
@@ -1724,7 +2010,6 @@ function initPatchEvents(){
       cv.style.cursor='grabbing'; return; }
     const ed=edgeAt(sp);
     if(ed){ patch.selEdge={from:ed.from,to:ed.to}; patch.selected=null; return; }
-    // пустое место — панорамирование
     patch.drag={kind:'pan',sx:sp.x,sy:sp.y,ox:cam.ox,oy:cam.oy,moved:0};
     cv.style.cursor='grabbing';
   });
@@ -1797,7 +2082,6 @@ function initPatchEvents(){
     patch.drag=null;
   });
 
-  // зум колесом (и тачпад-жесты)
   cv.addEventListener('wheel',e=>{
     e.preventDefault();
     const sp=patchPos(e);
@@ -1815,31 +2099,34 @@ function initPatchEvents(){
     }
   });
 
-  // кнопки управления видом
   $('btn-zoom-in').addEventListener('click',()=>zoomCenter(1.25));
   $('btn-zoom-out').addEventListener('click',()=>zoomCenter(0.8));
   $('btn-fit').addEventListener('click',()=>fitToView());
   $('btn-zoom-100').addEventListener('click',()=>zoomAt({x:patchW()/2,y:patchH()/2},1/cam.scale));
 
   $('btn-patch-reset').addEventListener('click',()=>{
-    resetPatchEdges(); layoutPatch();
-    patch.selected=null; patch.selEdge=null; patch.drag=null;
-    fitToView();
-    onEdgesChanged();
+    buildChainFromSpec(DEFAULT_SPEC);
+    clearPreset();
     toast('Цепь сброшена к стандартной','ok');
   });
 
   $('m-close').addEventListener('click',closeModal);
   $('modal-backdrop').addEventListener('pointerdown',e=>{ if(e.target===$('modal-backdrop'))closeModal(); });
   $('m-power').addEventListener('change',()=>{
-    if(!modalNode)return;
-    const nd=nodeById(modalNode), spec=MODAL_SPECS[nd.type];
-    if(spec&&spec.param){
-      setPath(params,spec.param+'.on',$('m-power').checked);
+    if(modalTarget&&('on' in modalTarget)){
+      modalTarget.on=$('m-power').checked;
       updateModalPower(); clearPreset(); applyLive();
     }
   });
-  $('m-reset').addEventListener('click',resetModalModule);
+  $('m-reset').addEventListener('click',()=>{
+    if(!modalNode)return;
+    const nd=nodeById(modalNode);
+    if(isModule(nd))Object.assign(nd.params,cloneJSON(MODULE_TYPES[nd.type].defaults));
+    else if(nd.type==='src')params.inGain={db:0};
+    else params.makeup={db:0};
+    refreshModal(); clearPreset(); applyLive();
+  });
+  $('m-delete').addEventListener('click',()=>{ if(modalNode)deleteNode(modalNode); });
 }
 
 /* ---------- главный цикл ---------- */
@@ -1855,9 +2142,10 @@ function frame(){
 
 /* ---------- пресеты ---------- */
 function applyPresetByName(name){
-  const over=PRESETS[name]||{};
-  params=deepAssign(defaultParams(),JSON.parse(JSON.stringify(over)));
-  refreshModal(); applyLive(); clearPreset();
+  const p=PRESETS[name]; if(!p)return;
+  if(modalNode)closeModal();
+  buildChainFromSpec(p.chain||[]);
+  clearPreset();
   const chip=document.querySelector(`.chip[data-preset="${name}"]`);
   if(chip)chip.classList.add('active');
   toast(`Пресет: ${name}`,'ok');
@@ -1939,14 +2227,17 @@ async function renderOffline(){
   let gOK=false;
   try{ await off.audioWorklet.addModule(GATE_URL); gOK=true; }catch(e){ gOK=false; }
   const {path,complete}=computePath();
-  const order=complete?path.filter(id=>id!=='src'&&id!=='dst'):lastOrder;
+  const order=complete
+    ? path.filter(id=>id!=='src'&&id!=='dst')
+    : lastOrder.filter(id=>isModule(nodeById(id)));
   const oIn=off.createGain(); oIn.gain.value=db2lin(params.inGain.db);
-  const blocks={}; order.forEach(k=>{blocks[k]=createBlock(k,off,gOK);});
+  const blocks={};
+  order.forEach(id=>{ blocks[id]=createBlockFor(nodeById(id),off,gOK); });
   let prev=oIn;
-  order.forEach(k=>{prev.connect(blocks[k].input); prev=blocks[k].output;});
+  order.forEach(id=>{ prev.connect(blocks[id].input); prev=blocks[id].output; });
   const oMk=off.createGain(); oMk.gain.value=db2lin(params.makeup.db);
   prev.connect(oMk); oMk.connect(off.destination);
-  order.forEach(k=>applyBlockParams(off,blocks[k],params,false));
+  order.forEach(id=>applyBlockFor(off,blocks[id],nodeById(id),false));
   const src=off.createBufferSource(); src.buffer=buf;
   src.connect(oIn); src.start(0);
   return await off.startRendering();
@@ -2186,9 +2477,9 @@ function init(){
   window.addEventListener('dragover',e=>e.preventDefault());
   window.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files&&e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);});
 
-  initPatch();
+  initPalette();
   initPatchEvents();
-  updateChainLine();
+  buildChainFromSpec(DEFAULT_SPEC);
   checkEncoders();
   updateZoomLabel();
 
@@ -2199,7 +2490,10 @@ function init(){
     if(['INPUT','SELECT','TEXTAREA','BUTTON'].includes(tag))return;
     if(e.code==='Space'&&!modalOpen){e.preventDefault();togglePlay();}
     if(e.code==='KeyB'&&!modalOpen){state.bypass=!state.bypass;updateAB();}
-    if((e.code==='Delete'||e.code==='Backspace')&&patch.selEdge&&!modalOpen){e.preventDefault();removeSelectedEdge();}
+    if((e.code==='Delete'||e.code==='Backspace')&&!modalOpen){
+      if(patch.selEdge){ e.preventDefault(); removeSelectedEdge(); }
+      else if(patch.selected&&isModule(nodeById(patch.selected))){ e.preventDefault(); deleteNode(patch.selected); }
+    }
   });
 
   let rz=null;
@@ -2219,3 +2513,4 @@ init();
 </script>
 </body>
 </html>
+```
