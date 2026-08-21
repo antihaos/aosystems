@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>NEONFORGE — студийный аудио-энхансер</title>
-<meta name="description" content="Локальная студийная обработка аудио и видеодорожек: модульный конструктор цепи с палитрой из 15 процессоров, пан/зум, пресеты, экспорт WAV / MP3 / OGG и ремукс видео.">
+<meta name="description" content="Локальная студийная обработка аудио и видео: 21 модуль — улучшение качества (экспандер, эксайтер, мастеринг) и искажения (дисторшн, биткрашер, ринг-модулятор, фейзер), экспорт WAV / MP3 / OGG и ремукс видео.">
 
 <!-- Шрифты (fontsource CDN) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5/index.css">
@@ -134,6 +134,10 @@ tailwind.config = {
     border:1.5px solid #00F0FF; color:#fff; font-size:12px; font-weight:600;
     box-shadow:0 8px 30px rgba(0,0,0,.55), 0 0 18px rgba(0,240,255,.35);
   }
+  .preset-h{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.2em;
+    text-transform:uppercase; color:#64748B; margin-top:16px;
+  }
 
   @keyframes pulseGlow{ 0%,100%{ box-shadow:0 0 16px rgba(0,240,255,.45);} 50%{ box-shadow:0 0 36px rgba(0,240,255,.85);} }
   .play-btn.playing{ animation:pulseGlow 1.6s ease-in-out infinite; }
@@ -201,7 +205,7 @@ tailwind.config = {
         <span id="state-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
         <span id="ctx-state" class="font-mono text-xs text-slate-400">ожидание</span>
       </div>
-      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.8</div>
+      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.9</div>
     </div>
   </div>
 </header>
@@ -218,9 +222,9 @@ tailwind.config = {
         Студийный звук —<br>даже <span class="bg-gradient-to-r from-neon-cyan via-neon-violet to-neon-magenta bg-clip-text text-transparent">для вашего видео</span>
       </h1>
       <p class="mt-6 text-slate-400 text-lg max-w-xl mx-auto">
-        Загрузите аудио или видеофайл, соберите цепь из 15 модулей обработки на холсте,
-        настройте параметры и экспортируйте результат в WAV, MP3, OGG — или сохраните видео
-        с улучшенным звуком без перекодирования картинки.
+        21 модуль обработки: от кристальной чистоты и мастеринга до дисторшна, биткрашера и ринг-модуляции.
+        Собирайте цепь на холсте, применяйте пресеты, экспортируйте в WAV, MP3, OGG
+        или сохраняйте видео с новым звуком без перекодирования картинки.
       </p>
 
       <div id="drop" class="mt-12 cursor-pointer rounded-3xl border-2 border-dashed border-white/15 bg-ink-900/60 p-10 md:p-14 transition hover:border-neon-cyan/60 hover:bg-neon-cyan/[0.03]">
@@ -241,12 +245,10 @@ tailwind.config = {
 
       <div class="mt-10 flex flex-wrap justify-center gap-2">
         <span class="chip pointer-events-none">🎬 Видео-режим</span>
-        <span class="chip pointer-events-none">🔗 15 модулей обработки</span>
+        <span class="chip pointer-events-none">🔗 21 модуль обработки</span>
+        <span class="chip pointer-events-none">✨ Улучшение качества</span>
+        <span class="chip pointer-events-none">🔥 Искажения и эффекты</span>
         <span class="chip pointer-events-none">🧩 Палитра и конструктор</span>
-        <span class="chip pointer-events-none">🎛 Эквалайзеры</span>
-        <span class="chip pointer-events-none">🗜 Динамика</span>
-        <span class="chip pointer-events-none">🌊 Пространство</span>
-        <span class="chip pointer-events-none">📼 Сатурация</span>
         <span class="chip pointer-events-none">💾 WAV / MP3 / OGG / видео</span>
       </div>
     </div>
@@ -320,7 +322,7 @@ tailwind.config = {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 12h3M13 12h7M4 17h11"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg>
         </button>
         <div id="palette" class="palette-hidden absolute left-2.5 top-12 bottom-2.5 w-44 z-10 rounded-xl border border-white/10 bg-ink-950/95 backdrop-blur flex flex-col shadow-[0_8px_40px_rgba(0,0,0,.5)]">
-          <div class="px-3 pt-3 pb-1 font-mono text-[10px] tracking-[0.22em] text-slate-500 uppercase">Модули</div>
+          <div class="px-3 pt-3 pb-1 font-mono text-[10px] tracking-[0.22em] text-slate-500 uppercase">Модули · 21</div>
           <div id="palette-list" class="flex-1 overflow-y-auto px-2.5 pb-2 space-y-1.5"></div>
           <div class="px-3 py-2 border-t border-white/5 font-mono text-[9px] text-slate-600 leading-relaxed">клик — добавить в центр<br>перетаскивание — в нужное место</div>
         </div>
@@ -369,12 +371,15 @@ tailwind.config = {
       </div>
     </div>
 
+    <!-- ПРЕСЕТЫ -->
     <div class="card p-5">
       <div class="flex items-center justify-between">
         <h3 class="h3">Пресеты обработки</h3>
         <button id="btn-reset" class="btn-ghost !py-1.5 !px-3 text-xs">⟲ Сброс</button>
       </div>
-      <div class="flex flex-wrap gap-2 mt-4">
+
+      <div class="preset-h">🎙 Базовые</div>
+      <div class="flex flex-wrap gap-2 mt-2">
         <button class="chip" data-preset="Студийный вокал">🎙 Студийный вокал</button>
         <button class="chip" data-preset="Яркий вокал">✨ Яркий вокал</button>
         <button class="chip" data-preset="Подкаст">🎧 Подкаст</button>
@@ -390,6 +395,28 @@ tailwind.config = {
         <button class="chip" data-preset="Lo-Fi ретро">📼 Lo-Fi ретро</button>
         <button class="chip" data-preset="Чистый сигнал">⭕ Чистый сигнал</button>
       </div>
+
+      <div class="preset-h">💎 Улучшение качества</div>
+      <div class="flex flex-wrap gap-2 mt-2">
+        <button class="chip" data-preset="Кристальная чистота">💠 Кристальная чистота</button>
+        <button class="chip" data-preset="Шумоподавление">🔇 Шумоподавление</button>
+        <button class="chip" data-preset="Реставрация записи">🏺 Реставрация записи</button>
+        <button class="chip" data-preset="Тёплый ламповый">🕯 Тёплый ламповый</button>
+        <button class="chip" data-preset="Мастеринг-полировка">🏆 Мастеринг-полировка</button>
+      </div>
+
+      <div class="preset-h">🔥 Искажения и характер</div>
+      <div class="flex flex-wrap gap-2 mt-2">
+        <button class="chip" data-preset="Телефонный">☎️ Телефонный</button>
+        <button class="chip" data-preset="Мегафон">📢 Мегафон</button>
+        <button class="chip" data-preset="Радиоприёмник 50-х">📟 Радиоприёмник 50-х</button>
+        <button class="chip" data-preset="8-бит чиптюн">👾 8-бит чиптюн</button>
+        <button class="chip" data-preset="Робот">🤖 Робот</button>
+        <button class="chip" data-preset="Космический дрейф">🛸 Космический дрейф</button>
+        <button class="chip" data-preset="Аналоговый хоррор">📼 Аналоговый хоррор</button>
+        <button class="chip" data-preset="Стадионный рок">🎸 Стадионный рок</button>
+      </div>
+
       <div class="mt-3 font-mono text-[10px] text-slate-600">Пресет собирает готовую цепь модулей — параметры каждого можно менять кликом по узлу.</div>
     </div>
 
@@ -522,14 +549,13 @@ tailwind.config = {
 <!-- Кодеры аудио -->
 <script src="https://cdn.jsdelivr.net/npm/@breezystack/lamejs@1.2.7/dist/lamejs.iife.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/higuma/ogg-vorbis-encoder-js@master/lib/OggVorbisEncoder.js"></script>
-<!-- FFmpeg WASM (UMD, глобал FFmpegWASM) -->
+<!-- FFmpeg WASM -->
 <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
 
 <script>
 /* ============================================================
    NEONFORGE — студийный аудио/видео энхансер (SPA, один файл)
-   Исправление звука: сквозной проход при пустой цепи,
-   гарантированный resume AudioContext, самодиагностика
+   21 модуль: качество + искажения
    ============================================================ */
 'use strict';
 
@@ -571,7 +597,7 @@ function withTimeout(promise,ms,msg){
   });
 }
 
-/* ---------- AudioWorklet: шумовой гейт ---------- */
+/* ---------- AudioWorklet: гейт, экспандер, биткрашер ---------- */
 const GATE_SRC = `
 class NoiseGate extends AudioWorkletProcessor {
   static get parameterDescriptors(){
@@ -607,6 +633,78 @@ class NoiseGate extends AudioWorkletProcessor {
   }
 }
 registerProcessor('noise-gate', NoiseGate);
+
+class ExpanderProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors(){
+    return [
+      {name:'threshold', defaultValue:-45, minValue:-80, maxValue:-20, automationRate:'k-rate'},
+      {name:'ratio',     defaultValue:2,   minValue:1,   maxValue:8,  automationRate:'k-rate'},
+      {name:'attack',    defaultValue:5,   minValue:0.5, maxValue:100, automationRate:'k-rate'},
+      {name:'release',   defaultValue:200, minValue:10,  maxValue:1000, automationRate:'k-rate'},
+      {name:'active',    defaultValue:1,   minValue:0,   maxValue:1, automationRate:'k-rate'}
+    ];
+  }
+  constructor(){ super(); this.env=0; this.g=1; }
+  process(inputs, outputs, params){
+    const inp=inputs[0], out=outputs[0];
+    if(!inp || !inp.length || !inp[0] || !inp[0].length) return true;
+    const n=inp[0].length;
+    const thr=Math.pow(10, params.threshold[0]/20);
+    const ratio=params.ratio[0];
+    const atk=Math.exp(-1/((params.attack[0]/1000)*sampleRate));
+    const rel=Math.exp(-1/((params.release[0]/1000)*sampleRate));
+    const active=params.active[0];
+    for(let i=0;i<n;i++){
+      let peak=0;
+      for(let c=0;c<inp.length;c++){ const v=Math.abs(inp[c][i]); if(v>peak) peak=v; }
+      const coef = peak>this.env ? atk : rel;
+      this.env = peak + coef*(this.env-peak);
+      let gt=1;
+      if(active>0.5 && this.env<thr){
+        gt=Math.pow(this.env/(thr+1e-9), ratio-1);
+        if(gt>1)gt=1; if(gt<0)gt=0;
+      }
+      this.g += (gt-this.g)*0.01;
+      for(let c=0;c<out.length;c++){ out[c][i] = inp[c] ? inp[c][i]*this.g : 0; }
+    }
+    return true;
+  }
+}
+registerProcessor('nf-expander', ExpanderProcessor);
+
+class BitcrushProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors(){
+    return [
+      {name:'bits',   defaultValue:8, minValue:2, maxValue:16, automationRate:'k-rate'},
+      {name:'rate',   defaultValue:4, minValue:1, maxValue:50, automationRate:'k-rate'},
+      {name:'active', defaultValue:1, minValue:0, maxValue:1,  automationRate:'k-rate'}
+    ];
+  }
+  constructor(){ super(); this.hold=new Float32Array(8); this.cnt=0; }
+  process(inputs, outputs, params){
+    const inp=inputs[0], out=outputs[0];
+    if(!inp || !inp.length || !inp[0] || !inp[0].length) return true;
+    const n=inp[0].length;
+    const bits=Math.round(params.bits[0]);
+    const div=Math.max(1,Math.round(params.rate[0]));
+    const step=Math.pow(2,Math.max(2,bits)-1);
+    const active=params.active[0];
+    if(this.hold.length<inp.length)this.hold=new Float32Array(inp.length);
+    for(let i=0;i<n;i++){
+      if(this.cnt%div===0){
+        for(let c=0;c<inp.length;c++){ this.hold[c]=inp[c][i]; }
+      }
+      this.cnt++;
+      if(this.cnt>1000000)this.cnt=0;
+      for(let c=0;c<out.length;c++){
+        const v=inp[c]?this.hold[c]:0;
+        out[c][i]=active>0.5 ? Math.round(v*step)/step : v;
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('nf-crush', BitcrushProcessor);
 `;
 const GATE_URL = URL.createObjectURL(new Blob([GATE_SRC],{type:'application/javascript'}));
 
@@ -618,7 +716,7 @@ const state = { buffer:null, fileName:'', fileSize:0, playing:false,
 let params = { inGain:{db:0}, makeup:{db:0} };
 
 /* ============================================================
-   КАТАЛОГ МОДУЛЕЙ
+   КАТАЛОГ МОДУЛЕЙ (21)
    ============================================================ */
 const MODULE_TYPES = {
   gate:{ title:'Шумовой гейт', acc:'#FF2ED2',
@@ -629,6 +727,15 @@ const MODULE_TYPES = {
       {label:'Атака',path:'attack',min:0.5,max:40,step:0.5,fmt:fmtMs},
       {label:'Отпускание',path:'release',min:40,max:600,step:10,fmt:fmtMs}],
     hint:'Закрывает сигнал ниже порога — убирает шум и фон в паузах.' },
+  expander:{ title:'Экспандер', acc:'#FF2ED2',
+    defaults:{on:false,threshold:-45,ratio:2,attack:5,release:200},
+    status:p=>`${Math.round(p.threshold)} дБ`,
+    ctrls:[
+      {label:'Порог',path:'threshold',min:-80,max:-20,step:1,fmt:fmtDb},
+      {label:'Степень расширения',path:'ratio',min:1,max:8,step:0.5,fmt:fmtX},
+      {label:'Атака',path:'attack',min:0.5,max:40,step:0.5,fmt:fmtMs},
+      {label:'Отпускание',path:'release',min:40,max:600,step:10,fmt:fmtMs}],
+    hint:'Мягкое шумоподавление: плавно приглушает тихий фон без резкости гейта.' },
   comp:{ title:'Компрессор', acc:'#8B5CF6',
     defaults:{on:true,threshold:-24,ratio:3,attack:10,release:250,knee:12},
     status:p=>fmtX(p.ratio),
@@ -686,6 +793,24 @@ const MODULE_TYPES = {
       {label:'Подавление',path:'gain',min:-15,max:0,step:0.5,fmt:fmtDb},
       {label:'Добротность Q',path:'q',min:1,max:5,step:0.1,fmt:fmtQ}],
     hint:'Узкий вырез против свистящих «с», «ц», «щ».' },
+  exciter:{ title:'Эксайтер', acc:'#00F0FF',
+    defaults:{on:true,freq:6000,drive:30,mix:35},
+    status:p=>`${Math.round(p.drive)}%`,
+    ctrls:[
+      {label:'Полоса возбуждения',path:'freq',min:2000,max:12000,step:1,log:true,fmt:fmtHz},
+      {label:'Интенсивность',path:'drive',min:0,max:100,step:1,fmt:fmtPct},
+      {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Генерирует гармоники в верхней полосе — воздух, блеск и детальность.' },
+  gain:{ title:'Уровень', acc:'#00F0FF',
+    defaults:{on:true,db:0},
+    status:p=>fmtDb(p.db),
+    ctrls:[{label:'Усиление',path:'db',min:-24,max:24,step:0.5,fmt:fmtDb}],
+    hint:'Трим громкости для гейн-стейджинга между модулями.' },
+  width:{ title:'Стерео-расширение', acc:'#00F0FF',
+    defaults:{on:true,amount:110},
+    status:p=>fmtPct(p.amount),
+    ctrls:[{label:'Ширина',path:'amount',min:0,max:200,step:1,fmt:fmtPct}],
+    hint:'M/S-матрица · 0% — моно, 100% — исходник.' },
   rv:{ title:'Реверберация', acc:'#8B5CF6',
     defaults:{on:true,mix:15,decay:1.6},
     status:p=>fmtPct(p.mix),
@@ -716,6 +841,14 @@ const MODULE_TYPES = {
       {label:'Скорость LFO',path:'rate',min:0.5,max:20,step:0.1,fmt:fmtRate},
       {label:'Глубина',path:'depth',min:0,max:100,step:1,fmt:fmtPct}],
     hint:'Амплитудная модуляция — пульсация громкости.' },
+  phaser:{ title:'Фейзер', acc:'#8B5CF6',
+    defaults:{on:true,rate:0.8,depth:60,mix:60},
+    status:p=>fmtRate(p.rate),
+    ctrls:[
+      {label:'Скорость LFO',path:'rate',min:0.1,max:8,step:0.1,fmt:fmtRate},
+      {label:'Глубина',path:'depth',min:0,max:100,step:1,fmt:fmtPct},
+      {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Фазовое вращение с LFO — классический «плывущий» эффект.' },
   sat:{ title:'Сатурация', acc:'#FF2ED2',
     defaults:{on:true,drive:25,mix:100},
     status:p=>`${Math.round(p.drive)}%`,
@@ -723,27 +856,45 @@ const MODULE_TYPES = {
       {label:'Драйв',path:'drive',min:0,max:100,step:1,fmt:fmtPct},
       {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
     hint:'Мягкое «ленточное» насыщение — тепло и плотность.' },
-  gain:{ title:'Уровень', acc:'#00F0FF',
-    defaults:{on:true,db:0},
-    status:p=>fmtDb(p.db),
-    ctrls:[{label:'Усиление',path:'db',min:-24,max:24,step:0.5,fmt:fmtDb}],
-    hint:'Трим громкости для гейн-стейджинга между модулями.' },
-  width:{ title:'Стерео-расширение', acc:'#00F0FF',
-    defaults:{on:true,amount:110},
-    status:p=>fmtPct(p.amount),
-    ctrls:[{label:'Ширина',path:'amount',min:0,max:200,step:1,fmt:fmtPct}],
-    hint:'M/S-матрица · 0% — моно, 100% — исходник.' }
+  dist:{ title:'Дисторшн', acc:'#FF2ED2',
+    defaults:{on:true,drive:40,tone:6000,mix:100},
+    status:p=>`${Math.round(p.drive)}%`,
+    ctrls:[
+      {label:'Драйв',path:'drive',min:0,max:100,step:1,fmt:fmtPct},
+      {label:'Тон (срез ВЧ)',path:'tone',min:500,max:12000,step:1,log:true,fmt:fmtHz},
+      {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Жёсткое клиппирование с тоном — от лёгкого кранча до перегруза.' },
+  crush:{ title:'Биткрашер', acc:'#FF2ED2',
+    defaults:{on:true,bits:8,rate:4,mix:100},
+    status:p=>`${Math.round(p.bits)} бит`,
+    ctrls:[
+      {label:'Разрядность',path:'bits',min:2,max:16,step:1,fmt:v=>Math.round(v)+' бит'},
+      {label:'Прореживание',path:'rate',min:1,max:40,step:1,fmt:v=>'×'+Math.round(v)},
+      {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Понижение битности и частоты — лоу-фай, 8-бит, цифровая грязь.' },
+  ring:{ title:'Ринг-модулятор', acc:'#FF2ED2',
+    defaults:{on:true,freq:30,mix:80},
+    status:p=>fmtHz(p.freq),
+    ctrls:[
+      {label:'Частота несущей',path:'freq',min:10,max:2000,step:1,log:true,fmt:fmtHz},
+      {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
+    hint:'Умножение сигнала на синусоиду — металлические, роботизированные тембры.' }
 };
 const PALETTE_GROUPS=[
-  {name:'Динамика', items:['gate','comp','lim']},
+  {name:'Динамика', items:['gate','expander','comp','lim']},
   {name:'Фильтры и EQ', items:['hp','lowpass','peq','eq','de']},
-  {name:'Эффекты и пространство', items:['rv','delay','chorus','tremolo','sat']},
-  {name:'Уровень и стерео', items:['gain','width']}
+  {name:'Качество и характер', items:['exciter','sat','gain','width']},
+  {name:'Пространство', items:['rv','delay','chorus']},
+  {name:'Модуляция', items:['tremolo','phaser','ring']},
+  {name:'Искажения', items:['dist','crush']}
 ];
 const MAX_NODES=18;
 
 const DEFAULT_SPEC=[['gate',{}],['hp',{}],['eq',{}],['de',{}],['comp',{}],['rv',{}],['width',{}],['lim',{}]];
+
+/* ---------- пресеты ---------- */
 const PRESETS = {
+ /* базовые */
  'Чистый сигнал':{chain:[]},
  'Студийный вокал':{chain:[
    ['gate',{threshold:-52,attack:3,release:200}],['hp',{freq:80}],
@@ -828,7 +979,91 @@ const PRESETS = {
    ['sat',{drive:35,mix:100}],
    ['comp',{threshold:-20,ratio:5,attack:10,release:150,knee:6}],
    ['rv',{mix:12,decay:1.2}],['width',{amount:65}],
-   ['lim',{threshold:-2}],['gain',{db:2}]]}
+   ['lim',{threshold:-2}],['gain',{db:2}]]},
+ /* улучшение качества */
+ 'Кристальная чистота':{chain:[
+   ['expander',{threshold:-48,ratio:2.5,attack:4,release:200}],
+   ['hp',{freq:70}],
+   ['eq',{lf:110,lg:1,mf:3000,mg:2,mq:1.1,hf:10000,hg:2}],
+   ['de',{freq:7000,gain:-4,q:2.5}],
+   ['exciter',{freq:7000,drive:25,mix:30}],
+   ['comp',{threshold:-26,ratio:2.5,attack:10,release:250,knee:14}],
+   ['width',{amount:105}],['lim',{threshold:-1.5}],['gain',{db:2}]]},
+ 'Шумоподавление':{chain:[
+   ['hp',{freq:90}],
+   ['expander',{threshold:-42,ratio:3,attack:4,release:180}],
+   ['gate',{threshold:-55,attack:2,release:160}],
+   ['de',{freq:7000,gain:-3,q:2}],
+   ['comp',{threshold:-28,ratio:2,attack:12,release:300,knee:16}],
+   ['lim',{threshold:-2}],['gain',{db:2.5}]]},
+ 'Реставрация записи':{chain:[
+   ['hp',{freq:60}],['lowpass',{freq:11000,q:0.71}],
+   ['expander',{threshold:-45,ratio:2.5}],
+   ['de',{freq:6500,gain:-4,q:2}],
+   ['eq',{lf:120,lg:1,mf:2000,mg:1.5,mq:1.0,hf:9000,hg:-1}],
+   ['comp',{threshold:-24,ratio:2.5,attack:10,release:280,knee:14}],
+   ['lim',{threshold:-1.5}],['gain',{db:2}]]},
+ 'Тёплый ламповый':{chain:[
+   ['hp',{freq:40}],
+   ['sat',{drive:18,mix:70}],
+   ['exciter',{freq:8000,drive:20,mix:20}],
+   ['comp',{threshold:-20,ratio:2,attack:20,release:300,knee:18}],
+   ['rv',{mix:8,decay:1.2}],['lim',{threshold:-1.5}],['gain',{db:1.5}]]},
+ 'Мастеринг-полировка':{chain:[
+   ['hp',{freq:30}],
+   ['eq',{lf:90,lg:1,mf:800,mg:-0.5,mq:0.9,hf:11000,hg:1.5}],
+   ['comp',{threshold:-18,ratio:1.8,attack:30,release:350,knee:20}],
+   ['exciter',{freq:9000,drive:15,mix:18}],
+   ['width',{amount:115}],['lim',{threshold:-1}],['gain',{db:1}]]},
+ /* искажения и характер */
+ 'Телефонный':{chain:[
+   ['hp',{freq:350}],['lowpass',{freq:3200,q:0.8}],
+   ['dist',{drive:15,tone:3500,mix:80}],
+   ['comp',{threshold:-22,ratio:4,attack:5,release:150,knee:6}],
+   ['gain',{db:2}]]},
+ 'Мегафон':{chain:[
+   ['hp',{freq:500}],['lowpass',{freq:4500,q:0.8}],
+   ['dist',{drive:35,tone:4000,mix:100}],
+   ['comp',{threshold:-18,ratio:5,attack:3,release:120,knee:4}],
+   ['delay',{time:90,feedback:15,mix:12}],['gain',{db:2}]]},
+ 'Радиоприёмник 50-х':{chain:[
+   ['hp',{freq:200}],['lowpass',{freq:4000,q:0.8}],
+   ['crush',{bits:12,rate:2,mix:35}],
+   ['sat',{drive:25,mix:90}],
+   ['tremolo',{rate:6,depth:10}],
+   ['comp',{threshold:-20,ratio:3,attack:8,release:200}],
+   ['gain',{db:2}]]},
+ '8-бит чиптюн':{chain:[
+   ['hp',{freq:60}],
+   ['crush',{bits:6,rate:8,mix:100}],
+   ['eq',{lf:100,lg:1,mf:1500,mg:2,mq:1.0,hf:8000,hg:-2}],
+   ['comp',{threshold:-18,ratio:3,attack:5,release:200}],
+   ['lim',{threshold:-1}],['gain',{db:2}]]},
+ 'Робот':{chain:[
+   ['ring',{freq:50,mix:70}],
+   ['crush',{bits:10,rate:2,mix:60}],
+   ['phaser',{rate:0.5,depth:40,mix:40}],
+   ['comp',{threshold:-20,ratio:3,attack:8,release:220}],
+   ['lim',{threshold:-1.5}],['gain',{db:1.5}]]},
+ 'Космический дрейф':{chain:[
+   ['ring',{freq:25,mix:45}],
+   ['phaser',{rate:0.3,depth:70,mix:60}],
+   ['delay',{time:450,feedback:45,mix:35}],
+   ['rv',{mix:35,decay:3.5}],
+   ['lim',{threshold:-2}],['gain',{db:1}]]},
+ 'Аналоговый хоррор':{chain:[
+   ['lowpass',{freq:5000,q:0.8}],['hp',{freq:80}],
+   ['phaser',{rate:0.15,depth:80,mix:70}],
+   ['crush',{bits:12,rate:3,mix:45}],
+   ['sat',{drive:30,mix:80}],
+   ['tremolo',{rate:0.7,depth:25}],
+   ['rv',{mix:20,decay:2.5}],['gain',{db:1.5}]]},
+ 'Стадионный рок':{chain:[
+   ['dist',{drive:55,tone:7000,mix:85}],
+   ['eq',{lf:100,lg:1,mf:900,mg:-1.5,mq:1.0,hf:6000,hg:2}],
+   ['comp',{threshold:-16,ratio:3.5,attack:15,release:250,knee:10}],
+   ['delay',{time:300,feedback:30,mix:18}],
+   ['rv',{mix:18,decay:1.8}],['lim',{threshold:-1}],['gain',{db:1}]]}
 };
 
 function clearPreset(){document.querySelectorAll('.chip[data-preset]').forEach(c=>c.classList.remove('active'));}
@@ -1055,8 +1290,8 @@ function openNodeModal(id){
     first=false;
   });
   if(hint)html.push(`<div class="font-mono text-[11px] text-slate-600 leading-relaxed">${hint}</div>`);
-  if(nd.type==='gate'&&live&&!live.gateOK)
-    html.push(`<div class="text-xs text-neon-magenta font-mono">⚠ AudioWorklet недоступен в этом браузере — гейт не обрабатывает сигнал</div>`);
+  if((nd.type==='gate'||nd.type==='expander'||nd.type==='crush')&&live&&!live.gateOK)
+    html.push(`<div class="text-xs text-neon-magenta font-mono">⚠ AudioWorklet недоступен в этом браузере — модуль пропускает звук без обработки</div>`);
   $('modal-body').innerHTML=html.join('');
   modalCtrls=[];
   ctrls.forEach(c=>{
@@ -1188,7 +1423,7 @@ function makeIR(actx,seconds){
 function makeSatCurve(drive){
   const k=1+Math.max(0,drive)*0.12, n=1024;
   const curve=new Float32Array(n);
-  const nk=Math.tanh(k);
+  const nk=Math.tanh(k)||1;
   for(let i=0;i<n;i++){const x=i/(n-1)*2-1;curve[i]=Math.tanh(k*x)/nk;}
   return curve;
 }
@@ -1203,6 +1438,13 @@ function createBlockFor(nd,actx,gateOK){
       if(gateOK){ try{
         B.gate=new AudioWorkletNode(actx,'noise-gate');
         B.input.connect(B.gate); B.output=B.gate; reg(B.gate);
+      }catch(e){ B.output=B.input; } } else B.output=B.input;
+      break; }
+    case 'expander':{
+      B.input=mkGainNode(actx,1); reg(B.input);
+      if(gateOK){ try{
+        B.exp=new AudioWorkletNode(actx,'nf-expander');
+        B.input.connect(B.exp); B.output=B.exp; reg(B.exp);
       }catch(e){ B.output=B.input; } } else B.output=B.input;
       break; }
     case 'hp':{ const f=bq(actx,'highpass',p.freq,0,p.q); B.input=B.output=f; reg(f); break; }
@@ -1252,6 +1494,18 @@ function createBlockFor(nd,actx,gateOK){
       try{lfo.start(0);}catch(e){}
       B.input=B.output=vca; B.vca=vca; B.lfo=lfo; B.lfoG=lfoG;
       reg(vca,lfoG); B.oscs.push(lfo); break; }
+    case 'phaser':{
+      const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
+      const aps=[]; let prv=null;
+      for(let i=0;i<4;i++){ const ap=bq(actx,'allpass',700,0,0.6); aps.push(ap); if(prv)prv.connect(ap); prv=ap; }
+      const lfo=actx.createOscillator(); lfo.type='sine'; lfo.frequency.value=clamp(p.rate,0.05,12);
+      const lfoG=mkGainNode(actx,(clamp(p.depth,0,100)/100)*600);
+      lfo.connect(lfoG); aps.forEach(ap=>lfoG.connect(ap.frequency));
+      try{lfo.start(0);}catch(e){}
+      inG.connect(dry); dry.connect(sum);
+      inG.connect(aps[0]); aps[3].connect(wet); wet.connect(sum);
+      B.input=inG; B.output=sum; B.dry=dry; B.wet=wet; B.lfo=lfo; B.lfoG=lfoG;
+      reg(inG,dry,wet,sum,...aps,lfoG); B.oscs.push(lfo); break; }
     case 'sat':{
       const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
       const pre=mkGainNode(actx,1+p.drive/20);
@@ -1261,6 +1515,45 @@ function createBlockFor(nd,actx,gateOK){
       inG.connect(pre); pre.connect(shaper); shaper.connect(post); post.connect(wet); wet.connect(sum);
       B.input=inG; B.output=sum; B.dry=dry; B.wet=wet; B.pre=pre; B.post=post; B.shaper=shaper; B.lastDrive=p.drive;
       reg(inG,dry,wet,sum,pre,shaper,post); break; }
+    case 'exciter':{
+      const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
+      const hp=bq(actx,'highpass',clamp(p.freq,500,16000),0,0.71);
+      const pre=mkGainNode(actx,1+p.drive/25);
+      const shaper=actx.createWaveShaper(); shaper.oversample='4x'; shaper.curve=makeSatCurve(p.drive);
+      const post=mkGainNode(actx,1/(1+p.drive/30));
+      inG.connect(dry); dry.connect(sum);
+      inG.connect(hp); hp.connect(pre); pre.connect(shaper); shaper.connect(post); post.connect(wet); wet.connect(sum);
+      B.input=inG; B.output=sum; B.dry=dry; B.wet=wet; B.hp=hp; B.pre=pre; B.post=post; B.shaper=shaper; B.lastDrive=p.drive;
+      reg(inG,dry,wet,sum,hp,pre,shaper,post); break; }
+    case 'dist':{
+      const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
+      const pre=mkGainNode(actx,1+p.drive/8);
+      const shaper=actx.createWaveShaper(); shaper.oversample='4x'; shaper.curve=makeSatCurve(p.drive*2.5);
+      const tone=bq(actx,'lowpass',clamp(p.tone,200,16000),0,0.71);
+      const post=mkGainNode(actx,1/(1+p.drive/12));
+      inG.connect(dry); dry.connect(sum);
+      inG.connect(pre); pre.connect(shaper); shaper.connect(tone); tone.connect(post); post.connect(wet); wet.connect(sum);
+      B.input=inG; B.output=sum; B.dry=dry; B.wet=wet; B.pre=pre; B.post=post; B.tone=tone; B.shaper=shaper; B.lastDrive=p.drive;
+      reg(inG,dry,wet,sum,pre,shaper,tone,post); break; }
+    case 'crush':{
+      const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
+      inG.connect(dry); dry.connect(sum);
+      B.input=inG; B.output=sum; B.dry=dry; B.wet=wet;
+      if(gateOK){ try{
+        B.crush=new AudioWorkletNode(actx,'nf-crush');
+        inG.connect(B.crush); B.crush.connect(wet); wet.connect(sum); reg(B.crush);
+      }catch(e){ wet.gain.value=0; } } else { wet.gain.value=0; }
+      reg(inG,dry,wet,sum); break; }
+    case 'ring':{
+      const inG=mkGainNode(actx,1), dry=mkGainNode(actx,1), wet=mkGainNode(actx,0), sum=mkGainNode(actx,1);
+      const vg=mkGainNode(actx,0);
+      const osc=actx.createOscillator(); osc.type='sine'; osc.frequency.value=clamp(p.freq,1,8000);
+      osc.connect(vg.gain);
+      try{osc.start(0);}catch(e){}
+      inG.connect(dry); dry.connect(sum);
+      inG.connect(vg); vg.connect(wet); wet.connect(sum);
+      B.input=inG; B.output=sum; B.dry=dry; B.wet=wet; B.osc=osc;
+      reg(inG,dry,wet,sum,vg); B.oscs.push(osc); break; }
     case 'width':{
       const inG=mkGainNode(actx,1), split=actx.createChannelSplitter(2), merge=actx.createChannelMerger(2);
       inG.connect(split);
@@ -1276,7 +1569,6 @@ function createBlockFor(nd,actx,gateOK){
       B.input=inG; B.output=merge; B.wSideL=sL; B.wSideR=sR;
       reg(inG,split,merge,gLM,gRM,gLS,gRS,mid,side,sL,sR); break; }
     default:{
-      // страховка: неизвестный тип пропускаем звук насквозь
       const g=mkGainNode(actx,1); B.input=B.output=g; reg(g);
     }
   }
@@ -1298,6 +1590,10 @@ function applyBlockFor(actx,B,nd,smooth){
       set(P.get('threshold'), p.threshold);
       set(P.get('attack'), p.attack);
       set(P.get('release'), p.release); } break;
+    case 'expander': if(B.exp){ const P=B.exp.parameters;
+      set(P.get('threshold'), p.threshold); set(P.get('ratio'), p.ratio);
+      set(P.get('attack'), p.attack); set(P.get('release'), p.release);
+      set(P.get('active'), p.on?1:0); } break;
     case 'hp': set(B.input.frequency, p.on?p.freq:10); set(B.input.Q,p.q); break;
     case 'lowpass': set(B.input.frequency, p.on?p.freq:20000); set(B.input.Q,p.q); break;
     case 'peq':
@@ -1330,10 +1626,27 @@ function applyBlockFor(actx,B,nd,smooth){
       if(p.on){ set(B.vca.gain,1-clamp(p.depth,0,100)/200); set(B.lfoG.gain,clamp(p.depth,0,100)/200); }
       else { set(B.vca.gain,1); set(B.lfoG.gain,0); }
       break;
+    case 'phaser': set(B.lfo.frequency,clamp(p.rate,0.05,12));
+      set(B.lfoG.gain,(clamp(p.depth,0,100)/100)*600); mixGains(p.mix,p.on); break;
     case 'sat': set(B.pre.gain,1+p.drive/20); set(B.post.gain,1/(1+p.drive/30));
       if(Math.abs(p.drive-(B.lastDrive||0))>0.5){ B.lastDrive=p.drive;
         try{B.shaper.curve=makeSatCurve(p.drive);}catch(e){} }
       mixGains(p.mix,p.on); break;
+    case 'exciter': set(B.hp.frequency,clamp(p.freq,500,16000));
+      set(B.pre.gain,1+p.drive/25); set(B.post.gain,1/(1+p.drive/30));
+      if(Math.abs(p.drive-(B.lastDrive||0))>0.5){ B.lastDrive=p.drive;
+        try{B.shaper.curve=makeSatCurve(p.drive);}catch(e){} }
+      mixGains(p.mix,p.on); break;
+    case 'dist': set(B.pre.gain,1+p.drive/8); set(B.post.gain,1/(1+p.drive/12));
+      set(B.tone.frequency,clamp(p.tone,200,16000));
+      if(Math.abs(p.drive-(B.lastDrive||0))>0.5){ B.lastDrive=p.drive;
+        try{B.shaper.curve=makeSatCurve(p.drive*2.5);}catch(e){} }
+      mixGains(p.mix,p.on); break;
+    case 'crush': if(B.crush){ const P=B.crush.parameters;
+      set(P.get('bits'),clamp(p.bits,2,16)); set(P.get('rate'),clamp(p.rate,1,50));
+      set(P.get('active'),p.on?1:0); }
+      mixGains(p.mix,p.on); break;
+    case 'ring': set(B.osc.frequency,clamp(p.freq,1,8000)); mixGains(p.mix,p.on); break;
     case 'width':{ const w=p.on?p.amount/100:1;
       set(B.wSideL.gain,w); set(B.wSideR.gain,-w); break; }
   }
@@ -1364,7 +1677,6 @@ function rebuildLiveChain(){
   live.blocks={};
   try{live.inGain.disconnect();}catch(e){}
   if(order.length===0){
-    // пустая цепь («Чистый сигнал») — сквозной проход
     live.inGain.connect(live.makeup);
   }else{
     order.forEach(id=>{
