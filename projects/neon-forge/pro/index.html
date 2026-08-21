@@ -2,9 +2,9 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>NEONFORGE — студийный аудио-энхансер</title>
-<meta name="description" content="Локальная студийная обработка аудио и видеодорожек: визуальный конструктор цепи, модули с параметрами, пресеты, экспорт WAV / MP3 / OGG и ремукс видео с улучшенным звуком.">
+<meta name="description" content="Локальная студийная обработка аудио и видеодорожек: визуальный конструктор цепи с пан/зумом, модули с параметрами, пресеты, экспорт WAV / MP3 / OGG и ремукс видео.">
 
 <!-- Шрифты (fontsource CDN) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5/index.css">
@@ -97,6 +97,15 @@ tailwind.config = {
   }
   .sel:focus{ border-color:rgba(0,240,255,.6); box-shadow:0 0 12px rgba(0,240,255,.2); }
 
+  /* кнопки панели управления холстом */
+  .tbtn{
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    border-radius:9px; color:#94a3b8; transition:.2s; cursor:pointer;
+    font-family:'JetBrains Mono',monospace; font-size:11px; flex:none;
+  }
+  .tbtn:hover{ color:#00F0FF; background:rgba(0,240,255,.08); box-shadow:0 0 12px rgba(0,240,255,.25); }
+  .tbtn:active{ transform:scale(.9); }
+
   @keyframes pulseGlow{ 0%,100%{ box-shadow:0 0 16px rgba(0,240,255,.45);} 50%{ box-shadow:0 0 36px rgba(0,240,255,.85);} }
   .play-btn.playing{ animation:pulseGlow 1.6s ease-in-out infinite; }
   .spin{ animation:spinSlow 4s linear infinite; }
@@ -163,7 +172,7 @@ tailwind.config = {
         <span id="state-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
         <span id="ctx-state" class="font-mono text-xs text-slate-400">ожидание</span>
       </div>
-      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.5</div>
+      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.6</div>
     </div>
   </div>
 </header>
@@ -264,6 +273,7 @@ tailwind.config = {
       <video id="vid-preview" class="w-full max-h-[420px] rounded-xl bg-black" muted playsinline preload="auto"></video>
     </div>
 
+    <!-- ПАТЧ-ХОЛСТ -->
     <div class="card p-5">
       <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div class="min-w-0">
@@ -275,14 +285,33 @@ tailwind.config = {
           <button id="btn-patch-reset" class="btn-ghost !py-1.5 !px-3 text-xs">⟲ Сброс цепи</button>
         </div>
       </div>
-      <div class="overflow-x-auto rounded-xl border border-white/5 bg-ink-950/70">
-        <canvas id="patch" class="block h-80 w-full min-w-[900px] touch-none select-none"></canvas>
+
+      <div class="relative rounded-xl border border-white/5 bg-ink-950/70 overflow-hidden">
+        <canvas id="patch" class="block w-full h-80 md:h-[400px] touch-none select-none"></canvas>
+        <!-- панель управления видом -->
+        <div class="absolute top-2.5 right-2.5 flex items-center gap-1 rounded-xl border border-white/10 bg-ink-950/85 backdrop-blur px-1.5 py-1.5 shadow-[0_4px_24px_rgba(0,0,0,.5)]">
+          <button id="btn-zoom-out" class="tbtn" title="Уменьшить" aria-label="Уменьшить">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </button>
+          <span id="zoom-label" class="font-mono text-[10px] text-neon-cyan w-11 text-center select-none">100%</span>
+          <button id="btn-zoom-in" class="tbtn" title="Увеличить" aria-label="Увеличить">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+          <span class="w-px h-6 bg-white/10 mx-0.5"></span>
+          <button id="btn-zoom-100" class="tbtn" title="Масштаб 100%">1:1</button>
+          <button id="btn-fit" class="tbtn" title="Автомасштаб: уместить всю цепь" aria-label="Автомасштаб">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+          </button>
+        </div>
       </div>
+
       <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[10px] text-slate-600">
+        <span>◦ колесо мыши / пинч — масштаб</span>
+        <span>◦ тяните фон — перемещение вида</span>
         <span>◦ перетаскивайте узлы</span>
         <span>◦ тяните от выхода ● к входу ● — кабель</span>
-        <span>◦ клик по узлу — параметры модуля</span>
-        <span>◦ двойной клик по узлу — вкл/выкл</span>
+        <span>◦ клик по узлу — параметры</span>
+        <span>◦ двойной клик — вкл/выкл</span>
         <span>◦ клик по кабелю + Del — удалить</span>
       </div>
     </div>
@@ -451,7 +480,7 @@ tailwind.config = {
 <div id="toasts" class="fixed bottom-6 right-6 z-50 space-y-2"></div>
 <input type="file" id="file" accept="audio/*,video/*,.mp3,.wav,.ogg,.oga,.flac,.m4a,.aac,.opus,.webm,.mp4,.m4v,.mov,.mkv,.avi" class="hidden">
 
-<!-- Кодеры аудио: MP3 (lamejs) и OGG Vorbis -->
+<!-- Кодеры аудио -->
 <script src="https://cdn.jsdelivr.net/npm/@breezystack/lamejs@1.2.7/dist/lamejs.iife.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/higuma/ogg-vorbis-encoder-js@master/lib/OggVorbisEncoder.js"></script>
 <!-- FFmpeg WASM (UMD, глобал FFmpegWASM) -->
@@ -460,9 +489,7 @@ tailwind.config = {
 <script>
 /* ============================================================
    NEONFORGE — студийный аудио/видео энхансер (SPA, один файл)
-   Патч-движок · модальные параметры · пресеты · видео-ремукс
-   Надёжная синхронизация видео со звуком (мастер-часы — аудио)
-   FFmpeg WASM: UMD-загрузка, blob-воркер, прогресс без зависаний
+   Патч-движок с камерой: пан / зум / автомасштаб / мультитач
    ============================================================ */
 'use strict';
 
@@ -502,7 +529,7 @@ function withTimeout(promise,ms,msg){
   });
 }
 
-/* ---------- AudioWorklet: шумовой гейт (через Blob) ---------- */
+/* ---------- AudioWorklet: шумовой гейт ---------- */
 const GATE_SRC = `
 class NoiseGate extends AudioWorkletProcessor {
   static get parameterDescriptors(){
@@ -639,7 +666,7 @@ const PRESETS = {
 function clearPreset(){document.querySelectorAll('.chip[data-preset]').forEach(c=>c.classList.remove('active'));}
 
 /* ============================================================
-   ПАТЧ-МОДЕЛЬ
+   ПАТЧ-МОДЕЛЬ + КАМЕРА (пан/зум)
    ============================================================ */
 const DEFAULT_ORDER = ['gate','hp','eq','de','comp','rv','width','lim'];
 const NODE_W = 124, NODE_H = 58;
@@ -658,9 +685,43 @@ const NODE_META = {
 const patch = { nodes:[], edges:[], selected:null, selEdge:null, drag:null, hoverPort:null };
 let patchReady=false, lastOrder=[...DEFAULT_ORDER];
 
+// камера: экранные координаты = мировые * scale + offset
+const cam = { ox:0, oy:0, scale:1 };
+const CAM_MIN=0.3, CAM_MAX=3;
+const w2sX=x=>x*cam.scale+cam.ox;
+const w2sY=y=>y*cam.scale+cam.oy;
+const s2w=p=>({x:(p.x-cam.ox)/cam.scale, y:(p.y-cam.oy)/cam.scale});
+
 const nodeById = id=>patch.nodes.find(n=>n.id===id);
 const patchW = ()=> $('patch').clientWidth;
 const patchH = ()=> $('patch').clientHeight;
+
+function updateZoomLabel(){ $('zoom-label').textContent=Math.round(cam.scale*100)+'%'; }
+function zoomAt(sp,factor){
+  const ns=clamp(cam.scale*factor,CAM_MIN,CAM_MAX);
+  const wx=(sp.x-cam.ox)/cam.scale, wy=(sp.y-cam.oy)/cam.scale;
+  cam.scale=ns;
+  cam.ox=sp.x-wx*ns;
+  cam.oy=sp.y-wy*ns;
+  updateZoomLabel();
+}
+function zoomCenter(factor){ zoomAt({x:patchW()/2,y:patchH()/2},factor); }
+function fitToView(){
+  const cw=patchW(), ch=patchH();
+  if(!patch.nodes.length||cw<2||ch<2)return;
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  patch.nodes.forEach(n=>{
+    minX=Math.min(minX,n.x); minY=Math.min(minY,n.y);
+    maxX=Math.max(maxX,n.x+NODE_W); maxY=Math.max(maxY,n.y+NODE_H);
+  });
+  const pad=48;
+  const bw=(maxX-minX)+pad*2, bh=(maxY-minY)+pad*2;
+  const s=clamp(Math.min(cw/bw,ch/bh),CAM_MIN,1.4);
+  cam.scale=s;
+  cam.ox=(cw-(maxX-minX)*s)/2-minX*s;
+  cam.oy=(ch-(maxY-minY)*s)/2-minY*s;
+  updateZoomLabel();
+}
 
 function initPatch(){
   patch.nodes=[{id:'src',type:'src',x:16,y:130},
@@ -674,7 +735,7 @@ function resetPatchEdges(){
   for(let i=0;i<seq.length-1;i++)patch.edges.push({from:seq[i],to:seq[i+1]});
 }
 function layoutPatch(){
-  const w=Math.max(patchW(),900);
+  const w=940; // мировая опорная ширина раскладки
   const step=clamp((w-440)/3,140,210);
   DEFAULT_ORDER.forEach((id,i)=>{
     const nd=nodeById(id); if(!nd)return;
@@ -683,13 +744,6 @@ function layoutPatch(){
   });
   const s=nodeById('src'); s.x=16; s.y=130;
   const d=nodeById('dst'); d.x=w-NODE_W-18; d.y=130;
-}
-function clampPatch(){
-  const w=patchW(),h=patchH(); if(w<10)return;
-  patch.nodes.forEach(nd=>{
-    nd.x=clamp(nd.x,4,Math.max(4,w-NODE_W-4));
-    nd.y=clamp(nd.y,4,Math.max(4,h-NODE_H-4));
-  });
 }
 function computePath(){
   const out=new Map();
@@ -722,20 +776,23 @@ function onEdgesChanged(){
   updateChainLine();
 }
 
-/* ---------- геометрия ---------- */
+/* ---------- хит-тесты в экранных координатах ---------- */
 function outPort(nd){ return {x:nd.x+NODE_W,y:nd.y+NODE_H/2}; }
 function inPort(nd){ return {x:nd.x,y:nd.y+NODE_H/2}; }
-function portAt(p){
+function portAt(sp){
   for(const nd of patch.nodes){
-    if(nd.type!=='src'){ const q=inPort(nd); if(Math.hypot(p.x-q.x,p.y-q.y)<11)return {nodeId:nd.id,kind:'in',x:q.x,y:q.y}; }
-    if(nd.type!=='dst'){ const q=outPort(nd); if(Math.hypot(p.x-q.x,p.y-q.y)<11)return {nodeId:nd.id,kind:'out',x:q.x,y:q.y}; }
+    if(nd.type!=='src'){ const q=inPort(nd);
+      if(Math.hypot(sp.x-w2sX(q.x),sp.y-w2sY(q.y))<13)return {nodeId:nd.id,kind:'in',x:q.x,y:q.y}; }
+    if(nd.type!=='dst'){ const q=outPort(nd);
+      if(Math.hypot(sp.x-w2sX(q.x),sp.y-w2sY(q.y))<13)return {nodeId:nd.id,kind:'out',x:q.x,y:q.y}; }
   }
   return null;
 }
-function nodeAt(p){
+function nodeAt(sp){
   for(let i=patch.nodes.length-1;i>=0;i--){
     const nd=patch.nodes[i];
-    if(p.x>=nd.x&&p.x<=nd.x+NODE_W&&p.y>=nd.y&&p.y<=nd.y+NODE_H)return nd;
+    const x=w2sX(nd.x), y=w2sY(nd.y), w=NODE_W*cam.scale, h=NODE_H*cam.scale;
+    if(sp.x>=x&&sp.x<=x+w&&sp.y>=y&&sp.y<=y+h)return nd;
   }
   return null;
 }
@@ -744,7 +801,7 @@ function bezPt(a,c1,c2,b,t){
   return { x:mt*mt*mt*a.x+3*mt*mt*t*c1.x+3*mt*t*t*c2.x+t*t*t*b.x,
            y:mt*mt*mt*a.y+3*mt*mt*t*c1.y+3*mt*t*t*c2.y+t*t*t*b.y };
 }
-function edgeAt(p){
+function edgeAt(sp){
   for(const ed of patch.edges){
     const a=nodeById(ed.from), b=nodeById(ed.to); if(!a||!b)continue;
     const p1=outPort(a), p2=inPort(b);
@@ -752,7 +809,7 @@ function edgeAt(p){
     const c1={x:p1.x+cp,y:p1.y}, c2={x:p2.x-cp,y:p2.y};
     for(let t=0;t<=1.001;t+=1/28){
       const q=bezPt(p1,c1,c2,p2,t);
-      if(Math.hypot(p.x-q.x,p.y-q.y)<7)return ed;
+      if(Math.hypot(sp.x-w2sX(q.x),sp.y-w2sY(q.y))<9)return ed;
     }
   }
   return null;
@@ -1079,11 +1136,6 @@ function updateAB(){
 
 /* ============================================================
    СИНХРОНИЗАЦИЯ ВИДЕО С ОБРАБОТАННЫМ ЗВУКОМ
-   Аудио — мастер-часы. Видео — ведомое:
-   • задержка вывода звука компенсируется (outputLatency)
-   • малый дрейф устраняется плавно через playbackRate (0.9–1.1)
-   • большой рассинхрон — редкая жёсткая перемотка (не чаще 2 р/с)
-   • никакие действия не выполняются во время seek видео
    ============================================================ */
 let lastHardFix=0;
 function videoLatency(){
@@ -1107,7 +1159,6 @@ function syncVideo(action,time){
       v.loop=state.loop;
       if(v.readyState>=1){ applyPos(); v.play().catch(()=>{}); }
       else{
-        // метаданные ещё не загружены — стартуем, как только станут доступны
         v.addEventListener('loadedmetadata',()=>{
           if(state.playing){ applyPos(); v.play().catch(()=>{}); }
         },{once:true});
@@ -1128,12 +1179,11 @@ function syncVideoLoop(){
     if(v.playbackRate!==1)v.playbackRate=1;
     return;
   }
-  // ждём первый кадр и не вмешиваемся, пока видео само перематывается
   if(v.readyState<2||v.seeking)return;
   if(v.paused&&!v.ended){ v.play().catch(()=>{}); return; }
   if(v.ended)return;
   const target=clamp(getPos()-videoLatency(),0,state.buffer.duration);
-  const d=v.currentTime-target; // d>0 — видео опережает звук
+  const d=v.currentTime-target;
   const now=performance.now();
   if(Math.abs(d)>0.3){
     if(now-lastHardFix>500){
@@ -1203,7 +1253,7 @@ function updateTransport(){
 }
 
 /* ============================================================
-   ЗАГРУЗКА ФАЙЛОВ: аудио и видео
+   ЗАГРУЗКА ФАЙЛОВ
    ============================================================ */
 function isVideoFile(f){
   return /^video\//i.test(f.type)||/\.(mp4|m4v|mov|webm|mkv|avi)$/i.test(f.name);
@@ -1217,7 +1267,7 @@ function finalizeLoad(f,kindLabel){
   $('f-meta').textContent=`${kindLabel} · ${fmtTime(state.buffer.duration)} · ${(state.buffer.sampleRate/1000).toFixed(1).replace('.',',')} кГц · ${state.buffer.numberOfChannels===1?'моно':'стерео'} · ${(f.size/1048576).toFixed(1).replace('.',',')} МБ`;
   requestAnimationFrame(()=>{
     fitAllCanvases(); buildWave();
-    if(!patchReady){ layoutPatch(); patchReady=true; } else clampPatch();
+    if(!patchReady){ layoutPatch(); patchReady=true; fitToView(); }
     updateChainLine(); updateTransport(); updateExportUI();
   });
 }
@@ -1278,7 +1328,7 @@ async function loadVideoFile(f){
 }
 
 /* ============================================================
-   FFMPEG WASM — надёжная загрузка (UMD + blob-воркер)
+   FFMPEG WASM
    ============================================================ */
 const FF_BASE='https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd';
 const CORE_BASE='https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist';
@@ -1316,18 +1366,14 @@ async function ensureFFmpeg(){
     const ff=new FFmpeg();
     ff.on('progress',ev=>{ if(ffProgressCb)ffProgressCb(ev.progress||0); });
     ff.on('log',ev=>{ try{console.debug('[ffmpeg]',ev.message);}catch(e){} });
-
     setFFStatus('скачивание воркера…');
     const classWorkerURL=await fetchToBlobURL(FF_BASE+'/814.ffmpeg.js','text/javascript');
-
     setFFStatus('скачивание ядра…');
     const coreURL=await fetchToBlobURL(CORE_BASE+'/esm/ffmpeg-core.js','text/javascript',
       (l,t)=>setFFStatus(`скачивание ядра JS… ${fmtMB(l)}${t?' / '+fmtMB(t):''}`));
-
     setFFStatus('скачивание WASM-модуля…');
     const wasmURL=await fetchToBlobURL(CORE_BASE+'/umd/ffmpeg-core.wasm','application/wasm',
       (l,t)=>setFFStatus(`скачивание WASM… ${fmtMB(l)}${t?' / '+fmtMB(t):''}`));
-
     setFFStatus('инициализация WASM…');
     await withTimeout(ff.load({classWorkerURL,coreURL,wasmURL}),120000,
       'таймаут инициализации FFmpeg (>120 с)');
@@ -1495,7 +1541,7 @@ function drawMeterFrame(){
   drawBar(x1,L,holdL,'L'); drawBar(x2,Rr,holdR,'R');
 }
 
-/* ---------- рендер патч-холста ---------- */
+/* ---------- рендер патч-холста (с камерой) ---------- */
 function roundRectPath(g,x,y,w,h,r){
   g.moveTo(x+r,y);
   g.arcTo(x+w,y,x+w,y+h,r);
@@ -1584,10 +1630,24 @@ function drawNode(g,nd){
 function drawPatchFrame(){
   const cv=$('patch'); if(!cv)return;
   const g=cv.getContext('2d');
-  const w=cv.clientWidth,h=cv.clientHeight; if(w<2||!patchReady)return;
+  const w=cv.clientWidth,h=cv.clientHeight; if(w<2)return;
   g.clearRect(0,0,w,h);
-  g.fillStyle='rgba(148,163,184,.07)';
-  for(let x=12;x<w;x+=24)for(let y=12;y<h;y+=24)g.fillRect(x,y,1.5,1.5);
+  if(!patchReady)return;
+  g.save();
+  g.translate(cam.ox,cam.oy);
+  g.scale(cam.scale,cam.scale);
+  // адаптивная мировая сетка в видимой области
+  const wx0=(-cam.ox)/cam.scale, wy0=(-cam.oy)/cam.scale;
+  const wx1=(w-cam.ox)/cam.scale, wy1=(h-cam.oy)/cam.scale;
+  let step=24;
+  while((wx1-wx0)/step>90||((wy1-wy0)/step>60))step*=2;
+  g.fillStyle='rgba(148,163,184,.08)';
+  const ds=1.5/cam.scale;
+  const sx=Math.floor(wx0/step)*step, sy=Math.floor(wy0/step)*step;
+  for(let x=sx;x<wx1;x+=step)
+    for(let y=sy;y<wy1;y+=step)
+      g.fillRect(x,y,ds,ds);
+  // содержимое
   const {path}=computePath();
   const activeSet=new Set();
   for(let i=0;i<path.length-1;i++)activeSet.add(path[i]+'>'+path[i+1]);
@@ -1613,10 +1673,16 @@ function drawPatchFrame(){
     }
   }
   patch.nodes.forEach(nd=>drawNode(g,nd));
+  g.restore();
 }
 
-/* ---------- интерактив патч-холста ---------- */
+/* ============================================================
+   ИНТЕРАКТИВ ПАТЧ-ХОЛСТА: узлы, кабели, пан, зум, мультитач
+   ============================================================ */
 let clickTimer=null;
+const pointers=new Map();
+let pinch=null;
+
 function patchPos(e){ const r=$('patch').getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
 function removeSelectedEdge(){
   if(!patch.selEdge)return;
@@ -1627,49 +1693,82 @@ function removeSelectedEdge(){
 }
 function initPatchEvents(){
   const cv=$('patch');
+
   cv.addEventListener('pointerdown',e=>{
     e.preventDefault();
-    const p=patchPos(e);
     cv.setPointerCapture(e.pointerId);
-    const port=portAt(p);
+    const sp=patchPos(e);
+    pointers.set(e.pointerId,sp);
+    if(pointers.size===2){
+      // начался пинч — отменяем одиночные действия
+      patch.drag=null;
+      const [a,b]=[...pointers.values()];
+      const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      pinch={d0:Math.hypot(a.x-b.x,a.y-b.y)||1, s0:cam.scale, wm:s2w(mid)};
+      return;
+    }
+    if(pointers.size>2)return;
+    const port=portAt(sp);
     if(port){
-      if(port.kind==='out'){ patch.drag={kind:'edge',from:port.nodeId,x:p.x,y:p.y}; }
+      if(port.kind==='out'){ const wp=s2w(sp); patch.drag={kind:'edge',from:port.nodeId,x:wp.x,y:wp.y}; }
       else{
         const ei=patch.edges.findIndex(ed=>ed.to===port.nodeId);
         if(ei>=0){ const ed=patch.edges.splice(ei,1)[0]; onEdgesChanged();
-          patch.drag={kind:'edge',from:ed.from,x:p.x,y:p.y}; }
+          const wp=s2w(sp); patch.drag={kind:'edge',from:ed.from,x:wp.x,y:wp.y}; }
       }
       return;
     }
-    const nd=nodeAt(p);
-    if(nd){ patch.selected=nd.id; patch.selEdge=null;
-      patch.drag={kind:'node',id:nd.id,dx:p.x-nd.x,dy:p.y-nd.y,moved:0};
+    const nd=nodeAt(sp);
+    if(nd){ const wp=s2w(sp); patch.selected=nd.id; patch.selEdge=null;
+      patch.drag={kind:'node',id:nd.id,dx:wp.x-nd.x,dy:wp.y-nd.y,moved:0};
       cv.style.cursor='grabbing'; return; }
-    const ed=edgeAt(p);
+    const ed=edgeAt(sp);
     if(ed){ patch.selEdge={from:ed.from,to:ed.to}; patch.selected=null; return; }
-    patch.selected=null; patch.selEdge=null;
+    // пустое место — панорамирование
+    patch.drag={kind:'pan',sx:sp.x,sy:sp.y,ox:cam.ox,oy:cam.oy,moved:0};
+    cv.style.cursor='grabbing';
   });
+
   cv.addEventListener('pointermove',e=>{
-    const p=patchPos(e);
-    patch.hoverPort=portAt(p);
-    if(!patch.drag){
-      cv.style.cursor=patch.hoverPort?'pointer':(nodeAt(p)?'grab':(edgeAt(p)?'pointer':'default'));
+    const sp=patchPos(e);
+    if(pointers.has(e.pointerId))pointers.set(e.pointerId,sp);
+    if(pinch&&pointers.size>=2){
+      const [a,b]=[...pointers.values()];
+      const d=Math.hypot(a.x-b.x,a.y-b.y)||1;
+      const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      const ns=clamp(pinch.s0*d/pinch.d0,CAM_MIN,CAM_MAX);
+      cam.scale=ns;
+      cam.ox=mid.x-pinch.wm.x*ns;
+      cam.oy=mid.y-pinch.wm.y*ns;
+      updateZoomLabel();
       return;
     }
+    patch.hoverPort=portAt(sp);
+    if(!patch.drag){
+      cv.style.cursor=patch.hoverPort?'pointer':(nodeAt(sp)?'grab':(edgeAt(sp)?'pointer':'default'));
+      return;
+    }
+    const wp=s2w(sp);
     if(patch.drag.kind==='node'){
       const nd=nodeById(patch.drag.id);
-      if(nd){
-        nd.x=clamp(p.x-patch.drag.dx,4,patchW()-NODE_W-4);
-        nd.y=clamp(p.y-patch.drag.dy,4,patchH()-NODE_H-4);
-        patch.drag.moved+=(Math.abs(e.movementX||0)+Math.abs(e.movementY||0));
-      }
-    }else{ patch.drag.x=p.x; patch.drag.y=p.y; }
+      if(nd){ nd.x=wp.x-patch.drag.dx; nd.y=wp.y-patch.drag.dy;
+        patch.drag.moved+=(Math.abs(e.movementX||0)+Math.abs(e.movementY||0)); }
+    }else if(patch.drag.kind==='edge'){
+      patch.drag.x=wp.x; patch.drag.y=wp.y;
+    }else if(patch.drag.kind==='pan'){
+      cam.ox=patch.drag.ox+(sp.x-patch.drag.sx);
+      cam.oy=patch.drag.oy+(sp.y-patch.drag.sy);
+      patch.drag.moved+=(Math.abs(e.movementX||0)+Math.abs(e.movementY||0));
+    }
   });
+
   const endDrag=e=>{
+    pointers.delete(e.pointerId);
+    if(pointers.size<2)pinch=null;
     if(!patch.drag)return;
-    const p=patchPos(e);
+    const sp=patchPos(e);
     if(patch.drag.kind==='edge'){
-      const port=portAt(p);
+      const port=portAt(sp);
       if(port&&port.kind==='in'&&patch.drag.from&&port.nodeId!==patch.drag.from)
         connectNodes(patch.drag.from,port.nodeId);
       patch.drag=null;
@@ -1685,25 +1784,51 @@ function initPatchEvents(){
           clickTimer={id, t:setTimeout(()=>{clickTimer=null; openNodeModal(id);},240)};
         }
       }
+    }else if(patch.drag.kind==='pan'){
+      const moved=patch.drag.moved;
+      patch.drag=null; cv.style.cursor='default';
+      if(moved<4){ patch.selected=null; patch.selEdge=null; }
     }
   };
   cv.addEventListener('pointerup',endDrag);
-  cv.addEventListener('pointercancel',()=>{patch.drag=null;});
+  cv.addEventListener('pointercancel',e=>{
+    pointers.delete(e.pointerId);
+    if(pointers.size<2)pinch=null;
+    patch.drag=null;
+  });
+
+  // зум колесом (и тачпад-жесты)
+  cv.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const sp=patchPos(e);
+    const factor=Math.exp(-clamp(e.deltaY,-240,240)*0.0016);
+    zoomAt(sp,factor);
+  },{passive:false});
+
   cv.addEventListener('dblclick',e=>{
-    const p=patchPos(e);
-    if(portAt(p)||nodeAt(p))return;
-    const ed=edgeAt(p);
+    const sp=patchPos(e);
+    if(portAt(sp)||nodeAt(sp))return;
+    const ed=edgeAt(sp);
     if(ed){
       patch.edges=patch.edges.filter(x=>!(x.from===ed.from&&x.to===ed.to));
       patch.selEdge=null; onEdgesChanged();
     }
   });
+
+  // кнопки управления видом
+  $('btn-zoom-in').addEventListener('click',()=>zoomCenter(1.25));
+  $('btn-zoom-out').addEventListener('click',()=>zoomCenter(0.8));
+  $('btn-fit').addEventListener('click',()=>fitToView());
+  $('btn-zoom-100').addEventListener('click',()=>zoomAt({x:patchW()/2,y:patchH()/2},1/cam.scale));
+
   $('btn-patch-reset').addEventListener('click',()=>{
     resetPatchEdges(); layoutPatch();
     patch.selected=null; patch.selEdge=null; patch.drag=null;
+    fitToView();
     onEdgesChanged();
     toast('Цепь сброшена к стандартной','ok');
   });
+
   $('m-close').addEventListener('click',closeModal);
   $('modal-backdrop').addEventListener('pointerdown',e=>{ if(e.target===$('modal-backdrop'))closeModal(); });
   $('m-power').addEventListener('change',()=>{
@@ -2036,7 +2161,6 @@ function init(){
   document.querySelectorAll('.chip[data-preset]').forEach(ch=>
     ch.addEventListener('click',()=>applyPresetByName(ch.dataset.preset)));
 
-  // диагностика видео-элемента
   $('vid-preview').addEventListener('error',()=>{
     if(state.videoKind==='video'&&state.buffer)
       toast('Превью недоступно для этого видеокодека — звук обрабатывается штатно','err');
@@ -2066,6 +2190,7 @@ function init(){
   initPatchEvents();
   updateChainLine();
   checkEncoders();
+  updateZoomLabel();
 
   document.addEventListener('keydown',e=>{
     const modalOpen=!$('modal-backdrop').classList.contains('hidden');
@@ -2082,7 +2207,7 @@ function init(){
     clearTimeout(rz);
     rz=setTimeout(()=>{
       if(!$('studio').classList.contains('hidden')){
-        fitAllCanvases(); buildWave(); clampPatch();
+        fitAllCanvases(); buildWave();
       }
     },160);
   });

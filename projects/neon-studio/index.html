@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>NEON STUDIO PRO · Пресеты и экспорт</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
@@ -68,7 +68,6 @@
         .tracking-wider { letter-spacing: 0.05em; } .font-light { font-weight: 300; } .font-medium { font-weight: 500; } .font-bold { font-weight: 700; }
         .relative { position: relative; } .absolute { position: absolute; }
 
-        /* === ИСПРАВЛЕННЫЙ TOOLBAR === */
         .toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -77,9 +76,6 @@
             background: rgba(0,0,0,0.3);
             border-radius: 12px;
             border: 1px solid rgba(0,255,255,0.05);
-            /* Убираем ограничение высоты, чтобы zoom-кнопки были видны */
-            /* overflow-y: auto; */
-            /* max-height: 240px; */
         }
         .toolbar::-webkit-scrollbar { width: 4px; }
         .toolbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
@@ -128,7 +124,7 @@
         .connection-info { position: absolute; bottom: 8px; right: 12px; color: rgba(103,232,249,0.3); font-size: 0.7rem; pointer-events: none; z-index: 10; }
         .pan-hint { position: absolute; bottom: 8px; left: 12px; color: rgba(103,232,249,0.2); font-size: 0.6rem; pointer-events: none; z-index: 10; letter-spacing: 0.03em; }
 
-        /* Стили для панелей */
+        /* Панели */
         .toolbar-panel {
             display: flex;
             flex-direction: column;
@@ -171,15 +167,26 @@
         .preset-select option { background: #1a1f2e; color: #d0f4ff; }
 
         @media (max-width: 768px) {
+            body { padding: 0.75rem; }
             .glass-panel { padding: 1rem; }
             .toolbar {
-                max-height: 240px;      /* на мобильных включаем прокрутку */
+                max-height: 240px;
                 overflow-y: auto;
                 justify-content: center;
             }
+            .toolbar-panel { min-width: auto; width: 100%; }
+            .preset-panel .toolbar-buttons { flex-wrap: wrap; }
+            .canvas-wrapper { min-height: 300px; }
+            #canvas { min-height: 300px; }
+            #bottomGrid { grid-template-columns: 1fr !important; }
+            .flex-between { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
             .zoom-controls { margin-left: 0; width: 100%; justify-content: center; }
             .modal { padding: 1.5rem; margin: 1rem; }
             .pan-hint { display: none; }
+            .file-drop-zone { padding: 1rem; }
+            .btn-neon { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+            .toolbar-group-label { font-size: 0.55rem; }
+            .node-btn { font-size: 0.65rem; padding: 0.2rem 0.5rem; }
         }
     </style>
 </head>
@@ -191,7 +198,7 @@
                 <h1 class="text-2xl font-light tracking-wider neon-text">
                     <span class="font-bold">NEON</span> STUDIO <span style="font-size:0.7rem;color:rgba(165,243,252,0.4);">pro</span>
                 </h1>
-                <span class="badge-neon"><i class="fas fa-circle" style="font-size:8px;color:#22d3ee;margin-right:4px;"></i> Собери цепочку фильтров и получи звук студийного качества</span>
+                <span class="badge-neon"><i class="fas fa-circle" style="font-size:8px;color:#22d3ee;margin-right:4px;"></i> отладка</span>
             </div>
             <div class="flex-center gap-2 text-sm text-cyan-200/60">
                 <i class="fas fa-project-diagram"></i>
@@ -295,7 +302,7 @@
                 </div>
             </div>
 
-            <!-- Zoom controls теперь всегда видимы -->
+            <!-- Zoom controls -->
             <div class="zoom-controls">
                 <button id="zoomOutBtn" title="Уменьшить"><i class="fas fa-minus"></i></button>
                 <span id="zoomLevel">100%</span>
@@ -304,7 +311,7 @@
             </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
+        <div id="bottomGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem;">
             <div class="file-drop-zone" id="dropZone">
                 <i class="fas fa-cloud-upload-alt text-2xl text-cyan-300/70 block" style="filter: drop-shadow(0 0 16px #0cf);"></i>
                 <p class="text-cyan-100/80 font-light text-sm">Загрузите аудиофайл</p>
@@ -375,12 +382,14 @@
             let offsetY = 0;
             let isPanning = false;
             let panStartX = 0, panStartY = 0, panOffsetX = 0, panOffsetY = 0;
-            let selectedNodeId = null;
+            let selectedNodeId = null; // Новое: выделенный узел
+            let pinchStartDistance = 0; // Для pinch-to-zoom (пока не используется)
 
             const NODE_W = 120;
             const NODE_H = 50;
             const PORT_R = 8;
 
+            // Типы узлов (полный набор)
             const nodeTypes = {
                 input: { label: 'Вход', color: '#22d3ee', bg: 'rgba(34,211,238,0.15)', params: {} },
                 output: { label: 'Выход', color: '#f472b6', bg: 'rgba(244,114,182,0.15)', params: {} },
@@ -438,11 +447,13 @@
                 ctx.translate(offsetX, offsetY);
                 ctx.scale(scale, scale);
 
+                // Сетка
                 ctx.strokeStyle = 'rgba(255,255,255,0.03)';
                 ctx.lineWidth = 1 / scale;
                 for (let gx = 0; gx < canvas.width / scale; gx += 40) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height / scale); ctx.stroke(); }
                 for (let gy = 0; gy < canvas.height / scale; gy += 40) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width / scale, gy); ctx.stroke(); }
 
+                // Соединения
                 connections.forEach(conn => {
                     const from = nodes.find(n => n.id === conn.from);
                     const to = nodes.find(n => n.id === conn.to);
@@ -472,6 +483,7 @@
                     ctx.stroke();
                 });
 
+                // Узлы
                 nodes.forEach(node => {
                     const type = nodeTypes[node.type] || nodeTypes.lowpass;
                     const x = node.x, y = node.y, w = NODE_W, h = NODE_H;
@@ -740,6 +752,82 @@
                 if (node) openModal(node);
             });
 
+            // === МОБИЛЬНАЯ АДАПТАЦИЯ: Touch Events ===
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                if (e.touches.length === 2) {
+                    // Панорамирование двумя пальцами
+                    isPanning = true;
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    panStartX = (touch1.clientX + touch2.clientX) / 2;
+                    panStartY = (touch1.clientY + touch2.clientY) / 2;
+                    panOffsetX = offsetX;
+                    panOffsetY = offsetY;
+                    wrapper.classList.add('panning');
+                    canvas.style.cursor = 'grabbing';
+                    return;
+                } else if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    const mouseEvent = new MouseEvent('mousedown', {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY,
+                        button: 0,
+                        shiftKey: false,
+                        ctrlKey: false,
+                        metaKey: false,
+                        bubbles: true
+                    });
+                    canvas.dispatchEvent(mouseEvent);
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+                if (e.touches.length === 2 && isPanning) {
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const centerX = (touch1.clientX + touch2.clientX) / 2;
+                    const centerY = (touch1.clientY + touch2.clientY) / 2;
+                    offsetX = panOffsetX + (centerX - panStartX);
+                    offsetY = panOffsetY + (centerY - panStartY);
+                    draw();
+                    return;
+                } else if (e.touches.length === 1) {
+                    const touch = e.touches[0];
+                    const mouseEvent = new MouseEvent('mousemove', {
+                        clientX: touch.clientX,
+                        clientY: touch.clientY,
+                        bubbles: true
+                    });
+                    canvas.dispatchEvent(mouseEvent);
+                }
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                if (e.touches.length === 0 && isPanning) {
+                    isPanning = false;
+                    wrapper.classList.remove('panning');
+                    canvas.style.cursor = 'default';
+                    return;
+                }
+                const mouseEvent = new MouseEvent('mouseup', { bubbles: true });
+                canvas.dispatchEvent(mouseEvent);
+            }, { passive: false });
+
+            canvas.addEventListener('touchcancel', function(e) {
+                e.preventDefault();
+                if (isPanning) {
+                    isPanning = false;
+                    wrapper.classList.remove('panning');
+                    canvas.style.cursor = 'default';
+                }
+                const mouseEvent = new MouseEvent('mouseup', { bubbles: true });
+                canvas.dispatchEvent(mouseEvent);
+            }, { passive: false });
+
+            // === Остальные обработчики ===
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Delete' || e.key === 'Backspace') {
                     if (modalNode) return;
@@ -1576,7 +1664,7 @@
             function resizeCanvas() {
                 const rect = canvas.parentElement.getBoundingClientRect();
                 const w = rect.width || 1200;
-                const h = Math.max(450, rect.height || 500);
+                const h = Math.max(300, rect.height || 500);
                 canvas.width = w;
                 canvas.height = h;
                 canvas.style.width = w + 'px';
@@ -1612,7 +1700,7 @@
             selectedNodeId = null;
             draw();
 
-            console.log('NEON STUDIO PRO — улучшенный UI, пресеты и экспорт готовы');
+            console.log('NEON STUDIO PRO — мобильная адаптация включена');
         })();
     </script>
 </body>
