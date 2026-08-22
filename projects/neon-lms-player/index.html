@@ -723,7 +723,6 @@
     }
   }
 
-  // Загрузка одного курса (используется редактором)
   async function loadCourseFromObject(courseData, recordId) {
     try {
       if (!courseData.meta || !courseData.lessons) {
@@ -736,9 +735,9 @@
     }
   }
 
-  // НОВАЯ ФУНКЦИЯ: загрузка данных (один курс, массив курсов или объект с courses, содержащий URL или объекты)
+  // Функция загрузки данных (один курс, массив курсов/URL или объект с courses)
   async function loadCoursesFromData(data) {
-    let items = []; // элементы для обработки: строки (URL) или объекты курсов
+    let items = [];
 
     if (Array.isArray(data)) {
       items = data;
@@ -755,7 +754,6 @@
 
     for (const item of items) {
       if (typeof item === 'string') {
-        // Это URL, пытаемся загрузить
         try {
           const response = await fetch(item);
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -779,19 +777,14 @@
       throw new Error('Нет успешно загруженных курсов');
     }
 
-    // Сохраняем все курсы
     for (const courseData of coursesArray) {
       await saveCourseToDB(courseData);
     }
 
-    // Обновляем список и делаем первый курс активным
     updateSavedCoursesList();
     setCourse(coursesArray[0]);
 
-    return {
-      count: coursesArray.length,
-      errors: errors
-    };
+    return { count: coursesArray.length, errors };
   }
 
   // ---------- УПРАВЛЕНИЕ ПАНЕЛЬЮ ----------
@@ -812,7 +805,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.0.1' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.0.2' }));
     return header;
   }
 
@@ -1021,7 +1014,6 @@
     saveBtn.addEventListener('click', async () => {
       try {
         const data = JSON.parse(textarea.value);
-        // Редактор поддерживает только один курс
         if (Array.isArray(data) || (data && data.courses)) {
           alert('Редактор поддерживает только один курс. Для загрузки нескольких курсов используйте импорт файла или URL.');
           return;
@@ -1096,6 +1088,7 @@
       <h4 style="color: #fff; margin-top: 10px;">Общая информация</h4>
       <p>Данный плеер предназначен для отображения интерактивных образовательных курсов в формате JSON. Курс состоит из метаданных и списка уроков. Каждый урок содержит заголовок, описание и набор блоков контента.</p>
       <p><strong>Поддержка нескольких курсов:</strong> Вы можете загрузить JSON, содержащий один курс, массив курсов, массив URL-адресов на курсы, или объект с полем <code>courses</code>, которое может быть массивом курсов или массивом URL. При загрузке URL каждый адрес должен возвращать JSON одного курса.</p>
+      <p><strong>Автозагрузка через URL:</strong> Добавьте параметр <code>?url=ссылка</code> (или <code>?source=</code>, <code>?course=</code>) в адресную строку, и плеер автоматически загрузит данные по этой ссылке при открытии страницы.</p>
       <h4 style="color: #fff; margin-top: 10px;">Форматы входных данных</h4>
       <ul>
         <li>Одиночный курс: <code>{ "meta": ..., "lessons": ... }</code></li>
@@ -1104,7 +1097,6 @@
         <li>Объект с курсами: <code>{ "courses": [ {курс1}, {курс2}, ... ] }</code></li>
         <li>Объект с URL: <code>{ "courses": [ "url1", "url2", ... ] }</code></li>
       </ul>
-      <p>При загрузке URL выполняется запрос и ожидается JSON с одним курсом. Ошибки при загрузке отдельных URL не прерывают процесс, но выводятся в уведомлении.</p>
       <h4 style="color: #fff; margin-top: 10px;">Структура курса</h4>
       <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>{
   "meta": {
@@ -1113,7 +1105,7 @@
     "author": "Автор",
     "duration": "Длительность",
     "level": "Уровень",
-    "theme": { ... } // необязательно, переопределение цветов
+    "theme": { ... }
   },
   "lessons": [
     {
@@ -1124,64 +1116,8 @@
     }
   ]
 }</code></pre>
-      <h4 style="color: #fff; margin-top: 10px;">Настройка цветовой схемы (тема)</h4>
-      <p>В <code>meta.theme</code> можно передать объект с переопределением любых переменных CSS. Доступные ключи:</p>
-      <ul>
-        <li><code>bg</code> — основной фон (по умолчанию #0a0e1a)</li>
-        <li><code>panel</code> — фон панелей (по умолчанию #111627)</li>
-        <li><code>text</code> — основной текст (по умолчанию #d5e5ff)</li>
-        <li><code>muted</code> — приглушённый текст (по умолчанию #8b9bbf)</li>
-        <li><code>cyan</code> — основной акцент (по умолчанию #00f0ff)</li>
-        <li><code>pink</code> — розовый акцент (по умолчанию #ff2a6d)</li>
-        <li><code>green</code> — зелёный акцент (по умолчанию #05ffa1)</li>
-        <li><code>purple</code> — фиолетовый акцент (по умолчанию #b967ff)</li>
-        <li><code>yellow</code> — жёлтый акцент (по умолчанию #ffd700)</li>
-        <li><code>border</code> — цвет границ (по умолчанию rgba(0, 240, 255, 0.25))</li>
-        <li><code>shadow</code> — тень (по умолчанию 0 0 15px rgba(0,240,255,0.1))</li>
-      </ul>
-      <p>Пример: <code>"theme": { "cyan": "#ff00ff", "bg": "#101010" }</code>.</p>
-      <h4 style="color: #fff; margin-top: 10px;">Типы блоков</h4>
-      <ul>
-        <li><strong>section</strong> — секция с заголовком и вложенными блоками.</li>
-        <li><strong>heading</strong> — заголовок уровня h1-h6.</li>
-        <li><strong>text</strong> — абзац текста.</li>
-        <li><strong>image</strong> — изображение с подписью (клик открывает превью; поддерживаются поля <code>previewWidth</code> и <code>previewHeight</code> для размера окна предпросмотра).</li>
-        <li><strong>video</strong> — видео (с возможностью контроля скорости).</li>
-        <li><strong>audio</strong> — аудио (с возможностью контроля скорости).</li>
-        <li><strong>list</strong> — маркированный/нумерованный список.</li>
-        <li><strong>code</strong> — блок кода с подсветкой.</li>
-        <li><strong>callout</strong> — выделенный блок (info, warning, success).</li>
-        <li><strong>tabs</strong> — вкладки.</li>
-        <li><strong>accordion</strong> — аккордеон.</li>
-        <li><strong>quiz</strong> — одиночный выбор с проверкой.</li>
-        <li><strong>multi-quiz</strong> — множественный выбор.</li>
-        <li><strong>match</strong> — сопоставление пар.</li>
-        <li><strong>sort</strong> — сортировка элементов стрелками.</li>
-        <li><strong>fill-blank</strong> — заполнение пропусков.</li>
-        <li><strong>flip-card</strong> — переворачивающаяся карточка.</li>
-        <li><strong>poll</strong> — опрос с отображением результатов.</li>
-        <li><strong>compare</strong> — сравнение двух блоков с перетаскиваемым разделителем.</li>
-        <li><strong>slider</strong> — ползунок.</li>
-        <li><strong>timeline</strong> — таймлайн.</li>
-        <li><strong>steps</strong> — пошаговый контент.</li>
-        <li><strong>embed</strong> — iframe.</li>
-        <li><strong>columns</strong> — колонки.</li>
-        <li><strong>carousel</strong> — карусель.</li>
-        <li><strong>before-after</strong> — сравнение изображений.</li>
-        <li><strong>table</strong> — таблица.</li>
-        <li><strong>chart</strong> — столбчатая диаграмма.</li>
-        <li><strong>pie</strong> — круговая диаграмма.</li>
-        <li><strong>modal</strong> — кнопка, открывающая модальное окно.</li>
-        <li><strong>tooltip</strong> — текст с подсказкой.</li>
-        <li><strong>mermaid</strong> — диаграмма Mermaid.</li>
-        <li><strong>drag-sort</strong> — сортировка перетаскиванием.</li>
-        <li><strong>progress-tracker</strong> — интерактивный трекер прогресса.</li>
-        <li><strong>svg</strong> — встроенное SVG-изображение (клик открывает превью; поддерживаются поля <code>previewWidth</code> и <code>previewHeight</code> для размера окна предпросмотра).</li>
-        <li><strong>html</strong> — произвольный HTML-код для расширенного форматирования (поле <code>code</code>).</li>
-      </ul>
-      <p><strong>Размеры блоков:</strong> Любой блок может содержать поля <code>width</code>, <code>height</code>, <code>maxWidth</code>, <code>maxHeight</code>, <code>minWidth</code>, <code>minHeight</code> для явного указания размеров. Поле <code>autoScale</code> (по умолчанию <code>true</code>) автоматически масштабирует блок под ширину контейнера и сохраняет пропорции для медиаэлементов. Чтобы отключить, установите <code>autoScale: false</code>.</p>
-      <p>Подробное описание параметров каждого блока смотрите в JSON-схеме (открывается через "Генерация промпта").</p>
-      <p><strong>Создание нового курса:</strong> В панели управления нажмите кнопку "Новый курс", чтобы открыть редактор с шаблоном. Замените содержимое на свой JSON и нажмите "Сохранить".</p>
+      <p>Полный список типов блоков смотрите в расширенной справке или JSON-схеме.</p>
+      <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс".</p>
     `;
     content.appendChild(helpDiv);
     overlay.appendChild(content);
@@ -2222,6 +2158,25 @@ ${schema}
   async function init() {
     await openDB().catch(e => console.warn('IndexedDB не доступна', e));
     renderInitialState();
+
+    // Проверяем GET-параметры для автозагрузки
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoUrl = urlParams.get('url') || urlParams.get('source') || urlParams.get('course');
+    if (autoUrl) {
+      try {
+        const response = await fetch(autoUrl);
+        if (!response.ok) throw new Error('Сетевая ошибка');
+        const data = await response.json();
+        const result = await loadCoursesFromData(data);
+        console.log(`Автозагрузка: загружено курсов ${result.count}`);
+        if (result.errors.length > 0) {
+          console.warn('Ошибки при автозагрузке:', result.errors);
+        }
+      } catch (err) {
+        console.error('Ошибка автозагрузки:', err);
+        alert('Ошибка автозагрузки курса: ' + err.message);
+      }
+    }
   }
 
   init();
