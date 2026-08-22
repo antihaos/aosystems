@@ -247,7 +247,7 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.1.0</span></div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.1.1</span></div>
       <div class="desc">Студия швейных выкроек: собирайте детали на холсте, редактируйте размеры — автораскладка оптимально разложит их в области ткани.</div>
     </div>
   </div>
@@ -620,7 +620,6 @@ function placeAt(p,X,Y,rot){
   p.rot=((rot%360)+360)%360;
   const bb=pieceAABB(p);
   p.x+=X-bb.minx; p.y+=Y-bb.miny;
-  p.x=Math.round(p.x*2)/2; p.y=Math.round(p.y*2)/2;
 }
 /* Удержать деталь в пределах ткани по X */
 function clampToFabric(p){
@@ -650,7 +649,9 @@ const state={
 let editorId=null, saving=false, lastSavedAt=null, storageFailedNoted=false, saveTimer=null, repackTimer=null;
 
 const cv=$('#cv'), ctx=cv.getContext('2d');
-const hitCv=document.createElement('canvas'), hctx=hitCv.getContext('2d');
+const hitCv=document.createElement('canvas');
+hitCv.width=1; hitCv.height=1;
+const hctx=hitCv.getContext('2d');
 const wrap=$('#canvasWrap');
 let W=0,H=0,dpr=1;
 
@@ -695,6 +696,7 @@ function packAll(){
     placeAt(it.p,x,y,o.rot);
     x+=o.w+gap; shelfH=Math.max(shelfH,o.h);
   }
+  if(state.fabric) for(const p of state.pieces) clampToFabric(p); // страховка
   draw();
 }
 
@@ -748,32 +750,38 @@ function drawFabric(){
   ctx.font='600 11px "JetBrains Mono",monospace';ctx.textAlign='center';
   ctx.fillText(`ткань · ${fmt(state.fabricW)} см`,(x0+x1)/2,18);
 }
+/* ИСПРАВЛЕНО: деталь рисуется через полную цепочку «мир → экран»,
+   поэтому при зуме/перемещении она жёстко привязана к ткани и сетке. */
 function drawPiece(p){
-  const b=p._bounds, rad=p.rot*Math.PI/180, cx=p.x+b.w/2, cy=p.y+b.h/2;
+  const b=p._bounds, rad=p.rot*Math.PI/180, sv=state.view.scale;
+  const s=w2s(p.x+b.w/2, p.y+b.h/2); // центр детали в экранных координатах
   const sel=p.id===state.selId, hov=p.id===state.hoverId;
   ctx.save();
-  ctx.translate(cx,cy); ctx.rotate(rad);
+  ctx.translate(s.x,s.y);   // экранный центр
+  ctx.scale(sv,sv);         // мировые единицы (см) → пиксели
+  ctx.rotate(rad);
   if(p.mirror)ctx.scale(-1,1);
-  ctx.translate(-(b.minx+b.w/2),-(b.miny+b.h/2));
+  ctx.translate(-(b.minx+b.w/2),-(b.miny+b.h/2)); // локальный центр → в 0
+  ctx.lineJoin='round'; ctx.lineCap='round';
   if(p.seam>0){
-    ctx.lineWidth=p.seam*2; ctx.lineJoin='round';
+    ctx.lineWidth=p.seam*2; // см
     ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.stroke(p._path);
   }
   ctx.shadowColor=p.color;
   ctx.shadowBlur=sel?20:hov?15:9;
   ctx.fillStyle=hexA(p.color,0.10); ctx.fill(p._path);
-  ctx.lineWidth=(sel?2.2:1.6)/state.view.scale;
+  ctx.lineWidth=(sel?2.2:1.6)/sv; // постоянная толщина на экране
   ctx.strokeStyle=p.color; ctx.stroke(p._path);
   ctx.shadowBlur=0;
   if(p.seam>0){
-    ctx.setLineDash([4.2/state.view.scale,4.2/state.view.scale]);
-    ctx.lineWidth=0.8/state.view.scale;
+    ctx.setLineDash([4.2/sv,4.2/sv]);
+    ctx.lineWidth=0.8/sv;
     ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.stroke(p._path);
     ctx.setLineDash([]);
   }
   // долевая нить
-  ctx.strokeStyle='rgba(255,255,255,.26)'; ctx.lineWidth=1/state.view.scale;
-  const gx=b.minx+b.w/2, gy1=b.miny+b.h*0.24, gy2=b.miny+b.h*0.76, a=6/state.view.scale;
+  ctx.strokeStyle='rgba(255,255,255,.26)'; ctx.lineWidth=1/sv;
+  const gx=b.minx+b.w/2, gy1=b.miny+b.h*0.24, gy2=b.miny+b.h*0.76, a=6/sv;
   ctx.beginPath();ctx.moveTo(gx,gy1);ctx.lineTo(gx,gy2);
   ctx.moveTo(gx-a,gy1+a*1.6);ctx.lineTo(gx,gy1);ctx.lineTo(gx+a,gy1+a*1.6);
   ctx.moveTo(gx-a,gy2-a*1.6);ctx.lineTo(gx,gy2);ctx.lineTo(gx+a,gy2-a*1.6);
@@ -1075,11 +1083,13 @@ const IDB={
   open(){return new Promise(res=>{
     if(!('indexedDB' in window)){res(false);return;}
     let req; try{req=indexedDB.open('neoncut-db',1);}catch(e){res(false);return;}
+    let done=false;
+    const finish=v=>{if(!done){done=true;res(v);}};
     req.onupgradeneeded=e=>{const d=e.target.result;
       if(!d.objectStoreNames.contains('projects'))d.createObjectStore('projects',{keyPath:'id'});};
-    req.onsuccess=e=>{this.db=e.target.result;this.ok=true;res(true);};
-    req.onerror=()=>res(false); req.onblocked=()=>res(false);
-    setTimeout(()=>res(this.ok),2500);
+    req.onsuccess=e=>{this.db=e.target.result;this.ok=true;finish(true);};
+    req.onerror=()=>finish(false); req.onblocked=()=>finish(false);
+    setTimeout(()=>finish(this.ok),2500);
   });},
   store(mode){return this.db.transaction('projects',mode).objectStore('projects');},
   rq(r){return new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});},
@@ -1183,7 +1193,7 @@ function newProject(){
 $('#btnNew').onclick=()=>{ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=()=>saveProject(true);
 $('#btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.1.0',...projectData()},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.1.1',...projectData()},null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
