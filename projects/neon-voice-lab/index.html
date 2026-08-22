@@ -1,20 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<!--
-  NEON VOICE LAB v1.7.1
-  Исправления OGG-экспорта:
-   - корневая причина зависания: при загрузке @ffmpeg/ffmpeg (UMD) с CDN воркер класса
-     создаётся из чанка 814.ffmpeg.js, а Worker должен быть того же origin, что и страница;
-     решение — скачиваем 814.ffmpeg.js в blob и передаём как classWorkerURL [[22]][[9]][[21]];
-   - exec() может резолвиться кодом возврата — проверяем его явно [[14]];
-   - таймауты на load/exec с гашением «висящих» промисов, инвалидация инстанса по таймауту/прерыванию;
-   - проверка магии 'OggS', каскад: libvorbis -> libopus -> MediaRecorder(audio/ogg;codecs=opus) -> ошибка;
-  Исправления кнопки «Прервать»:
-   - прерывание немедленно терминирует воркер ffmpeg (разблокирует load/exec);
-   - после прерывания не запускается резервное кодирование;
-   - фолбэк-рекордер и захват вживую учитывают флаг прерывания.
--->
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#05070d">
@@ -468,7 +455,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <div class="frow"><label>Формат</label>
     <select id="exp-format">
       <option value="mp3">MP3 (lamejs, 192 kbps)</option>
-      <option value="ogg">OGG (ffmpeg.wasm: vorbis/opus)</option>
+      <option value="ogg">OGG Vorbis (OggVorbisEncoder.js)</option>
       <option value="wav">WAV (без сжатия)</option>
     </select>
   </div>
@@ -507,7 +494,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <p class="help-li"><b>Транспорт</b> (панель на холсте): ⏻ — питание аудио-движка; 🎙/🎵 — выбор источника.</p>
   <p class="help-li"><b>Файл</b> — в режиме 🎵: 📂 загрузка, ▶/⏸ воспроизведение через цепь фильтров, ⏹ стоп, ⟳ зацикливание.</p>
   <p class="help-li"><b>Запись</b> — в режиме 🎙 кнопка ● REC пишет обработанный сигнал с микрофона до остановки; дубль можно экспортировать из окна «Экспорт». Доступ к микрофону работает только на https или localhost.</p>
-  <p class="help-li"><b>Экспорт OGG</b> — при первом использовании скачивается кодек (~31 МБ, прогресс виден в строке состояния). Каскад кодировщиков: libvorbis → libopus → резервное кодирование браузера (где поддерживается OGG/Opus). Ошибки пишутся в консоль; длительные операции можно прервать кнопкой «✕ Прервать».</p>
+  <p class="help-li"><b>Экспорт OGG</b> — кодируется локально библиотекой OggVorbisEncoder.js (asm.js, libogg/libvorbis) прямо в браузере: без сервера, без больших загрузок, без Web Worker. Во время кодирования виден прогресс, работает кнопка «Прервать». При ошибке выводится понятное сообщение, подробности — в консоли.</p>
   <p class="help-li"><b>Визуализатор</b> — спектр и уровни L/R выходного сигнала внизу холста. При работающем движке по проводам течёт «энергия».</p>
   <p class="help-li"><b>Палитра</b> (кнопка «＋» внизу слева на мобильных) — вкладки «Модули» и «Пресеты».</p>
   <p class="help-li"><b>Соединения</b> — тяните от правого порта к левому. Клик по проводу выделяет его (✕ — удалить).</p>
@@ -521,11 +508,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
 <!-- Libraries via CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@breezystack/lamejs@1.2.7/dist/lamejs.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/higuma/ogg-vorbis-encoder-js@master/lib/OggVorbisEncoder.js"></script>
 
 <script>
 "use strict";
 /* ============================================================ version & logging */
-const APP_VERSION = '1.7.1';
+const APP_VERSION = '1.7.5';
 const APP_NAME = 'NEON VOICE LAB';
 document.title = APP_NAME + ' v' + APP_VERSION + ' — конструктор голосовых эффектов';
 
@@ -544,17 +532,6 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function fmtT(s) { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60), ss = Math.floor(s % 60); return m + ':' + String(ss).padStart(2, '0'); }
-function fmtMB(bytes) { return (bytes / 1048576).toFixed(1) + ' МБ'; }
-function withTimeout(promise, ms, msg) {
-  let t;
-  const to = new Promise((_, rej) => { t = setTimeout(() => rej(new Error(msg)), ms); });
-  return Promise.race([promise, to]).finally(() => clearTimeout(t));
-}
-/* ждём промис с таймаутом; «позднее» отклонение оригинала гасим, чтобы не было unhandled rejection */
-function guarded(promise, ms, msg) {
-  try { promise.catch(() => {}); } catch (e) {}
-  return withTimeout(promise, ms, msg);
-}
 
 function toast(msg, kind) {
   const t = document.createElement('div');
@@ -2061,185 +2038,57 @@ function encodeMP3(pcm) {
   return new Blob(out, { type: 'audio/mpeg' });
 }
 
-/* ---------- OGG: ffmpeg.wasm с прогрессом, таймаутами, инвалидацией и проверкой результата ---------- */
-let ffInstance = null, ffLoading = null;
-
-function invalidateFFmpeg(reason) {
-  nvlog.warn('FFmpeg деактивирован:', reason || 'без причины');
-  try { if (ffInstance && ffInstance.terminate) ffInstance.terminate(); } catch (e) {}
-  ffInstance = null; ffLoading = null;
-}
-
-async function fetchToBlobURL(url, mime, label) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(label + ': HTTP ' + res.status);
-  const total = parseInt(res.headers.get('Content-Length') || '0', 10);
-  if (!res.body || !total) {
-    const b = await res.arrayBuffer();
-    setExportProgress(15, label + '… ' + fmtMB(b.byteLength));
-    return URL.createObjectURL(new Blob([b], { type: mime }));
-  }
-  const reader = res.body.getReader();
-  const parts = []; let received = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    parts.push(value); received += value.length;
-    setExportProgress(5 + Math.min(22, received / total * 22),
-      label + ': ' + fmtMB(received) + ' / ' + fmtMB(total));
-    if (exportAbort) throw new Error('прервано пользователем');
-  }
-  return URL.createObjectURL(new Blob(parts, { type: mime }));
-}
-
-function getFFmpeg() {
-  if (ffInstance) return Promise.resolve(ffInstance);
-  if (ffLoading) return ffLoading;
-  ffLoading = (async () => {
-    setExportProgress(3, 'Загрузка библиотеки FFmpeg…');
-    await loadScript('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js');
-    if (!window.FFmpegWASM) throw new Error('FFmpeg UMD не загрузился');
-    const { FFmpeg } = window.FFmpegWASM;
-    const ff = new FFmpeg();
-    ff.on('log', ev => { if (ev && ev.message) console.debug('[ffmpeg]', ev.message); });
-    ff.on('progress', ev => {
-      if (!exportAbort) setExportProgress(72 + (ev.progress || 0) * 26, 'Кодирование OGG… ' + Math.round((ev.progress || 0) * 100) + '%');
-    });
-    const base = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
-    const coreURL = await fetchToBlobURL(base + '/ffmpeg-core.js', 'text/javascript', 'Кодек: скрипт');
-    if (exportAbort) throw new Error('прервано пользователем');
-    const wasmURL = await fetchToBlobURL(base + '/ffmpeg-core.wasm', 'application/wasm', 'Кодек: ядро');
-    if (exportAbort) throw new Error('прервано пользователем');
-    /* воркер класса нельзя создавать с cross-origin (CDN) URL — качаем чанк воркера в blob
-       и передаём как classWorkerURL — это устраняет зависание при работе со страницы на другом домене */
-    const classWorkerURL = await fetchToBlobURL(
-      'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/814.ffmpeg.js',
-      'text/javascript', 'Кодек: воркер');
-    if (exportAbort) throw new Error('прервано пользователем');
-    setExportProgress(27, 'Инициализация FFmpeg…');
-    try {
-      await guarded(ff.load({ coreURL, wasmURL, classWorkerURL }), 120000,
-        'таймаут инициализации FFmpeg (120 с) — проверьте сеть и повторите');
-    } catch (e) {
-      try { ff.terminate(); } catch (err) {}
-      throw e;
-    }
-    ffInstance = ff;
-    nvlog.info('FFmpeg.wasm готов');
-    return ff;
-  })();
-  ffLoading.catch(e => { nvlog.err('FFmpeg загрузка не удалась:', e); ffLoading = null; });
-  return ffLoading;
-}
-
-/* exec с таймаутом и гашением поздних отклонений; проверяем код возврата */
-async function ffExec(ff, args, label) {
-  setExportProgress(70, label);
-  const p = ff.exec(args);
-  const code = await guarded(p, 240000, 'таймаут кодирования ffmpeg (240 с)');
-  if (typeof code === 'number' && code !== 0) throw new Error('ffmpeg завершился с кодом ' + code);
-}
-
-function isOggBlob(bytes) {
-  return bytes && bytes.length > 512 &&
-    bytes[0] === 0x4f && bytes[1] === 0x67 && bytes[2] === 0x67 && bytes[3] === 0x53;
-}
-
-function canRecorderOGG() {
-  try {
-    return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/ogg;codecs=opus');
-  } catch (e) { return false; }
-}
-
-/* резервное OGG-кодирование: проигрываем PCM в MediaStream и пишем MediaRecorder'ом */
-async function encodeOGGRealtime(pcm) {
-  const mime = 'audio/ogg;codecs=opus';
-  const sr = pcm.sampleRate;
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  try { await ctx.resume(); } catch (e) { nvlog.warn('resume AudioContext:', e.message); }
-  const buf = ctx.createBuffer(pcm.channels.length, pcm.channels[0].length, sr);
-  pcm.channels.forEach((c, i) => buf.copyToChannel(c, i));
-  const dest = ctx.createMediaStreamDestination();
-  const src = ctx.createBufferSource(); src.buffer = buf; src.connect(dest);
-  const rec = new MediaRecorder(dest.stream, { mimeType: mime, audioBitsPerSecond: 160000 });
-  const chunks = [];
-  rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-  const stopped = new Promise(res => { rec.onstop = res; });
-  const dur = Math.max(0.2, buf.duration);
-  const iv = setInterval(() => {
-    setExportProgress(72 + clamp(ctx.currentTime / dur, 0, 1) * 26,
-      'Резервное кодирование в реальном времени… ' + fmtT(Math.min(ctx.currentTime, dur)) + ' / ' + fmtT(dur));
-    if (exportAbort) { try { if (rec.state !== 'inactive') rec.stop(); } catch (e) {} }
-  }, 250);
-  try {
-    rec.start(250);
-    src.start();
-    await new Promise(res => { src.onended = res; });
-    setTimeout(() => { try { if (rec.state !== 'inactive') rec.stop(); } catch (e) {} }, 300);
-    await withTimeout(stopped, dur * 1000 + 15000, 'резервный рекордер не завершился');
-  } finally {
-    clearInterval(iv);
-    try { ctx.close(); } catch (e) {}
-  }
-  if (exportAbort) throw new Error('прервано пользователем');
-  if (!chunks.length) throw new Error('резервный рекордер не дал данных');
-  return new Blob(chunks, { type: 'audio/ogg' });
-}
+/* ---------- OGG: кодирование через OggVorbisEncoder.js (asm.js, libogg/libvorbis).
+   Ревизия 5: прежняя связка на ffmpeg.wasm полностью удалена.
+   - одиночный самодостаточный скрипт (глобал OggVorbisEncoder), без SharedArrayBuffer,
+     без Web Worker, без .wasm/.mem;
+   - new OggVorbisEncoder(sampleRate, numChannels, quality), quality -0.1..1;
+   - encode([Float32Array, ...]) — порциями, потоково;
+   - finish('audio/ogg') -> Blob (после него кодировщик одноразовый);
+   - кодирование идёт порциями с периодической отдачей управления браузеру:
+     обновляется прогресс и работает кнопка «Прервать». ---------- */
+const OGG_VORBIS_QUALITY = 0.6; // -0.1 .. 1.0 (≈ ffmpeg -q:a 6)
 
 async function encodeOGG(pcm) {
-  let ffError = null;
-  try {
-    const ff = await getFFmpeg();
-    if (exportAbort) throw new Error('прервано пользователем');
-    const wav = pcmToWavBytes(pcm.channels, pcm.sampleRate);
-    const rnd = uid();
-    const inName = 'in_' + rnd + '.wav';
-    const outName = 'out_' + rnd + '.ogg';
-    await ff.writeFile(inName, wav);
+  if (typeof OggVorbisEncoder !== 'function') {
+    throw new Error('библиотека OggVorbisEncoder.js не загружена — проверьте сеть/блокировщик');
+  }
+  if (exportAbort) throw new Error('прервано пользователем');
 
-    let encoded = false;
-    try {
-      await ffExec(ff, ['-y', '-i', inName, '-vn', '-c:a', 'libvorbis', '-q:a', '6', outName],
-        'Кодирование OGG (libvorbis)…');
-      encoded = true;
-    } catch (e) {
-      nvlog.warn('libvorbis не удался:', e.message);
-      if (/таймаут|прервано/.test(e.message)) invalidateFFmpeg(e.message);
-    }
-    if (!encoded && ffInstance === ff) {
-      try {
-        await ffExec(ff, ['-y', '-i', inName, '-vn', '-c:a', 'libopus', '-b:a', '160k', outName],
-          'Кодирование OGG (libopus)…');
-        encoded = true;
-      } catch (e) {
-        nvlog.warn('libopus не удался:', e.message);
-        if (/таймаут|прервано/.test(e.message)) invalidateFFmpeg(e.message);
+  const numChannels = clamp(pcm.channels.length, 1, 2);
+  const sampleRate = pcm.sampleRate;
+  const total = pcm.channels[0].length;
+  const encoder = new OggVorbisEncoder(sampleRate, numChannels, OGG_VORBIS_QUALITY);
+
+  try {
+    const CHUNK = 16384;
+    let processed = 0;
+    let lastPct = -1;
+    while (processed < total) {
+      if (exportAbort) throw new Error('прервано пользователем');
+      const n = Math.min(CHUNK, total - processed);
+      const buffers = [];
+      for (let c = 0; c < numChannels; c++) {
+        const src = pcm.channels[Math.min(c, pcm.channels.length - 1)];
+        buffers.push(src.subarray(processed, processed + n));
+      }
+      encoder.encode(buffers);
+      processed += n;
+      const pct = Math.floor((processed / total) * 100);
+      if (pct !== lastPct) {
+        lastPct = pct;
+        setExportProgress(68 + pct * 0.30, 'Кодирование OGG (Vorbis)… ' + pct + '%');
+        await sleep(0); // отдать управление браузеру: перерисовка + проверка прерывания
       }
     }
-    if (!encoded) {
-      try { await ff.deleteFile(inName); } catch (e) {}
-      throw new Error('ffmpeg не смог закодировать OGG');
-    }
-
-    let data;
-    try { data = await ff.readFile(outName); }
-    finally {
-      try { await ff.deleteFile(inName); } catch (e) {}
-      try { await ff.deleteFile(outName); } catch (e) {}
-    }
-    const bytes = new Uint8Array(data instanceof Uint8Array ? data : new Uint8Array(data)); // копия вне кучи wasm
-    if (!isOggBlob(bytes)) throw new Error('ffmpeg вернул повреждённый OGG');
-    nvlog.info('OGG готов:', bytes.length, 'байт');
-    return new Blob([bytes], { type: 'audio/ogg' });
+    if (exportAbort) throw new Error('прервано пользователем');
+    const blob = encoder.finish('audio/ogg');
+    if (!blob || blob.size < 64) throw new Error('OggVorbisEncoder вернул пустой файл');
+    nvlog.info('OGG готов:', blob.size, 'байт');
+    return blob;
   } catch (e) {
-    if (exportAbort || String(e.message || e).includes('прервано')) throw new Error('прервано пользователем');
-    ffError = e;
-    nvlog.warn('ffmpeg.wasm путь не пройден — пробую резерв:', e.message);
-    if (canRecorderOGG()) {
-      toast('FFmpeg недоступен — использую резервное кодирование браузера', 'err');
-      return encodeOGGRealtime(pcm);
-    }
-    throw new Error('OGG недоступен: ' + (ffError && ffError.message ? ffError.message : 'неизвестная ошибка') + '. Попробуйте WAV или MP3.');
+    try { encoder.cancel(); } catch (x) {}
+    throw e;
   }
 }
 
@@ -2421,13 +2270,9 @@ byId('btn-export').onclick = () => {
 byId('exp-run').onclick = runExportLive;
 byId('exp-file-run').onclick = runExportFile;
 byId('exp-dub-run').onclick = runExportDub;
-/* «Прервать»: флаг + немедленное завершение воркера ffmpeg,
-   чтобы разблокировать зависшие загрузку/кодирование; после прерывания
-   резервные кодировщики не запускаются */
 byId('exp-cancel').onclick = () => {
   exportAbort = true;
   setExportProgress(0, 'Прерывание…');
-  invalidateFFmpeg('прервано пользователем');
   nvlog.warn('Экспорт прерван пользователем');
 };
 
@@ -2533,7 +2378,7 @@ window.addEventListener('beforeunload', () => { try { saveCurrent(true); } catch
 (async function boot() {
   nvlog.info(APP_NAME + ' v' + APP_VERSION + ' — запуск');
   byId('brand-sub').innerHTML = 'voice fx constructor · <span class="ver">v' + APP_VERSION + '</span>';
-  byId('help-ver').textContent = APP_NAME + ' · версия ' + APP_VERSION + ' · Web Audio · IndexedDB · lamejs · ffmpeg.wasm';
+  byId('help-ver').textContent = APP_NAME + ' · версия ' + APP_VERSION + ' · Web Audio · IndexedDB · lamejs · OggVorbisEncoder.js';
   buildPalette();
   await bootProjects();
   applyView();
