@@ -28,7 +28,6 @@ body{
 }
 .hidden{display:none!important}
 
-/* ---------- header ---------- */
 header{
   display:flex; align-items:center; gap:14px; padding:10px 16px; flex-wrap:wrap;
   border-bottom:1px solid rgba(0,229,255,.18);
@@ -53,7 +52,6 @@ header{
 .head-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 #projName{width:170px;font-family:var(--font-ui)}
 
-/* ---------- buttons / inputs ---------- */
 .btn{
   background:#121633; border:1px solid var(--line2); color:var(--txt);
   padding:8px 13px; border-radius:9px; cursor:pointer; font:600 12.5px var(--font-ui);
@@ -73,7 +71,6 @@ input:focus{border-color:var(--cyan); box-shadow:0 0 10px rgba(0,229,255,.35)}
 input[type=checkbox]{accent-color:var(--cyan); width:17px;height:17px;cursor:pointer}
 label{font:600 11px var(--font-ui); color:var(--dim); letter-spacing:.4px}
 
-/* ---------- layout ---------- */
 main{display:flex; flex:1; min-height:0}
 aside{
   width:296px; flex:none; display:flex; flex-direction:column;
@@ -123,7 +120,6 @@ aside{
 }
 .preset:hover .p-add{opacity:1}
 
-/* мобильная боковая панель */
 #btnSide{
   display:none; position:fixed; left:12px; bottom:44px; z-index:46;
   width:54px; height:54px; border-radius:50%; border:1px solid rgba(0,229,255,.6);
@@ -133,7 +129,6 @@ aside{
 #sideDim{position:fixed; inset:0; background:rgba(2,3,8,.6); backdrop-filter:blur(2px); z-index:44; opacity:0; pointer-events:none; transition:.22s}
 #sideDim.show{opacity:1; pointer-events:auto}
 
-/* ---------- stage ---------- */
 #stage{flex:1; display:flex; flex-direction:column; min-width:0; position:relative}
 #toolbar{
   display:flex; align-items:center; gap:6px; padding:8px 12px; flex-wrap:wrap;
@@ -165,7 +160,6 @@ aside{
 .chip.warn{color:#ffe08a; border-color:rgba(255,194,77,.45); box-shadow:0 0 9px rgba(255,194,77,.2)}
 .chip.bad{color:#ff9db1; border-color:rgba(255,77,109,.5); box-shadow:0 0 9px rgba(255,77,109,.25)}
 
-/* ---------- quick panel ---------- */
 #quick{
   position:absolute; z-index:20; min-width:216px; padding:10px;
   background:rgba(10,12,26,.93); border:1px solid rgba(255,61,240,.55); border-radius:13px;
@@ -182,7 +176,6 @@ aside{
 .q-actions{display:flex; gap:6px}
 .q-actions .tbtn{padding:7px 8px; font-size:12px; flex:1; justify-content:center}
 
-/* ---------- modal ---------- */
 .overlay{
   position:fixed; inset:0; background:rgba(3,4,10,.68); backdrop-filter:blur(7px);
   display:flex; align-items:center; justify-content:center; z-index:60;
@@ -225,7 +218,6 @@ aside{
 .proj .p-info{flex:1; min-width:0}
 .empty{color:var(--dim); font:400 12px var(--font-ui); text-align:center; padding:22px 8px}
 
-/* ---------- misc ---------- */
 #emptyHint{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   padding:18px 26px; border:1px dashed rgba(0,229,255,.5); border-radius:14px;
@@ -283,7 +275,7 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.2.0</span></div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.2.1</span></div>
       <div class="desc">Студия швейных выкроек: детали, размеры и оптимальная автораскладка в области ткани.</div>
     </div>
   </div>
@@ -366,14 +358,12 @@ aside{
 <button id="btnSide" title="Детали и пресеты">◈</button>
 <div id="sideDim"></div>
 
-<!-- Модалка параметров детали: краткий и детальный режимы -->
 <div class="overlay" id="editorOverlay">
   <div class="modal">
     <div class="m-head"><b id="mTitle">Параметры детали</b><button id="mClose">✕</button></div>
     <div class="m-body">
       <div class="m-row"><label>Название детали</label><input type="text" id="mName"></div>
 
-      <!-- КРАТКИЕ ПАРАМЕТРЫ -->
       <div id="mQuickSec">
         <div class="m-grid" id="mParamsQuick"></div>
         <div class="m-row" style="margin-top:12px">
@@ -388,7 +378,6 @@ aside{
         <button class="btn wide-btn" id="mToFull" style="margin-top:12px">⚙ Детальные параметры…</button>
       </div>
 
-      <!-- ДЕТАЛЬНЫЕ ПАРАМЕТРЫ -->
       <div id="mFullSec" class="hidden">
         <button class="btn" id="mToQuick" style="margin-bottom:12px">⇠ Краткие параметры</button>
         <div class="m-grid" id="mParams"></div>
@@ -418,7 +407,6 @@ aside{
   </div>
 </div>
 
-<!-- Модалка проектов -->
 <div class="overlay" id="projOverlay">
   <div class="modal">
     <div class="m-head"><b>📁 Сохранённые проекты</b><button id="projClose">✕</button></div>
@@ -432,7 +420,27 @@ aside{
 
 <script>
 'use strict';
-/* ============================ утилиты ============================ */
+/* =====================================================================
+   МОДЕЛЬ КООРДИНАТ (единая для рендера и выбора):
+   • МИР  — сантиметры, ось Y вниз, начало (0,0) — левая кромка ткани.
+   • ЭКРАН — CSS-пиксели холста.
+   • Преобразования:
+       screen = world * scale + offset        (w2s)
+       world  = (screen - offset) / scale     (s2w)
+   • Деталь задаётся якорем (p.x, p.y) — это левый-верхний угол её
+     НЕповёрнутого габаритного бокса; центр детали:
+       C = (p.x + b.w/2, p.y + b.h/2)
+   • Прямое преобразование детали (локальные → мир):
+       world = T(C) · R(rot) · M(mirror) · T(-localCenter) · local
+     где localCenter = (b.minx + b.w/2, b.miny + b.h/2).
+   • Выбор детали использует ОБРАТНОЕ преобразование (мир → локальные):
+       d      = world - C
+       d'     = rotate(d, -rot)
+       d'.x   = mirror ? -d'.x : d'.x
+       local  = d' + localCenter
+     после чего точка тестируется в локальном полигоне контура.
+   ===================================================================== */
+
 const $=s=>document.querySelector(s);
 const uid=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -440,8 +448,7 @@ const fmt=v=>{const r=Math.round(v*10)/10;return Number.isInteger(r)?String(r):r
 function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
 const PALETTE=['#00e5ff','#39ffa0','#8b5cff','#ff3df0','#ffc24d','#4d8bff','#ff5c5c','#e8ecff'];
 const CC={cyan:'#00e5ff',grn:'#39ffa0',vio:'#8b5cff',mag:'#ff3df0',amb:'#ffc24d'};
-const BASE=3;      // пикселей на см при 100%
-const TAP_SLOP=9;  // допуск «тап против перетаскивания», экранные пиксели
+const BASE=3; // пикселей на см при 100%
 
 /* ============================ генераторы контуров ============================ */
 function rectBuild(p){return[['M',0,0],['L',p.w,0],['L',p.w,p.h],['L',0,p.h],['Z']];}
@@ -564,7 +571,6 @@ const SHAPES={
     params:[{k:'w',label:'Ширина, см',def:14,min:4,max:40},{k:'h',label:'Высота, см',def:8,min:2,max:30}]},
 };
 
-/* ============================ пресеты ============================ */
 const PRESETS=[
  {id:'tshirt',icon:'👕',name:'Футболка',pieces:[
    {t:'bodiceFront',n:'Полочка',c:CC.cyan,p:{chest:27,length:68,armhole:21,neckW:7.5,neckD:8}},
@@ -633,6 +639,22 @@ function cmdsToPath(cmds){
   }
   return p;
 }
+/* Полигон с семплированием кривых — для математического выбора */
+function cmdsToPoly(cmds){
+  const pts=[]; let cx=0,cy=0,sx=0,sy=0;
+  for(const c of cmds){
+    if(c[0]==='M'){cx=c[1];cy=c[2];sx=cx;sy=cy;pts.push([cx,cy]);}
+    else if(c[0]==='L'){cx=c[1];cy=c[2];pts.push([cx,cy]);}
+    else if(c[0]==='Q'){
+      const x0=cx,y0=cy,qx=c[1],qy=c[2],x1=c[3],y1=c[4];
+      for(let i=1;i<=10;i++){const t=i/10,mt=1-t;
+        pts.push([mt*mt*x0+2*mt*t*qx+t*t*x1, mt*mt*y0+2*mt*t*qy+t*t*y1]);}
+      cx=x1;cy=y1;
+    }
+    else if(c[0]==='Z'){cx=sx;cy=sy;}
+  }
+  return pts;
+}
 function cmdsBounds(cmds){
   let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9,cx=0,cy=0,sx=0,sy=0;
   const add=(x,y)=>{if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;};
@@ -647,24 +669,29 @@ function cmdsBounds(cmds){
   }
   return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
 }
+/* Лучевой тест точки в полигоне (локальные координаты детали) */
+function pointInPoly(pts,x,y){
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi=pts[i][0],yi=pts[i][1],xj=pts[j][0],yj=pts[j][1];
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
 function rebuildPiece(p){
   const cmds=SHAPES[p.type].build(p.params);
-  p._cmds=cmds; p._path=cmdsToPath(cmds); p._bounds=cmdsBounds(cmds);
+  p._cmds=cmds; p._path=cmdsToPath(cmds);
+  p._bounds=cmdsBounds(cmds); p._poly=cmdsToPoly(cmds);
 }
-function worldPathOf(p){
-  const b=p._bounds,cx=p.x+b.w/2,cy=p.y+b.h/2;
-  const m=new DOMMatrix([1,0,0,1,cx,cy]).rotateSelf(p.rot)
-    .scaleSelf(p.mirror?-1:1,1)
-    .translateSelf(-(b.minx+b.w/2),-(b.miny+b.h/2));
-  const path=new Path2D(); path.addPath(p._path,m); return path;
-}
+/* Углы повёрнутого габарита (мир). Порядок: mirror → rotate (как в рендере) */
 function pieceCorners(p){
   const b=p._bounds,rad=p.rot*Math.PI/180,cx=p.x+b.w/2,cy=p.y+b.h/2;
+  const cs=Math.cos(rad),sn=Math.sin(rad);
   const pts=[[b.minx,b.miny],[b.minx+b.w,b.miny],[b.minx+b.w,b.miny+b.h],[b.minx,b.miny+b.h]];
   return pts.map(pt=>{
     let dx=pt[0]-(b.minx+b.w/2),dy=pt[1]-(b.miny+b.h/2);
     if(p.mirror)dx=-dx;
-    return [cx+dx*Math.cos(rad)-dy*Math.sin(rad), cy+dx*Math.sin(rad)+dy*Math.cos(rad)];
+    return [cx+dx*cs-dy*sn, cy+dx*sn+dy*cs];
   });
 }
 function pieceAABB(p){
@@ -707,13 +734,11 @@ const state={
 let editorId=null, saving=false, lastSavedAt=null, storageFailedNoted=false, saveTimer=null, repackTimer=null;
 
 const cv=$('#cv'), ctx=cv.getContext('2d');
-const hitCv=document.createElement('canvas');
-hitCv.width=1; hitCv.height=1;
-const hctx=hitCv.getContext('2d');
 const wrap=$('#canvasWrap');
 let W=0,H=0,dpr=1;
 
 const byId=id=>state.pieces.find(p=>p.id===id)||null;
+/* Экранные ⇄ мировые координаты (см. модель координат в шапке) */
 const s2w=(sx,sy)=>({x:(sx-state.view.ox)/state.view.scale, y:(sy-state.view.oy)/state.view.scale});
 const w2s=(wx,wy)=>({x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy});
 
@@ -806,6 +831,7 @@ function drawFabric(){
   ctx.font='600 11px "JetBrains Mono",monospace';ctx.textAlign='center';
   ctx.fillText(`ткань · ${fmt(state.fabricW)} см`,(x0+x1)/2,18);
 }
+/* Рендер детали: экран = T(w2s(C)) · S(scale) · R · M · T(-localCenter) */
 function drawPiece(p){
   const b=p._bounds, rad=p.rot*Math.PI/180, sv=state.view.scale;
   const s=w2s(p.x+b.w/2, p.y+b.h/2);
@@ -894,7 +920,6 @@ function contentBounds(){
   }
   return {minx,miny,maxx,maxy};
 }
-/* ИСПРАВЛЕНО: «Вписать» учитывает и детали, и область ткани целиком */
 function fitBounds(){
   const b=contentBounds();
   let minx,miny,maxx,maxy;
@@ -909,7 +934,7 @@ function fitBounds(){
 }
 function fitView(){
   const b=fitBounds();
-  const padT=26,padS=16; // сверху место под подпись ткани
+  const padT=26,padS=16;
   const bw=Math.max(10,b.maxx-b.minx), bh=Math.max(10,b.maxy-b.miny);
   const s=clamp(Math.min(W/(bw+padS*2),H/(bh+padT+padS)),0.12,80);
   state.view.scale=s;
@@ -919,12 +944,24 @@ function fitView(){
 }
 
 /* ============================ выбор / hit-test ============================ */
-/* УЛУЧШЕНО: точное попадание + допуск вокруг габарита (удобно для тача) */
+/* МИР → ЛОКАЛЬНЫЕ координаты детали (обратное преобразование рендера):
+   d = world-C; поворот на -rot; зеркало X; сдвиг на localCenter */
+function worldToLocal(p,wx,wy){
+  const b=p._bounds, cx=p.x+b.w/2, cy=p.y+b.h/2;
+  const dx=wx-cx, dy=wy-cy;
+  const rad=-p.rot*Math.PI/180, cs=Math.cos(rad), sn=Math.sin(rad);
+  let lx=dx*cs-dy*sn, ly=dx*sn+dy*cs;
+  if(p.mirror)lx=-lx;
+  return [lx+(b.minx+b.w/2), ly+(b.miny+b.h/2)];
+}
 function pick(wx,wy){
+  // 1) точное попадание в контур (локальный полигон)
   for(let i=state.pieces.length-1;i>=0;i--){
     const p=state.pieces[i];
-    try{ if(hctx.isPointInPath(worldPathOf(p),wx,wy)) return p; }catch(e){}
+    const [lx,ly]=worldToLocal(p,wx,wy);
+    if(pointInPoly(p._poly,lx,ly))return p;
   }
+  // 2) допуск для тача: ближайшая деталь в пределах расширенного габарита
   const tol=Math.min(14/state.view.scale,5);
   let best=null,bestD=Infinity;
   for(let i=state.pieces.length-1;i>=0;i--){
@@ -1031,7 +1068,6 @@ function setEditorMode(full){
   $('#mFullSec').classList.toggle('hidden',!full);
   $('#mQuickSec').classList.toggle('hidden',full);
 }
-/* Тап по детали открывает КРАТКИЕ параметры; детальные — из кнопки внутри */
 function openEditor(p){
   editorId=p.id; state.selId=p.id;
   $('#mTitle').textContent='Деталь · '+SHAPES[p.type].name;
@@ -1186,7 +1222,6 @@ $('#tabParts').onclick=()=>{ $('#tabParts').classList.add('active');$('#tabPrese
 $('#tabPresets').onclick=()=>{ $('#tabPresets').classList.add('active');$('#tabParts').classList.remove('active');
   $('#presetsPanel').classList.remove('hidden');$('#partsPanel').classList.add('hidden'); };
 
-/* мобильная панель */
 function openSide(){ $('#sidebar').classList.add('open'); $('#sideDim').classList.add('show'); }
 function closeSide(){ if(window.innerWidth<=860){ $('#sidebar').classList.remove('open'); $('#sideDim').classList.remove('show'); } }
 $('#btnSide').onclick=()=>{ $('#sidebar').classList.contains('open')?closeSide():openSide(); };
@@ -1308,7 +1343,7 @@ function newProject(){
 $('#btnNew').onclick=()=>{ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=()=>saveProject(true);
 $('#btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.2.0',...projectData()},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.2.1',...projectData()},null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -1353,6 +1388,8 @@ $('#btnClear').onclick=()=>{ if(!state.pieces.length)return;
 
 /* ============================ указатель ============================ */
 const pointers=new Map(); let gesture=null, spaceDown=false;
+/* допуск «тап/драг»: для пальца больше, чтобы дрожь не считалась перетаскиванием */
+const tapSlop=pt=>pt==='touch'?14:8;
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 cv.addEventListener('wheel',e=>{
   e.preventDefault();
@@ -1373,16 +1410,16 @@ cv.addEventListener('pointerdown',e=>{
   }
   const {x:px,y:py}=relXY(e);
   if(e.button===1||e.button===2||spaceDown){
-    gesture={type:'pan',sx:px,sy:py,ox:state.view.ox,oy:state.view.oy,moved:false};
+    gesture={type:'pan',pt:e.pointerType,sx:px,sy:py,ox:state.view.ox,oy:state.view.oy,moved:false};
     cv.style.cursor='grabbing'; return;
   }
   const w=s2w(px,py), hit=pick(w.x,w.y);
   if(hit){
     selectPiece(hit.id);
-    gesture={type:'drag',id:hit.id,gx:w.x-hit.x,gy:w.y-hit.y,sx:px,sy:py,moved:false};
+    gesture={type:'drag',pt:e.pointerType,id:hit.id,gx:w.x-hit.x,gy:w.y-hit.y,sx:px,sy:py,moved:false};
     cv.style.cursor='move';
   }else{
-    gesture={type:'pan',sx:px,sy:py,ox:state.view.ox,oy:state.view.oy,moved:false,empty:true};
+    gesture={type:'pan',pt:e.pointerType,sx:px,sy:py,ox:state.view.ox,oy:state.view.oy,moved:false,empty:true};
   }
 });
 cv.addEventListener('pointermove',e=>{
@@ -1404,14 +1441,14 @@ cv.addEventListener('pointermove',e=>{
   if(gesture&&gesture.type==='pan'){
     state.view.ox=gesture.ox+(px-gesture.sx);
     state.view.oy=gesture.oy+(py-gesture.sy);
-    if(Math.hypot(px-gesture.sx,py-gesture.sy)>TAP_SLOP)gesture.moved=true;
+    if(Math.hypot(px-gesture.sx,py-gesture.sy)>tapSlop(gesture.pt))gesture.moved=true;
     if(gesture.moved)cv.style.cursor='grabbing';
     draw(); return;
   }
   if(gesture&&gesture.type==='drag'){
     const p=byId(gesture.id);
     if(p){
-      if(!gesture.moved&&Math.hypot(px-gesture.sx,py-gesture.sy)>TAP_SLOP)gesture.moved=true;
+      if(!gesture.moved&&Math.hypot(px-gesture.sx,py-gesture.sy)>tapSlop(gesture.pt))gesture.moved=true;
       if(gesture.moved){
         p.x=w.x-gesture.gx; p.y=w.y-gesture.gy;
         if($('#chkSnap').checked){
@@ -1435,7 +1472,7 @@ function endPointer(e){
   if(gesture&&gesture.type==='pinch'){
     if(pointers.size===1){
       const [rp]=pointers.values(); const {x,y}=relXY(rp);
-      gesture={type:'pan',sx:x,sy:y,ox:state.view.ox,oy:state.view.oy,moved:true};
+      gesture={type:'pan',pt:e.pointerType,sx:x,sy:y,ox:state.view.ox,oy:state.view.oy,moved:true};
     }else gesture=null;
     return;
   }
