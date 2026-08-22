@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEONCUT · Студия швейных выкроек</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter/600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter/800.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono/700.css">
+<style>
+:root{
+  --bg:#05060e; --panel:rgba(13,15,30,.92); --panel2:#0d1022; --line:#1c2140; --line2:#2a3160;
+  --txt:#dbe2ff; --dim:#6f77a3; --cyan:#00e5ff; --mag:#ff3df0; --vio:#8b5cff; --grn:#39ffa0; --amb:#ffc24d; --red:#ff4d6d;
+  --font-ui:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(1200px 800px at 85% -10%, rgba(139,92,255,.13), transparent 60%),
+    radial-gradient(1000px 700px at -10% 110%, rgba(0,229,255,.10), transparent 55%),
+    var(--bg);
+  color:var(--txt); font-family:var(--font-ui); overflow:hidden;
+  display:flex; flex-direction:column; user-select:none;
+}
+.hidden{display:none!important}
+
+/* ---------- header ---------- */
+header{
+  display:flex; align-items:center; gap:14px; padding:10px 16px; flex-wrap:wrap;
+  border-bottom:1px solid rgba(0,229,255,.18);
+  background:rgba(8,10,22,.82); backdrop-filter:blur(10px);
+  box-shadow:0 6px 24px rgba(0,0,0,.35), 0 1px 0 rgba(0,229,255,.08);
+  z-index:30;
+}
+.logo{display:flex;align-items:center;gap:12px}
+.logo svg{filter:drop-shadow(0 0 6px rgba(0,229,255,.7))}
+.logo-name{display:flex;align-items:center;gap:8px}
+.logo-title{
+  font:800 19px var(--font-ui); letter-spacing:3px;
+  background:linear-gradient(90deg,var(--cyan),var(--mag));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 0 9px rgba(0,229,255,.45));
+}
+.ver{
+  font:700 10px var(--font-mono); color:#041018; padding:3px 8px; border-radius:20px;
+  background:linear-gradient(90deg,var(--cyan),#7df9ff); box-shadow:0 0 12px rgba(0,229,255,.55);
+}
+.desc{color:var(--dim); font:400 11.5px/1.45 var(--font-ui); max-width:360px}
+.head-actions{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#projName{width:190px;font-family:var(--font-ui)}
+
+/* ---------- buttons / inputs ---------- */
+.btn{
+  background:#121633; border:1px solid var(--line2); color:var(--txt);
+  padding:7px 13px; border-radius:9px; cursor:pointer; font:600 12.5px var(--font-ui);
+  display:inline-flex; gap:6px; align-items:center; transition:.16s; white-space:nowrap;
+}
+.btn:hover{border-color:var(--cyan); color:#fff; box-shadow:0 0 14px rgba(0,229,255,.35), inset 0 0 10px rgba(0,229,255,.07)}
+.btn.primary{border-color:rgba(0,229,255,.6); background:linear-gradient(180deg,rgba(0,229,255,.18),rgba(0,229,255,.05)); color:#bffcff}
+.btn.primary:hover{box-shadow:0 0 18px rgba(0,229,255,.5)}
+.btn.danger:hover{border-color:var(--red); box-shadow:0 0 14px rgba(255,77,109,.45); color:#ffd7de}
+input[type=text],input[type=number]{
+  background:#0a0d1f; border:1px solid var(--line2); color:var(--txt); border-radius:8px;
+  padding:7px 9px; font:500 13px var(--font-mono); width:100%; outline:none; transition:.15s;
+}
+input:focus{border-color:var(--cyan); box-shadow:0 0 10px rgba(0,229,255,.35)}
+input[type=checkbox]{accent-color:var(--cyan); width:15px;height:15px;cursor:pointer}
+label{font:600 11px var(--font-ui); color:var(--dim); letter-spacing:.4px}
+
+/* ---------- layout ---------- */
+main{display:flex; flex:1; min-height:0}
+aside{
+  width:296px; flex:none; display:flex; flex-direction:column;
+  border-right:1px solid var(--line); background:rgba(9,11,24,.72); backdrop-filter:blur(6px);
+}
+.tabs{display:flex; gap:5px; padding:10px; border-bottom:1px solid var(--line)}
+.tab{
+  flex:1; background:transparent; border:1px solid transparent; padding:9px; border-radius:9px;
+  color:var(--dim); font:700 13px var(--font-ui); cursor:pointer; letter-spacing:.5px; transition:.16s;
+}
+.tab.active{
+  color:#9ef7ff; border-color:rgba(0,229,255,.4); background:rgba(0,229,255,.07);
+  box-shadow:0 0 14px rgba(0,229,255,.18), inset 0 0 10px rgba(0,229,255,.06);
+  text-shadow:0 0 9px rgba(0,229,255,.65);
+}
+.tab:not(.active):hover{color:var(--txt)}
+.side-scroll{flex:1; overflow-y:auto; padding:12px}
+.side-hint{padding:9px 12px; border-top:1px solid var(--line); color:var(--dim); font:400 10.5px/1.55 var(--font-mono)}
+.cat-title{
+  font:700 10px var(--font-ui); letter-spacing:2px; text-transform:uppercase; color:var(--vio);
+  margin:14px 2px 8px; text-shadow:0 0 8px rgba(139,92,255,.6);
+}
+.cat-title:first-child{margin-top:2px}
+.lib-grid{display:flex; flex-direction:column; gap:7px}
+.lib-item{
+  display:flex; gap:10px; align-items:center; padding:7px 9px;
+  border:1px solid var(--line); border-radius:12px; background:rgba(16,19,40,.6);
+  cursor:pointer; transition:.16s;
+}
+.lib-item:hover{border-color:var(--cyan); transform:translateY(-1px); box-shadow:0 0 16px rgba(0,229,255,.22)}
+.lib-item canvas{width:62px; height:48px; flex:none; background:rgba(5,6,14,.65); border-radius:8px; border:1px solid var(--line)}
+.lib-item b{display:block; font:600 12.5px var(--font-ui)}
+.lib-item small{color:var(--dim); font:400 10px var(--font-mono)}
+.preset-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.preset{
+  border:1px solid var(--line); border-radius:13px; padding:12px 10px; text-align:center;
+  background:rgba(16,19,40,.6); cursor:pointer; transition:.16s; position:relative;
+}
+.preset:hover{border-color:var(--mag); transform:translateY(-2px); box-shadow:0 0 18px rgba(255,61,240,.28)}
+.preset .p-ico{font-size:28px; filter:drop-shadow(0 0 8px rgba(255,61,240,.45))}
+.preset b{display:block; margin-top:6px; font:600 12.5px var(--font-ui)}
+.preset small{color:var(--dim); font:400 10px var(--font-mono)}
+.preset .p-add{
+  position:absolute; top:6px; right:8px; color:var(--mag); font:700 15px var(--font-mono);
+  opacity:0; transition:.16s; text-shadow:0 0 8px var(--mag);
+}
+.preset:hover .p-add{opacity:1}
+
+/* ---------- stage ---------- */
+#stage{flex:1; display:flex; flex-direction:column; min-width:0; position:relative}
+#toolbar{
+  display:flex; align-items:center; gap:6px; padding:8px 12px; flex-wrap:wrap;
+  border-bottom:1px solid var(--line); background:rgba(9,11,24,.8);
+}
+.tbtn{
+  background:#101430; border:1px solid var(--line2); color:var(--txt); border-radius:8px;
+  padding:6px 11px; font:600 12px var(--font-ui); cursor:pointer; transition:.15s;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.tbtn:hover{border-color:var(--cyan); box-shadow:0 0 10px rgba(0,229,255,.3)}
+.tbtn.toggle.active{border-color:rgba(0,229,255,.55); color:#9ef7ff; background:rgba(0,229,255,.08); box-shadow:0 0 10px rgba(0,229,255,.25)}
+.tbtn.danger-t:hover{border-color:var(--red); box-shadow:0 0 10px rgba(255,77,109,.4)}
+.tbtn label{display:inline-flex; align-items:center; gap:6px; cursor:pointer; font:600 12px var(--font-ui); color:inherit; letter-spacing:0}
+.tbtn input[type=checkbox]{margin:0}
+#fabWrap{cursor:default}
+.zoomlbl{font:700 12px var(--font-mono); color:var(--cyan); min-width:52px; text-align:center; text-shadow:0 0 8px rgba(0,229,255,.5)}
+.tsep{width:1px; height:22px; background:var(--line2); margin:0 4px}
+#fabWrap input[type=number]{width:58px; padding:4px 6px; font-size:12px}
+#canvasWrap{flex:1; position:relative; overflow:hidden; background:transparent}
+#cv{position:absolute; inset:0; touch-action:none; cursor:default}
+#statusbar{
+  display:flex; gap:16px; align-items:center; padding:6px 14px; flex-wrap:wrap;
+  border-top:1px solid var(--line); background:rgba(9,11,24,.88);
+  font:500 11px var(--font-mono); color:var(--dim);
+}
+.chip{margin-left:auto; padding:3px 11px; border-radius:20px; border:1px solid var(--line2); font:700 10.5px var(--font-mono); white-space:nowrap}
+.chip.ok{color:#7dffca; border-color:rgba(57,255,160,.45); box-shadow:0 0 9px rgba(57,255,160,.2)}
+.chip.warn{color:#ffe08a; border-color:rgba(255,194,77,.45); box-shadow:0 0 9px rgba(255,194,77,.2)}
+.chip.bad{color:#ff9db1; border-color:rgba(255,77,109,.5); box-shadow:0 0 9px rgba(255,77,109,.25)}
+
+/* ---------- quick panel ---------- */
+#quick{
+  position:absolute; z-index:20; min-width:216px; padding:10px;
+  background:rgba(10,12,26,.93); border:1px solid rgba(255,61,240,.55); border-radius:13px;
+  box-shadow:0 0 20px rgba(255,61,240,.3), 0 12px 34px rgba(0,0,0,.55); backdrop-filter:blur(8px);
+}
+.q-head{display:flex; align-items:center; gap:8px; margin-bottom:8px}
+.q-head b{font:700 12px var(--font-ui); color:#ffc4f4; text-shadow:0 0 8px rgba(255,61,240,.6); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.q-head button{background:none;border:none;color:var(--dim);cursor:pointer;font-size:15px;line-height:1}
+.q-head button:hover{color:#fff}
+.q-fields{display:flex; gap:8px; margin-bottom:8px}
+.qf{flex:1; display:flex; flex-direction:column; gap:4px}
+.qf span{font:600 9.5px var(--font-ui); color:var(--dim); text-transform:uppercase; letter-spacing:.5px}
+.qf input{padding:5px 7px; font-size:12px}
+.q-actions{display:flex; gap:6px}
+.q-actions .tbtn{padding:5px 8px; font-size:11.5px; flex:1; justify-content:center}
+
+/* ---------- modal ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(3,4,10,.68); backdrop-filter:blur(7px);
+  display:flex; align-items:center; justify-content:center; z-index:60;
+  opacity:0; pointer-events:none; transition:.2s;
+}
+.overlay.open{opacity:1; pointer-events:auto}
+.modal{
+  width:min(580px,94vw); max-height:88vh; overflow:auto;
+  background:linear-gradient(180deg,#101327,#0b0d1d);
+  border:1px solid var(--line2); border-radius:16px;
+  box-shadow:0 0 0 1px rgba(0,229,255,.1), 0 0 40px rgba(0,229,255,.14), 0 30px 90px rgba(0,0,0,.65);
+  transform:translateY(10px) scale(.97); transition:.22s;
+}
+.overlay.open .modal{transform:none}
+.m-head{display:flex; align-items:center; padding:15px 18px; border-bottom:1px solid var(--line)}
+.m-head b{flex:1; font:700 15px var(--font-ui); color:#aef6ff; text-shadow:0 0 10px rgba(0,229,255,.55)}
+.m-head button{background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;line-height:1}
+.m-head button:hover{color:var(--mag); text-shadow:0 0 8px var(--mag)}
+.m-body{padding:16px 18px; display:flex; flex-direction:column; gap:13px}
+.m-row{display:flex; flex-direction:column; gap:5px}
+.m-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.m-field{display:flex; flex-direction:column; gap:4px}
+.rot-line{display:flex; gap:6px; align-items:center}
+.rot-line input{width:86px}
+.rot-line .tbtn{padding:6px 9px}
+.swatches{display:flex; gap:8px; flex-wrap:wrap}
+.swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:.15s}
+.swatch:hover{transform:scale(1.15)}
+.swatch.active{border-color:#fff; box-shadow:0 0 12px currentColor}
+.m-foot{display:flex; gap:8px; padding:14px 18px; border-top:1px solid var(--line); justify-content:flex-end}
+.m-foot .spacer{flex:1}
+.proj{
+  display:flex; align-items:center; gap:10px; padding:10px 12px; margin-bottom:8px;
+  border:1px solid var(--line); border-radius:11px; background:rgba(16,19,40,.55);
+}
+.proj b{font:600 13px var(--font-ui)}
+.proj small{display:block; color:var(--dim); font:400 10.5px var(--font-mono); margin-top:2px}
+.proj .p-info{flex:1; min-width:0}
+.empty{color:var(--dim); font:400 12px var(--font-ui); text-align:center; padding:22px 8px}
+
+/* ---------- misc ---------- */
+#emptyHint{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  padding:18px 26px; border:1px dashed rgba(0,229,255,.5); border-radius:14px;
+  color:#9ef7ff; font:600 13px var(--font-ui); text-align:center; pointer-events:none;
+  background:rgba(8,10,24,.6); box-shadow:0 0 24px rgba(0,229,255,.15); animation:pulse 2.4s infinite;
+}
+@keyframes pulse{0%,100%{opacity:.75}50%{opacity:1}}
+#toastBox{position:absolute; left:50%; bottom:18px; transform:translateX(-50%); display:flex; flex-direction:column; gap:8px; z-index:40; align-items:center; pointer-events:none}
+.toast{
+  background:rgba(10,12,28,.95); border:1px solid rgba(0,229,255,.5); color:#d9fbff;
+  padding:9px 16px; border-radius:10px; font:600 12px var(--font-ui);
+  box-shadow:0 0 18px rgba(0,229,255,.3); opacity:0; transform:translateY(8px); transition:.25s; white-space:nowrap;
+}
+.toast.show{opacity:1; transform:none}
+.toast.warn{border-color:rgba(255,194,77,.6); color:#ffe9b3; box-shadow:0 0 18px rgba(255,194,77,.3)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#222848; border-radius:8px; border:2px solid #0a0c1c}
+::-webkit-scrollbar-thumb:hover{background:#2f3866}
+@media (max-width:900px){ aside{width:236px} .desc{display:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="24" y2="24">
+        <stop offset="0" stop-color="#00e5ff"/><stop offset="1" stop-color="#ff3df0"/>
+      </linearGradient></defs>
+      <g stroke="url(#lg)">
+        <circle cx="6" cy="6" r="2.7"/><circle cx="6" cy="18" r="2.7"/>
+        <path d="M8.3 7.7 20.5 18.5"/><path d="M8.3 16.3 20.5 5.5"/>
+      </g>
+    </svg>
+    <div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.1.0</span></div>
+      <div class="desc">Студия швейных выкроек: собирайте детали на холсте, редактируйте размеры — автораскладка оптимально разложит их в области ткани.</div>
+    </div>
+  </div>
+  <div class="head-actions">
+    <input type="text" id="projName" value="Новый проект" title="Название проекта">
+    <button class="btn" id="btnNew" title="Новый пустой проект">✦ Новый</button>
+    <button class="btn primary" id="btnSave" title="Сохранить проект (Ctrl+S)">💾 Сохранить</button>
+    <button class="btn" id="btnProjects" title="Сохранённые проекты">📁 Проекты</button>
+    <button class="btn" id="btnExport" title="Экспорт проекта в JSON">⇩ JSON</button>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <div class="tabs">
+      <button class="tab active" id="tabParts">◈ Детали</button>
+      <button class="tab" id="tabPresets">★ Пресеты</button>
+    </div>
+    <div class="side-scroll" id="partsPanel"><div id="partsList"></div></div>
+    <div class="side-scroll hidden" id="presetsPanel">
+      <div class="cat-title">Готовые комплекты</div>
+      <div class="preset-grid" id="presetsList"></div>
+    </div>
+    <div class="side-hint">ЛКМ — перетащить (с привязкой к ткани) · клик — параметры<br>колесо — масштаб · ПКМ/пробел — перемещение · 0 — вписать<br>⚡ — оптимальная раскладка · автораскладка при правке размеров</div>
+  </aside>
+
+  <section id="stage">
+    <div id="toolbar">
+      <button class="tbtn" id="btnZoomOut" title="Уменьшить (−)">−</button>
+      <span class="zoomlbl" id="zoomLbl">100%</span>
+      <button class="tbtn" id="btnZoomIn" title="Увеличить (+)">+</button>
+      <button class="tbtn" id="btnFit" title="Автомасштаб: вписать всё (0)">⤢ Вписать</button>
+      <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
+      <span class="tsep"></span>
+      <button class="tbtn" id="btnPack" title="Оптимальная автораскладка деталей в области ткани">⚡ Раскладка</button>
+      <label class="tbtn toggle active" id="autoWrap" title="Пересобирать раскладку автоматически при изменении параметров">
+        <input type="checkbox" id="chkAuto" checked> Авто
+      </label>
+      <label class="tbtn toggle active" id="snapWrap" title="Привязка деталей к области ткани и сетке 0.5 см при перетаскивании">
+        <input type="checkbox" id="chkSnap" checked> К ткани
+      </label>
+      <span class="tsep"></span>
+      <button class="tbtn toggle active" id="btnGrid" title="Сетка"># Сетка</button>
+      <div class="tbtn toggle active" id="fabWrap" title="Область ткани для раскроя">
+        <label><input type="checkbox" id="fabChk" checked> Ткань</label>
+        <input type="number" id="fabW" value="150" min="60" max="400" step="5" title="Ширина ткани, см">
+        <span style="color:var(--dim)">см</span>
+      </div>
+      <span class="tsep"></span>
+      <button class="tbtn danger-t" id="btnClear" title="Очистить холст">✕ Очистить</button>
+    </div>
+
+    <div id="canvasWrap">
+      <canvas id="cv"></canvas>
+      <div id="emptyHint" class="hidden">Холст пуст — добавьте детали слева<br>или выберите пресет ✦</div>
+
+      <div id="quick" class="hidden">
+        <div class="q-head"><b id="qName">Деталь</b><button id="qClose" title="Снять выделение">✕</button></div>
+        <div class="q-fields" id="qFields"></div>
+        <div class="q-actions">
+          <button class="tbtn" id="qRot" title="Повернуть на 90°">⟳90°</button>
+          <button class="tbtn" id="qEdit" title="Все параметры">⚙</button>
+          <button class="tbtn" id="qDup" title="Дублировать">⧉</button>
+          <button class="tbtn" id="qDel" title="Удалить">🗑</button>
+        </div>
+      </div>
+
+      <div id="toastBox"></div>
+    </div>
+
+    <div id="statusbar">
+      <span id="stZoom">масштаб: —</span>
+      <span id="stCoords">X: — · Y: —</span>
+      <span id="stCount">деталей: 0</span>
+      <span id="storageChip" class="chip warn">● инициализация…</span>
+    </div>
+  </section>
+</main>
+
+<!-- Модалка параметров детали -->
+<div class="overlay" id="editorOverlay">
+  <div class="modal">
+    <div class="m-head"><b id="mTitle">Параметры детали</b><button id="mClose">✕</button></div>
+    <div class="m-body">
+      <div class="m-row"><label>Название детали</label><input type="text" id="mName"></div>
+      <div class="m-grid" id="mParams"></div>
+      <div class="m-row">
+        <label>Поворот, °</label>
+        <div class="rot-line">
+          <input type="number" id="mRot" step="15" min="-360" max="360">
+          <button class="tbtn" data-rot="0">0°</button><button class="tbtn" data-rot="90">90°</button>
+          <button class="tbtn" data-rot="180">180°</button><button class="tbtn" data-rot="270">270°</button>
+        </div>
+      </div>
+      <div class="m-grid">
+        <div class="m-field"><label>Припуск на шов, см</label><input type="number" id="mSeam" step="0.5" min="0" max="5"></div>
+        <div class="m-field"><label>Зеркальное отражение</label>
+          <div style="padding:8px 0"><input type="checkbox" id="mMirror"></div>
+        </div>
+      </div>
+      <div class="m-row"><label>Цвет неона</label><div class="swatches" id="mColors"></div></div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" id="mDup">⧉ Дублировать</button>
+      <button class="btn danger" id="mDel">🗑 Удалить</button>
+      <span class="spacer"></span>
+      <button class="btn primary" id="mOk">Готово</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка проектов -->
+<div class="overlay" id="projOverlay">
+  <div class="modal">
+    <div class="m-head"><b>📁 Сохранённые проекты</b><button id="projClose">✕</button></div>
+    <div class="m-body"><div id="projList"></div></div>
+    <div class="m-foot">
+      <span class="spacer"></span>
+      <button class="btn" id="btnNewProj">✦ Новый проект</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================ утилиты ============================ */
+const $=s=>document.querySelector(s);
+const uid=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmt=v=>{const r=Math.round(v*10)/10;return Number.isInteger(r)?String(r):r.toFixed(1);};
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+const PALETTE=['#00e5ff','#39ffa0','#8b5cff','#ff3df0','#ffc24d','#4d8bff','#ff5c5c','#e8ecff'];
+const CC={cyan:'#00e5ff',grn:'#39ffa0',vio:'#8b5cff',mag:'#ff3df0',amb:'#ffc24d'};
+const BASE=3; // пикселей на см при 100%
+
+/* ============================ генераторы контуров ============================ */
+function rectBuild(p){return[['M',0,0],['L',p.w,0],['L',p.w,p.h],['L',0,p.h],['Z']];}
+function bodiceBuild(p){
+  const w=p.chest,len=p.length,ah=p.armhole,nw=p.neckW,nd=p.neckD,sh=p.shoulder;
+  return [['M',nw,0],['L',w*0.78,sh],
+    ['Q',w*1.02,sh+(ah-sh)*0.38,w,ah],
+    ['Q',w+0.4,(ah+len)/2,w-1.6,len],
+    ['L',0,len],['L',0,nd],['Q',nw,nd,nw,0],['Z']];
+}
+function sleeveBuild(p){
+  const w=p.width,c=p.capH,l=p.length,i=Math.min(p.hemIn,w/2-2);
+  return [['M',w/2,0],['Q',w*0.09,c*0.22,0,c],['L',i,l],['L',w-i,l],['L',w,c],
+    ['Q',w*0.91,c*0.22,w/2,0],['Z']];
+}
+function collarBuild(p){const L=p.len,h=p.h;
+  return [['M',0,h*0.55],['Q',L*0.5,-h*0.45,L,h*0.55],['L',L*0.96,h],
+    ['Q',L*0.5,h*0.28,L*0.04,h],['Z']];}
+function neckbandBuild(p){const L=p.len,w=p.w;
+  return [['M',0,w],['Q',L/2,-w*0.4,L,w],['L',L,2*w],['Q',L/2,w*0.6,0,2*w],['Z']];}
+function cuffBuild(p){const w=p.w,h=p.h;
+  return [['M',0,h*0.2],['Q',w/2,0,w,h*0.2],['L',w,h],['L',0,h],['Z']];}
+function facingBuild(p){const L=p.len,d=p.depth,w=Math.min(p.w,p.depth*0.9);
+  return [['M',0,0],['Q',L/2,d*2,L,0],['Q',L/2,(d-w)*2,0,0],['Z']];}
+function pocketBuild(p){const w=p.w,h=p.h,r=Math.min(3,w*0.25,h*0.25);
+  return [['M',0,0],['L',w,0],['L',w-0.6,h-r],['Q',w-0.6,h,w-0.6-r,h],
+    ['L',0.6+r,h],['Q',0.6,h,0.6,h-r],['Z']];}
+function yokeBuild(p){const w=p.w,h=p.h,c=p.curve;
+  return [['M',0,c],['Q',w/2,0,w,c],['L',w,h],['Q',w/2,h-c*1.6,0,h],['Z']];}
+function gussetBuild(p){return [['M',p.w/2,0],['L',p.w,p.h/2],['L',p.w/2,p.h],['L',0,p.h/2],['Z']];}
+function pantsBuild(p){
+  const W=p.hip,R=p.rise,L=p.length,c=p.crotch,hw=Math.min(p.hem,W);
+  const xc=(W+c)/2+1;
+  return [['M',0,0],['L',W-2,0],['Q',W+0.6,R*0.25,W,R*0.55],['L',W-0.6,R+3],
+    ['L',xc+hw/2,L],['L',xc-hw/2,L],
+    ['Q',xc-hw/2+1.5,R+(L-R)*0.35,c+1.2,R+2.5],
+    ['Q',c*0.35,R-1,0,R-7],['L',0,0],['Z']];
+}
+function skirtBuild(p){const wst=p.waist,hip=p.hip,L=p.length,f=p.flare;
+  return [['M',0,0],['L',wst,0],['Q',hip+0.8,7,hip,19],['L',hip+f,L],
+    ['Q',(hip+f)/2,L+1.6,0,L],['Z']];}
+function briefsFrontBuild(p){const W=p.waist,H=p.height;
+  return [['M',0,0],['Q',W/2,1.4,W,0],['Q',W+0.4,H*0.3,W-1,H*0.52],
+    ['Q',W*0.66,H*0.86,W/2,H],['Q',W*0.34,H*0.86,1,H*0.52],
+    ['Q',-0.4,H*0.3,0,0],['Z']];}
+function briefsBackBuild(p){const W=p.waist,H=p.height;
+  return [['M',0,0],['Q',W/2,1.8,W,0],['Q',W+0.5,H*0.34,W-0.8,H*0.6],
+    ['Q',W*0.72,H*0.95,W*0.58,H],['L',W*0.42,H],['Q',W*0.28,H*0.95,0.8,H*0.6],
+    ['Q',-0.5,H*0.34,0,0],['Z']];}
+
+const SHAPES={
+  rect:{name:'Прямоугольник',cat:'Базовые',build:rectBuild,
+    params:[{k:'w',label:'Ширина, см',def:30,min:2,max:400},{k:'h',label:'Высота, см',def:20,min:2,max:400}]},
+  band:{name:'Пояс / полоса',cat:'Базовые',build:rectBuild,
+    params:[{k:'w',label:'Длина, см',def:70,min:4,max:400},{k:'h',label:'Ширина, см',def:7,min:1,max:60}]},
+  bodiceFront:{name:'Полочка',cat:'Верх',build:bodiceBuild,quick:['chest','length'],
+    params:[{k:'chest',label:'Полуобхват груди, см',def:26,min:14,max:70},
+      {k:'length',label:'Длина, см',def:66,min:20,max:150},
+      {k:'armhole',label:'Глубина проймы, см',def:20,min:10,max:55},
+      {k:'neckW',label:'Ширина горловины, см',def:7,min:3,max:16},
+      {k:'neckD',label:'Глубина горловины, см',def:8.5,min:1,max:40},
+      {k:'shoulder',label:'Спуск плеча, см',def:4,min:0,max:12}]},
+  bodiceBack:{name:'Спинка',cat:'Верх',build:bodiceBuild,quick:['chest','length'],
+    params:[{k:'chest',label:'Полуобхват груди, см',def:26,min:14,max:70},
+      {k:'length',label:'Длина, см',def:66,min:20,max:150},
+      {k:'armhole',label:'Глубина проймы, см',def:21,min:10,max:55},
+      {k:'neckW',label:'Ширина горловины, см',def:7,min:3,max:16},
+      {k:'neckD',label:'Глубина горловины, см',def:2.5,min:1,max:20},
+      {k:'shoulder',label:'Спуск плеча, см',def:4.5,min:0,max:12}]},
+  sleeve:{name:'Рукав',cat:'Верх',build:sleeveBuild,quick:['width','length'],
+    params:[{k:'width',label:'Ширина рукава, см',def:34,min:16,max:90},
+      {k:'capH',label:'Высота оката, см',def:13,min:5,max:30},
+      {k:'length',label:'Длина рукава, см',def:22,min:5,max:95},
+      {k:'hemIn',label:'Заужение к низу, см',def:2,min:0,max:15}]},
+  yoke:{name:'Кокетка',cat:'Верх',build:yokeBuild,
+    params:[{k:'w',label:'Ширина, см',def:42,min:10,max:110},
+      {k:'h',label:'Высота, см',def:12,min:3,max:40},
+      {k:'curve',label:'Изгиб, см',def:3,min:0,max:12}]},
+  pantsFront:{name:'Брюки — перед',cat:'Низ',build:pantsBuild,quick:['length','hip'],
+    params:[{k:'hip',label:'Ширина по бёдрам, см',def:27,min:14,max:70},
+      {k:'rise',label:'Высота сидения, см',def:26,min:12,max:50},
+      {k:'length',label:'Длина, см',def:102,min:20,max:160},
+      {k:'crotch',label:'Выступ банта, см',def:5,min:1,max:20},
+      {k:'hem',label:'Ширина низа, см',def:20,min:10,max:60}]},
+  pantsBack:{name:'Брюки — зад',cat:'Низ',build:pantsBuild,quick:['length','hip'],
+    params:[{k:'hip',label:'Ширина по бёдрам, см',def:30,min:14,max:75},
+      {k:'rise',label:'Высота сидения, см',def:28,min:12,max:52},
+      {k:'length',label:'Длина, см',def:102,min:20,max:160},
+      {k:'crotch',label:'Выступ банта, см',def:11,min:2,max:26},
+      {k:'hem',label:'Ширина низа, см',def:22,min:10,max:64}]},
+  skirtFront:{name:'Юбка — перед',cat:'Низ',build:skirtBuild,quick:['length','waist'],
+    params:[{k:'waist',label:'Полуобхват талии, см',def:21,min:12,max:60},
+      {k:'hip',label:'Полуобхват бёдер, см',def:25,min:14,max:70},
+      {k:'length',label:'Длина, см',def:60,min:15,max:130},
+      {k:'flare',label:'Расширение, см',def:4,min:0,max:40}]},
+  skirtBack:{name:'Юбка — зад',cat:'Низ',build:skirtBuild,quick:['length','waist'],
+    params:[{k:'waist',label:'Полуобхват талии, см',def:22.5,min:12,max:60},
+      {k:'hip',label:'Полуобхват бёдер, см',def:26.5,min:14,max:70},
+      {k:'length',label:'Длина, см',def:60,min:15,max:130},
+      {k:'flare',label:'Расширение, см',def:4,min:0,max:40}]},
+  briefsFront:{name:'Трусы — перед',cat:'Низ',build:briefsFrontBuild,quick:['waist','height'],
+    params:[{k:'waist',label:'Ширина по талии, см',def:23,min:12,max:60},
+      {k:'height',label:'Высота, см',def:20,min:8,max:50}]},
+  briefsBack:{name:'Трусы — зад',cat:'Низ',build:briefsBackBuild,quick:['waist','height'],
+    params:[{k:'waist',label:'Ширина по талии, см',def:24,min:12,max:60},
+      {k:'height',label:'Высота, см',def:23,min:8,max:55}]},
+  collar:{name:'Воротник',cat:'Детали',build:collarBuild,
+    params:[{k:'len',label:'Длина, см',def:38,min:10,max:90},{k:'h',label:'Высота, см',def:7,min:2,max:20}]},
+  neckband:{name:'Бейка горловины',cat:'Детали',build:neckbandBuild,
+    params:[{k:'len',label:'Длина, см',def:44,min:10,max:120},{k:'w',label:'Ширина, см',def:2.5,min:1,max:10}]},
+  cuff:{name:'Манжета',cat:'Детали',build:cuffBuild,
+    params:[{k:'w',label:'Ширина, см',def:26,min:5,max:60},{k:'h',label:'Высота, см',def:8,min:2,max:25}]},
+  facing:{name:'Обтачка горловины',cat:'Детали',build:facingBuild,
+    params:[{k:'len',label:'Длина дуги, см',def:40,min:10,max:100},
+      {k:'depth',label:'Глубина, см',def:8,min:2,max:30},
+      {k:'w',label:'Ширина обтачки, см',def:4,min:1.5,max:12}]},
+  pocket:{name:'Карман',cat:'Детали',build:pocketBuild,
+    params:[{k:'w',label:'Ширина, см',def:14,min:4,max:40},{k:'h',label:'Высота, см',def:16,min:4,max:50}]},
+  gusset:{name:'Ластовица',cat:'Детали',build:gussetBuild,
+    params:[{k:'w',label:'Ширина, см',def:14,min:4,max:40},{k:'h',label:'Высота, см',def:8,min:2,max:30}]},
+};
+
+/* ============================ пресеты ============================ */
+const PRESETS=[
+ {id:'tshirt',icon:'👕',name:'Футболка',pieces:[
+   {t:'bodiceFront',n:'Полочка',c:CC.cyan,p:{chest:27,length:68,armhole:21,neckW:7.5,neckD:8}},
+   {t:'bodiceBack',n:'Спинка',c:CC.cyan,p:{chest:27,length:68,armhole:21,neckW:7.5,neckD:2.5}},
+   {t:'sleeve',n:'Рукав',c:CC.grn,p:{width:36,capH:12.5,length:20,hemIn:1.5}},
+   {t:'sleeve',n:'Рукав',c:CC.grn,p:{width:36,capH:12.5,length:20,hemIn:1.5}},
+   {t:'neckband',n:'Бейка горловины',c:CC.amb,p:{len:46,w:2.5}}]},
+ {id:'shirt',icon:'👔',name:'Рубашка',pieces:[
+   {t:'bodiceFront',n:'Полочка',c:CC.cyan,p:{chest:29,length:74,armhole:22,neckW:7.5,neckD:8}},
+   {t:'bodiceBack',n:'Спинка',c:CC.cyan,p:{chest:29,length:74,armhole:22,neckW:7.5,neckD:2.5}},
+   {t:'sleeve',n:'Рукав',c:CC.grn,p:{width:40,capH:15,length:58,hemIn:3}},
+   {t:'sleeve',n:'Рукав',c:CC.grn,p:{width:40,capH:15,length:58,hemIn:3}},
+   {t:'collar',n:'Воротник',c:CC.amb,p:{len:40,h:7.5}},
+   {t:'cuff',n:'Манжета',c:CC.amb,p:{w:26,h:9}},
+   {t:'cuff',n:'Манжета',c:CC.amb,p:{w:26,h:9}},
+   {t:'pocket',n:'Карман',c:CC.mag,p:{w:12,h:14}}]},
+ {id:'pants',icon:'👖',name:'Брюки',pieces:[
+   {t:'pantsFront',n:'Перед. половинка',c:CC.vio,p:{}},
+   {t:'pantsFront',n:'Перед. половинка',c:CC.vio,p:{}},
+   {t:'pantsBack',n:'Задн. половинка',c:CC.vio,p:{}},
+   {t:'pantsBack',n:'Задн. половинка',c:CC.vio,p:{}},
+   {t:'band',n:'Пояс',c:CC.amb,p:{w:76,h:7}},
+   {t:'pocket',n:'Карман',c:CC.mag,p:{w:15,h:18}},
+   {t:'pocket',n:'Карман',c:CC.mag,p:{w:15,h:18}}]},
+ {id:'shorts',icon:'🩳',name:'Шорты',pieces:[
+   {t:'pantsFront',n:'Перед. половинка',c:CC.vio,p:{rise:25,length:48,crotch:4.5,hem:24}},
+   {t:'pantsFront',n:'Перед. половинка',c:CC.vio,p:{rise:25,length:48,crotch:4.5,hem:24}},
+   {t:'pantsBack',n:'Задн. половинка',c:CC.vio,p:{rise:27,length:48,crotch:9,hem:26}},
+   {t:'pantsBack',n:'Задн. половинка',c:CC.vio,p:{rise:27,length:48,crotch:9,hem:26}},
+   {t:'band',n:'Пояс',c:CC.amb,p:{w:76,h:6}}]},
+ {id:'tank',icon:'🎽',name:'Майка',pieces:[
+   {t:'bodiceFront',n:'Полочка',c:CC.cyan,p:{chest:25,length:62,armhole:26,neckW:8,neckD:12,shoulder:6}},
+   {t:'bodiceBack',n:'Спинка',c:CC.cyan,p:{chest:25,length:62,armhole:25,neckW:8,neckD:10,shoulder:6}},
+   {t:'facing',n:'Обтачка горловины',c:CC.amb,p:{len:44,depth:9,w:3.5}},
+   {t:'facing',n:'Обтачка горловины',c:CC.amb,p:{len:44,depth:9,w:3.5}}]},
+ {id:'briefs',icon:'🩲',name:'Трусы',pieces:[
+   {t:'briefsFront',n:'Перед',c:CC.mag,p:{}},
+   {t:'briefsBack',n:'Зад',c:CC.mag,p:{}},
+   {t:'gusset',n:'Ластовица',c:CC.grn,p:{w:13,h:7}},
+   {t:'band',n:'Пояс (эластик)',c:CC.amb,p:{w:70,h:3.5}}]},
+ {id:'skirt',icon:'👗',name:'Юбка',pieces:[
+   {t:'skirtFront',n:'Юбка — перед',c:CC.grn,p:{}},
+   {t:'skirtBack',n:'Юбка — зад',c:CC.grn,p:{}},
+   {t:'band',n:'Пояс',c:CC.amb,p:{w:72,h:6}}]},
+ {id:'suit',icon:'🤵',name:'Костюм брючный',pieces:[
+   {t:'bodiceFront',n:'Полочка жакета',c:CC.cyan,p:{chest:28.5,length:72,armhole:22,neckW:7.5,neckD:7.5}},
+   {t:'bodiceBack',n:'Спинка жакета',c:CC.cyan,p:{chest:28.5,length:72,armhole:22,neckW:7.5,neckD:2.5}},
+   {t:'sleeve',n:'Рукав',c:CC.grn,p:{width:40,capH:15.5,length:60,hemIn:3}},
+   {t:'sleeve',n:'Рукав',c:CC.grn,p:{width:40,capH:15.5,length:60,hemIn:3}},
+   {t:'collar',n:'Воротник',c:CC.amb,p:{len:42,h:8}},
+   {t:'pantsFront',n:'Перед. половинка',c:CC.vio,p:{}},
+   {t:'pantsFront',n:'Перед. половинка',c:CC.vio,p:{}},
+   {t:'pantsBack',n:'Задн. половинка',c:CC.vio,p:{}},
+   {t:'pantsBack',n:'Задн. половинка',c:CC.vio,p:{}},
+   {t:'band',n:'Пояс',c:CC.amb,p:{w:76,h:7}}]},
+];
+
+/* ============================ геометрия ============================ */
+function cmdsToPath(cmds){
+  const p=new Path2D();
+  for(const c of cmds){
+    if(c[0]==='M')p.moveTo(c[1],c[2]);
+    else if(c[0]==='L')p.lineTo(c[1],c[2]);
+    else if(c[0]==='Q')p.quadraticCurveTo(c[1],c[2],c[3],c[4]);
+    else if(c[0]==='Z')p.closePath();
+  }
+  return p;
+}
+function cmdsBounds(cmds){
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9,cx=0,cy=0,sx=0,sy=0;
+  const add=(x,y)=>{if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;};
+  for(const c of cmds){
+    if(c[0]==='M'){cx=c[1];cy=c[2];sx=cx;sy=cy;add(cx,cy);}
+    else if(c[0]==='L'){cx=c[1];cy=c[2];add(cx,cy);}
+    else if(c[0]==='Q'){const x0=cx,y0=cy,cx1=c[1],cy1=c[2],x1=c[3],y1=c[4];
+      for(let i=1;i<=8;i++){const t=i/8,mt=1-t;
+        add(mt*mt*x0+2*mt*t*cx1+t*t*x1, mt*mt*y0+2*mt*t*cy1+t*t*y1);}
+      cx=x1;cy=y1;}
+    else if(c[0]==='Z'){cx=sx;cy=sy;}
+  }
+  return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
+}
+function rebuildPiece(p){
+  const cmds=SHAPES[p.type].build(p.params);
+  p._cmds=cmds; p._path=cmdsToPath(cmds); p._bounds=cmdsBounds(cmds);
+}
+function worldPathOf(p){
+  const b=p._bounds,cx=p.x+b.w/2,cy=p.y+b.h/2;
+  const m=new DOMMatrix([1,0,0,1,cx,cy]).rotateSelf(p.rot)
+    .scaleSelf(p.mirror?-1:1,1)
+    .translateSelf(-(b.minx+b.w/2),-(b.miny+b.h/2));
+  const path=new Path2D(); path.addPath(p._path,m); return path;
+}
+function pieceCorners(p){
+  const b=p._bounds,rad=p.rot*Math.PI/180,cx=p.x+b.w/2,cy=p.y+b.h/2;
+  const pts=[[b.minx,b.miny],[b.minx+b.w,b.miny],[b.minx+b.w,b.miny+b.h],[b.minx,b.miny+b.h]];
+  return pts.map(pt=>{
+    let dx=pt[0]-(b.minx+b.w/2),dy=pt[1]-(b.miny+b.h/2);
+    if(p.mirror)dx=-dx;
+    return [cx+dx*Math.cos(rad)-dy*Math.sin(rad), cy+dx*Math.sin(rad)+dy*Math.cos(rad)];
+  });
+}
+function pieceAABB(p){
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  for(const c of pieceCorners(p)){
+    if(c[0]<minx)minx=c[0]; if(c[0]>maxx)maxx=c[0];
+    if(c[1]<miny)miny=c[1]; if(c[1]>maxy)maxy=c[1];
+  }
+  return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
+}
+/* Поставить деталь так, чтобы её фактический габаритный бокс начался в (X,Y) */
+function placeAt(p,X,Y,rot){
+  p.rot=((rot%360)+360)%360;
+  const bb=pieceAABB(p);
+  p.x+=X-bb.minx; p.y+=Y-bb.miny;
+  p.x=Math.round(p.x*2)/2; p.y=Math.round(p.y*2)/2;
+}
+/* Удержать деталь в пределах ткани по X */
+function clampToFabric(p){
+  if(!state.fabric)return;
+  const bb=pieceAABB(p);
+  if(bb.w<=state.fabricW+0.001){
+    if(bb.minx<0)p.x-=bb.minx;
+    else if(bb.maxx>state.fabricW)p.x-=bb.maxx-state.fabricW;
+  }else{
+    p.x-=bb.minx; // шире ткани — прижать к левой кромке
+  }
+}
+function outOfFabric(p){
+  if(!state.fabric)return false;
+  for(const c of pieceCorners(p)) if(c[0]<-0.01||c[0]>state.fabricW+0.01) return true;
+  return false;
+}
+
+/* ============================ состояние ============================ */
+const state={
+  pieces:[], selId:null, hoverId:null,
+  view:{scale:BASE,ox:80,oy:60},
+  grid:true, fabric:true, fabricW:150,
+  project:{id:null,name:'Новый проект'},
+  dirty:false,
+};
+let editorId=null, saving=false, lastSavedAt=null, storageFailedNoted=false, saveTimer=null, repackTimer=null;
+
+const cv=$('#cv'), ctx=cv.getContext('2d');
+const hitCv=document.createElement('canvas'), hctx=hitCv.getContext('2d');
+const wrap=$('#canvasWrap');
+let W=0,H=0,dpr=1;
+
+const byId=id=>state.pieces.find(p=>p.id===id)||null;
+const s2w=(sx,sy)=>({x:(sx-state.view.ox)/state.view.scale, y:(sy-state.view.oy)/state.view.scale});
+const w2s=(wx,wy)=>({x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy});
+
+function resize(){
+  const r=wrap.getBoundingClientRect();
+  W=Math.max(50,r.width); H=Math.max(50,r.height);
+  dpr=window.devicePixelRatio||1;
+  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  draw();
+}
+new ResizeObserver(resize).observe(wrap);
+window.addEventListener('resize',resize);
+
+/* ============================ автораскладка ============================ */
+function autoPackOn(){return $('#chkAuto').checked;}
+function scheduleRepack(){
+  if(!autoPackOn())return;
+  clearTimeout(repackTimer);
+  repackTimer=setTimeout(()=>{packAll();fitView();markDirty();},400);
+}
+/* Полочная упаковка (shelf, FFDH) с выбором ориентации, внутри ширины ткани */
+function packAll(){
+  if(!state.pieces.length)return;
+  const margin=2, gap=2;
+  const X0=margin, X1=(state.fabric?state.fabricW:150)-margin;
+  const items=state.pieces.map(p=>{rebuildPiece(p);return {p,b:p._bounds};});
+  // крупные первыми
+  items.sort((a,b)=>(b.b.w*b.b.h)-(a.b.w*a.b.h));
+  let x=X0, y=margin, shelfH=0;
+  for(const it of items){
+    const o0={w:it.b.w,h:it.b.h,rot:0};
+    const o90={w:it.b.h,h:it.b.w,rot:90};
+    const fits=o=>o.w<=X1-X0+0.001;
+    let o=o0;
+    if(!fits(o0)&&fits(o90))o=o90;                    // иначе не влезает — повернуть
+    else if(fits(o0)&&fits(o90)&&o90.h<o0.h)o=o90;    // обе влезают — ниже полка
+    if(x+o.w>X1+0.001&&x>X0){ y+=shelfH+gap; x=X0; shelfH=0; } // новая полка
+    placeAt(it.p,x,y,o.rot);
+    x+=o.w+gap; shelfH=Math.max(shelfH,o.h);
+  }
+  draw();
+}
+
+/* ============================ рисование ============================ */
+function draw(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  drawGrid(); drawFabric();
+  for(const p of state.pieces) drawPiece(p);
+  for(const p of state.pieces) drawLabel(p);
+  if(state.fabric) for(const p of state.pieces) if(outOfFabric(p)) drawWarning(p);
+  drawSelection();
+  $('#emptyHint').classList.toggle('hidden',state.pieces.length>0);
+  $('#zoomLbl').textContent=Math.round(state.view.scale/BASE*100)+'%';
+  $('#stZoom').textContent=`масштаб: ${Math.round(state.view.scale/BASE*100)}% · 1 см = ${state.view.scale.toFixed(1)} px`;
+  let outN=0; if(state.fabric) for(const p of state.pieces) if(outOfFabric(p)) outN++;
+  $('#stCount').textContent='деталей: '+state.pieces.length+(state.fabric?' · вне ткани: '+outN:'');
+  positionQuick();
+}
+function drawGrid(){
+  if(!state.grid)return;
+  const v=state.view;
+  const steps=[1,2,5,10,20,50,100,200];
+  const minor=steps.find(s=>s*v.scale>=13)||200;
+  const wl=(-v.ox)/v.scale, wr=(W-v.ox)/v.scale, wt=(-v.oy)/v.scale, wb=(H-v.oy)/v.scale;
+  ctx.lineWidth=1;
+  for(let i=Math.floor(wl/minor);i*minor<=wr;i++){
+    const x=i*minor,sx=x*v.scale+v.ox;
+    ctx.strokeStyle=x===0?'rgba(0,229,255,.38)':(i%5===0)?'rgba(0,229,255,.12)':'rgba(110,130,255,.055)';
+    ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,H);ctx.stroke();
+  }
+  for(let j=Math.floor(wt/minor);j*minor<=wb;j++){
+    const y=j*minor,sy=y*v.scale+v.oy;
+    ctx.strokeStyle=y===0?'rgba(0,229,255,.38)':(j%5===0)?'rgba(0,229,255,.12)':'rgba(110,130,255,.055)';
+    ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(W,sy);ctx.stroke();
+  }
+  const o=w2s(0,0);
+  ctx.strokeStyle='rgba(0,229,255,.6)';ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.moveTo(o.x-7,o.y);ctx.lineTo(o.x+7,o.y);ctx.moveTo(o.x,o.y-7);ctx.lineTo(o.x,o.y+7);ctx.stroke();
+}
+function drawFabric(){
+  if(!state.fabric)return;
+  const x0=w2s(0,0).x, x1=w2s(state.fabricW,0).x;
+  ctx.fillStyle='rgba(139,92,255,.05)';
+  ctx.fillRect(x0,0,x1-x0,H);
+  ctx.save();
+  ctx.strokeStyle='rgba(139,92,255,.55)';ctx.lineWidth=1.2;ctx.setLineDash([9,7]);
+  ctx.beginPath();ctx.moveTo(x0,0);ctx.lineTo(x0,H);ctx.moveTo(x1,0);ctx.lineTo(x1,H);ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle='rgba(180,150,255,.85)';
+  ctx.font='600 11px "JetBrains Mono",monospace';ctx.textAlign='center';
+  ctx.fillText(`ткань · ${fmt(state.fabricW)} см`,(x0+x1)/2,18);
+}
+function drawPiece(p){
+  const b=p._bounds, rad=p.rot*Math.PI/180, cx=p.x+b.w/2, cy=p.y+b.h/2;
+  const sel=p.id===state.selId, hov=p.id===state.hoverId;
+  ctx.save();
+  ctx.translate(cx,cy); ctx.rotate(rad);
+  if(p.mirror)ctx.scale(-1,1);
+  ctx.translate(-(b.minx+b.w/2),-(b.miny+b.h/2));
+  if(p.seam>0){
+    ctx.lineWidth=p.seam*2; ctx.lineJoin='round';
+    ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.stroke(p._path);
+  }
+  ctx.shadowColor=p.color;
+  ctx.shadowBlur=sel?20:hov?15:9;
+  ctx.fillStyle=hexA(p.color,0.10); ctx.fill(p._path);
+  ctx.lineWidth=(sel?2.2:1.6)/state.view.scale;
+  ctx.strokeStyle=p.color; ctx.stroke(p._path);
+  ctx.shadowBlur=0;
+  if(p.seam>0){
+    ctx.setLineDash([4.2/state.view.scale,4.2/state.view.scale]);
+    ctx.lineWidth=0.8/state.view.scale;
+    ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.stroke(p._path);
+    ctx.setLineDash([]);
+  }
+  // долевая нить
+  ctx.strokeStyle='rgba(255,255,255,.26)'; ctx.lineWidth=1/state.view.scale;
+  const gx=b.minx+b.w/2, gy1=b.miny+b.h*0.24, gy2=b.miny+b.h*0.76, a=6/state.view.scale;
+  ctx.beginPath();ctx.moveTo(gx,gy1);ctx.lineTo(gx,gy2);
+  ctx.moveTo(gx-a,gy1+a*1.6);ctx.lineTo(gx,gy1);ctx.lineTo(gx+a,gy1+a*1.6);
+  ctx.moveTo(gx-a,gy2-a*1.6);ctx.lineTo(gx,gy2);ctx.lineTo(gx+a,gy2-a*1.6);
+  ctx.stroke();
+  ctx.restore();
+}
+function drawLabel(p){
+  const b=p._bounds, s=w2s(p.x+b.w/2,p.y+b.h/2);
+  if(b.w*state.view.scale<52||b.h*state.view.scale<38)return;
+  ctx.textAlign='center';
+  ctx.fillStyle=p.color;
+  ctx.font='600 11.5px "Inter",sans-serif';
+  ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=5;
+  ctx.fillText(p.name,s.x,s.y-3);
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(200,210,255,.6)';
+  ctx.font='10px "JetBrains Mono",monospace';
+  ctx.fillText(`${fmt(b.w)}×${fmt(b.h)} см`,s.x,s.y+11);
+}
+function drawWarning(p){
+  const pts=pieceCorners(p).map(c=>w2s(c[0],c[1]));
+  ctx.save();
+  ctx.strokeStyle='#ff4d6d';ctx.lineWidth=1.3;ctx.setLineDash([4,4]);
+  ctx.shadowColor='#ff4d6d';ctx.shadowBlur=9;
+  ctx.beginPath();
+  pts.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));
+  ctx.closePath();ctx.stroke();
+  ctx.restore();
+}
+function drawSelection(){
+  const p=byId(state.selId); if(!p)return;
+  const pts=pieceCorners(p).map(c=>w2s(c[0],c[1]));
+  ctx.save();
+  ctx.strokeStyle='#ff3df0';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+  ctx.shadowColor='#ff3df0';ctx.shadowBlur=11;
+  ctx.beginPath();
+  pts.forEach((pt,i)=>i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y));
+  ctx.closePath();ctx.stroke();
+  ctx.setLineDash([]);ctx.shadowBlur=0;ctx.fillStyle='#ff3df0';
+  for(const pt of pts)ctx.fillRect(pt.x-3,pt.y-3,6,6);
+  ctx.restore();
+}
+
+/* ============================ вид ============================ */
+function zoomAt(px,py,f){
+  const v=state.view, w=s2w(px,py);
+  v.scale=clamp(v.scale*f,0.12,80);
+  v.ox=px-w.x*v.scale; v.oy=py-w.y*v.scale;
+  draw();
+}
+function contentBounds(){
+  if(!state.pieces.length)return null;
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  for(const p of state.pieces)for(const c of pieceCorners(p)){
+    if(c[0]<minx)minx=c[0];if(c[0]>maxx)maxx=c[0];
+    if(c[1]<miny)miny=c[1];if(c[1]>maxy)maxy=c[1];
+  }
+  return {minx,miny,maxx,maxy};
+}
+function fitView(){
+  const b=contentBounds();
+  if(!b){state.view={scale:BASE,ox:W*0.25,oy:H*0.2};draw();return;}
+  const pad=12, bw=b.maxx-b.minx+pad*2, bh=b.maxy-b.miny+pad*2;
+  const s=clamp(Math.min(W/bw,H/bh),0.12,80);
+  state.view.scale=s;
+  state.view.ox=(W-(b.maxx-b.minx)*s)/2-b.minx*s;
+  state.view.oy=(H-(b.maxy-b.miny)*s)/2-b.miny*s;
+  draw();
+}
+
+/* ============================ выбор / hit-test ============================ */
+function pick(wx,wy){
+  for(let i=state.pieces.length-1;i>=0;i--){
+    const p=state.pieces[i];
+    try{ if(hctx.isPointInPath(worldPathOf(p),wx,wy)) return p; }catch(e){}
+  }
+  return null;
+}
+function selectPiece(id){ state.selId=id; buildQuickPanel(byId(id)); draw(); }
+function deselect(){ state.selId=null; $('#quick').classList.add('hidden'); draw(); }
+
+/* ============================ операции с деталями ============================ */
+function makePiece(type,over={},name=null,color=null){
+  const def=SHAPES[type]; if(!def)return null;
+  const params={}; def.params.forEach(d=>params[d.k]=d.def);
+  Object.assign(params,over||{});
+  const p={id:uid(),type,name:name||def.name,x:0,y:0,rot:0,mirror:false,seam:1,
+    color:color||PALETTE[state.pieces.length%PALETTE.length],params};
+  rebuildPiece(p); return p;
+}
+function addPieceOfType(type){
+  const p=makePiece(type); if(!p)return;
+  state.pieces.push(p);
+  if(autoPackOn()){ packAll(); fitView(); }
+  else{
+    const c=s2w(W/2,H/2);
+    p.x=c.x-p._bounds.w/2+(Math.random()*8-4);
+    p.y=c.y-p._bounds.h/2+(Math.random()*8-4);
+    if($('#chkSnap').checked)clampToFabric(p);
+    draw();
+  }
+  selectPiece(p.id); markDirty();
+  toast(`◈ Добавлено: ${SHAPES[type].name}`);
+}
+function duplicatePiece(p){
+  const np={...p,id:uid(),params:{...p.params},x:p.x+4,y:p.y+4};
+  rebuildPiece(np); state.pieces.push(np);
+  selectPiece(np.id); markDirty();
+  scheduleRepack(); draw(); return np;
+}
+function removePiece(id){
+  const i=state.pieces.findIndex(p=>p.id===id);
+  if(i<0)return;
+  state.pieces.splice(i,1);
+  if(state.selId===id){state.selId=null;$('#quick').classList.add('hidden');}
+  if(editorId===id)closeEditor(true);
+  markDirty(); draw(); scheduleRepack();
+  toast('🗑 Деталь удалена','warn');
+}
+
+/* ============================ quick-панель ============================ */
+function buildQuickPanel(p){
+  const q=$('#quick');
+  if(!p){q.classList.add('hidden');return;}
+  $('#qName').textContent=p.name;
+  const box=$('#qFields'); box.innerHTML='';
+  const def=SHAPES[p.type];
+  const keys=(def.quick||def.params.slice(0,2).map(d=>d.k)).slice(0,2);
+  for(const k of keys){
+    const pd=def.params.find(d=>d.k===k); if(!pd)continue;
+    const lab=document.createElement('label'); lab.className='qf';
+    const sp=document.createElement('span'); sp.textContent=pd.label.split(',')[0];
+    const inp=document.createElement('input');
+    inp.type='number'; inp.step='0.5'; inp.min=pd.min; inp.max=pd.max;
+    inp.value=(p.params[k]!=null?p.params[k]:pd.def);
+    inp.addEventListener('input',()=>{
+      const v=parseFloat(inp.value); if(!isFinite(v))return;
+      p.params[k]=clamp(v,pd.min,pd.max); rebuildPiece(p); markDirty(); draw();
+      scheduleRepack();
+    });
+    lab.appendChild(sp); lab.appendChild(inp); box.appendChild(lab);
+  }
+  q.classList.remove('hidden');
+}
+function positionQuick(){
+  const q=$('#quick'); const p=byId(state.selId);
+  if(!p||editorId){q.classList.add('hidden');return;}
+  q.classList.remove('hidden');
+  const b=p._bounds, s=w2s(p.x+b.w/2,p.y);
+  const qw=q.offsetWidth||220, qh=q.offsetHeight||110;
+  const lx=clamp(s.x-qw/2,6,W-qw-6);
+  let ly=s.y-qh-14; if(ly<6)ly=s.y+20;
+  q.style.left=lx+'px'; q.style.top=Math.min(ly,H-qh-6)+'px';
+}
+$('#qClose').onclick=()=>deselect();
+$('#qRot').onclick=()=>{const p=byId(state.selId);if(p){p.rot=(p.rot+90)%360;markDirty();draw();scheduleRepack();}};
+$('#qEdit').onclick=()=>{const p=byId(state.selId);if(p)openEditor(p);};
+$('#qDup').onclick=()=>{const p=byId(state.selId);if(p)duplicatePiece(p);};
+$('#qDel').onclick=()=>{if(state.selId)removePiece(state.selId);};
+
+/* ============================ модальный редактор ============================ */
+const edOv=$('#editorOverlay');
+function openEditor(p){
+  editorId=p.id; state.selId=p.id;
+  $('#mTitle').textContent='Деталь · '+SHAPES[p.type].name;
+  $('#mName').value=p.name;
+  const grid=$('#mParams'); grid.innerHTML='';
+  for(const pd of SHAPES[p.type].params){
+    const f=document.createElement('div'); f.className='m-field';
+    const lab=document.createElement('label'); lab.textContent=pd.label;
+    const inp=document.createElement('input');
+    inp.type='number'; inp.step='0.5'; inp.min=pd.min; inp.max=pd.max;
+    inp.value=(p.params[pd.k]!=null?p.params[pd.k]:pd.def);
+    inp.addEventListener('input',()=>{
+      const v=parseFloat(inp.value); if(!isFinite(v))return;
+      p.params[pd.k]=clamp(v,pd.min,pd.max); rebuildPiece(p); markDirty(); draw();
+      scheduleRepack();
+    });
+    f.appendChild(lab); f.appendChild(inp); grid.appendChild(f);
+  }
+  $('#mRot').value=p.rot;
+  $('#mSeam').value=p.seam;
+  $('#mMirror').checked=!!p.mirror;
+  buildSwatches(p);
+  edOv.classList.add('open');
+  buildQuickPanel(p);
+}
+function buildSwatches(p){
+  const box=$('#mColors'); box.innerHTML='';
+  for(const c of PALETTE){
+    const s=document.createElement('div'); s.className='swatch'+(p.color===c?' active':'');
+    s.style.background=c; s.style.color=c;
+    s.onclick=()=>{p.color=c;buildSwatches(p);markDirty();draw();};
+    box.appendChild(s);
+  }
+}
+function closeEditor(skipQuick){
+  edOv.classList.remove('open'); editorId=null;
+  if(!skipQuick){const p=byId(state.selId); if(p)buildQuickPanel(p);}
+  draw();
+}
+$('#mClose').onclick=()=>closeEditor();
+$('#mOk').onclick=()=>closeEditor();
+edOv.addEventListener('click',e=>{if(e.target===edOv)closeEditor();});
+$('#mName').addEventListener('input',e=>{const p=byId(editorId);if(p){p.name=e.target.value||SHAPES[p.type].name;markDirty();draw();}});
+$('#mRot').addEventListener('input',e=>{const p=byId(editorId);if(!p)return;
+  const v=parseFloat(e.target.value); if(!isFinite(v))return;
+  p.rot=((v%360)+360)%360; markDirty(); draw(); scheduleRepack();});
+document.querySelectorAll('[data-rot]').forEach(b=>b.onclick=()=>{
+  $('#mRot').value=b.dataset.rot; $('#mRot').dispatchEvent(new Event('input'));});
+$('#mSeam').addEventListener('input',e=>{const p=byId(editorId);if(!p)return;
+  const v=parseFloat(e.target.value); if(!isFinite(v))return;
+  p.seam=clamp(v,0,5); markDirty(); draw();});
+$('#mMirror').addEventListener('change',e=>{const p=byId(editorId);if(p){p.mirror=e.target.checked;markDirty();draw();}});
+$('#mDup').onclick=()=>{const p=byId(editorId);if(p){const np=duplicatePiece(p);editorId=np.id;openEditor(np);}};
+$('#mDel').onclick=()=>{if(editorId)removePiece(editorId);};
+
+/* ============================ пресеты / раскладка ============================ */
+function addPreset(id,opts={}){
+  const pr=PRESETS.find(x=>x.id===id); if(!pr)return;
+  const items=pr.pieces.map(cfg=>makePiece(cfg.t,cfg.p,cfg.n,cfg.c)).filter(Boolean);
+  if(!items.length)return;
+  if(autoPackOn()){
+    for(const p of items)state.pieces.push(p);
+    packAll();
+  }else{
+    // простая рядная раскладка под существующей композицией
+    const cb=contentBounds();
+    const maxW=(state.fabric?state.fabricW:150)-4, gap=4;
+    let x=2, y=cb?cb.maxy+8:2, rowH=0;
+    for(const p of items){
+      const b=p._bounds;
+      if(x>2&&x+b.w>maxW){x=2;y+=rowH+gap;rowH=0;}
+      placeAt(p,x,y,0); x+=b.w+gap; rowH=Math.max(rowH,b.h);
+      state.pieces.push(p);
+    }
+  }
+  markDirty(); fitView();
+  if(!opts.silent)toast(`${pr.icon} ${pr.name}: добавлено ${items.length} дет.`);
+}
+
+/* ============================ боковая панель ============================ */
+function makeThumb(type){
+  const c=document.createElement('canvas'); c.width=124;c.height=96;
+  const g=c.getContext('2d');
+  const def=SHAPES[type]; const params={}; def.params.forEach(d=>params[d.k]=d.def);
+  const cmds=def.build(params); const path=cmdsToPath(cmds); const b=cmdsBounds(cmds);
+  const pad=14, s=Math.min((c.width-2*pad)/b.w,(c.height-2*pad)/b.h);
+  g.translate(c.width/2-(b.minx+b.w/2)*s, c.height/2-(b.miny+b.h/2)*s); g.scale(s,s);
+  g.shadowColor='#00e5ff'; g.shadowBlur=7; g.lineWidth=1.4/s;
+  g.strokeStyle='#00e5ff'; g.fillStyle='rgba(0,229,255,.08)';
+  g.fill(path); g.stroke(path);
+  return c;
+}
+function buildLibrary(){
+  const list=$('#partsList'); list.innerHTML='';
+  const cats=['Базовые','Верх','Низ','Детали'];
+  for(const cat of cats){
+    const types=Object.keys(SHAPES).filter(t=>SHAPES[t].cat===cat);
+    if(!types.length)continue;
+    const h=document.createElement('div'); h.className='cat-title'; h.textContent=cat;
+    list.appendChild(h);
+    const grid=document.createElement('div'); grid.className='lib-grid';
+    for(const t of types){
+      const def=SHAPES[t];
+      const item=document.createElement('div'); item.className='lib-item';
+      item.title='Добавить на холст: '+def.name;
+      item.appendChild(makeThumb(t));
+      const info=document.createElement('div');
+      const nm=document.createElement('b'); nm.textContent=def.name;
+      const prm={}; def.params.forEach(d=>prm[d.k]=d.def);
+      const bb=cmdsBounds(def.build(prm));
+      const sz=document.createElement('small'); sz.textContent=`по умолчанию ${fmt(bb.w)}×${fmt(bb.h)} см`;
+      info.appendChild(nm); info.appendChild(sz); item.appendChild(info);
+      item.onclick=()=>addPieceOfType(t);
+      grid.appendChild(item);
+    }
+    list.appendChild(grid);
+  }
+}
+function buildPresetsUI(){
+  const list=$('#presetsList'); list.innerHTML='';
+  for(const pr of PRESETS){
+    const card=document.createElement('div'); card.className='preset';
+    card.innerHTML=`<div class="p-ico">${pr.icon}</div><b>${pr.name}</b><small>${pr.pieces.length} дет.</small><span class="p-add">＋</span>`;
+    card.title='Добавить комплект «'+pr.name+'» на холст';
+    card.onclick=()=>addPreset(pr.id);
+    list.appendChild(card);
+  }
+}
+$('#tabParts').onclick=()=>{ $('#tabParts').classList.add('active');$('#tabPresets').classList.remove('active');
+  $('#partsPanel').classList.remove('hidden');$('#presetsPanel').classList.add('hidden'); };
+$('#tabPresets').onclick=()=>{ $('#tabPresets').classList.add('active');$('#tabParts').classList.remove('active');
+  $('#presetsPanel').classList.remove('hidden');$('#partsPanel').classList.add('hidden'); };
+
+/* ============================ IndexedDB ============================ */
+const IDB={
+  db:null,ok:false,
+  open(){return new Promise(res=>{
+    if(!('indexedDB' in window)){res(false);return;}
+    let req; try{req=indexedDB.open('neoncut-db',1);}catch(e){res(false);return;}
+    req.onupgradeneeded=e=>{const d=e.target.result;
+      if(!d.objectStoreNames.contains('projects'))d.createObjectStore('projects',{keyPath:'id'});};
+    req.onsuccess=e=>{this.db=e.target.result;this.ok=true;res(true);};
+    req.onerror=()=>res(false); req.onblocked=()=>res(false);
+    setTimeout(()=>res(this.ok),2500);
+  });},
+  store(mode){return this.db.transaction('projects',mode).objectStore('projects');},
+  rq(r){return new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});},
+  save(p){return this.rq(this.store('readwrite').put(p));},
+  all(){return this.rq(this.store('readonly').getAll());},
+  del(id){return this.rq(this.store('readwrite').delete(id));}
+};
+function failStorage(){
+  IDB.ok=false;
+  updateStorageChip();
+  if(!storageFailedNoted){storageFailedNoted=true;
+    toast('⚠ IndexedDB недоступен — работаем без сохранения','warn');}
+}
+function updateStorageChip(){
+  const el=$('#storageChip');
+  if(!IDB.ok){el.className='chip bad';el.textContent='● без сохранения (IndexedDB недоступен)';return;}
+  if(saving){el.className='chip warn';el.textContent='● сохранение…';return;}
+  if(state.dirty){el.className='chip warn';el.textContent='● изменения · автосохранение';return;}
+  if(lastSavedAt){el.className='chip ok';
+    el.textContent='● сохранено '+lastSavedAt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});return;}
+  el.className='chip ok';el.textContent='● хранилище готово';
+}
+const serializePiece=p=>({id:p.id,type:p.type,name:p.name,x:p.x,y:p.y,rot:p.rot,
+  mirror:!!p.mirror,seam:p.seam,color:p.color,params:{...p.params}});
+function projectData(){
+  return {id:state.project.id||uid(),
+    name:(state.project.name||'Без названия').trim()||'Без названия',
+    updatedAt:Date.now(), pieces:state.pieces.map(serializePiece)};
+}
+async function saveProject(manual){
+  if(!IDB.ok){if(manual)toast('Сохранение недоступно: IndexedDB отключён','warn');updateStorageChip();return;}
+  saving=true;updateStorageChip();
+  const data=projectData();
+  try{await IDB.save(data);state.project.id=data.id;state.dirty=false;lastSavedAt=new Date();}
+  catch(e){console.warn('IndexedDB save failed',e);failStorage();}
+  saving=false;updateStorageChip();
+  if(manual&&IDB.ok)toast('💾 Проект сохранён');
+}
+function markDirty(){
+  state.dirty=true;updateStorageChip();
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>saveProject(false),1200);
+}
+
+/* ============================ проекты UI ============================ */
+const projOv=$('#projOverlay');
+async function refreshProjectsList(){
+  const list=$('#projList'); list.innerHTML='';
+  if(!IDB.ok){list.innerHTML='<div class="empty">Хранилище недоступно — список проектов пуст.</div>';return;}
+  let items; try{items=await IDB.all();}catch(e){failStorage();list.innerHTML='<div class="empty">Ошибка чтения хранилища.</div>';return;}
+  items.sort((a,b)=>b.updatedAt-a.updatedAt);
+  if(!items.length){list.innerHTML='<div class="empty">Сохранённых проектов пока нет.<br>Нажмите «Сохранить», чтобы создать первый.</div>';return;}
+  for(const it of items){
+    const row=document.createElement('div'); row.className='proj';
+    const info=document.createElement('div'); info.className='p-info';
+    const nm=document.createElement('b'); nm.textContent=it.name;
+    const sm=document.createElement('small');
+    sm.textContent=new Date(it.updatedAt).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})+` · ${it.pieces.length} дет.`;
+    info.appendChild(nm);info.appendChild(sm);
+    const bo=document.createElement('button'); bo.className='btn'; bo.textContent='Открыть';
+    bo.onclick=()=>loadProject(it);
+    const bd=document.createElement('button'); bd.className='btn danger'; bd.textContent='✕';
+    bd.title='Удалить';
+    bd.onclick=async()=>{ if(!confirm(`Удалить проект «${it.name}»?`))return;
+      try{await IDB.del(it.id);toast('Проект удалён','warn');refreshProjectsList();}
+      catch(e){failStorage();} };
+    row.appendChild(info);row.appendChild(bo);row.appendChild(bd);
+    list.appendChild(row);
+  }
+}
+function loadProject(data){
+  state.project={id:data.id,name:data.name};
+  $('#projName').value=data.name;
+  state.pieces=[];
+  for(const d of (data.pieces||[])){
+    if(!SHAPES[d.type])continue;
+    const p=makePiece(d.type,{...d.params},d.name,d.color);
+    p.id=d.id||p.id; p.x=+d.x||0; p.y=+d.y||0; p.rot=+d.rot||0;
+    p.mirror=!!d.mirror; p.seam=+d.seam||0;
+    state.pieces.push(p);
+  }
+  state.selId=null; $('#quick').classList.add('hidden');
+  state.dirty=false; lastSavedAt=new Date(data.updatedAt||Date.now());
+  projOv.classList.remove('open');
+  fitView(); updateStorageChip();
+  toast(`📁 Открыт проект «${data.name}»`);
+}
+$('#btnProjects').onclick=()=>{projOv.classList.add('open');refreshProjectsList();};
+$('#projClose').onclick=()=>projOv.classList.remove('open');
+projOv.addEventListener('click',e=>{if(e.target===projOv)projOv.classList.remove('open');});
+$('#btnNewProj').onclick=()=>newProject();
+function newProject(){
+  state.pieces=[]; state.selId=null; editorId=null;
+  state.project={id:null,name:'Новый проект'}; $('#projName').value='Новый проект';
+  state.dirty=false; lastSavedAt=null;
+  edOv.classList.remove('open'); projOv.classList.remove('open');
+  $('#quick').classList.add('hidden');
+  state.view={scale:BASE,ox:W*0.25,oy:H*0.2};
+  draw(); updateStorageChip(); toast('✦ Новый проект');
+}
+$('#btnNew').onclick=()=>{ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
+$('#btnSave').onclick=()=>saveProject(true);
+$('#btnExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.1.0',...projectData()},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast('⇩ Проект экспортирован в JSON');
+};
+$('#projName').addEventListener('input',e=>{state.project.name=e.target.value;markDirty();});
+window.addEventListener('beforeunload',()=>{
+  if(state.dirty&&IDB.ok){try{IDB.save(projectData());}catch(e){}}
+});
+
+/* ============================ тулбар ============================ */
+$('#btnZoomIn').onclick=()=>zoomAt(W/2,H/2,1.3);
+$('#btnZoomOut').onclick=()=>zoomAt(W/2,H/2,1/1.3);
+$('#btnFit').onclick=fitView;
+$('#btn100').onclick=()=>{const c=s2w(W/2,H/2);state.view.scale=BASE;
+  state.view.ox=W/2-c.x*BASE;state.view.oy=H/2-c.y*BASE;draw();};
+$('#btnPack').onclick=()=>{
+  if(!state.pieces.length){toast('Холст пуст — нечего раскладывать','warn');return;}
+  packAll(); fitView(); markDirty();
+  toast('⚡ Автораскладка выполнена');
+};
+$('#chkAuto').addEventListener('change',e=>{
+  $('#autoWrap').classList.toggle('active',e.target.checked);
+  if(e.target.checked&&state.pieces.length){packAll();fitView();markDirty();toast('⚡ Автораскладка включена');}
+});
+$('#chkSnap').addEventListener('change',e=>{
+  $('#snapWrap').classList.toggle('active',e.target.checked);
+});
+$('#btnGrid').onclick=e=>{state.grid=!state.grid;e.currentTarget.classList.toggle('active',state.grid);draw();};
+$('#fabChk').addEventListener('change',e=>{
+  state.fabric=e.target.checked;
+  $('#fabWrap').classList.toggle('active',state.fabric);
+  draw(); scheduleRepack();
+});
+$('#fabW').addEventListener('input',e=>{
+  const v=parseFloat(e.target.value);
+  if(isFinite(v)){state.fabricW=clamp(v,60,400);draw();scheduleRepack();}
+});
+$('#btnClear').onclick=()=>{ if(!state.pieces.length)return;
+  if(!confirm('Очистить холст? Все детали будут удалены.'))return;
+  state.pieces=[]; deselect(); markDirty(); draw(); };
+
+/* ============================ указатель ============================ */
+const pointers=new Map(); let gesture=null, spaceDown=false;
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=cv.getBoundingClientRect();
+  zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*0.0016));
+},{passive:false});
+function relXY(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+cv.addEventListener('pointerdown',e=>{
+  cv.setPointerCapture(e.pointerId);
+  if(e.button===1)e.preventDefault();
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  clearTimeout(repackTimer); // не перекладывать во время жеста
+  if(pointers.size===2){
+    const [a,b]=[...pointers.values()];
+    gesture={type:'pinch',d0:Math.hypot(a.x-b.x,a.y-b.y)||1,scale0:state.view.scale,
+      mid0:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},view0:{...state.view}};
+    return;
+  }
+  const {x:px,y:py}=relXY(e);
+  if(e.button===1||e.button===2||spaceDown){
+    gesture={type:'pan',sx:px,sy:py,ox:state.view.ox,oy:state.view.oy,moved:false};
+    cv.style.cursor='grabbing'; return;
+  }
+  const w=s2w(px,py), hit=pick(w.x,w.y);
+  if(hit){
+    selectPiece(hit.id);
+    gesture={type:'drag',id:hit.id,gx:w.x-hit.x,gy:w.y-hit.y,sx:px,sy:py,moved:false};
+    cv.style.cursor='move';
+  }else{
+    gesture={type:'pan',sx:px,sy:py,ox:state.view.ox,oy:state.view.oy,moved:false,empty:true};
+  }
+});
+cv.addEventListener('pointermove',e=>{
+  if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const {x:px,y:py}=relXY(e);
+  const w=s2w(px,py);
+  $('#stCoords').textContent=`X: ${w.x.toFixed(1)} · Y: ${w.y.toFixed(1)} см`;
+  if(gesture&&gesture.type==='pinch'&&pointers.size>=2){
+    const [a,b]=[...pointers.values()];
+    const d=Math.hypot(a.x-b.x,a.y-b.y)||1, mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+    const r=cv.getBoundingClientRect();
+    const ns=clamp(gesture.scale0*(d/gesture.d0),0.12,80);
+    const w0={x:(gesture.mid0.x-r.left-gesture.view0.ox)/gesture.view0.scale,
+              y:(gesture.mid0.y-r.top-gesture.view0.oy)/gesture.view0.scale};
+    state.view.scale=ns;
+    state.view.ox=(mx-r.left)-w0.x*ns; state.view.oy=(my-r.top)-w0.y*ns;
+    draw(); return;
+  }
+  if(gesture&&gesture.type==='pan'){
+    state.view.ox=gesture.ox+(px-gesture.sx);
+    state.view.oy=gesture.oy+(py-gesture.sy);
+    if(Math.abs(px-gesture.sx)+Math.abs(py-gesture.sy)>4)gesture.moved=true;
+    if(gesture.moved)cv.style.cursor='grabbing';
+    draw(); return;
+  }
+  if(gesture&&gesture.type==='drag'){
+    const p=byId(gesture.id);
+    if(p){
+      p.x=w.x-gesture.gx; p.y=w.y-gesture.gy;
+      if($('#chkSnap').checked){
+        p.x=Math.round(p.x*2)/2; p.y=Math.round(p.y*2)/2;
+        clampToFabric(p);
+      }
+      draw();
+    }
+    if(Math.abs(px-gesture.sx)+Math.abs(py-gesture.sy)>4)gesture.moved=true;
+    return;
+  }
+  // hover
+  const h=pick(w.x,w.y);
+  const nid=h?h.id:null;
+  if(nid!==state.hoverId){state.hoverId=nid;draw();}
+  cv.style.cursor=nid?'pointer':(spaceDown?'grab':'default');
+});
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if(gesture&&gesture.type==='pinch'){
+    if(pointers.size===1){
+      const [rp]=pointers.values(); const {x,y}=relXY(rp);
+      gesture={type:'pan',sx:x,sy:y,ox:state.view.ox,oy:state.view.oy,moved:true};
+    }else gesture=null;
+    return;
+  }
+  if(gesture){
+    if(gesture.type==='pan'&&gesture.empty&&!gesture.moved)deselect();
+    if(gesture.type==='drag'&&!gesture.moved){const p=byId(gesture.id);if(p)openEditor(p);}
+    if(gesture.type==='drag'&&gesture.moved)markDirty();
+  }
+  gesture=null; cv.style.cursor='default';
+}
+cv.addEventListener('pointerup',endPointer);
+cv.addEventListener('pointercancel',endPointer);
+
+/* ============================ клавиатура / тосты ============================ */
+window.addEventListener('keydown',e=>{
+  const inInput=e.target.matches('input,textarea,select');
+  if(e.code==='Space'&&!inInput){spaceDown=true;e.preventDefault();}
+  if(inInput)return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveProject(true);return;}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){
+    const p=byId(state.selId); if(p){e.preventDefault();duplicatePiece(p);} return;}
+  if(e.key==='Escape'){
+    if(editorId)closeEditor();
+    else if(projOv.classList.contains('open'))projOv.classList.remove('open');
+    else deselect();
+    return;
+  }
+  if(e.key==='Delete'||e.key==='Backspace'){ if(state.selId)removePiece(state.selId); return; }
+  if(e.key==='+'||e.key==='=')zoomAt(W/2,H/2,1.25);
+  if(e.key==='-')zoomAt(W/2,H/2,0.8);
+  if(e.key==='0')fitView();
+  if(e.key.toLowerCase()==='r'||e.key.toLowerCase()==='к'){
+    const p=byId(state.selId); if(p){p.rot=(p.rot+90)%360;markDirty();draw();scheduleRepack();}}
+  if(e.key===']'||e.key==='['){
+    const p=byId(state.selId); if(!p)return;
+    const i=state.pieces.indexOf(p);
+    if(e.key===']'&&i<state.pieces.length-1){state.pieces.splice(i,1);state.pieces.push(p);}
+    if(e.key==='['&&i>0){state.pieces.splice(i,1);state.pieces.unshift(p);}
+    markDirty();draw();
+  }
+});
+window.addEventListener('keyup',e=>{if(e.code==='Space')spaceDown=false;});
+function toast(msg,kind='info'){
+  const box=$('#toastBox');
+  const t=document.createElement('div'); t.className='toast '+kind; t.textContent=msg;
+  box.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},2600);
+  while(box.children.length>3)box.firstChild.remove();
+}
+
+/* ============================ старт ============================ */
+(async function init(){
+  buildLibrary(); buildPresetsUI();
+  resize();
+  const ok=await IDB.open();
+  IDB.ok=ok;
+  if(!ok)failStorage(); else updateStorageChip();
+  // демо-композиция: автораскладка сразу уложит детали в область ткани
+  addPreset('tshirt',{silent:true});
+  state.dirty=false; updateStorageChip();
+  fitView();
+})();
+</script>
+</body>
+</html>
