@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON LMS PLAYER</title>
+
+<!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+<!-- Mermaid -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+  });
+</script>
+
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #111627;
+    --text: #d5e5ff;
+    --muted: #8b9bbf;
+    --cyan: #00f0ff;
+    --pink: #ff2a6d;
+    --green: #05ffa1;
+    --purple: #b967ff;
+    --yellow: #ffd700;
+    --border: rgba(0, 240, 255, 0.25);
+    --shadow: 0 0 15px rgba(0,240,255,0.1);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: radial-gradient(ellipse at 20% 20%, #141b33 0%, var(--bg) 70%);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    padding: 20px;
+    min-height: 100vh;
+  }
+  #app { max-width: 1200px; margin: 0 auto; }
+
+  /* Шапка курса */
+  .course-header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .course-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  .course-header h1 {
+    font-size: 2.5em;
+    color: #fff;
+    text-shadow: 0 0 15px var(--cyan), 0 0 30px var(--cyan);
+  }
+  .course-header .description { color: var(--muted); margin: 10px 0; }
+  .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
+  .badge { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: rgba(0,240,255,0.1); color: var(--cyan); font-size: 0.9em; }
+
+  /* Кнопка редактора (иконка) */
+  .edit-course-btn {
+    background: rgba(0,240,255,0.1);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1.5em;
+    line-height: 1;
+    padding: 6px 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+  }
+  .edit-course-btn:hover {
+    background: rgba(0,240,255,0.2);
+    box-shadow: 0 0 10px rgba(0,240,255,0.3);
+    transform: translateY(-2px);
+  }
+
+  .lessons-nav { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; padding: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); }
+  .lesson-btn { padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: transparent; color: var(--text); cursor: pointer; transition: all 0.3s; font-size: 0.95em; }
+  .lesson-btn:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.3); transform: translateY(-2px); }
+  .lesson-btn.active { background: rgba(0,240,255,0.15); border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 15px rgba(0,240,255,0.4); }
+  .lesson-btn.completed { border-color: var(--green); color: var(--green); }
+  .lesson-btn.completed:hover { box-shadow: 0 0 10px rgba(5,255,161,0.4); }
+
+  .progress-container { margin: 20px 0; }
+  .progress-label { display: flex; justify-content: space-between; color: var(--muted); margin-bottom: 5px; }
+  .progress-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); width: 0%; transition: width 0.4s ease; box-shadow: 0 0 10px var(--cyan); }
+
+  .back-btn { background: transparent; border: 1px solid var(--border); color: var(--cyan); padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; transition: all 0.3s; }
+  .back-btn:hover { box-shadow: 0 0 10px rgba(0,240,255,0.3); background: rgba(0,240,255,0.1); transform: translateX(-3px); }
+
+  .block-section { margin: 25px 0; padding: 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow), inset 0 0 10px rgba(0,240,255,0.02); }
+  .block-section h2 { font-size: 1.8em; color: #fff; text-shadow: 0 0 10px var(--cyan); margin-bottom: 15px; }
+
+  .heading { color: #fff; text-shadow: 0 0 8px var(--purple); }
+  .text { margin: 10px 0; }
+  .figure { margin: 15px 0; text-align: center; }
+  .figure img, .figure video, .figure audio { max-width: 100%; border-radius: 6px; border: 1px solid var(--border); box-shadow: 0 0 12px rgba(0,240,255,0.2); display: block; margin: 0 auto; }
+  .figure figcaption { color: var(--muted); font-size: 0.9em; margin-top: 8px; }
+
+  .list { margin: 10px 0 10px 25px; }
+  .list li { margin: 5px 0; }
+
+  .code-block { margin: 15px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #0a0c14; }
+  .code-header { background: rgba(0,240,255,0.1); padding: 8px 15px; color: var(--cyan); font-family: monospace; font-size: 0.9em; }
+  .code-block pre { padding: 15px; overflow-x: auto; }
+  .code-block code { color: var(--green); font-family: 'Courier New', monospace; white-space: pre; }
+
+  .callout { margin: 15px 0; padding: 15px; border-left: 4px solid; border-radius: 6px; background: rgba(255,255,255,0.03); }
+  .callout-info { border-color: var(--cyan); background: rgba(0,240,255,0.05); }
+  .callout-warning { border-color: var(--yellow); background: rgba(255,215,0,0.05); }
+  .callout-success { border-color: var(--green); background: rgba(5,255,161,0.05); }
+  .callout h4 { color: #fff; margin-bottom: 8px; }
+
+  .tabs { margin: 15px 0; }
+  .tab-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
+  .tab-button { padding: 10px 18px; background: transparent; border: 1px solid var(--border); border-radius: 6px 6px 0 0; color: var(--text); cursor: pointer; transition: all 0.3s; }
+  .tab-button:hover { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.3); }
+  .tab-button.active { background: rgba(0,240,255,0.15); color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 15px rgba(0,240,255,0.4); }
+  .tab-panel { display: none; padding: 15px; border: 1px solid var(--border); border-radius: 0 0 6px 6px; background: rgba(255,255,255,0.02); }
+  .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .accordion { margin: 15px 0; }
+  .accordion-item { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; overflow: hidden; transition: border-color 0.3s; }
+  .accordion-item:hover { border-color: var(--cyan); }
+  .accordion-header { width: 100%; padding: 12px 18px; background: transparent; color: var(--text); text-align: left; cursor: pointer; font-size: 1em; display: flex; justify-content: space-between; align-items: center; border: none; transition: color 0.3s; }
+  .accordion-header:hover { color: var(--cyan); }
+  .accordion-header .icon { transition: transform 0.3s; }
+  .accordion-item.open .icon { transform: rotate(45deg); }
+  .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: rgba(255,255,255,0.02); }
+  .accordion-body-inner { padding: 15px; }
+
+  .quiz, .multi-quiz, .match-container, .sort-container, .fill-blank, .poll, .drag-sort { margin: 15px 0; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.02); }
+  .quiz .question, .multi-quiz .question, .poll .question { font-weight: bold; color: #fff; margin-bottom: 10px; }
+  .quiz-option, .multi-quiz .option, .poll-option { display: block; margin: 8px 0; padding: 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+  .quiz-option:hover, .multi-quiz .option:hover, .poll-option:hover { border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.2); transform: translateX(5px); }
+  .quiz-option input, .multi-quiz .option input { margin-right: 10px; accent-color: var(--cyan); }
+  .quiz-option.correct { border-color: var(--green); background: rgba(5,255,161,0.1); }
+  .quiz-option.wrong { border-color: var(--pink); background: rgba(255,42,109,0.1); }
+  .quiz-button, .match-check-btn, .sort-check-btn, .fill-blank-check-btn { margin-top: 15px; padding: 10px 20px; background: rgba(0,240,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+  .quiz-button:hover, .match-check-btn:hover, .sort-check-btn:hover, .fill-blank-check-btn:hover { background: rgba(0,240,255,0.2); box-shadow: 0 0 15px rgba(0,240,255,0.4); transform: translateY(-2px); }
+  .quiz-button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .quiz-feedback, .match-result, .fill-blank-feedback { margin-top: 10px; font-weight: bold; }
+
+  .match-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+  .match-item .term { min-width: 120px; }
+  .match-item select {
+    background: #0a0c14; color: var(--text); border: 1px solid var(--border);
+    border-radius: 4px; padding: 4px 8px; cursor: pointer; outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .match-item select:hover, .match-item select:focus {
+    border-color: var(--cyan); box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+  }
+  .sort-list { list-style: none; padding: 0; margin: 10px 0; }
+  .sort-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 6px; margin: 5px 0; transition: all 0.2s; }
+  .sort-item:hover { background: rgba(255,255,255,0.05); }
+  .sort-item span { flex: 1; }
+  .sort-controls { display: flex; gap: 4px; }
+  .sort-btn { background: rgba(0, 240, 255, 0.1); border: 1px solid var(--border); color: var(--cyan); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; transition: all 0.2s; font-size: 0.9em; }
+  .sort-btn:hover { background: rgba(0, 240, 255, 0.2); box-shadow: 0 0 8px rgba(0, 240, 255, 0.4); }
+  .fill-blank-input { background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; text-align: center; outline: none; transition: border-color 0.3s, box-shadow 0.3s; }
+  .fill-blank-input:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0, 240, 255, 0.3); }
+
+  .embed { margin: 15px 0; }
+  .embed iframe { width: 100%; height: 400px; border: 1px solid var(--border); border-radius: 8px; }
+
+  .columns { display: flex; gap: 20px; }
+  .column { flex: 1; }
+
+  .carousel { position: relative; max-width: 800px; margin: 20px auto; overflow: hidden; border-radius: 8px; border: 1px solid var(--border); }
+  .carousel-track { display: flex; transition: transform 0.5s ease; }
+  .carousel-slide { min-width: 100%; flex-shrink: 0; box-sizing: border-box; }
+  .carousel-slide img { width: 100%; display: block; }
+  .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); border: none; color: #fff; font-size: 2em; padding: 0 15px; cursor: pointer; border-radius: 4px; z-index: 10; transition: all 0.3s; }
+  .carousel-btn:hover { background: rgba(0,240,255,0.7); color: #000; }
+  .carousel-btn.prev { left: 10px; }
+  .carousel-btn.next { right: 10px; }
+  .carousel-dots { text-align: center; padding: 10px 0; }
+  .carousel-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.3); margin: 0 5px; cursor: pointer; transition: all 0.3s; }
+  .carousel-dot.active { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+
+  .before-after { position: relative; max-width: 800px; margin: 20px auto; user-select: none; }
+  .before-after img { width: 100%; display: block; }
+  .before-after .after { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
+  .before-after .after img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+  .before-after .divider { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: #fff; cursor: ew-resize; z-index: 10; }
+  .before-after .divider::after { content: '⟷'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border-radius: 50%; padding: 4px; }
+
+  .table-container { overflow-x: auto; margin: 15px 0; }
+  .table-container table { width: 100%; border-collapse: collapse; }
+  .table-container th, .table-container td { padding: 10px 15px; border: 1px solid var(--border); text-align: left; }
+  .table-container th { background: rgba(0,240,255,0.1); color: var(--cyan); }
+  .table-container tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+
+  .chart-container { display: flex; align-items: flex-end; gap: 10px; height: 200px; margin: 20px 0; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; }
+  .chart-bar { background: linear-gradient(to top, var(--cyan), var(--green)); border-radius: 4px 4px 0 0; min-width: 30px; position: relative; transition: height 0.3s; }
+  .chart-bar span { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.8em; }
+  .chart-bar-label { text-align: center; margin-top: 5px; font-size: 0.8em; color: var(--muted); }
+  .pie-chart { width: 150px; height: 150px; border-radius: 50%; margin: 20px auto; transition: transform 0.3s; }
+  .pie-chart:hover { transform: scale(1.05); }
+  .pie-legend { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
+  .pie-legend-item { display: flex; align-items: center; gap: 5px; }
+  .pie-legend-color { width: 15px; height: 15px; border-radius: 3px; }
+
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; }
+  .modal-content { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; max-width: 600px; width: 90%; position: relative; box-shadow: 0 0 30px rgba(0,240,255,0.3); animation: slideUp 0.3s ease; }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-close { position: absolute; top: 10px; right: 15px; background: none; border: none; color: var(--text); font-size: 1.5em; cursor: pointer; transition: color 0.3s; }
+  .modal-close:hover { color: var(--pink); }
+  .modal-open-btn { padding: 8px 16px; background: rgba(0,240,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); border-radius: 6px; cursor: pointer; transition: all 0.3s; }
+  .modal-open-btn:hover { background: rgba(0,240,255,0.2); box-shadow: 0 0 10px rgba(0,240,255,0.3); }
+
+  .tooltip { position: relative; display: inline-block; border-bottom: 1px dotted var(--cyan); cursor: help; }
+  .tooltip .tooltip-text { visibility: hidden; width: 200px; background: #0a0c14; color: var(--text); text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; border: 1px solid var(--border); }
+  .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+  .drag-sort-list { list-style: none; padding: 0; }
+  .drag-sort-item { padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 6px; margin: 5px 0; cursor: grab; user-select: none; transition: all 0.2s; }
+  .drag-sort-item:hover { background: rgba(255,255,255,0.08); }
+  .drag-sort-item.dragging { opacity: 0.5; border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.5); }
+
+  .steps-container { margin: 20px 0; }
+  .steps-header { display: flex; gap: 10px; margin-bottom: 15px; }
+  .step-btn { padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text); cursor: pointer; transition: all 0.3s; }
+  .step-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .step-btn.active { background: rgba(0,240,255,0.15); border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.3); }
+  .step-content { padding: 15px; border: 1px solid var(--border); border-radius: 6px; }
+
+  .progress-tracker { display: flex; gap: 5px; flex-wrap: wrap; margin: 15px 0; }
+  .progress-step { padding: 5px 10px; border-radius: 4px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); cursor: pointer; transition: all 0.3s; }
+  .progress-step:hover { border-color: var(--cyan); }
+  .progress-step.done { background: rgba(5,255,161,0.15); border-color: var(--green); color: var(--green); box-shadow: 0 0 8px rgba(5,255,161,0.3); }
+
+  .mermaid { background: #0a0c14; padding: 10px; border-radius: 8px; overflow-x: auto; }
+
+  /* Стили для блока управления скоростью */
+  .speed-control { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 6px; 
+    margin: 10px auto; 
+    padding: 4px 8px; 
+    background: rgba(0, 0, 0, 0.4); 
+    border: 1px solid var(--border); 
+    border-radius: 20px; 
+    width: fit-content;
+  }
+  .speed-control label { font-size: 0.85em; color: var(--muted); }
+  .speed-control select { background: #0a0c14; color: var(--text); border: none; border-radius: 12px; padding: 4px 8px; cursor: pointer; outline: none; font-size: 0.9em; transition: box-shadow 0.3s; }
+  .speed-control select:hover, .speed-control select:focus { box-shadow: 0 0 8px rgba(0, 240, 255, 0.4); }
+
+  .compare-container { display: flex; align-items: stretch; position: relative; margin: 20px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; user-select: none; }
+  .compare-left { flex: 0 0 auto; width: 50%; background: var(--panel); overflow: hidden; padding: 15px; transition: width 0.1s; }
+  .compare-right { flex: 1; background: rgba(255, 255, 255, 0.02); padding: 15px; overflow: hidden; }
+  .compare-divider { flex: 0 0 4px; background: #fff; cursor: ew-resize; z-index: 10; box-shadow: 0 0 10px rgba(0, 240, 255, 0.5); position: relative; }
+  .compare-divider::after { content: '⟷'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; border-radius: 50%; padding: 4px; font-size: 0.8em; }
+
+  .svg-container { margin: 15px 0; text-align: center; }
+  .svg-wrapper { display: inline-block; max-width: 100%; overflow: auto; }
+  .svg-wrapper svg { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 0 12px rgba(0,240,255,0.2); }
+  .svg-caption { color: var(--muted); font-size: 0.9em; margin-top: 8px; }
+
+  /* Новый блок HTML */
+  .html-block {
+    margin: 15px 0;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+    overflow-x: auto;
+  }
+  .html-block > *:first-child { margin-top: 0; }
+  .html-block > *:last-child { margin-bottom: 0; }
+
+  .course-manager { margin: 20px 0; padding: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; }
+  .saved-course-item { display: flex; gap: 10px; align-items: center; margin: 5px 0; }
+
+  .toggle-manager-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+    font-family: inherit;
+    font-size: 0.95em;
+  }
+  .toggle-manager-btn:hover {
+    background: rgba(0,240,255,0.1);
+    box-shadow: 0 0 10px rgba(0,240,255,0.3);
+    transform: translateY(-2px);
+  }
+
+  .help-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    margin-top: 10px;
+    padding-right: 5px;
+  }
+  .prompt-textarea {
+    width: 100%;
+    height: 250px;
+    background: #0a0c14;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: monospace;
+    margin: 10px 0;
+    resize: vertical;
+  }
+  .copy-btn {
+    padding: 8px 16px;
+    background: rgba(0,240,255,0.1);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-left: 10px;
+  }
+  .copy-btn:hover {
+    background: rgba(0,240,255,0.2);
+    box-shadow: 0 0 10px rgba(0,240,255,0.3);
+  }
+
+  .flip-card {
+    background-color: transparent;
+    width: 300px;
+    height: 200px;
+    perspective: 1000px;
+    margin: 15px auto;
+    cursor: pointer;
+  }
+  .flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+  }
+  .flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+  }
+  .flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    overflow: auto;
+    box-sizing: border-box;
+  }
+  .flip-card-back {
+    transform: rotateY(180deg);
+    background: rgba(0, 240, 255, 0.05);
+  }
+
+  .poll-option.selected {
+    border-color: var(--cyan);
+    background: rgba(0,240,255,0.1);
+  }
+  .poll-bar {
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    margin: 5px 0 10px 0;
+    overflow: hidden;
+  }
+  .poll-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    transition: width 0.5s;
+  }
+  .timeline {
+    position: relative;
+    margin: 20px 0;
+    padding-left: 30px;
+    border-left: 2px solid var(--border);
+  }
+  .timeline-item {
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -37px;
+    top: 5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+  }
+  .timeline-title {
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 5px var(--cyan);
+  }
+  .timeline-desc {
+    color: var(--muted);
+  }
+  .slider-container {
+    margin: 15px 0;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.02);
+  }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .slider-value {
+    color: var(--cyan);
+    font-weight: bold;
+  }
+  .slider-input {
+    width: 100%;
+    accent-color: var(--cyan);
+    cursor: pointer;
+  }
+
+  @media (max-width: 600px) {
+    .columns { flex-direction: column; }
+    .carousel-btn { font-size: 1.5em; padding: 0 8px; }
+    .compare-container { flex-direction: column; }
+    .compare-left, .compare-right { width: 100% !important; flex: 1 1 auto; }
+    .compare-divider { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function() {
+  const app = document.getElementById('app');
+
+  // ---------- СОСТОЯНИЕ ----------
+  let course = null;
+  let currentLessonId = null;
+  const courseProgress = JSON.parse(localStorage.getItem('lms_course_progress') || '{}');
+  let completedLessons = new Set();
+  let themeStyleElement = null;
+
+  // ---------- INDEXEDDB ----------
+  const DB_NAME = 'lms_courses_db';
+  const DB_VERSION = 1;
+  let db;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        db = request.result;
+        resolve(db);
+      };
+      request.onupgradeneeded = (event) => {
+        const database = event.target.result;
+        if (!database.objectStoreNames.contains('courses')) {
+          const store = database.createObjectStore('courses', { keyPath: 'id' });
+          store.createIndex('title', 'title', { unique: false });
+        }
+      };
+    });
+  }
+
+  async function saveCourseToDB(courseData, recordId) {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['courses'], 'readwrite');
+      const store = tx.objectStore('courses');
+      const id = recordId || Date.now().toString();
+      const record = {
+        id: id,
+        title: courseData.meta?.title || 'Без названия',
+        course: courseData
+      };
+      store.put(record);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function getAllCoursesFromDB() {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['courses'], 'readonly');
+      const store = tx.objectStore('courses');
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async function deleteCourseFromDB(id) {
+    if (!db) await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(['courses'], 'readwrite');
+      const store = tx.objectStore('courses');
+      store.delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ DOM ----------
+  function h(tag, attrs = {}, children = []) {
+    const el = document.createElement(tag);
+    for (const [key, value] of Object.entries(attrs)) {
+      if (key === 'class') el.className = value;
+      else if (key === 'textContent') el.textContent = value;
+      else if (key.startsWith('on')) el.addEventListener(key.slice(2).toLowerCase(), value);
+      else if (key === 'disabled') el.disabled = value;
+      else if (key === 'dataset') {
+        for (const [dataKey, dataValue] of Object.entries(value)) {
+          el.dataset[dataKey] = dataValue;
+        }
+      }
+      else el.setAttribute(key, value);
+    }
+    const childArr = Array.isArray(children) ? children : [children];
+    for (const child of childArr) {
+      if (child == null) continue;
+      el.appendChild(typeof child === 'string' ? document.createTextNode(child) : child);
+    }
+    return el;
+  }
+
+  function slugify(text) {
+    return text.toLowerCase().trim().replace(/[^\wа-яё]+/gi, '-').replace(/^-+|-+$/g, '');
+  }
+
+  function getCourseKey(course) {
+    return course.meta.id || slugify(course.meta.title) || 'default';
+  }
+
+  // ---------- ТЕМЫ ----------
+  const defaultTheme = {
+    bg: '#0a0e1a',
+    panel: '#111627',
+    text: '#d5e5ff',
+    muted: '#8b9bbf',
+    cyan: '#00f0ff',
+    pink: '#ff2a6d',
+    green: '#05ffa1',
+    purple: '#b967ff',
+    yellow: '#ffd700',
+    border: 'rgba(0, 240, 255, 0.25)',
+    shadow: '0 0 15px rgba(0,240,255,0.1)'
+  };
+
+  function applyTheme(theme) {
+    if (!themeStyleElement) {
+      themeStyleElement = document.createElement('style');
+      document.head.appendChild(themeStyleElement);
+    }
+    const vars = {};
+    const source = theme || defaultTheme;
+    for (const [key, value] of Object.entries(source)) {
+      vars[`--${key}`] = value;
+    }
+    const css = `:root { ${Object.entries(vars).map(([k, v]) => `${k}: ${v};`).join(' ')} }`;
+    themeStyleElement.textContent = css;
+  }
+
+  // ---------- ОБРАБОТКА КУРСА ----------
+  function setCourse(newCourse) {
+    course = newCourse;
+    currentLessonId = null;
+    const key = getCourseKey(course);
+    completedLessons = new Set(courseProgress[key] || []);
+    applyTheme(course.meta.theme || null);
+    renderInitialState();
+    updateSavedCoursesList();
+    if (courseManagerPanel) {
+      courseManagerPanel.style.display = 'none';
+    }
+  }
+
+  async function loadCourseFromObject(courseData, recordId) {
+    try {
+      if (!courseData.meta || !courseData.lessons) {
+        throw new Error('Неверный формат курса');
+      }
+      await saveCourseToDB(courseData, recordId);
+      setCourse(courseData);
+    } catch (e) {
+      alert('Ошибка загрузки курса: ' + e.message);
+    }
+  }
+
+  // ---------- УПРАВЛЕНИЕ ПАНЕЛЬЮ ----------
+  let courseManagerPanel = null;
+
+  function toggleCourseManager() {
+    if (courseManagerPanel) {
+      const isHidden = courseManagerPanel.style.display === 'none';
+      courseManagerPanel.style.display = isHidden ? 'block' : 'none';
+    }
+  }
+
+  // ---------- РЕНДЕРИНГ UI ----------
+  function renderCourseHeader() {
+    if (!course) return null;
+    const header = h('header', { class: 'course-header' });
+
+    // Строка с заголовком и кнопкой редактора
+    const titleRow = h('div', { class: 'course-title-row' });
+    titleRow.appendChild(h('h1', { textContent: course.meta.title }));
+
+    const editBtn = h('button', {
+      class: 'edit-course-btn',
+      type: 'button',
+      title: 'Редактор JSON',
+      textContent: '✎' // иконка карандаша
+    });
+    editBtn.addEventListener('click', () => {
+      const recordId = course.meta._recordId;
+      openJSONEditor(JSON.stringify(course, null, 2), recordId);
+    });
+    titleRow.appendChild(editBtn);
+    header.appendChild(titleRow);
+
+    header.appendChild(h('p', { class: 'description', textContent: course.meta.description }));
+    const badges = h('div', { class: 'badges' });
+    if (course.meta.author) badges.appendChild(h('span', { class: 'badge', textContent: 'Автор: ' + course.meta.author }));
+    if (course.meta.duration) badges.appendChild(h('span', { class: 'badge', textContent: 'Длительность: ' + course.meta.duration }));
+    if (course.meta.level) badges.appendChild(h('span', { class: 'badge', textContent: 'Уровень: ' + course.meta.level }));
+    header.appendChild(badges);
+
+    return header;
+  }
+
+  function renderLessonsNav() {
+    if (!course) return null;
+    const nav = h('div', { class: 'lessons-nav' });
+    course.lessons.forEach(lesson => {
+      const btn = h('button', {
+        class: 'lesson-btn' + (lesson.id === currentLessonId ? ' active' : '') + (completedLessons.has(lesson.id) ? ' completed' : ''),
+        textContent: lesson.title,
+        type: 'button'
+      });
+      btn.addEventListener('click', () => showLesson(lesson.id));
+      nav.appendChild(btn);
+    });
+    return nav;
+  }
+
+  function renderProgress() {
+    if (!course) return null;
+    const total = course.lessons.length;
+    const done = [...completedLessons].filter(id => course.lessons.some(l => l.id === id)).length;
+    const percent = Math.round((done / total) * 100);
+    const container = h('div', { class: 'progress-container' });
+    const label = h('div', { class: 'progress-label' });
+    label.appendChild(h('span', { textContent: 'Прогресс курса' }));
+    label.appendChild(h('span', { textContent: `${done}/${total} (${percent}%)` }));
+    const bar = h('div', { class: 'progress-bar' });
+    bar.appendChild(h('div', { class: 'progress-fill', style: `width: ${percent}%` }));
+    container.appendChild(label);
+    container.appendChild(bar);
+    return container;
+  }
+
+  function renderCourseManager() {
+    const manager = h('div', { class: 'course-manager' });
+    const title = h('h3', { textContent: 'Управление курсами', class: 'heading' });
+    manager.appendChild(title);
+
+    const buttonRow = h('div', { style: 'display:flex; gap:10px; flex-wrap:wrap; margin:10px 0;' });
+
+    // Загрузка из файла
+    const fileInput = h('input', { type: 'file', accept: '.json,application/json', style: 'display:none' });
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        const data = JSON.parse(text);
+        await loadCourseFromObject(data);
+      } catch (err) {
+        alert('Ошибка парсинга JSON: ' + err.message);
+      }
+    });
+    const fileBtn = h('button', { class: 'quiz-button', textContent: 'Загрузить из файла', type: 'button' });
+    fileBtn.addEventListener('click', () => fileInput.click());
+    buttonRow.appendChild(fileInput);
+    buttonRow.appendChild(fileBtn);
+
+    // Кнопка "Новый курс"
+    const newCourseBtn = h('button', { class: 'quiz-button', textContent: 'Новый курс', type: 'button' });
+    newCourseBtn.addEventListener('click', () => {
+      const emptyCourse = {
+        meta: {
+          title: "Новый курс",
+          description: "Описание курса",
+          author: "",
+          duration: "",
+          level: "",
+          theme: {}
+        },
+        lessons: [
+          {
+            id: "lesson-1",
+            title: "Урок 1",
+            description: "Описание урока",
+            blocks: [
+              { type: "text", text: "Введите текст..." }
+            ]
+          }
+        ]
+      };
+      openJSONEditor(JSON.stringify(emptyCourse, null, 2), null);
+    });
+    buttonRow.appendChild(newCourseBtn);
+
+    manager.appendChild(buttonRow);
+
+    // Отдельная строка для URL
+    const urlRow = h('div', { style: 'display:flex; gap:10px; margin:10px 0;' });
+    const urlInput = h('input', { type: 'text', placeholder: 'URL JSON курса', class: 'fill-blank-input', style: 'flex:1;' });
+    const urlBtn = h('button', { class: 'quiz-button', textContent: 'Загрузить по URL', type: 'button' });
+    urlBtn.addEventListener('click', async () => {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Сетевая ошибка');
+        const data = await response.json();
+        await loadCourseFromObject(data);
+      } catch (err) {
+        alert('Ошибка загрузки: ' + err.message);
+      }
+    });
+    urlRow.appendChild(urlInput);
+    urlRow.appendChild(urlBtn);
+    manager.appendChild(urlRow);
+
+    // Список сохранённых курсов
+    const savedTitle = h('h4', { textContent: 'Сохранённые курсы:', style: 'margin-top:15px;' });
+    manager.appendChild(savedTitle);
+    const savedList = h('div', { class: 'saved-courses-list', id: 'savedCoursesList' });
+    manager.appendChild(savedList);
+
+    return manager;
+  }
+
+  async function updateSavedCoursesList() {
+    const listEl = document.getElementById('savedCoursesList');
+    if (!listEl) return;
+    listEl.innerHTML = '<p class="text">Загрузка списка...</p>';
+    try {
+      const courses = await getAllCoursesFromDB();
+      if (courses.length === 0) {
+        listEl.innerHTML = '<p class="text">Сохранённых курсов нет.</p>';
+        return;
+      }
+      listEl.innerHTML = '';
+      courses.forEach(record => {
+        const item = h('div', { class: 'saved-course-item' });
+        item.appendChild(h('span', { textContent: record.title, style: 'flex:1;' }));
+        const loadBtn = h('button', { class: 'quiz-button', textContent: 'Загрузить', type: 'button' });
+        loadBtn.addEventListener('click', () => {
+          if (!record.course.meta) record.course.meta = {};
+          record.course.meta._recordId = record.id;
+          setCourse(record.course);
+        });
+        const delBtn = h('button', { class: 'quiz-button', textContent: 'Удалить', type: 'button', style: 'background: rgba(255,42,109,0.1); border-color: var(--pink); color: var(--pink);' });
+        delBtn.addEventListener('click', async () => {
+          if (confirm('Удалить курс "' + record.title + '"?')) {
+            await deleteCourseFromDB(record.id);
+            updateSavedCoursesList();
+          }
+        });
+        item.appendChild(loadBtn);
+        item.appendChild(delBtn);
+        listEl.appendChild(item);
+      });
+    } catch (e) {
+      listEl.innerHTML = '<p class="text">Ошибка загрузки списка.</p>';
+      console.error(e);
+    }
+  }
+
+  function openJSONEditor(initialValue, recordId) {
+    const overlay = h('div', { class: 'modal-overlay' });
+    const content = h('div', { class: 'modal-content' });
+    const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
+    closeBtn.addEventListener('click', () => overlay.remove());
+    content.appendChild(closeBtn);
+    content.appendChild(h('h3', { textContent: 'Редактор JSON курса', class: 'heading' }));
+
+    const textarea = h('textarea', { style: 'width:100%; height:300px; background:#0a0c14; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:10px; font-family:monospace;' });
+    textarea.value = initialValue || '';
+    content.appendChild(textarea);
+
+    const buttonRow = h('div', { style: 'display:flex; gap:10px; margin-top:10px;' });
+    const loadBtn = h('button', { class: 'quiz-button', textContent: 'Загрузить', type: 'button' });
+    loadBtn.addEventListener('click', async () => {
+      try {
+        const data = JSON.parse(textarea.value);
+        await loadCourseFromObject(data, recordId);
+        overlay.remove();
+      } catch (e) {
+        alert('Ошибка JSON: ' + e.message);
+      }
+    });
+    const cancelBtn = h('button', { class: 'quiz-button', textContent: 'Отмена', type: 'button' });
+    cancelBtn.addEventListener('click', () => overlay.remove());
+    buttonRow.appendChild(loadBtn);
+    buttonRow.appendChild(cancelBtn);
+    content.appendChild(buttonRow);
+
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+
+  // ---------- СПРАВКА И ГЕНЕРАЦИЯ ПРОМПТА ----------
+  function openHelpModal() {
+    const overlay = h('div', { class: 'modal-overlay' });
+    const content = h('div', { class: 'modal-content' });
+    const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
+    closeBtn.addEventListener('click', () => overlay.remove());
+    content.appendChild(closeBtn);
+    content.appendChild(h('h3', { textContent: 'Справка по LMS Player', class: 'heading' }));
+
+    const helpDiv = h('div', { class: 'help-content' });
+    helpDiv.innerHTML = `
+      <h4 style="color: #fff; margin-top: 10px;">Общая информация</h4>
+      <p>Данный плеер предназначен для отображения интерактивных образовательных курсов в формате JSON. Курс состоит из метаданных и списка уроков. Каждый урок содержит заголовок, описание и набор блоков контента.</p>
+      <h4 style="color: #fff; margin-top: 10px;">Структура курса</h4>
+      <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>{
+  "meta": {
+    "title": "Название курса",
+    "description": "Описание",
+    "author": "Автор",
+    "duration": "Длительность",
+    "level": "Уровень",
+    "theme": { ... } // необязательно, переопределение цветов
+  },
+  "lessons": [
+    {
+      "id": "lesson-1",
+      "title": "Название урока",
+      "description": "Описание урока",
+      "blocks": [ ... ]
+    }
+  ]
+}</code></pre>
+      <h4 style="color: #fff; margin-top: 10px;">Настройка цветовой схемы (тема)</h4>
+      <p>В <code>meta.theme</code> можно передать объект с переопределением любых переменных CSS. Доступные ключи:</p>
+      <ul>
+        <li><code>bg</code> — основной фон (по умолчанию #0a0e1a)</li>
+        <li><code>panel</code> — фон панелей (по умолчанию #111627)</li>
+        <li><code>text</code> — основной текст (по умолчанию #d5e5ff)</li>
+        <li><code>muted</code> — приглушённый текст (по умолчанию #8b9bbf)</li>
+        <li><code>cyan</code> — основной акцент (по умолчанию #00f0ff)</li>
+        <li><code>pink</code> — розовый акцент (по умолчанию #ff2a6d)</li>
+        <li><code>green</code> — зелёный акцент (по умолчанию #05ffa1)</li>
+        <li><code>purple</code> — фиолетовый акцент (по умолчанию #b967ff)</li>
+        <li><code>yellow</code> — жёлтый акцент (по умолчанию #ffd700)</li>
+        <li><code>border</code> — цвет границ (по умолчанию rgba(0, 240, 255, 0.25))</li>
+        <li><code>shadow</code> — тень (по умолчанию 0 0 15px rgba(0,240,255,0.1))</li>
+      </ul>
+      <p>Пример: <code>"theme": { "cyan": "#ff00ff", "bg": "#101010" }</code>.</p>
+      <h4 style="color: #fff; margin-top: 10px;">Типы блоков</h4>
+      <ul>
+        <li><strong>section</strong> — секция с заголовком и вложенными блоками.</li>
+        <li><strong>heading</strong> — заголовок уровня h1-h6.</li>
+        <li><strong>text</strong> — абзац текста.</li>
+        <li><strong>image</strong> — изображение с подписью.</li>
+        <li><strong>video</strong> — видео (с возможностью контроля скорости).</li>
+        <li><strong>audio</strong> — аудио (с возможностью контроля скорости).</li>
+        <li><strong>list</strong> — маркированный/нумерованный список.</li>
+        <li><strong>code</strong> — блок кода с подсветкой.</li>
+        <li><strong>callout</strong> — выделенный блок (info, warning, success).</li>
+        <li><strong>tabs</strong> — вкладки.</li>
+        <li><strong>accordion</strong> — аккордеон.</li>
+        <li><strong>quiz</strong> — одиночный выбор с проверкой.</li>
+        <li><strong>multi-quiz</strong> — множественный выбор.</li>
+        <li><strong>match</strong> — сопоставление пар.</li>
+        <li><strong>sort</strong> — сортировка элементов стрелками.</li>
+        <li><strong>fill-blank</strong> — заполнение пропусков.</li>
+        <li><strong>flip-card</strong> — переворачивающаяся карточка.</li>
+        <li><strong>poll</strong> — опрос с отображением результатов.</li>
+        <li><strong>compare</strong> — сравнение двух блоков с перетаскиваемым разделителем.</li>
+        <li><strong>slider</strong> — ползунок.</li>
+        <li><strong>timeline</strong> — таймлайн.</li>
+        <li><strong>steps</strong> — пошаговый контент.</li>
+        <li><strong>embed</strong> — iframe.</li>
+        <li><strong>columns</strong> — колонки.</li>
+        <li><strong>carousel</strong> — карусель.</li>
+        <li><strong>before-after</strong> — сравнение изображений.</li>
+        <li><strong>table</strong> — таблица.</li>
+        <li><strong>chart</strong> — столбчатая диаграмма.</li>
+        <li><strong>pie</strong> — круговая диаграмма.</li>
+        <li><strong>modal</strong> — кнопка, открывающая модальное окно.</li>
+        <li><strong>tooltip</strong> — текст с подсказкой.</li>
+        <li><strong>mermaid</strong> — диаграмма Mermaid.</li>
+        <li><strong>drag-sort</strong> — сортировка перетаскиванием.</li>
+        <li><strong>progress-tracker</strong> — интерактивный трекер прогресса.</li>
+        <li><strong>svg</strong> — встроенное SVG-изображение.</li>
+        <li><strong>html</strong> — произвольный HTML-код для расширенного форматирования (поле <code>code</code>).</li>
+      </ul>
+      <p>Подробное описание параметров каждого блока смотрите в JSON-схеме (открывается через "Генерация промпта").</p>
+      <p><strong>Создание нового курса:</strong> В панели управления нажмите кнопку "Новый курс", чтобы открыть редактор с шаблоном. Замените содержимое на свой JSON и нажмите "Загрузить".</p>
+    `;
+    content.appendChild(helpDiv);
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+
+  function openPromptGenerator() {
+    const overlay = h('div', { class: 'modal-overlay' });
+    const content = h('div', { class: 'modal-content' });
+    const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
+    closeBtn.addEventListener('click', () => overlay.remove());
+    content.appendChild(closeBtn);
+    content.appendChild(h('h3', { textContent: 'Генератор промпта для LLM', class: 'heading' }));
+
+    const topicRow = h('div', { style: 'display:flex; gap:10px; margin:15px 0;' });
+    const topicInput = h('input', { type: 'text', placeholder: 'Введите тему курса', class: 'fill-blank-input', style: 'flex:1;' });
+    const generateBtn = h('button', { class: 'quiz-button', textContent: 'Сгенерировать промпт', type: 'button' });
+    topicRow.appendChild(topicInput);
+    topicRow.appendChild(generateBtn);
+    content.appendChild(topicRow);
+
+    const promptArea = h('textarea', { class: 'prompt-textarea', placeholder: 'Здесь появится промпт...' });
+    content.appendChild(promptArea);
+
+    const copyRow = h('div', { style: 'display:flex; gap:10px; margin-top:10px;' });
+    const copyBtn = h('button', { class: 'copy-btn', textContent: 'Копировать в буфер', type: 'button' });
+    copyBtn.addEventListener('click', async () => {
+      if (!promptArea.value) {
+        alert('Промпт пуст. Сначала сгенерируйте.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(promptArea.value);
+        alert('Промпт скопирован в буфер обмена!');
+      } catch (e) {
+        alert('Не удалось скопировать: ' + e.message);
+      }
+    });
+    copyRow.appendChild(copyBtn);
+    content.appendChild(copyRow);
+
+    generateBtn.addEventListener('click', () => {
+      const topic = topicInput.value.trim() || 'выбранной теме';
+      promptArea.value = generatePrompt(topic);
+    });
+
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+
+  function generatePrompt(topic) {
+    const schema = `СПИСОК ТИПОВ БЛОКОВ И ИХ ПАРАМЕТРОВ (JSON):
+{
+  "meta": {
+    "title": "Название курса",
+    "description": "Краткое описание",
+    "author": "Автор",
+    "duration": "Длительность (например, 2 часа)",
+    "level": "Уровень (начинающий, средний, продвинутый)",
+    "theme": { 
+      "bg": "#0a0e1a",
+      "panel": "#111627",
+      "text": "#d5e5ff",
+      "muted": "#8b9bbf",
+      "cyan": "#00f0ff",
+      "pink": "#ff2a6d",
+      "green": "#05ffa1",
+      "purple": "#b967ff",
+      "yellow": "#ffd700",
+      "border": "rgba(0, 240, 255, 0.25)",
+      "shadow": "0 0 15px rgba(0,240,255,0.1)"
+    }
+  },
+  "lessons": [
+    {
+      "id": "уникальный идентификатор урока",
+      "title": "Название урока",
+      "description": "Описание урока",
+      "blocks": [
+        // Массив блоков, каждый блок имеет type и свои поля.
+      ]
+    }
+  ]
+}
+
+ТИПЫ БЛОКОВ:
+1. section: { "type": "section", "title": "Заголовок секции", "children": [ ...блоки... ] }
+2. heading: { "type": "heading", "level": 2, "text": "Текст заголовка" } // level: 1-6
+3. text: { "type": "text", "text": "Текст абзаца" }
+4. image: { "type": "image", "src": "URL изображения", "caption": "Подпись (необязательно)" }
+5. video: { "type": "video", "src": "URL видео", "poster": "URL постера", "caption": "Подпись", "speedControl": true } // speedControl - показать переключатель скорости
+6. audio: { "type": "audio", "src": "URL аудио", "caption": "Подпись", "speedControl": true }
+7. list: { "type": "list", "ordered": false, "items": ["Элемент 1", "Элемент 2"] } // ordered - true для нумерованного
+8. code: { "type": "code", "language": "javascript", "code": "console.log('Hello');" }
+9. callout: { "type": "callout", "variant": "info", "title": "Заголовок", "text": "Текст" } // variant: info, warning, success
+10. tabs: { "type": "tabs", "tabs": [ { "label": "Вкладка 1", "content": [ ...блоки... ] }, { "label": "Вкладка 2", "content": [ ...блоки... ] } ] }
+11. accordion: { "type": "accordion", "items": [ { "title": "Заголовок", "content": [ ...блоки... ] } ] }
+12. quiz: { "type": "quiz", "question": "Вопрос", "options": ["Вариант 1", "Вариант 2"], "correct": 0, "explanation": "Пояснение (необязательно)" } // correct - индекс правильного варианта
+13. multi-quiz: { "type": "multi-quiz", "question": "Вопрос", "options": ["Вариант A", "Вариант B", "Вариант C"], "correct": [0, 2], "explanation": "Пояснение" }
+14. match: { "type": "match", "instruction": "Сопоставьте", "pairs": [ { "left": "Термин 1", "right": "Определение 1" }, ... ] }
+15. sort: { "type": "sort", "instruction": "Расставьте по порядку", "items": ["Пункт 1", "Пункт 2"], "correctOrder": ["Пункт 2", "Пункт 1"] }
+16. fill-blank: { "type": "fill-blank", "instruction": "Заполните пропуски", "text": "Текст с {{1}} и {{2}}", "answers": { "1": "ответ1", "2": "ответ2" } }
+17. flip-card: { "type": "flip-card", "front": "Вопрос или текст", "back": "Ответ или пояснение" }
+18. poll: { "type": "poll", "question": "Вопрос опроса", "options": ["Вариант 1", "Вариант 2"] } // Результаты генерируются случайно
+19. compare: { "type": "compare", "left": [ ...блоки... ], "right": [ ...блоки... ] } // два контента, перетаскиваемый разделитель
+20. slider: { "type": "slider", "label": "Оцените", "min": 0, "max": 10, "default": 5 }
+21. timeline: { "type": "timeline", "items": [ { "title": "Событие 1", "description": "Описание" }, ... ] }
+22. steps: { "type": "steps", "steps": [ { "title": "Шаг 1", "content": [ ...блоки... ] }, ... ] }
+23. embed: { "type": "embed", "src": "URL для iframe" }
+24. columns: { "type": "columns", "columns": [ { "blocks": [ ...блоки... ] }, { "blocks": [ ...блоки... ] } ] }
+25. carousel: { "type": "carousel", "items": [ { "image": "URL", "caption": "Подпись" }, { "content": [ ...блоки... ] } ] }
+26. before-after: { "type": "before-after", "before": "URL изображения до", "after": "URL изображения после" }
+27. table: { "type": "table", "headers": ["Колонка 1", "Колонка 2"], "rows": [ ["Ячейка 1", "Ячейка 2"], ... ] }
+28. chart: { "type": "chart", "title": "Заголовок", "labels": ["Метка 1", "Метка 2"], "values": [80, 20] }
+29. pie: { "type": "pie", "title": "Заголовок", "segments": [ { "label": "Сегмент 1", "value": 50, "color": "#ff0000" }, ... ] } // value - процент или доля
+30. modal: { "type": "modal", "buttonText": "Открыть", "content": [ ...блоки... ] }
+31. tooltip: { "type": "tooltip", "text": "Наведите на меня", "tooltipText": "Подсказка" }
+32. mermaid: { "type": "mermaid", "code": "graph TD; A-->B;" }
+33. drag-sort: { "type": "drag-sort", "instruction": "Перетащите", "items": ["Элемент 1", "Элемент 2"], "correctOrder": ["Элемент 2", "Элемент 1"] }
+34. progress-tracker: { "type": "progress-tracker", "tasks": [ { "label": "Задача 1" }, ... ] }
+35. svg: { "type": "svg", "code": "<svg xmlns=\"http://www.w3.org/2000/svg\">...</svg>", "caption": "Подпись (необязательно)" } // Встраиваемый SVG-код
+36. html: { "type": "html", "code": "<div style=\"...\">...</div>" } // Произвольный HTML-код
+`;
+
+    const prompt = `Ты — эксперт по созданию интерактивных образовательных курсов. Создай JSON-файл курса на тему "${topic}" для LMS-плеера.
+
+Требования:
+- Курс должен содержать 10-15 уроков, каждый с несколькими блоками разного типа.
+- В каждом уроке должно быть не менее 30 элементов (блоков).
+- Основной упор — на теоретический материал, практика второстепенна.
+- Наибольшее количество текстовых блоков, но они не должны идти друг за другом; лучше расширять содержание каждого блока (делать блоки крупнее, а не плодить много мелких).
+- Теоретическое повествование — основное, практика менее важна.
+- Используй разнообразные типы блоков: текст, изображения, видео (если возможно), викторины, сопоставления, диаграммы, таблицы, аккордеоны и т.д.
+- Отдавай предпочтение иллюстрациям mermaid и svg для визуализации.
+- Используй формулы KaTeX при необходимости.
+- Блоки кода преимущественно размещай внутри блока modal.
+- JSON должен быть валидным и соответствовать схеме ниже.
+- Не добавляй комментарии в JSON.
+- Обязательно включи блоки quiz, fill-blank, и хотя бы один диаграмму (chart или pie).
+- Метаданные должны быть заполнены реалистично, в качестве автора укажи себя (например, "AI Assistant").
+- Все URL изображений/видео должны быть рабочими (используй https://picsum.photos для изображений, если нужно).
+- При желании можешь добавить кастомную тему через meta.theme.
+- SVG-код должен быть валидным и не содержать скриптов (безопасность).
+- HTML-код должен быть корректным и не содержать скриптов.
+
+Схема:
+${schema}
+
+Сгенерируй только JSON, без пояснений.`;
+
+    return prompt;
+  }
+
+  // ---------- РЕНДЕРИНГ БАЗОВОГО UI ----------
+  function renderBaseUI() {
+    const buttonsContainer = h('div', { style: 'display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;' });
+
+    const toggleBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Управление курсами', type: 'button' });
+    toggleBtn.addEventListener('click', toggleCourseManager);
+    buttonsContainer.appendChild(toggleBtn);
+
+    const helpBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Справка', type: 'button' });
+    helpBtn.addEventListener('click', openHelpModal);
+    buttonsContainer.appendChild(helpBtn);
+
+    const promptBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Генерация промпта', type: 'button' });
+    promptBtn.addEventListener('click', openPromptGenerator);
+    buttonsContainer.appendChild(promptBtn);
+
+    app.appendChild(buttonsContainer);
+
+    courseManagerPanel = renderCourseManager();
+    courseManagerPanel.style.display = 'none';
+    app.appendChild(courseManagerPanel);
+    updateSavedCoursesList();
+
+    if (course) {
+      const header = renderCourseHeader();
+      if (header) app.appendChild(header);
+      const progress = renderProgress();
+      if (progress) app.appendChild(progress);
+      const nav = renderLessonsNav();
+      if (nav) app.appendChild(nav);
+    } else {
+      app.appendChild(h('p', { class: 'text', textContent: 'Курс не загружен. Откройте "Управление курсами" для загрузки курса.' }));
+    }
+  }
+
+  function renderInitialState() {
+    app.innerHTML = '';
+    if (!course) {
+      applyTheme(null);
+    }
+    renderBaseUI();
+    if (course) {
+      app.appendChild(h('p', { class: 'text', textContent: 'Выберите занятие из списка выше.' }));
+    }
+  }
+
+  function showLesson(lessonId) {
+    if (!course) return;
+    currentLessonId = lessonId;
+    app.innerHTML = '';
+    renderBaseUI();
+    const backBtn = h('button', { class: 'back-btn', textContent: '← К списку занятий', type: 'button' });
+    backBtn.addEventListener('click', () => {
+      currentLessonId = null;
+      renderInitialState();
+    });
+    app.appendChild(backBtn);
+
+    const lesson = course.lessons.find(l => l.id === lessonId);
+    if (!lesson) return;
+
+    const lessonContainer = h('div', { class: 'lesson-container' });
+    lessonContainer.appendChild(h('h2', { class: 'heading', textContent: lesson.title }));
+    if (lesson.description) lessonContainer.appendChild(h('p', { class: 'text', textContent: lesson.description }));
+
+    const content = h('div', { class: 'lesson-content' });
+    renderBlocks(lesson.blocks, content);
+    lessonContainer.appendChild(content);
+
+    const completeBtn = h('button', {
+      class: 'quiz-button',
+      textContent: completedLessons.has(lessonId) ? 'Занятие завершено ✓' : 'Завершить занятие',
+      type: 'button'
+    });
+    completeBtn.addEventListener('click', () => {
+      const key = getCourseKey(course);
+      if (!courseProgress[key]) courseProgress[key] = [];
+      if (completedLessons.has(lessonId)) {
+        completedLessons.delete(lessonId);
+      } else {
+        completedLessons.add(lessonId);
+      }
+      courseProgress[key] = [...completedLessons];
+      localStorage.setItem('lms_course_progress', JSON.stringify(courseProgress));
+      showLesson(lessonId);
+    });
+    lessonContainer.appendChild(completeBtn);
+
+    app.appendChild(lessonContainer);
+    postProcess(lessonContainer);
+  }
+
+  // ---------- ОБРАБОТЧИКИ БЛОКОВ ----------
+  function processMath(element) {
+    if (window.renderMathInElement) {
+      try {
+        window.renderMathInElement(element, {
+          delimiters: [
+            {left: '\\[', right: '\\]', display: true},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      } catch(e) { console.error('KaTeX error:', e); }
+    }
+  }
+
+  function renderMermaidDiagrams(element) {
+    const mermaidElements = element.querySelectorAll('.mermaid');
+    if (mermaidElements.length && window.mermaid) {
+      mermaidElements.forEach(el => {
+        const code = el.textContent;
+        el.removeAttribute('data-processed');
+        el.innerHTML = code;
+      });
+      try {
+        mermaid.run({ nodes: mermaidElements });
+      } catch(e) { console.error('Mermaid error:', e); }
+    }
+  }
+
+  function postProcess(container) {
+    processMath(container);
+    renderMermaidDiagrams(container);
+  }
+
+  function renderBlocks(blocks, container) {
+    blocks.forEach((block, idx) => {
+      const element = renderBlock(block, idx);
+      if (element) container.appendChild(element);
+    });
+  }
+
+  function renderContentOrText(value, container) {
+    if (typeof value === 'string') {
+      container.appendChild(document.createTextNode(value));
+    } else if (Array.isArray(value)) {
+      renderBlocks(value, container);
+    } else if (value && value.type) {
+      const el = renderBlock(value, 0);
+      if (el) container.appendChild(el);
+    }
+  }
+
+  function setupDrag(divider, container, setPos) {
+    let isDragging = false;
+    function onMouseMove(e) { if (isDragging) setPos(e.clientX); }
+    function onTouchMove(e) { if (isDragging) { e.preventDefault(); setPos(e.touches[0].clientX); } }
+    function endDrag() {
+      isDragging = false;
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', endDrag);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', endDrag);
+    }
+    function startDrag(e) {
+      e.preventDefault();
+      isDragging = true;
+      document.body.style.userSelect = 'none';
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', endDrag);
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', endDrag);
+      if (e.type === 'touchstart') setPos(e.touches[0].clientX);
+      else if (e.type === 'mousedown') setPos(e.clientX);
+    }
+    divider.addEventListener('mousedown', startDrag);
+    divider.addEventListener('touchstart', startDrag, { passive: false });
+  }
+
+  function setupCompareDrag(container, left, divider) {
+    let isDragging = false;
+    function setWidthFromClientX(clientX) {
+      const rect = container.getBoundingClientRect();
+      const dividerWidth = 4;
+      const minLeft = 50;
+      const minRight = 50;
+      let x = clientX - rect.left;
+      x = Math.max(minLeft, Math.min(x, rect.width - dividerWidth - minRight));
+      left.style.width = x + 'px';
+    }
+    function onMouseMove(e) { if (isDragging) setWidthFromClientX(e.clientX); }
+    function onTouchMove(e) { if (isDragging) { e.preventDefault(); setWidthFromClientX(e.touches[0].clientX); } }
+    function endDrag() {
+      isDragging = false;
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', endDrag);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', endDrag);
+    }
+    function startDrag(e) {
+      e.preventDefault();
+      isDragging = true;
+      document.body.style.userSelect = 'none';
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', endDrag);
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', endDrag);
+      if (e.type === 'touchstart') setWidthFromClientX(e.touches[0].clientX);
+      else if (e.type === 'mousedown') setWidthFromClientX(e.clientX);
+    }
+    divider.addEventListener('mousedown', startDrag);
+    divider.addEventListener('touchstart', startDrag, { passive: false });
+  }
+
+  function renderBlock(block, idx) {
+    switch (block.type) {
+      case 'section': {
+        const section = h('section', { class: 'block-section', id: block.id || slugify(block.title) });
+        section.appendChild(h('h2', { class: 'section-title', textContent: block.title }));
+        if (block.children) {
+          const content = h('div', { class: 'section-content' });
+          renderBlocks(block.children, content);
+          section.appendChild(content);
+        }
+        return section;
+      }
+      case 'heading':
+        return h(`h${block.level || 2}`, { class: 'heading', textContent: block.text });
+      case 'text':
+        return h('p', { class: 'text', textContent: block.text });
+      case 'image': {
+        const fig = h('figure', { class: 'figure' });
+        fig.appendChild(h('img', { src: block.src, alt: block.caption || '' }));
+        if (block.caption) fig.appendChild(h('figcaption', { textContent: block.caption }));
+        return fig;
+      }
+      case 'video': {
+        const fig = h('figure', { class: 'figure' });
+        const video = h('video', { controls: '' });
+        if (block.poster) video.setAttribute('poster', block.poster);
+        video.appendChild(h('source', { src: block.src, type: block.mimeType || 'video/mp4' }));
+        fig.appendChild(video);
+        if (block.speedControl) {
+          const speedControl = h('div', { class: 'speed-control' });
+          speedControl.appendChild(h('label', { textContent: 'Скорость:' }));
+          const speedSelect = h('select');
+          [0.5, 1, 1.5, 2].forEach(s => speedSelect.appendChild(h('option', { value: s, textContent: s + 'x' })));
+          speedSelect.value = '1';
+          speedSelect.addEventListener('change', () => video.playbackRate = parseFloat(speedSelect.value));
+          speedControl.appendChild(speedSelect);
+          fig.appendChild(speedControl);
+        }
+        if (block.caption) fig.appendChild(h('figcaption', { textContent: block.caption }));
+        return fig;
+      }
+      case 'audio': {
+        const fig = h('figure', { class: 'figure' });
+        const audio = h('audio', { controls: '' });
+        audio.appendChild(h('source', { src: block.src, type: block.mimeType || 'audio/mpeg' }));
+        fig.appendChild(audio);
+        if (block.speedControl) {
+          const speedControl = h('div', { class: 'speed-control' });
+          speedControl.appendChild(h('label', { textContent: 'Скорость:' }));
+          const speedSelect = h('select');
+          [0.5, 1, 1.5, 2].forEach(s => speedSelect.appendChild(h('option', { value: s, textContent: s + 'x' })));
+          speedSelect.value = '1';
+          speedSelect.addEventListener('change', () => audio.playbackRate = parseFloat(speedSelect.value));
+          speedControl.appendChild(speedSelect);
+          fig.appendChild(speedControl);
+        }
+        if (block.caption) fig.appendChild(h('figcaption', { textContent: block.caption }));
+        return fig;
+      }
+      case 'list': {
+        const list = h(block.ordered ? 'ol' : 'ul', { class: 'list' });
+        block.items.forEach(item => list.appendChild(h('li', { textContent: item })));
+        return list;
+      }
+      case 'code': {
+        const wrapper = h('div', { class: 'code-block' });
+        wrapper.appendChild(h('div', { class: 'code-header', textContent: block.language || 'code' }));
+        const pre = h('pre');
+        pre.appendChild(h('code', { textContent: block.code }));
+        wrapper.appendChild(pre);
+        return wrapper;
+      }
+      case 'callout': {
+        const callout = h('div', { class: `callout callout-${block.variant || 'info'}` });
+        if (block.title) callout.appendChild(h('h4', { textContent: block.title }));
+        if (block.children) {
+          const content = h('div');
+          renderBlocks(block.children, content);
+          callout.appendChild(content);
+        } else if (block.text) {
+          callout.appendChild(h('p', { textContent: block.text }));
+        }
+        return callout;
+      }
+      case 'tabs': {
+        const tabs = h('div', { class: 'tabs' });
+        const btnContainer = h('div', { class: 'tab-buttons' });
+        const panelContainer = h('div', { class: 'tab-panels' });
+        block.tabs.forEach((tab, tabIdx) => {
+          const btn = h('button', { class: 'tab-button' + (tabIdx === 0 ? ' active' : ''), textContent: tab.label, type: 'button' });
+          const panel = h('div', { class: 'tab-panel' + (tabIdx === 0 ? ' active' : '') });
+          renderBlocks(tab.content || [], panel);
+          btn.addEventListener('click', () => {
+            btnContainer.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            panelContainer.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            panel.classList.add('active');
+          });
+          btnContainer.appendChild(btn);
+          panelContainer.appendChild(panel);
+        });
+        tabs.appendChild(btnContainer);
+        tabs.appendChild(panelContainer);
+        return tabs;
+      }
+      case 'accordion': {
+        const accordion = h('div', { class: 'accordion' });
+        block.items.forEach((item) => {
+          const itemEl = h('div', { class: 'accordion-item' });
+          const header = h('button', { class: 'accordion-header', type: 'button' });
+          header.appendChild(h('span', { textContent: item.title }));
+          header.appendChild(h('span', { class: 'icon', textContent: '+' }));
+          const body = h('div', { class: 'accordion-body' });
+          const inner = h('div', { class: 'accordion-body-inner' });
+          renderBlocks(item.content || [], inner);
+          body.appendChild(inner);
+          header.addEventListener('click', () => {
+            const isOpen = itemEl.classList.contains('open');
+            accordion.querySelectorAll('.accordion-item').forEach(el => {
+              el.classList.remove('open');
+              el.querySelector('.accordion-body').style.maxHeight = '0';
+            });
+            if (!isOpen) {
+              itemEl.classList.add('open');
+              body.style.maxHeight = body.scrollHeight + 'px';
+            }
+          });
+          itemEl.appendChild(header);
+          itemEl.appendChild(body);
+          accordion.appendChild(itemEl);
+        });
+        return accordion;
+      }
+      case 'quiz': {
+        const quiz = h('div', { class: 'quiz' });
+        quiz.appendChild(h('p', { class: 'question', textContent: block.question }));
+        const optionsContainer = h('div', { class: 'quiz-options' });
+        const radioName = `quiz-${idx}-${Math.random().toString(36).substring(2, 11)}`;
+        let selected = null;
+        block.options.forEach((opt, optIdx) => {
+          const label = h('label', { class: 'quiz-option' });
+          const input = h('input', { type: 'radio', name: radioName, value: optIdx });
+          input.addEventListener('change', () => { selected = optIdx; });
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(opt));
+          optionsContainer.appendChild(label);
+        });
+        quiz.appendChild(optionsContainer);
+        const button = h('button', { class: 'quiz-button', textContent: 'Проверить', type: 'button' });
+        const feedback = h('div', { class: 'quiz-feedback' });
+        button.addEventListener('click', () => {
+          if (selected === null) { feedback.textContent = 'Выберите вариант!'; feedback.style.color = 'var(--yellow)'; return; }
+          const correct = block.correct;
+          const labels = optionsContainer.querySelectorAll('.quiz-option');
+          labels.forEach((label, i) => {
+            label.classList.remove('correct', 'wrong');
+            label.querySelector('input').disabled = true;
+            if (i === correct) label.classList.add('correct');
+            else if (i === selected) label.classList.add('wrong');
+          });
+          feedback.textContent = selected === correct ? 'Верно! ' + (block.explanation || '') : 'Неверно. ' + (block.explanation || '');
+          feedback.style.color = selected === correct ? 'var(--green)' : 'var(--pink)';
+          button.disabled = true;
+        });
+        quiz.appendChild(button);
+        quiz.appendChild(feedback);
+        return quiz;
+      }
+      case 'multi-quiz': {
+        const container = h('div', { class: 'quiz multi-quiz' });
+        container.appendChild(h('p', { class: 'question', textContent: block.question }));
+        const optionsContainer = h('div', { class: 'multi-quiz-options' });
+        block.options.forEach((opt, i) => {
+          const label = h('label', { class: 'option' });
+          const input = h('input', { type: 'checkbox', value: i });
+          label.appendChild(input);
+          label.appendChild(document.createTextNode(opt));
+          optionsContainer.appendChild(label);
+        });
+        container.appendChild(optionsContainer);
+        const button = h('button', { class: 'quiz-button', textContent: 'Проверить', type: 'button' });
+        const feedback = h('div', { class: 'feedback' });
+        button.addEventListener('click', () => {
+          const selected = [];
+          optionsContainer.querySelectorAll('input:checked').forEach(inp => selected.push(parseInt(inp.value)));
+          const correct = block.correct;
+          const isCorrect = selected.length === correct.length && selected.every(v => correct.includes(v));
+          feedback.textContent = isCorrect ? 'Верно! ' + (block.explanation || '') : 'Неверно. ' + (block.explanation || '');
+          feedback.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
+          optionsContainer.querySelectorAll('input').forEach(inp => inp.disabled = true);
+          button.disabled = true;
+        });
+        container.appendChild(button);
+        container.appendChild(feedback);
+        return container;
+      }
+      case 'match': {
+        const container = h('div', { class: 'match-container' });
+        if (block.instruction) container.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        const rightOptions = [...new Set(block.pairs.map(p => p.right))];
+        const selects = [];
+        block.pairs.forEach((pair, i) => {
+          const item = h('div', { class: 'match-item' });
+          item.appendChild(h('span', { class: 'term', textContent: pair.left + ' →' }));
+          const select = h('select');
+          select.appendChild(h('option', { value: '', textContent: 'Выберите...' }));
+          rightOptions.forEach(opt => select.appendChild(h('option', { value: opt, textContent: opt })));
+          item.appendChild(select);
+          container.appendChild(item);
+          selects.push({ select, correct: pair.right });
+        });
+        const checkBtn = h('button', { class: 'match-check-btn', textContent: 'Проверить', type: 'button' });
+        const result = h('div', { class: 'match-result' });
+        checkBtn.addEventListener('click', () => {
+          let allCorrect = true;
+          selects.forEach(({ select, correct }) => {
+            if (select.value !== correct) { allCorrect = false; select.style.borderColor = 'var(--pink)'; }
+            else select.style.borderColor = 'var(--green)';
+          });
+          result.textContent = allCorrect ? 'Все верно!' : 'Есть ошибки.';
+          result.style.color = allCorrect ? 'var(--green)' : 'var(--pink)';
+        });
+        container.appendChild(checkBtn);
+        container.appendChild(result);
+        return container;
+      }
+      case 'sort': {
+        const container = h('div', { class: 'sort-container' });
+        if (block.instruction) container.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        const list = h('ul', { class: 'sort-list' });
+        let items = [...block.items];
+        const renderList = () => {
+          list.innerHTML = '';
+          items.forEach((item, i) => {
+            const li = h('li', { class: 'sort-item' });
+            li.appendChild(h('span', { textContent: item }));
+            const controls = h('div', { class: 'sort-controls' });
+            if (i > 0) controls.appendChild(h('button', { class: 'sort-btn', textContent: '↑', type: 'button', onclick: () => { [items[i-1], items[i]] = [items[i], items[i-1]]; renderList(); }}));
+            if (i < items.length - 1) controls.appendChild(h('button', { class: 'sort-btn', textContent: '↓', type: 'button', onclick: () => { [items[i], items[i+1]] = [items[i+1], items[i]]; renderList(); }}));
+            li.appendChild(controls);
+            list.appendChild(li);
+          });
+        };
+        renderList();
+        container.appendChild(list);
+        const checkBtn = h('button', { class: 'sort-check-btn', textContent: 'Проверить', type: 'button' });
+        const result = h('div', { class: 'match-result' });
+        checkBtn.addEventListener('click', () => {
+          const isCorrect = JSON.stringify(items) === JSON.stringify(block.correctOrder);
+          result.textContent = isCorrect ? 'Правильный порядок!' : 'Неправильно.';
+          result.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
+        });
+        container.appendChild(checkBtn);
+        container.appendChild(result);
+        return container;
+      }
+      case 'fill-blank': {
+        const container = h('div', { class: 'fill-blank' });
+        if (block.instruction) container.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        const regex = /\{\{(\d+)\}\}/g;
+        const parts = [];
+        let lastIndex = 0, match;
+        const inputs = {};
+        while ((match = regex.exec(block.text)) !== null) {
+          if (match.index > lastIndex) parts.push(block.text.substring(lastIndex, match.index));
+          const key = match[1];
+          const input = h('input', { type: 'text', class: 'fill-blank-input', placeholder: key });
+          inputs[key] = input;
+          parts.push(input);
+          lastIndex = regex.lastIndex;
+        }
+        if (lastIndex < block.text.length) parts.push(block.text.substring(lastIndex));
+        parts.forEach(part => {
+          if (typeof part === 'string') {
+            container.appendChild(document.createTextNode(part));
+          } else {
+            container.appendChild(part);
+          }
+        });
+        const checkBtn = h('button', { class: 'fill-blank-check-btn', textContent: 'Проверить', type: 'button' });
+        const feedback = h('div', { class: 'fill-blank-feedback' });
+        checkBtn.addEventListener('click', () => {
+          let allCorrect = true;
+          for (const key in block.answers) {
+            if (inputs[key].value.trim().toLowerCase() !== block.answers[key].toLowerCase()) { allCorrect = false; inputs[key].style.borderColor = 'var(--pink)'; }
+            else inputs[key].style.borderColor = 'var(--green)';
+          }
+          feedback.textContent = allCorrect ? 'Верно!' : 'Есть ошибки.';
+          feedback.style.color = allCorrect ? 'var(--green)' : 'var(--pink)';
+        });
+        container.appendChild(checkBtn);
+        container.appendChild(feedback);
+        return container;
+      }
+      case 'flip-card': {
+        const card = h('div', { class: 'flip-card' });
+        const inner = h('div', { class: 'flip-card-inner' });
+        const front = h('div', { class: 'flip-card-front' });
+        renderContentOrText(block.front, front);
+        inner.appendChild(front);
+        const back = h('div', { class: 'flip-card-back' });
+        renderContentOrText(block.back, back);
+        inner.appendChild(back);
+        card.appendChild(inner);
+        card.addEventListener('click', () => card.classList.toggle('flipped'));
+        return card;
+      }
+      case 'poll': {
+        const container = h('div', { class: 'poll' });
+        container.appendChild(h('p', { class: 'question', textContent: block.question }));
+        const optionsContainer = h('div', { class: 'poll-options' });
+        const resultsContainer = h('div', { class: 'poll-results' });
+        let selected = null;
+        block.options.forEach((opt, i) => {
+          const optionEl = h('div', { class: 'poll-option', textContent: opt });
+          optionEl.addEventListener('click', () => {
+            selected = i;
+            optionsContainer.querySelectorAll('.poll-option').forEach(el => el.classList.remove('selected'));
+            optionEl.classList.add('selected');
+            resultsContainer.innerHTML = '';
+            block.options.forEach((o, idx) => {
+              const percent = idx === i ? 60 : Math.floor(Math.random() * 30 + 5);
+              const bar = h('div', { class: 'poll-bar' });
+              bar.appendChild(h('div', { class: 'poll-bar-fill', style: `width: ${percent}%` }));
+              resultsContainer.appendChild(h('div', { textContent: `${o}: ${percent}%` }));
+              resultsContainer.appendChild(bar);
+            });
+            resultsContainer.style.animation = 'fadeIn 0.5s ease';
+          });
+          optionsContainer.appendChild(optionEl);
+        });
+        container.appendChild(optionsContainer);
+        container.appendChild(resultsContainer);
+        return container;
+      }
+      case 'compare': {
+        const container = h('div', { class: 'compare-container' });
+        const left = h('div', { class: 'compare-left' });
+        if (block.left) renderBlocks(block.left, left);
+        container.appendChild(left);
+        const divider = h('div', { class: 'compare-divider' });
+        container.appendChild(divider);
+        const right = h('div', { class: 'compare-right' });
+        if (block.right) renderBlocks(block.right, right);
+        container.appendChild(right);
+        setupCompareDrag(container, left, divider);
+        return container;
+      }
+      case 'slider': {
+        const container = h('div', { class: 'slider-container' });
+        const labelRow = h('div', { class: 'slider-label' });
+        labelRow.appendChild(h('span', { textContent: block.label || 'Значение:' }));
+        const valueDisplay = h('span', { class: 'slider-value', textContent: block.default || 0 });
+        labelRow.appendChild(valueDisplay);
+        container.appendChild(labelRow);
+        const slider = h('input', { type: 'range', class: 'slider-input', min: block.min || 0, max: block.max || 100, value: block.default || 0 });
+        slider.addEventListener('input', () => valueDisplay.textContent = slider.value);
+        container.appendChild(slider);
+        return container;
+      }
+      case 'timeline': {
+        const timeline = h('div', { class: 'timeline' });
+        block.items.forEach(item => {
+          const itemEl = h('div', { class: 'timeline-item' });
+          itemEl.appendChild(h('div', { class: 'timeline-title', textContent: item.title }));
+          itemEl.appendChild(h('div', { class: 'timeline-desc', textContent: item.description }));
+          timeline.appendChild(itemEl);
+        });
+        return timeline;
+      }
+      case 'steps': {
+        const container = h('div', { class: 'steps-container' });
+        const header = h('div', { class: 'steps-header' });
+        const contentContainer = h('div', { class: 'step-content' });
+        let currentStep = 0;
+        const renderStep = () => {
+          header.innerHTML = '';
+          block.steps.forEach((step, i) => {
+            const btn = h('button', { class: 'step-btn' + (i === currentStep ? ' active' : ''), textContent: step.title, type: 'button' });
+            btn.addEventListener('click', () => { currentStep = i; renderStep(); });
+            header.appendChild(btn);
+          });
+          contentContainer.innerHTML = '';
+          renderBlocks(block.steps[currentStep].content || [], contentContainer);
+        };
+        renderStep();
+        container.appendChild(header);
+        container.appendChild(contentContainer);
+        return container;
+      }
+      case 'embed': {
+        const wrapper = h('div', { class: 'embed' });
+        wrapper.appendChild(h('iframe', { src: block.src, allowfullscreen: '' }));
+        return wrapper;
+      }
+      case 'columns': {
+        const cols = h('div', { class: 'columns' });
+        block.columns.forEach(col => {
+          const colDiv = h('div', { class: 'column' });
+          renderBlocks(col.blocks || [], colDiv);
+          cols.appendChild(colDiv);
+        });
+        return cols;
+      }
+      case 'carousel': {
+        const carousel = h('div', { class: 'carousel' });
+        const track = h('div', { class: 'carousel-track' });
+        const slides = block.items.map(item => {
+          const slide = h('div', { class: 'carousel-slide' });
+          if (item.content) {
+            renderBlocks(item.content, slide);
+          } else if (item.image) {
+            slide.appendChild(h('img', { src: item.image, alt: item.caption || '' }));
+            if (item.caption) slide.appendChild(h('div', { class: 'figure', textContent: item.caption }));
+          }
+          return slide;
+        });
+        slides.forEach(s => track.appendChild(s));
+        carousel.appendChild(track);
+        let current = 0;
+        const update = () => {
+          track.style.transform = `translateX(-${current * 100}%)`;
+          dots.forEach((dot, i) => dot.classList.toggle('active', i === current));
+        };
+        carousel.appendChild(h('button', { class: 'carousel-btn prev', textContent: '‹', type: 'button', onclick: () => { current = (current - 1 + slides.length) % slides.length; update(); }}));
+        carousel.appendChild(h('button', { class: 'carousel-btn next', textContent: '›', type: 'button', onclick: () => { current = (current + 1) % slides.length; update(); }}));
+        const dotsContainer = h('div', { class: 'carousel-dots' });
+        const dots = slides.map((_, i) => h('span', { class: 'carousel-dot' + (i === 0 ? ' active' : ''), onclick: () => { current = i; update(); }}));
+        dots.forEach(d => dotsContainer.appendChild(d));
+        carousel.appendChild(dotsContainer);
+        update();
+        return carousel;
+      }
+      case 'before-after': {
+        const container = h('div', { class: 'before-after' });
+        container.appendChild(h('img', { src: block.before, alt: 'before' }));
+        const after = h('div', { class: 'after' });
+        after.appendChild(h('img', { src: block.after, alt: 'after' }));
+        container.appendChild(after);
+        const divider = h('div', { class: 'divider' });
+        container.appendChild(divider);
+
+        const setPos = (x) => {
+          const rect = container.getBoundingClientRect();
+          const pos = Math.max(0, Math.min(x - rect.left, rect.width));
+          after.style.width = pos + 'px';
+          divider.style.left = pos + 'px';
+        };
+
+        setupDrag(divider, container, setPos);
+        return container;
+      }
+      case 'table': {
+        const container = h('div', { class: 'table-container' });
+        const table = h('table');
+        const thead = h('thead');
+        const tr = h('tr');
+        block.headers.forEach(hd => tr.appendChild(h('th', { textContent: hd })));
+        thead.appendChild(tr);
+        table.appendChild(thead);
+        const tbody = h('tbody');
+        block.rows.forEach(row => {
+          const tr2 = h('tr');
+          row.forEach(cell => tr2.appendChild(h('td', { textContent: cell })));
+          tbody.appendChild(tr2);
+        });
+        table.appendChild(tbody);
+        container.appendChild(table);
+        return container;
+      }
+      case 'chart': {
+        const container = h('div', { class: 'chart-block' });
+        if (block.title) container.appendChild(h('h4', { textContent: block.title, class: 'heading' }));
+        const chart = h('div', { class: 'chart-container' });
+        const max = Math.max(...block.values);
+        block.values.forEach((val, i) => {
+          const barWrap = h('div', { style: 'display: flex; flex-direction: column; align-items: center; flex: 1;' });
+          const bar = h('div', { class: 'chart-bar', style: `height: ${(val / max) * 150}px;` });
+          bar.appendChild(h('span', { textContent: val + '%' }));
+          barWrap.appendChild(bar);
+          barWrap.appendChild(h('div', { class: 'chart-bar-label', textContent: block.labels[i] }));
+          chart.appendChild(barWrap);
+        });
+        container.appendChild(chart);
+        return container;
+      }
+      case 'pie': {
+        const container = h('div', { class: 'pie-block' });
+        if (block.title) container.appendChild(h('h4', { textContent: block.title, class: 'heading' }));
+        const total = block.segments.reduce((sum, seg) => sum + seg.value, 0);
+        let cumulative = 0;
+        const gradientStops = block.segments.map(seg => {
+          const start = (cumulative / total) * 100;
+          cumulative += seg.value;
+          const end = (cumulative / total) * 100;
+          return `${seg.color} ${start}% ${end}%`;
+        }).join(', ');
+        const pie = h('div', { class: 'pie-chart', style: `background: conic-gradient(${gradientStops});` });
+        container.appendChild(pie);
+        const legend = h('div', { class: 'pie-legend' });
+        block.segments.forEach(seg => {
+          const item = h('div', { class: 'pie-legend-item' });
+          item.appendChild(h('div', { class: 'pie-legend-color', style: `background: ${seg.color};` }));
+          item.appendChild(h('span', { textContent: `${seg.label} (${seg.value}%)` }));
+          legend.appendChild(item);
+        });
+        container.appendChild(legend);
+        return container;
+      }
+      case 'modal': {
+        const wrapper = h('div', { class: 'modal-block' });
+        const btn = h('button', { class: 'modal-open-btn', textContent: block.buttonText || 'Открыть', type: 'button' });
+        wrapper.appendChild(btn);
+        btn.addEventListener('click', () => {
+          const overlay = h('div', { class: 'modal-overlay' });
+          const content = h('div', { class: 'modal-content' });
+          const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
+          closeBtn.addEventListener('click', () => overlay.remove());
+          content.appendChild(closeBtn);
+          if (block.content) renderBlocks(block.content, content);
+          else if (block.text) content.appendChild(h('p', { textContent: block.text }));
+          overlay.appendChild(content);
+          document.body.appendChild(overlay);
+          postProcess(content);
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+          });
+        });
+        return wrapper;
+      }
+      case 'tooltip': {
+        const tooltip = h('span', { class: 'tooltip', textContent: block.text });
+        const tip = h('span', { class: 'tooltip-text', textContent: block.tooltipText });
+        tooltip.appendChild(tip);
+        return tooltip;
+      }
+      case 'mermaid': {
+        const container = h('div', { class: 'mermaid', textContent: block.code });
+        return container;
+      }
+      case 'svg': {
+        const container = h('div', { class: 'svg-container' });
+        const wrapper = h('div', { class: 'svg-wrapper' });
+        wrapper.innerHTML = block.code;
+        container.appendChild(wrapper);
+        if (block.caption) {
+          container.appendChild(h('div', { class: 'svg-caption', textContent: block.caption }));
+        }
+        return container;
+      }
+      case 'html': {
+        const container = h('div', { class: 'html-block' });
+        container.innerHTML = block.code;
+        return container;
+      }
+      case 'drag-sort': {
+        const container = h('div', { class: 'drag-sort' });
+        if (block.instruction) container.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        const list = h('ul', { class: 'drag-sort-list' });
+        let items = [...block.items];
+        const renderList = () => {
+          list.innerHTML = '';
+          items.forEach((item, index) => {
+            const li = h('li', { class: 'drag-sort-item', draggable: 'true', textContent: item, dataset: { index: index } });
+            li.addEventListener('dragstart', (e) => {
+              li.classList.add('dragging');
+              e.dataTransfer.setData('text/plain', index.toString());
+            });
+            li.addEventListener('dragend', () => li.classList.remove('dragging'));
+            li.addEventListener('dragover', (e) => e.preventDefault());
+            li.addEventListener('drop', (e) => {
+              e.preventDefault();
+              const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+              const toIndex = index;
+              if (fromIndex !== toIndex) {
+                const [moved] = items.splice(fromIndex, 1);
+                items.splice(toIndex, 0, moved);
+                renderList();
+              }
+            });
+            list.appendChild(li);
+          });
+        };
+        renderList();
+        container.appendChild(list);
+        const checkBtn = h('button', { class: 'sort-check-btn', textContent: 'Проверить', type: 'button' });
+        const result = h('div', { class: 'match-result' });
+        checkBtn.addEventListener('click', () => {
+          const isCorrect = JSON.stringify(items) === JSON.stringify(block.correctOrder);
+          result.textContent = isCorrect ? 'Правильный порядок!' : 'Неправильно.';
+          result.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
+        });
+        container.appendChild(checkBtn);
+        container.appendChild(result);
+        return container;
+      }
+      case 'progress-tracker': {
+        const container = h('div', { class: 'progress-tracker' });
+        block.tasks.forEach(task => {
+          const step = h('div', { class: 'progress-step', textContent: task.label });
+          step.addEventListener('click', () => step.classList.toggle('done'));
+          container.appendChild(step);
+        });
+        return container;
+      }
+      default:
+        console.warn('Unknown block type:', block.type);
+        return null;
+    }
+  }
+
+  // ---------- ИНИЦИАЛИЗАЦИЯ ----------
+  async function init() {
+    await openDB().catch(e => console.warn('IndexedDB не доступна', e));
+    renderInitialState();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
