@@ -266,9 +266,9 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .plist-item small{color:var(--mut);font-size:9.5px}
 .plist-item .grow{flex:1;min-width:0}
 .plist-item .btn{min-height:40px;padding:8px 12px}
-.radio-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-.radio-row label{display:flex;gap:7px;align-items:center;cursor:pointer;font-size:12px;text-transform:none;color:var(--txt);min-height:34px}
-.radio-row input{accent-color:var(--mag);width:17px;height:17px}
+.dub-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px;border:1px dashed rgba(255,47,214,.4);
+  border-radius:10px;background:rgba(255,47,214,.05)}
+.dub-box .tr-time{text-align:left;min-width:60px}
 .help-li{margin:0 0 9px;padding-left:2px;line-height:1.55;color:#a9bce0}
 .help-li b{color:var(--cyan)}
 
@@ -433,19 +433,24 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <option value="wav">WAV (без сжатия)</option>
     </select>
   </div>
-  <div class="frow"><label>Источник</label>
-    <div class="radio-row">
-      <label><input type="radio" name="exp-src" id="exp-src-rec"> <span id="exp-rec-lbl">Из записи</span></label>
-      <label><input type="radio" name="exp-src" id="exp-src-live" checked> Вживую (сек)</label>
-      <input type="number" id="exp-dur" value="5" min="1" max="60" style="width:70px;min-height:40px">
-      <label><input type="radio" name="exp-src" id="exp-src-file"> Файл (офлайн)</label>
+  <div class="frow">
+    <label>Записать текущий обработанный звук (сек)</label>
+    <div style="display:flex;gap:8px">
+      <input type="number" id="exp-dur" value="5" min="1" max="60" style="flex:1">
+      <button class="btn accent" id="exp-run" style="min-width:130px">🔴 Записать</button>
+    </div>
+  </div>
+  <div class="frow" id="exp-dub-row" style="display:none">
+    <label>Последний дубль (● REC)</label>
+    <div class="dub-box">
+      <span class="tr-time" id="exp-dub-info">0:00</span>
+      <button class="btn" id="exp-dub-run">⬇ Экспортировать дубль</button>
     </div>
   </div>
   <div class="frow"><label>Имя файла</label><input type="text" id="exp-name" value="neon-voice"></div>
   <div class="progress"><i id="exp-bar"></i></div>
-  <div class="status-line" id="exp-status">Запись делается кнопкой ● REC на панели транспорта. При первом экспорте в OGG загружается кодек (~30 МБ).</div>
+  <div class="status-line" id="exp-status">Записывается звук, который прямо сейчас проходит через цепь фильтров (микрофон или файл — что играет на холсте).</div>
   <div class="m-actions">
-    <button class="btn accent2" id="exp-run">▶ Сформировать</button>
     <a id="exp-link" style="display:none;margin-left:auto;color:var(--lime);font-size:12px" download>⬇ Скачать ещё раз</a>
   </div>
 </div></div>
@@ -454,13 +459,13 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <h3><span>ℹ СПРАВКА</span><button class="m-close" data-close>✕</button></h3>
   <p class="help-li"><b>Транспорт</b> (панель на холсте): ⏻ — питание аудио-движка; 🎙/🎵 — выбор источника.</p>
   <p class="help-li"><b>Файл</b> — в режиме 🎵: 📂 загрузка, ▶/⏸ воспроизведение через цепь фильтров, ⏹ стоп, ⟳ зацикливание.</p>
-  <p class="help-li"><b>Запись</b> — в режиме 🎙 кнопка ● REC пишет обработанный сигнал с микрофона. Дубль сохраняется и доступен в «Экспорт → Из записи».</p>
-  <p class="help-li"><b>Визуализатор</b> — спектр и уровни L/R выходного сигнала внизу холста. Если сигнала нет — подсказка «НЕТ СИГНАЛА».</p>
+  <p class="help-li"><b>Запись</b> — в режиме 🎙 кнопка ● REC пишет обработанный сигнал с микрофона до остановки; дубль можно экспортировать из окна «Экспорт».</p>
+  <p class="help-li"><b>Экспорт</b> — всегда пишет текущий обработанный звук холста: что сейчас звучит (микрофон или играющий файл), то и попадает в MP3/OGG/WAV.</p>
+  <p class="help-li"><b>Визуализатор</b> — спектр и уровни L/R выходного сигнала внизу холста.</p>
   <p class="help-li"><b>Палитра</b> (кнопка «＋» внизу слева на мобильных) — вкладки «Модули» и «Пресеты».</p>
   <p class="help-li"><b>Соединения</b> — тяните от правого порта к левому. Клик по проводу выделяет его (✕ — удалить).</p>
   <p class="help-li"><b>Параллельные цепочки</b> — разветвляйте выход и подключайте до 4 веток к одному входу: сигналы суммируются.</p>
-  <p class="help-li"><b>Холст</b> — колесо/пинч для масштаба, перетаскивание фона для перемещения.</p>
-  <p class="help-li"><b>Проекты</b> хранятся локально в IndexedDB. Экспорт: MP3 / OGG / WAV, полностью на клиенте. Наденьте наушники при работе с микрофоном!</p>
+  <p class="help-li"><b>Проекты</b> хранятся локально в IndexedDB. Наденьте наушники при работе с микрофоном!</p>
 </div></div>
 
 <div id="toasts"></div>
@@ -929,6 +934,15 @@ const audioObjs = new Map();
 const engine = { ctx: null, running: false, micStream: null, fileBuffer: null, master: null,
                  analyser: null, anL: null, anR: null, collect: false, chunks: null };
 
+/* «живое» окружение для аудио-узлов: всегда видит актуальное состояние движка,
+   даже если файл загрузили после старта */
+const liveEnv = {
+  get fileBuffer() { return engine.fileBuffer; },
+  get micStream() { return engine.micStream; },
+  get master() { return engine.master; },
+  offline: false
+};
+
 const recorder = { active: false, start: 0, timer: null };
 let lastRecording = null; // {channels, sampleRate, duration}
 
@@ -1044,8 +1058,7 @@ function inputAudio(ctx, p, env) {
 function outputAudio(ctx, p, env) {
   const inN = ctx.createGain(), vol = ctx.createGain(); vol.gain.value = p.volume;
   inN.connect(vol);
-  /* весь выход идёт через мастер-шину: она подключена к динамикам,
-     анализаторам спектра/уровней и рекордеру */
+  /* весь выход идёт через мастер-шину: динамики + анализаторы + рекордер */
   vol.connect(env.master ? env.master : ctx.destination);
   return {
     in: inN, out: null,
@@ -1073,8 +1086,7 @@ function rebuildGraph() {
 }
 function buildAllAudio() {
   disposeAllAudio();
-  const env = { fileBuffer: engine.fileBuffer, micStream: engine.micStream, master: engine.master, offline: false };
-  for (const n of state.nodes) audioObjs.set(n.id, makeNodeAudio(engine.ctx, n, env));
+  for (const n of state.nodes) audioObjs.set(n.id, makeNodeAudio(engine.ctx, n, liveEnv));
   rebuildGraph();
 }
 
@@ -1084,13 +1096,11 @@ async function setupMasterBus(ctx) {
 
   engine.master = ctx.createGain(); engine.master.gain.value = 1;
 
-  /* анализатор спектра */
   engine.analyser = ctx.createAnalyser();
   engine.analyser.fftSize = 2048;
   engine.analyser.smoothingTimeConstant = 0.82;
   engine.master.connect(engine.analyser);
 
-  /* уровни по каналам */
   engine.anL = ctx.createAnalyser(); engine.anL.fftSize = 1024;
   engine.anR = ctx.createAnalyser(); engine.anR.fftSize = 1024;
   const split = ctx.createChannelSplitter(2);
@@ -1100,7 +1110,6 @@ async function setupMasterBus(ctx) {
 
   spData = null; tdL = null; tdR = null;
 
-  /* рекордер (захват PCM для экспорта/записи) */
   const silent = ctx.createGain(); silent.gain.value = 0; silent.connect(ctx.destination);
   const WORKLET = "class NVCapture extends AudioWorkletProcessor{process(i){const c=i[0];if(c&&c.length){const cp=c.map(x=>new Float32Array(x));this.port.postMessage(cp,cp.map(x=>x.buffer));}return true;}}registerProcessor('nv-capture',NVCapture);";
   try {
@@ -1123,7 +1132,6 @@ async function setupMasterBus(ctx) {
     engine._capture = sp;
   }
 
-  /* финальное подключение к динамикам */
   engine.master.connect(ctx.destination);
 }
 
@@ -1196,7 +1204,7 @@ function stopRec() {
   if (engine.ctx && engine.chunks && engine.chunks.length) {
     const pcm = mergeChunks(engine.chunks, engine.ctx.sampleRate);
     lastRecording = { channels: pcm.channels, sampleRate: pcm.sampleRate, duration: pcm.channels[0].length / pcm.sampleRate };
-    toast('Дубль ' + fmtT(lastRecording.duration) + ' сохранён — доступен в экспорте', 'ok');
+    toast('Дубль ' + fmtT(lastRecording.duration) + ' сохранён — экспорт в окне «Экспорт»', 'ok');
   }
   updateTransportUI();
 }
@@ -1785,23 +1793,45 @@ byId('np-create').onclick = async () => {
 };
 byId('np-save').onclick = async () => { await saveCurrent(); renderProjList(); };
 
-/* ============================================================ file input */
+/* ============================================================ file input
+   важно: буфер декодируется сразу и виден плееру через «живой» liveEnv,
+   перезапуск движка не требуется */
 byId('file-input').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
   if (f.size > 25 * 1024 * 1024) { toast('Файл больше 25 МБ', 'err'); return; }
   try {
-    state.fileRaw = await f.arrayBuffer();
+    const data = await f.arrayBuffer();
+    state.fileRaw = data;
     state.fileName = f.name;
     engine.fileBuffer = null;
-    if (engine.ctx) { try { engine.fileBuffer = await engine.ctx.decodeAudioData(state.fileRaw.slice(0)); } catch (err) {} }
+
+    /* если движок запущен — декодируем в его контексте и сохраняем состояние плеера */
+    let wasPlaying = false;
+    const inp = inputNode();
+    const a = inp ? audioObjs.get(inp.id) : null;
+    if (a && a.player) wasPlaying = a.player.playing;
+
+    if (engine.ctx) {
+      try { engine.fileBuffer = await engine.ctx.decodeAudioData(data.slice(0)); }
+      catch (err) { toast('Не удалось декодировать аудио', 'err'); }
+    }
+
     setSource('file');
+
+    /* если что-то играло — продолжаем играть новый файл */
+    const a2 = inp ? audioObjs.get(inp.id) : null;
+    if (a2 && a2.player && a2.player.duration) {
+      if (wasPlaying) a2.player.play();
+      byId('tr-time').textContent = '0:00 / ' + fmtT(a2.player.duration);
+    }
     dirty();
-    toast('Файл загружен: ' + f.name, 'ok');
+    toast('Файл загружен: ' + f.name + (engine.fileBuffer ? ' (' + fmtT(engine.fileBuffer.duration) + ')' : ''), 'ok');
   } catch (err) { toast('Не удалось прочитать файл', 'err'); }
 });
 
-/* ============================================================ export */
+/* ============================================================ export
+   всегда пишем ТЕКУЩИЙ обработанный звук холста (мастер-шину) */
 function pcmToWavBytes(chs, sr) {
   const nCh = chs.length, len = chs[0].length, dataSize = len * nCh * 2;
   const buf = new ArrayBuffer(44 + dataSize), dv = new DataView(buf);
@@ -1884,6 +1914,15 @@ async function encodeOGG(pcm) {
   return new Blob([data], { type: 'audio/ogg' });
 }
 
+async function encodePcm(pcm, fmt) {
+  if (fmt === 'wav') return { blob: new Blob([pcmToWavBytes(pcm.channels, pcm.sampleRate)], { type: 'audio/wav' }), ext: 'wav' };
+  if (fmt === 'mp3') {
+    if (!window.lamejs) throw new Error('библиотека lamejs не загрузилась');
+    return { blob: encodeMP3(pcm), ext: 'mp3' };
+  }
+  return { blob: await encodeOGG(pcm), ext: 'ogg' };
+}
+
 function setExportProgress(pct, text) {
   byId('exp-bar').style.width = clamp(pct, 0, 100) + '%';
   if (text) byId('exp-status').textContent = text;
@@ -1903,7 +1942,7 @@ function captureLive(sec) {
     const t0 = performance.now();
     const iv = setInterval(() => {
       const el = (performance.now() - t0) / (sec * 1000);
-      setExportProgress(6 + el * 58, '🔴 Запись… ' + Math.min(sec, (performance.now() - t0) / 1000).toFixed(1) + ' c');
+      setExportProgress(6 + el * 58, '🔴 Пишем текущий обработанный звук… ' + Math.min(sec, (performance.now() - t0) / 1000).toFixed(1) + ' c');
       if (performance.now() - t0 >= sec * 1000) {
         clearInterval(iv); engine.collect = false;
         res(mergeChunks(engine.chunks, engine.ctx.sampleRate));
@@ -1911,55 +1950,24 @@ function captureLive(sec) {
     }, 120);
   });
 }
-async function renderOfflineFile() {
-  const probe = new OfflineAudioContext(1, 8, 44100);
-  const buf = await probe.decodeAudioData(state.fileRaw.slice(0));
-  const sr = buf.sampleRate, tail = 3;
-  const octx = new OfflineAudioContext(2, Math.ceil((buf.duration + tail) * sr), sr);
-  const env = { fileBuffer: buf, micStream: null, master: null, offline: true };
-  const objs = new Map();
-  for (const n of state.nodes) objs.set(n.id, makeNodeAudio(octx, n, env));
-  for (const e of state.edges) {
-    const s = objs.get(e.from), t = objs.get(e.to);
-    if (s && t && s.out && t.in) s.out.connect(t.in);
-  }
-  const rendered = await octx.startRendering();
-  const chs = [];
-  for (let c = 0; c < rendered.numberOfChannels; c++) chs.push(rendered.getChannelData(c).slice(0));
-  objs.forEach(a => { try { a.dispose && a.dispose(); } catch (e) {} });
-  return { channels: chs, sampleRate: sr };
-}
-async function runExport() {
+
+/* запись текущего звука холста */
+async function runExportLive() {
   const fmt = byId('exp-format').value;
-  const src = byId('exp-src-file').checked && state.fileRaw ? 'file'
-            : byId('exp-src-rec').checked && lastRecording ? 'rec' : 'live';
   const dur = clamp(parseFloat(byId('exp-dur').value) || 5, 1, 60);
   const name = (byId('exp-name').value || 'voice').trim().replace(/[\\/:*?"<>|]+/g, '_');
   const runBtn = byId('exp-run'); runBtn.disabled = true;
   byId('exp-link').style.display = 'none';
   setExportProgress(2, 'Подготовка…');
   try {
-    let pcm, autoStarted = false;
-    if (src === 'rec') {
-      setExportProgress(10, 'Берём сохранённый дубль…');
-      pcm = { channels: lastRecording.channels, sampleRate: lastRecording.sampleRate };
-    } else if (src === 'file') {
-      setExportProgress(8, 'Офлайн-рендер через цепь фильтров…');
-      pcm = await renderOfflineFile();
-    } else {
-      if (!engine.running) { await engineStart(); autoStarted = true; }
-      if (!engine.running) throw new Error('аудио-движок не запущен');
-      pcm = await captureLive(dur);
-      if (autoStarted) engineStop();
-    }
+    let autoStarted = false;
+    if (!engine.running) { await engineStart(); autoStarted = true; }
+    if (!engine.running) throw new Error('аудио-движок не запущен');
+    const pcm = await captureLive(dur);
+    if (autoStarted) engineStop();
     setExportProgress(68, 'Кодирование ' + fmt.toUpperCase() + '…');
     await sleep(30);
-    let blob, ext;
-    if (fmt === 'wav') { blob = new Blob([pcmToWavBytes(pcm.channels, pcm.sampleRate)], { type: 'audio/wav' }); ext = 'wav'; }
-    else if (fmt === 'mp3') {
-      if (!window.lamejs) throw new Error('библиотека lamejs не загрузилась');
-      blob = encodeMP3(pcm); ext = 'mp3';
-    } else { blob = await encodeOGG(pcm); ext = 'ogg'; }
+    const { blob, ext } = await encodePcm(pcm, fmt);
     setExportProgress(100, 'Готово ✔ ' + (blob.size / 1024).toFixed(0) + ' КБ');
     downloadBlob(blob, name + '.' + ext);
     toast('Экспорт завершён', 'ok');
@@ -1970,16 +1978,41 @@ async function runExport() {
   }
   runBtn.disabled = false;
 }
+
+/* экспорт последнего дубля (● REC) тем же форматом */
+async function runExportDub() {
+  if (!lastRecording) return;
+  const fmt = byId('exp-format').value;
+  const name = ((byId('exp-name').value || 'voice').trim().replace(/[\\/:*?"<>|]+/g, '_')) + '-take';
+  const btn = byId('exp-dub-run'); btn.disabled = true;
+  byId('exp-link').style.display = 'none';
+  setExportProgress(30, 'Кодирование дубля в ' + fmt.toUpperCase() + '…');
+  try {
+    const pcm = { channels: lastRecording.channels, sampleRate: lastRecording.sampleRate };
+    const { blob, ext } = await encodePcm(pcm, fmt);
+    setExportProgress(100, 'Готово ✔ ' + (blob.size / 1024).toFixed(0) + ' КБ');
+    downloadBlob(blob, name + '.' + ext);
+    toast('Дубль экспортирован', 'ok');
+  } catch (err) {
+    console.error(err);
+    setExportProgress(0, 'Ошибка: ' + err.message);
+    toast('Ошибка экспорта: ' + err.message, 'err');
+  }
+  btn.disabled = false;
+}
+
 byId('btn-export').onclick = () => {
-  byId('exp-src-file').disabled = !state.fileRaw;
-  byId('exp-src-rec').disabled = !lastRecording;
-  byId('exp-rec-lbl').textContent = lastRecording ? 'Из записи (' + fmtT(lastRecording.duration) + ')' : 'Из записи (нет дубля)';
-  if (lastRecording) byId('exp-src-rec').checked = true;
-  else if (!state.fileRaw) byId('exp-src-live').checked = true;
   byId('exp-name').value = project.name.replace(/[\\/:*?"<>|]+/g, '_') || 'neon-voice';
+  const dubRow = byId('exp-dub-row');
+  if (lastRecording) {
+    dubRow.style.display = '';
+    byId('exp-dub-info').textContent = fmtT(lastRecording.duration);
+  } else dubRow.style.display = 'none';
+  setExportProgress(0, 'Записывается звук, который прямо сейчас проходит через цепь фильтров.');
   openModal('modal-export');
 };
-byId('exp-run').onclick = runExport;
+byId('exp-run').onclick = runExportLive;
+byId('exp-dub-run').onclick = runExportDub;
 
 /* ============================================================ topbar */
 byId('btn-help').onclick = () => openModal('modal-help');
@@ -2037,7 +2070,6 @@ function drawVisuals() {
     engine.anL.getByteTimeDomainData(tdL); l = rmsFromTd(tdL);
     engine.anR.getByteTimeDomainData(tdR); r = rmsFromTd(tdR);
 
-    /* спектр: логарифмическая разбивка по частотам */
     const bars = Math.max(24, Math.floor(W / 11)), bw = W / bars;
     for (let i = 0; i < bars; i++) {
       const idx = Math.min(spData.length - 1, Math.floor(Math.pow(i / bars, 1.6) * spData.length * 0.72));
@@ -2048,7 +2080,6 @@ function drawVisuals() {
       specCtx.fillRect(i * bw + 1, H - h, bw - 2, h);
     }
   } else {
-    /* дежурная анимация, когда движок выключен */
     idlePhase += 0.04;
     const bars = Math.max(24, Math.floor(W / 11)), bw = W / bars;
     for (let i = 0; i < bars; i++) {
@@ -2058,14 +2089,12 @@ function drawVisuals() {
     }
   }
 
-  /* индикатор наличия сигнала */
   const signal = energy > 0.35 || (l + r) > 0.004;
   if (has && !signal) silentFrames++; else silentFrames = 0;
   if (!has) { vizStateEl.textContent = 'ОЖИДАНИЕ'; vizStateEl.className = 'viz-state'; }
   else if (silentFrames > 90) { vizStateEl.textContent = 'НЕТ СИГНАЛА'; vizStateEl.className = 'viz-state'; }
   else { vizStateEl.textContent = 'LIVE'; vizStateEl.className = 'viz-state live'; }
 
-  /* уровни каналов */
   peakL = Math.max(l * 1.15, peakL * 0.965);
   peakR = Math.max(r * 1.15, peakR * 0.965);
   drawMeter(mLctx, mLc, l * 1.6, peakL * 1.6);
@@ -2073,7 +2102,6 @@ function drawVisuals() {
   byId('dbL').textContent = l > 0.0005 ? (20 * Math.log10(l)).toFixed(1) + ' дБ' : '-∞';
   byId('dbR').textContent = r > 0.0005 ? (20 * Math.log10(r)).toFixed(1) + ' дБ' : '-∞';
 
-  /* время воспроизведения файла + синхронизация кнопки */
   if (has) {
     updatePlayTime();
     const inp = inputNode();
