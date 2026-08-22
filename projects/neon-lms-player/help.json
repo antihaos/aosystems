@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Справка по блокам LMS Player",
-    "description": "Подробное руководство по всем типам блоков и их параметрам",
+    "description": "Подробное руководство по всем типам блоков и их параметрам с живыми примерами",
     "author": "AI Assistant",
     "duration": "2 часа",
     "level": "Начинающий",
@@ -23,7 +23,10 @@
               ["children", "array", "Массив вложенных блоков", "Да"],
               ["id", "string", "Якорь для навигации", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"section\",\n  \"title\": \"Заголовок\",\n  \"children\": [\n    { \"type\": \"text\", \"text\": \"Вложенный текст\" }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"section\",\n  \"title\": \"Заголовок\",\n  \"children\": [\n    { \"type\": \"text\", \"text\": \"Вложенный текст\" }\n  ]\n}" },
+            { "type": "section", "title": "Демо: section", "children": [
+              { "type": "text", "text": "Это вложенный текст внутри демонстрационной секции." }
+            ]}
           ]
         },
         {
@@ -35,7 +38,8 @@
               ["level", "number", "Уровень заголовка (1-6), по умолчанию 2", "Нет"],
               ["text", "string", "Текст заголовка", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"heading\",\n  \"level\": 2,\n  \"text\": \"Заголовок\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"heading\",\n  \"level\": 2,\n  \"text\": \"Заголовок\"\n}" },
+            { "type": "heading", "level": 2, "text": "Демо: заголовок уровня 2" }
           ]
         },
         {
@@ -46,7 +50,8 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["text", "string", "Текстовое содержимое", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"text\",\n  \"text\": \"Пример текста\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"text\",\n  \"text\": \"Пример текста\"\n}" },
+            { "type": "text", "text": "Демо: Это обычный текстовый абзац." }
           ]
         },
         {
@@ -58,7 +63,8 @@
               ["ordered", "boolean", "Если true — нумерованный список, иначе маркированный", "Нет"],
               ["items", "array", "Массив строк элементов", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"list\",\n  \"ordered\": false,\n  \"items\": [\"Элемент 1\", \"Элемент 2\"]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"list\",\n  \"ordered\": false,\n  \"items\": [\"Элемент 1\", \"Элемент 2\"]\n}" },
+            { "type": "list", "ordered": false, "items": ["Демо: Первый пункт", "Демо: Второй пункт"] }
           ]
         },
         {
@@ -72,7 +78,8 @@
               ["text", "string", "Текст (если нет children)", "Нет"],
               ["children", "array", "Вложенные блоки (альтернатива text)", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"callout\",\n  \"variant\": \"info\",\n  \"title\": \"Важно\",\n  \"text\": \"Текст предупреждения\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"callout\",\n  \"variant\": \"info\",\n  \"title\": \"Важно\",\n  \"text\": \"Текст предупреждения\"\n}" },
+            { "type": "callout", "variant": "info", "title": "Демо: Внимание", "text": "Это демонстрационный callout с вариантом info." }
           ]
         },
         {
@@ -84,7 +91,8 @@
               ["language", "string", "Язык программирования (для подсветки)", "Нет"],
               ["code", "string", "Код", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"code\",\n  \"language\": \"javascript\",\n  \"code\": \"console.log('Hello');\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"code\",\n  \"language\": \"javascript\",\n  \"code\": \"console.log('Hello');\"\n}" },
+            { "type": "code", "language": "javascript", "code": "console.log('Демо: Hello from JavaScript!');" }
           ]
         }
       ]
@@ -106,7 +114,8 @@
               ["previewHeight", "string", "Высота окна предпросмотра", "Нет"],
               ["autoScale", "boolean", "Автоматическое масштабирование (по умолчанию true)", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"image\",\n  \"src\": \"https://picsum.photos/400/300\",\n  \"caption\": \"Пример изображения\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"image\",\n  \"src\": \"https://picsum.photos/400/300\",\n  \"caption\": \"Пример изображения\"\n}" },
+            { "type": "image", "src": "https://picsum.photos/400/300", "caption": "Демо: случайное изображение" }
           ]
         },
         {
@@ -121,7 +130,8 @@
               ["speedControl", "boolean", "Показывать переключатель скорости", "Нет"],
               ["mimeType", "string", "MIME-тип видео (по умолчанию video/mp4)", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"video\",\n  \"src\": \"https://example.com/video.mp4\",\n  \"poster\": \"https://picsum.photos/400/300\",\n  \"caption\": \"Видео\",\n  \"speedControl\": true\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"video\",\n  \"src\": \"https://example.com/video.mp4\",\n  \"poster\": \"https://picsum.photos/400/300\",\n  \"caption\": \"Видео\",\n  \"speedControl\": true\n}" },
+            { "type": "video", "src": "https://www.w3schools.com/html/mov_bbb.mp4", "caption": "Демо: видео (короткий ролик)", "speedControl": true }
           ]
         },
         {
@@ -135,7 +145,8 @@
               ["speedControl", "boolean", "Показывать переключатель скорости", "Нет"],
               ["mimeType", "string", "MIME-тип аудио (по умолчанию audio/mpeg)", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"audio\",\n  \"src\": \"https://example.com/audio.mp3\",\n  \"caption\": \"Аудио\",\n  \"speedControl\": true\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"audio\",\n  \"src\": \"https://example.com/audio.mp3\",\n  \"caption\": \"Аудио\",\n  \"speedControl\": true\n}" },
+            { "type": "audio", "src": "https://www.w3schools.com/html/horse.mp3", "caption": "Демо: аудио (звук лошади)", "speedControl": true }
           ]
         },
         {
@@ -146,7 +157,8 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["src", "string", "URL для iframe", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"embed\",\n  \"src\": \"https://example.com\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"embed\",\n  \"src\": \"https://example.com\"\n}" },
+            { "type": "embed", "src": "https://www.wikipedia.org" }
           ]
         },
         {
@@ -157,7 +169,11 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["items", "array", "Массив элементов: {image, caption} или {content: blocks}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"carousel\",\n  \"items\": [\n    { \"image\": \"https://picsum.photos/400/300\", \"caption\": \"Слайд 1\" },\n    { \"image\": \"https://picsum.photos/400/301\", \"caption\": \"Слайд 2\" }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"carousel\",\n  \"items\": [\n    { \"image\": \"https://picsum.photos/400/300\", \"caption\": \"Слайд 1\" },\n    { \"image\": \"https://picsum.photos/400/301\", \"caption\": \"Слайд 2\" }\n  ]\n}" },
+            { "type": "carousel", "items": [
+              { "image": "https://picsum.photos/400/300", "caption": "Демо: Слайд 1" },
+              { "image": "https://picsum.photos/400/301", "caption": "Демо: Слайд 2" }
+            ]}
           ]
         },
         {
@@ -169,7 +185,8 @@
               ["before", "string", "URL изображения 'до'", "Да"],
               ["after", "string", "URL изображения 'после'", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"before-after\",\n  \"before\": \"https://picsum.photos/400/300\",\n  \"after\": \"https://picsum.photos/400/302\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"before-after\",\n  \"before\": \"https://picsum.photos/400/300\",\n  \"after\": \"https://picsum.photos/400/302\"\n}" },
+            { "type": "before-after", "before": "https://picsum.photos/400/300", "after": "https://picsum.photos/400/302" }
           ]
         }
       ]
@@ -190,7 +207,8 @@
               ["correct", "number", "Индекс правильного варианта", "Да"],
               ["explanation", "string", "Пояснение после ответа", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"quiz\",\n  \"question\": \"Сколько будет 2+2?\",\n  \"options\": [\"3\", \"4\", \"5\"],\n  \"correct\": 1,\n  \"explanation\": \"2+2=4\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"quiz\",\n  \"question\": \"Сколько будет 2+2?\",\n  \"options\": [\"3\", \"4\", \"5\"],\n  \"correct\": 1,\n  \"explanation\": \"2+2=4\"\n}" },
+            { "type": "quiz", "question": "Демо: Сколько будет 2+2?", "options": ["3", "4", "5"], "correct": 1, "explanation": "2+2=4" }
           ]
         },
         {
@@ -204,7 +222,8 @@
               ["correct", "array", "Массив индексов правильных вариантов", "Да"],
               ["explanation", "string", "Пояснение", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"multi-quiz\",\n  \"question\": \"Выберите чётные числа\",\n  \"options\": [\"1\", \"2\", \"3\", \"4\"],\n  \"correct\": [1, 3],\n  \"explanation\": \"Чётные числа: 2 и 4\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"multi-quiz\",\n  \"question\": \"Выберите чётные числа\",\n  \"options\": [\"1\", \"2\", \"3\", \"4\"],\n  \"correct\": [1, 3],\n  \"explanation\": \"Чётные числа: 2 и 4\"\n}" },
+            { "type": "multi-quiz", "question": "Демо: Выберите чётные числа", "options": ["1", "2", "3", "4"], "correct": [1, 3], "explanation": "Чётные числа: 2 и 4" }
           ]
         },
         {
@@ -216,7 +235,11 @@
               ["instruction", "string", "Инструкция", "Нет"],
               ["pairs", "array", "Массив объектов {left, right}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"match\",\n  \"instruction\": \"Сопоставьте термины\",\n  \"pairs\": [\n    { \"left\": \"HTML\", \"right\": \"Язык разметки\" },\n    { \"left\": \"CSS\", \"right\": \"Язык стилей\" }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"match\",\n  \"instruction\": \"Сопоставьте термины\",\n  \"pairs\": [\n    { \"left\": \"HTML\", \"right\": \"Язык разметки\" },\n    { \"left\": \"CSS\", \"right\": \"Язык стилей\" }\n  ]\n}" },
+            { "type": "match", "instruction": "Демо: Сопоставьте термины", "pairs": [
+              { "left": "HTML", "right": "Язык разметки" },
+              { "left": "CSS", "right": "Язык стилей" }
+            ]}
           ]
         },
         {
@@ -229,7 +252,8 @@
               ["items", "array", "Исходный порядок элементов", "Да"],
               ["correctOrder", "array", "Правильный порядок", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"sort\",\n  \"instruction\": \"Расставьте числа по возрастанию\",\n  \"items\": [\"3\", \"1\", \"2\"],\n  \"correctOrder\": [\"1\", \"2\", \"3\"]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"sort\",\n  \"instruction\": \"Расставьте числа по возрастанию\",\n  \"items\": [\"3\", \"1\", \"2\"],\n  \"correctOrder\": [\"1\", \"2\", \"3\"]\n}" },
+            { "type": "sort", "instruction": "Демо: Расставьте числа по возрастанию", "items": ["3", "1", "2"], "correctOrder": ["1", "2", "3"] }
           ]
         },
         {
@@ -242,7 +266,8 @@
               ["text", "string", "Текст с пропусками в формате {{1}}, {{2}}", "Да"],
               ["answers", "object", "Объект с ключами-номерами пропусков и правильными ответами", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"fill-blank\",\n  \"instruction\": \"Заполните пропуски\",\n  \"text\": \"Столица Франции — {{1}}.\",\n  \"answers\": { \"1\": \"Париж\" }\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"fill-blank\",\n  \"instruction\": \"Заполните пропуски\",\n  \"text\": \"Столица Франции — {{1}}.\",\n  \"answers\": { \"1\": \"Париж\" }\n}" },
+            { "type": "fill-blank", "instruction": "Демо: Заполните пропуски", "text": "Столица Франции — {{1}}.", "answers": { "1": "Париж" } }
           ]
         },
         {
@@ -254,7 +279,8 @@
               ["front", "string|array", "Содержимое лицевой стороны (текст или блоки)", "Да"],
               ["back", "string|array", "Содержимое обратной стороны", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"flip-card\",\n  \"front\": \"Вопрос\",\n  \"back\": \"Ответ\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"flip-card\",\n  \"front\": \"Вопрос\",\n  \"back\": \"Ответ\"\n}" },
+            { "type": "flip-card", "front": "Демо: Вопрос?", "back": "Демо: Ответ!" }
           ]
         },
         {
@@ -266,7 +292,8 @@
               ["question", "string", "Вопрос", "Да"],
               ["options", "array", "Варианты ответа", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"poll\",\n  \"question\": \"Ваш любимый цвет?\",\n  \"options\": [\"Красный\", \"Синий\", \"Зелёный\"]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"poll\",\n  \"question\": \"Ваш любимый цвет?\",\n  \"options\": [\"Красный\", \"Синий\", \"Зелёный\"]\n}" },
+            { "type": "poll", "question": "Демо: Ваш любимый цвет?", "options": ["Красный", "Синий", "Зелёный"] }
           ]
         },
         {
@@ -279,7 +306,8 @@
               ["items", "array", "Элементы в исходном порядке", "Да"],
               ["correctOrder", "array", "Правильный порядок", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"drag-sort\",\n  \"instruction\": \"Перетащите в правильном порядке\",\n  \"items\": [\"Второй\", \"Первый\", \"Третий\"],\n  \"correctOrder\": [\"Первый\", \"Второй\", \"Третий\"]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"drag-sort\",\n  \"instruction\": \"Перетащите в правильном порядке\",\n  \"items\": [\"Второй\", \"Первый\", \"Третий\"],\n  \"correctOrder\": [\"Первый\", \"Второй\", \"Третий\"]\n}" },
+            { "type": "drag-sort", "instruction": "Демо: Перетащите в правильном порядке", "items": ["Второй", "Первый", "Третий"], "correctOrder": ["Первый", "Второй", "Третий"] }
           ]
         },
         {
@@ -293,7 +321,8 @@
               ["max", "number", "Максимальное значение (по умолчанию 100)", "Нет"],
               ["default", "number", "Значение по умолчанию", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"slider\",\n  \"label\": \"Оцените курс\",\n  \"min\": 0,\n  \"max\": 10,\n  \"default\": 5\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"slider\",\n  \"label\": \"Оцените курс\",\n  \"min\": 0,\n  \"max\": 10,\n  \"default\": 5\n}" },
+            { "type": "slider", "label": "Демо: Оцените курс", "min": 0, "max": 10, "default": 5 }
           ]
         },
         {
@@ -304,7 +333,11 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["tasks", "array", "Массив объектов {label}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"progress-tracker\",\n  \"tasks\": [\n    { \"label\": \"Изучить теорию\" },\n    { \"label\": \"Выполнить практику\" }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"progress-tracker\",\n  \"tasks\": [\n    { \"label\": \"Изучить теорию\" },\n    { \"label\": \"Выполнить практику\" }\n  ]\n}" },
+            { "type": "progress-tracker", "tasks": [
+              { "label": "Демо: Изучить теорию" },
+              { "label": "Демо: Выполнить практику" }
+            ]}
           ]
         }
       ]
@@ -322,7 +355,11 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["tabs", "array", "Массив объектов {label, content: blocks}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"tabs\",\n  \"tabs\": [\n    { \"label\": \"Вкладка 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Содержимое 1\" } ] },\n    { \"label\": \"Вкладка 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Содержимое 2\" } ] }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"tabs\",\n  \"tabs\": [\n    { \"label\": \"Вкладка 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Содержимое 1\" } ] },\n    { \"label\": \"Вкладка 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Содержимое 2\" } ] }\n  ]\n}" },
+            { "type": "tabs", "tabs": [
+              { "label": "Демо: Вкладка 1", "content": [ { "type": "text", "text": "Содержимое первой демо-вкладки." } ] },
+              { "label": "Демо: Вкладка 2", "content": [ { "type": "text", "text": "Содержимое второй демо-вкладки." } ] }
+            ]}
           ]
         },
         {
@@ -333,7 +370,11 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["items", "array", "Массив объектов {title, content: blocks}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"accordion\",\n  \"items\": [\n    { \"title\": \"Раздел 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Текст 1\" } ] },\n    { \"title\": \"Раздел 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Текст 2\" } ] }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"accordion\",\n  \"items\": [\n    { \"title\": \"Раздел 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Текст 1\" } ] },\n    { \"title\": \"Раздел 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Текст 2\" } ] }\n  ]\n}" },
+            { "type": "accordion", "items": [
+              { "title": "Демо: Раздел 1", "content": [ { "type": "text", "text": "Текст первого демо-раздела." } ] },
+              { "title": "Демо: Раздел 2", "content": [ { "type": "text", "text": "Текст второго демо-раздела." } ] }
+            ]}
           ]
         },
         {
@@ -344,7 +385,11 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["columns", "array", "Массив объектов {blocks: array}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"columns\",\n  \"columns\": [\n    { \"blocks\": [ { \"type\": \"text\", \"text\": \"Левая колонка\" } ] },\n    { \"blocks\": [ { \"type\": \"text\", \"text\": \"Правая колонка\" } ] }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"columns\",\n  \"columns\": [\n    { \"blocks\": [ { \"type\": \"text\", \"text\": \"Левая колонка\" } ] },\n    { \"blocks\": [ { \"type\": \"text\", \"text\": \"Правая колонка\" } ] }\n  ]\n}" },
+            { "type": "columns", "columns": [
+              { "blocks": [ { "type": "text", "text": "Демо: Левая колонка" } ] },
+              { "blocks": [ { "type": "text", "text": "Демо: Правая колонка" } ] }
+            ]}
           ]
         },
         {
@@ -355,7 +400,11 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["steps", "array", "Массив объектов {title, content: blocks}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"steps\",\n  \"steps\": [\n    { \"title\": \"Шаг 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Первый шаг\" } ] },\n    { \"title\": \"Шаг 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Второй шаг\" } ] }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"steps\",\n  \"steps\": [\n    { \"title\": \"Шаг 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Первый шаг\" } ] },\n    { \"title\": \"Шаг 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Второй шаг\" } ] }\n  ]\n}" },
+            { "type": "steps", "steps": [
+              { "title": "Демо: Шаг 1", "content": [ { "type": "text", "text": "Первый демо-шаг." } ] },
+              { "title": "Демо: Шаг 2", "content": [ { "type": "text", "text": "Второй демо-шаг." } ] }
+            ]}
           ]
         },
         {
@@ -368,7 +417,10 @@
               ["content", "array", "Блоки для отображения в модальном окне", "Нет (если есть text)"],
               ["text", "string", "Простой текст в модальном окне", "Нет (если есть content)"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"modal\",\n  \"buttonText\": \"Открыть\",\n  \"content\": [\n    { \"type\": \"text\", \"text\": \"Содержимое модального окна\" }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"modal\",\n  \"buttonText\": \"Открыть\",\n  \"content\": [\n    { \"type\": \"text\", \"text\": \"Содержимое модального окна\" }\n  ]\n}" },
+            { "type": "modal", "buttonText": "Демо: Открыть", "content": [
+              { "type": "text", "text": "Это демо-содержимое модального окна." }
+            ]}
           ]
         },
         {
@@ -379,7 +431,11 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["items", "array", "Массив объектов {title, description}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"timeline\",\n  \"items\": [\n    { \"title\": \"Событие 1\", \"description\": \"Описание 1\" },\n    { \"title\": \"Событие 2\", \"description\": \"Описание 2\" }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"timeline\",\n  \"items\": [\n    { \"title\": \"Событие 1\", \"description\": \"Описание 1\" },\n    { \"title\": \"Событие 2\", \"description\": \"Описание 2\" }\n  ]\n}" },
+            { "type": "timeline", "items": [
+              { "title": "Демо: Событие 1", "description": "Описание демо-события 1." },
+              { "title": "Демо: Событие 2", "description": "Описание демо-события 2." }
+            ]}
           ]
         },
         {
@@ -391,7 +447,8 @@
               ["left", "array", "Блоки для левой части", "Да"],
               ["right", "array", "Блоки для правой части", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"compare\",\n  \"left\": [ { \"type\": \"text\", \"text\": \"Левая часть\" } ],\n  \"right\": [ { \"type\": \"text\", \"text\": \"Правая часть\" } ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"compare\",\n  \"left\": [ { \"type\": \"text\", \"text\": \"Левая часть\" } ],\n  \"right\": [ { \"type\": \"text\", \"text\": \"Правая часть\" } ]\n}" },
+            { "type": "compare", "left": [ { "type": "text", "text": "Демо: Левая часть" } ], "right": [ { "type": "text", "text": "Демо: Правая часть" } ] }
           ]
         }
       ]
@@ -410,7 +467,11 @@
               ["headers", "array", "Массив заголовков столбцов", "Да"],
               ["rows", "array", "Массив строк (каждая строка — массив ячеек)", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"table\",\n  \"headers\": [\"Имя\", \"Возраст\"],\n  \"rows\": [\n    [\"Анна\", 25],\n    [\"Иван\", 30]\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"table\",\n  \"headers\": [\"Имя\", \"Возраст\"],\n  \"rows\": [\n    [\"Анна\", 25],\n    [\"Иван\", 30]\n  ]\n}" },
+            { "type": "table", "headers": ["Имя", "Возраст"], "rows": [
+              ["Анна", 25],
+              ["Иван", 30]
+            ]}
           ]
         },
         {
@@ -423,7 +484,8 @@
               ["labels", "array", "Подписи столбцов", "Да"],
               ["values", "array", "Значения (числа)", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"chart\",\n  \"title\": \"Продажи\",\n  \"labels\": [\"Янв\", \"Фев\", \"Мар\"],\n  \"values\": [80, 120, 95]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"chart\",\n  \"title\": \"Продажи\",\n  \"labels\": [\"Янв\", \"Фев\", \"Мар\"],\n  \"values\": [80, 120, 95]\n}" },
+            { "type": "chart", "title": "Демо: Продажи", "labels": ["Янв", "Фев", "Мар"], "values": [80, 120, 95] }
           ]
         },
         {
@@ -435,7 +497,11 @@
               ["title", "string", "Заголовок", "Нет"],
               ["segments", "array", "Массив объектов {label, value, color}", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"pie\",\n  \"title\": \"Распределение\",\n  \"segments\": [\n    { \"label\": \"Сегмент 1\", \"value\": 40, \"color\": \"#ff0000\" },\n    { \"label\": \"Сегмент 2\", \"value\": 60, \"color\": \"#00ff00\" }\n  ]\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"pie\",\n  \"title\": \"Распределение\",\n  \"segments\": [\n    { \"label\": \"Сегмент 1\", \"value\": 40, \"color\": \"#ff0000\" },\n    { \"label\": \"Сегмент 2\", \"value\": 60, \"color\": \"#00ff00\" }\n  ]\n}" },
+            { "type": "pie", "title": "Демо: Распределение", "segments": [
+              { "label": "Сегмент 1", "value": 40, "color": "#ff0000" },
+              { "label": "Сегмент 2", "value": 60, "color": "#00ff00" }
+            ]}
           ]
         },
         {
@@ -446,7 +512,8 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["code", "string", "Код диаграммы Mermaid", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"mermaid\",\n  \"code\": \"graph TD; A-->B;\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"mermaid\",\n  \"code\": \"graph TD; A-->B;\"\n}" },
+            { "type": "mermaid", "code": "graph TD; A[Начало] --> B[Конец];" }
           ]
         },
         {
@@ -460,7 +527,8 @@
               ["previewWidth", "string", "Ширина предпросмотра", "Нет"],
               ["previewHeight", "string", "Высота предпросмотра", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"svg\",\n  \"code\": \"<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='40' fill='red'/></svg>\",\n  \"caption\": \"Красный круг\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"svg\",\n  \"code\": \"<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='40' fill='red'/></svg>\",\n  \"caption\": \"Красный круг\"\n}" },
+            { "type": "svg", "code": "<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='40' fill='red'/></svg>", "caption": "Демо: Красный круг" }
           ]
         },
         {
@@ -471,7 +539,8 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["code", "string", "HTML-код", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"html\",\n  \"code\": \"<p style='color: red;'>Красный текст</p>\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"html\",\n  \"code\": \"<p style='color: red;'>Красный текст</p>\"\n}" },
+            { "type": "html", "code": "<p style='color: red;'>Демо: Красный текст</p>" }
           ]
         },
         {
@@ -483,7 +552,8 @@
               ["text", "string", "Основной текст", "Да"],
               ["tooltipText", "string", "Текст подсказки", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"tooltip\",\n  \"text\": \"Наведите на меня\",\n  \"tooltipText\": \"Подсказка\"\n}" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"tooltip\",\n  \"text\": \"Наведите на меня\",\n  \"tooltipText\": \"Подсказка\"\n}" },
+            { "type": "tooltip", "text": "Демо: Наведите на меня", "tooltipText": "Демо: Подсказка" }
           ]
         }
       ]
