@@ -149,7 +149,7 @@ aside{
 .tsep{width:1px; height:22px; background:var(--line2); margin:0 4px}
 #fabWrap input[type=number]{width:58px; padding:4px 6px; font-size:12px}
 #canvasWrap{flex:1; position:relative; overflow:hidden; background:transparent}
-#cv{position:absolute; inset:0; touch-action:none; cursor:default}
+#cv{position:absolute; inset:0; touch-action:none; cursor:crosshair}
 #statusbar{
   display:flex; gap:16px; align-items:center; padding:6px 14px; flex-wrap:wrap;
   border-top:1px solid var(--line); background:rgba(9,11,24,.88);
@@ -275,7 +275,7 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.2.1</span></div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.2.2</span></div>
       <div class="desc">Студия швейных выкроек: детали, размеры и оптимальная автораскладка в области ткани.</div>
     </div>
   </div>
@@ -421,24 +421,26 @@ aside{
 <script>
 'use strict';
 /* =====================================================================
-   МОДЕЛЬ КООРДИНАТ (единая для рендера и выбора):
-   • МИР  — сантиметры, ось Y вниз, начало (0,0) — левая кромка ткани.
-   • ЭКРАН — CSS-пиксели холста.
-   • Преобразования:
-       screen = world * scale + offset        (w2s)
-       world  = (screen - offset) / scale     (s2w)
-   • Деталь задаётся якорем (p.x, p.y) — это левый-верхний угол её
-     НЕповёрнутого габаритного бокса; центр детали:
-       C = (p.x + b.w/2, p.y + b.h/2)
-   • Прямое преобразование детали (локальные → мир):
-       world = T(C) · R(rot) · M(mirror) · T(-localCenter) · local
-     где localCenter = (b.minx + b.w/2, b.miny + b.h/2).
-   • Выбор детали использует ОБРАТНОЕ преобразование (мир → локальные):
-       d      = world - C
-       d'     = rotate(d, -rot)
-       d'.x   = mirror ? -d'.x : d'.x
-       local  = d' + localCenter
-     после чего точка тестируется в локальном полигоне контура.
+   МОДЕЛЬ КООРДИНАТ — единая для рендера, выбора и жестов:
+
+   1) МИР  — сантиметры ткани. Ось Y вниз. (0,0) — левая кромка ткани.
+   2) ХОЛСТ (внутренние координаты) — CSS-пиксели области W×H.
+   3) СОБЫТИЕ → ХОЛСТ: клиентские координаты курсора переводятся через
+      актуальный rect холста с нормирующим коэффициентом:
+        canvasX = (clientX - rect.left) * (W / rect.width)
+      Это гарантирует корректность даже если фактический CSS-размер
+      канваса отличается от внутренней модели (дробные пиксели, зум
+      браузера, рассинхронизация после ресайза).
+   4) ХОЛСТ ⇄ МИР:
+        world  = (canvas - offset) / scale      (s2w)
+        canvas = world * scale + offset         (w2s)
+   5) Деталь: якорь (p.x, p.y) — левый-верхний угол НЕповёрнутого
+      габаритного бокса; центр C = (p.x + b.w/2, p.y + b.h/2).
+      Прямое преобразование (локальные → мир):
+        world = T(C) · R(rot) · M(mirror) · T(-localCenter) · local
+      Выбор детали использует ОБРАТНОЕ преобразование (мир → локальные):
+        d = world - C;  d = rotate(d, -rot);  d.x = mirror ? -d.x : d.x;
+        local = d + localCenter;  затем тест точки в локальном полигоне.
    ===================================================================== */
 
 const $=s=>document.querySelector(s);
@@ -639,7 +641,6 @@ function cmdsToPath(cmds){
   }
   return p;
 }
-/* Полигон с семплированием кривых — для математического выбора */
 function cmdsToPoly(cmds){
   const pts=[]; let cx=0,cy=0,sx=0,sy=0;
   for(const c of cmds){
@@ -669,7 +670,6 @@ function cmdsBounds(cmds){
   }
   return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
 }
-/* Лучевой тест точки в полигоне (локальные координаты детали) */
 function pointInPoly(pts,x,y){
   let inside=false;
   for(let i=0,j=pts.length-1;i<pts.length;j=i++){
@@ -683,7 +683,6 @@ function rebuildPiece(p){
   p._cmds=cmds; p._path=cmdsToPath(cmds);
   p._bounds=cmdsBounds(cmds); p._poly=cmdsToPoly(cmds);
 }
-/* Углы повёрнутого габарита (мир). Порядок: mirror → rotate (как в рендере) */
 function pieceCorners(p){
   const b=p._bounds,rad=p.rot*Math.PI/180,cx=p.x+b.w/2,cy=p.y+b.h/2;
   const cs=Math.cos(rad),sn=Math.sin(rad);
@@ -736,11 +735,28 @@ let editorId=null, saving=false, lastSavedAt=null, storageFailedNoted=false, sav
 const cv=$('#cv'), ctx=cv.getContext('2d');
 const wrap=$('#canvasWrap');
 let W=0,H=0,dpr=1;
+const mousePos={x:0,y:0,on:false}; // курсор во внутренних координатах холста
 
 const byId=id=>state.pieces.find(p=>p.id===id)||null;
-/* Экранные ⇄ мировые координаты (см. модель координат в шапке) */
-const s2w=(sx,sy)=>({x:(sx-state.view.ox)/state.view.scale, y:(sy-state.view.oy)/state.view.scale});
-const w2s=(wx,wy)=>({x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy});
+
+/* -------- пересчёт координат (см. модель в шапке файла) -------- */
+/* клиентские пиксели события → внутренние координаты холста,
+   с нормировкой на фактический CSS-размер канваса */
+function clientToCanvas(cx,cy){
+  const r=cv.getBoundingClientRect();
+  const kx=r.width>0?W/r.width:1;
+  const ky=r.height>0?H/r.height:1;
+  return {x:(cx-r.left)*kx, y:(cy-r.top)*ky};
+}
+function eventXY(e){return clientToCanvas(e.clientX,e.clientY);}
+function s2w(sx,sy){
+  const sc=state.view.scale||BASE;
+  return {x:(sx-state.view.ox)/sc, y:(sy-state.view.oy)/sc};
+}
+function eventToWorld(e){const p=eventXY(e);return s2w(p.x,p.y);}
+function w2s(wx,wy){
+  return {x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy};
+}
 
 function resize(){
   const r=wrap.getBoundingClientRect();
@@ -783,6 +799,9 @@ function packAll(){
 
 /* ============================ рисование ============================ */
 function draw(){
+  // защита от смены devicePixelRatio (монитор/зум браузера)
+  const nd=window.devicePixelRatio||1;
+  if(nd!==dpr){resize();return;}
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.clearRect(0,0,W,H);
   drawGrid(); drawFabric();
@@ -790,12 +809,23 @@ function draw(){
   for(const p of state.pieces) drawLabel(p);
   if(state.fabric) for(const p of state.pieces) if(outOfFabric(p)) drawWarning(p);
   drawSelection();
+  drawCursor();
   $('#emptyHint').classList.toggle('hidden',state.pieces.length>0);
   $('#zoomLbl').textContent=Math.round(state.view.scale/BASE*100)+'%';
   $('#stZoom').textContent=`масштаб: ${Math.round(state.view.scale/BASE*100)}% · 1 см = ${state.view.scale.toFixed(1)} px`;
   let outN=0; if(state.fabric) for(const p of state.pieces) if(outOfFabric(p)) outN++;
   $('#stCount').textContent='деталей: '+state.pieces.length+(state.fabric?' · вне ткани: '+outN:'');
   positionQuick();
+}
+function drawCursor(){
+  if(!mousePos.on)return;
+  ctx.save();
+  ctx.strokeStyle='rgba(0,229,255,.45)'; ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(mousePos.x-9,mousePos.y); ctx.lineTo(mousePos.x+9,mousePos.y);
+  ctx.moveTo(mousePos.x,mousePos.y-9); ctx.lineTo(mousePos.x,mousePos.y+9);
+  ctx.stroke();
+  ctx.restore();
 }
 function drawGrid(){
   if(!state.grid)return;
@@ -944,8 +974,7 @@ function fitView(){
 }
 
 /* ============================ выбор / hit-test ============================ */
-/* МИР → ЛОКАЛЬНЫЕ координаты детали (обратное преобразование рендера):
-   d = world-C; поворот на -rot; зеркало X; сдвиг на localCenter */
+/* мир → локальные координаты детали (обратное преобразование рендера) */
 function worldToLocal(p,wx,wy){
   const b=p._bounds, cx=p.x+b.w/2, cy=p.y+b.h/2;
   const dx=wx-cx, dy=wy-cy;
@@ -955,13 +984,11 @@ function worldToLocal(p,wx,wy){
   return [lx+(b.minx+b.w/2), ly+(b.miny+b.h/2)];
 }
 function pick(wx,wy){
-  // 1) точное попадание в контур (локальный полигон)
   for(let i=state.pieces.length-1;i>=0;i--){
     const p=state.pieces[i];
     const [lx,ly]=worldToLocal(p,wx,wy);
     if(pointInPoly(p._poly,lx,ly))return p;
   }
-  // 2) допуск для тача: ближайшая деталь в пределах расширенного габарита
   const tol=Math.min(14/state.view.scale,5);
   let best=null,bestD=Infinity;
   for(let i=state.pieces.length-1;i>=0;i--){
@@ -1343,7 +1370,7 @@ function newProject(){
 $('#btnNew').onclick=()=>{ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=()=>saveProject(true);
 $('#btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.2.1',...projectData()},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.2.2',...projectData()},null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -1388,15 +1415,14 @@ $('#btnClear').onclick=()=>{ if(!state.pieces.length)return;
 
 /* ============================ указатель ============================ */
 const pointers=new Map(); let gesture=null, spaceDown=false;
-/* допуск «тап/драг»: для пальца больше, чтобы дрожь не считалась перетаскиванием */
 const tapSlop=pt=>pt==='touch'?14:8;
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 cv.addEventListener('wheel',e=>{
   e.preventDefault();
-  const r=cv.getBoundingClientRect();
-  zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*0.0016));
+  const p=eventXY(e);
+  zoomAt(p.x,p.y,Math.exp(-e.deltaY*0.0016));
 },{passive:false});
-function relXY(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+cv.addEventListener('pointerleave',()=>{mousePos.on=false;draw();});
 cv.addEventListener('pointerdown',e=>{
   cv.setPointerCapture(e.pointerId);
   if(e.button===1)e.preventDefault();
@@ -1404,51 +1430,51 @@ cv.addEventListener('pointerdown',e=>{
   clearTimeout(repackTimer);
   if(pointers.size===2){
     const [a,b]=[...pointers.values()];
+    const midC=clientToCanvas((a.x+b.x)/2,(a.y+b.y)/2);
     gesture={type:'pinch',d0:Math.hypot(a.x-b.x,a.y-b.y)||1,scale0:state.view.scale,
-      mid0:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},view0:{...state.view}};
+      w0:s2w(midC.x,midC.y)};
     return;
   }
-  const {x:px,y:py}=relXY(e);
+  const pt=eventXY(e);
+  mousePos.x=pt.x; mousePos.y=pt.y; mousePos.on=true;
   if(e.button===1||e.button===2||spaceDown){
-    gesture={type:'pan',pt:e.pointerType,sx:px,sy:py,ox:state.view.ox,oy:state.view.oy,moved:false};
-    cv.style.cursor='grabbing'; return;
+    gesture={type:'pan',pt:e.pointerType,sx:pt.x,sy:pt.y,ox:state.view.ox,oy:state.view.oy,moved:false};
+    return;
   }
-  const w=s2w(px,py), hit=pick(w.x,w.y);
+  const w=s2w(pt.x,pt.y), hit=pick(w.x,w.y);
   if(hit){
     selectPiece(hit.id);
-    gesture={type:'drag',pt:e.pointerType,id:hit.id,gx:w.x-hit.x,gy:w.y-hit.y,sx:px,sy:py,moved:false};
-    cv.style.cursor='move';
+    gesture={type:'drag',pt:e.pointerType,id:hit.id,gx:w.x-hit.x,gy:w.y-hit.y,sx:pt.x,sy:pt.y,moved:false};
   }else{
-    gesture={type:'pan',pt:e.pointerType,sx:px,sy:py,ox:state.view.ox,oy:state.view.oy,moved:false,empty:true};
+    gesture={type:'pan',pt:e.pointerType,sx:pt.x,sy:pt.y,ox:state.view.ox,oy:state.view.oy,moved:false,empty:true};
   }
 });
 cv.addEventListener('pointermove',e=>{
   if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  const {x:px,y:py}=relXY(e);
-  const w=s2w(px,py);
+  const pt=eventXY(e);
+  const w=s2w(pt.x,pt.y);
+  mousePos.x=pt.x; mousePos.y=pt.y; mousePos.on=true;
   $('#stCoords').textContent=`X: ${w.x.toFixed(1)} · Y: ${w.y.toFixed(1)} см`;
   if(gesture&&gesture.type==='pinch'&&pointers.size>=2){
     const [a,b]=[...pointers.values()];
-    const d=Math.hypot(a.x-b.x,a.y-b.y)||1, mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
-    const r=cv.getBoundingClientRect();
+    const d=Math.hypot(a.x-b.x,a.y-b.y)||1;
+    const midC=clientToCanvas((a.x+b.x)/2,(a.y+b.y)/2);
     const ns=clamp(gesture.scale0*(d/gesture.d0),0.12,80);
-    const w0={x:(gesture.mid0.x-r.left-gesture.view0.ox)/gesture.view0.scale,
-              y:(gesture.mid0.y-r.top-gesture.view0.oy)/gesture.view0.scale};
     state.view.scale=ns;
-    state.view.ox=(mx-r.left)-w0.x*ns; state.view.oy=(my-r.top)-w0.y*ns;
+    state.view.ox=midC.x-gesture.w0.x*ns;
+    state.view.oy=midC.y-gesture.w0.y*ns;
     draw(); return;
   }
   if(gesture&&gesture.type==='pan'){
-    state.view.ox=gesture.ox+(px-gesture.sx);
-    state.view.oy=gesture.oy+(py-gesture.sy);
-    if(Math.hypot(px-gesture.sx,py-gesture.sy)>tapSlop(gesture.pt))gesture.moved=true;
-    if(gesture.moved)cv.style.cursor='grabbing';
+    state.view.ox=gesture.ox+(pt.x-gesture.sx);
+    state.view.oy=gesture.oy+(pt.y-gesture.sy);
+    if(Math.hypot(pt.x-gesture.sx,pt.y-gesture.sy)>tapSlop(gesture.pt))gesture.moved=true;
     draw(); return;
   }
   if(gesture&&gesture.type==='drag'){
     const p=byId(gesture.id);
     if(p){
-      if(!gesture.moved&&Math.hypot(px-gesture.sx,py-gesture.sy)>tapSlop(gesture.pt))gesture.moved=true;
+      if(!gesture.moved&&Math.hypot(pt.x-gesture.sx,pt.y-gesture.sy)>tapSlop(gesture.pt))gesture.moved=true;
       if(gesture.moved){
         p.x=w.x-gesture.gx; p.y=w.y-gesture.gy;
         if($('#chkSnap').checked){
@@ -1463,16 +1489,17 @@ cv.addEventListener('pointermove',e=>{
   if(e.pointerType==='mouse'){
     const h=pick(w.x,w.y);
     const nid=h?h.id:null;
-    if(nid!==state.hoverId){state.hoverId=nid;draw();}
-    cv.style.cursor=nid?'pointer':(spaceDown?'grab':'default');
+    if(nid!==state.hoverId){state.hoverId=nid;}
+    draw();
   }
 });
 function endPointer(e){
   pointers.delete(e.pointerId);
   if(gesture&&gesture.type==='pinch'){
     if(pointers.size===1){
-      const [rp]=pointers.values(); const {x,y}=relXY(rp);
-      gesture={type:'pan',pt:e.pointerType,sx:x,sy:y,ox:state.view.ox,oy:state.view.oy,moved:true};
+      const [rp]=pointers.values();
+      const ptC=clientToCanvas(rp.x,rp.y);
+      gesture={type:'pan',pt:e.pointerType,sx:ptC.x,sy:ptC.y,ox:state.view.ox,oy:state.view.oy,moved:true};
     }else gesture=null;
     return;
   }
@@ -1481,7 +1508,7 @@ function endPointer(e){
     if(gesture.type==='drag'&&!gesture.moved){const p=byId(gesture.id);if(p)openEditor(p);}
     if(gesture.type==='drag'&&gesture.moved)markDirty();
   }
-  gesture=null; cv.style.cursor='default';
+  gesture=null;
 }
 cv.addEventListener('pointerup',endPointer);
 cv.addEventListener('pointercancel',endPointer);
