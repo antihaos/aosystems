@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05070d">
+<title>NEON VOICE LAB — конструктор голосовых эффектов</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/russo-one@5/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5/index.css">
+
+<style>
+:root{
+  --bg0:#05070d; --bg1:#0a0f1e; --panel:rgba(11,17,32,.92);
+  --cyan:#00e5ff; --mag:#ff2fd6; --lime:#9dff00; --amb:#ffb300; --red:#ff3355;
+  --txt:#d9e6ff; --mut:#66799c; --line:#16233f;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg0); color:var(--txt);
+  font-family:'JetBrains Mono',monospace; font-size:13px;
+  display:flex; flex-direction:column; height:100dvh; overflow:hidden;
+  background-image:radial-gradient(ellipse 80% 60% at 70% -10%, rgba(124,77,255,.12), transparent),
+                   radial-gradient(ellipse 60% 50% at 10% 110%, rgba(0,229,255,.08), transparent);
+}
+button{font-family:inherit; cursor:pointer}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#1c2c4f;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ===== TOPBAR ===== */
+.topbar{
+  display:flex; align-items:center; gap:8px; padding:8px 12px;
+  background:linear-gradient(180deg, rgba(13,20,38,.95), rgba(8,12,24,.9));
+  border-bottom:1px solid var(--line); box-shadow:0 0 24px rgba(0,229,255,.08);
+  z-index:30; flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:9px;min-width:0}
+.brand-logo{
+  width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:17px;flex:none;
+  background:radial-gradient(circle at 30% 30%, #14264a, #070b16);
+  border:1px solid rgba(0,229,255,.5); color:var(--cyan);
+  text-shadow:0 0 8px var(--cyan); box-shadow:0 0 14px rgba(0,229,255,.35), inset 0 0 10px rgba(0,229,255,.15);
+  animation:pulse 3s ease-in-out infinite;
+}
+@keyframes pulse{50%{box-shadow:0 0 22px rgba(0,229,255,.55), inset 0 0 14px rgba(0,229,255,.25)}}
+.brand-txt b{font-family:'Russo One',sans-serif;font-size:15px;letter-spacing:1.5px;
+  background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 8px rgba(0,229,255,.4)); white-space:nowrap;}
+.brand-txt small{display:block;color:var(--mut);font-size:9px;letter-spacing:2px;text-transform:uppercase}
+.tb-project{display:flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;
+  background:rgba(6,10,20,.6); max-width:200px; overflow:hidden}
+.tb-project span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#9fd9ff}
+.save-dot{width:8px;height:8px;border-radius:50%;background:#233;flex:none;transition:.3s}
+.save-dot.dirty{background:var(--amb);box-shadow:0 0 8px var(--amb)}
+.save-dot.saved{background:var(--lime);box-shadow:0 0 8px var(--lime)}
+.tb-btns{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.btn{
+  padding:9px 12px;border-radius:9px;border:1px solid rgba(0,229,255,.35);
+  background:rgba(0,229,255,.06); color:var(--txt); font-size:12px; letter-spacing:.4px;
+  transition:.2s; white-space:nowrap; min-height:38px;
+}
+.btn:hover{background:rgba(0,229,255,.14); box-shadow:0 0 14px rgba(0,229,255,.35); text-shadow:0 0 8px var(--cyan)}
+.btn:active{transform:translateY(1px)}
+.btn.accent{border-color:rgba(255,47,214,.5);background:rgba(255,47,214,.08)}
+.btn.accent:hover{box-shadow:0 0 16px rgba(255,47,214,.4);text-shadow:0 0 8px var(--mag)}
+.btn.accent2{border-color:rgba(157,255,0,.45);background:rgba(157,255,0,.07)}
+.btn.accent2:hover{box-shadow:0 0 16px rgba(157,255,0,.35);text-shadow:0 0 8px var(--lime)}
+.btn.icon{padding:9px 12px}
+.btn:disabled{opacity:.4;cursor:default;box-shadow:none}
+
+/* ===== LAYOUT ===== */
+.layout{flex:1;display:flex;min-height:0;position:relative}
+
+/* ===== PALETTE ===== */
+.palette-wrap{
+  width:290px;flex:none;display:flex;flex-direction:column;
+  background:linear-gradient(180deg, rgba(9,14,28,.97), rgba(6,9,18,.97));
+  border-right:1px solid var(--line); z-index:45;
+}
+.palette-head{padding:8px 10px;display:flex;align-items:center;gap:8px}
+.pal-tabs{display:flex;flex:1;background:#0a1120;border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.pal-tab{
+  flex:1;padding:9px 4px;border:none;border-radius:8px;background:transparent;color:var(--mut);
+  font-size:12px;letter-spacing:.6px;transition:.2s;min-height:38px;
+}
+.pal-tab.active{background:rgba(0,229,255,.14);color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.7);
+  box-shadow:0 0 10px rgba(0,229,255,.2) inset}
+.pal-close{display:none;background:none;border:none;color:var(--mut);font-size:20px;padding:8px;min-width:38px}
+.pal-body{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:8px 10px 16px}
+.pal-tabpane{display:none}
+.pal-tabpane.active{display:block}
+.mod-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mod-btn{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  min-height:64px;padding:9px 4px;border-radius:12px;
+  border:1px solid color-mix(in srgb, var(--mc,#00e5ff) 35%, transparent);
+  background:rgba(14,22,42,.85); color:var(--txt); font-size:11.5px; letter-spacing:.3px;
+  transition:.15s;
+}
+.mod-btn .mi{font-size:19px;color:var(--mc);text-shadow:0 0 10px var(--mc)}
+.mod-btn:hover{box-shadow:0 0 14px color-mix(in srgb, var(--mc) 45%, transparent)}
+.mod-btn:active{transform:scale(.93);background:color-mix(in srgb, var(--mc) 18%, #0e162a)}
+.pal-note{color:#3d4d6e;font-size:10px;text-align:center;margin-top:12px;line-height:1.5}
+.preset-card{
+  display:flex;gap:11px;align-items:center;width:100%;text-align:left;
+  padding:12px 13px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;
+  background:rgba(10,16,30,.6); color:var(--txt); transition:.18s; min-height:58px;
+}
+.preset-card .pi{font-size:23px;width:36px;text-align:center;flex:none;filter:drop-shadow(0 0 6px rgba(0,229,255,.5))}
+.preset-card b{display:block;font-size:12.5px;color:#bfe9ff;margin-bottom:2px}
+.preset-card small{color:var(--mut);font-size:10px;line-height:1.35;display:block}
+.preset-card:hover{border-color:rgba(0,229,255,.55);box-shadow:0 0 14px rgba(0,229,255,.25);transform:translateX(2px)}
+.preset-card:active{transform:scale(.97)}
+.pal-overlay{position:fixed;inset:0;background:rgba(3,5,10,.55);backdrop-filter:blur(2px);z-index:40;display:none}
+
+/* ===== STAGE ===== */
+.stage{
+  flex:1;position:relative;overflow:hidden;touch-action:none;
+  background-color:var(--bg0);
+  background-image:radial-gradient(circle, rgba(58,92,160,.35) 1px, transparent 1.5px);
+  background-size:24px 24px; cursor:grab;
+}
+.stage:active{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible}
+.wire{fill:none;stroke-width:2.4;opacity:.95}
+.wire.sel{stroke-width:3.6;animation:wirePulse 1s ease-in-out infinite}
+@keyframes wirePulse{50%{opacity:.55}}
+.wire.temp{stroke-dasharray:7 6;opacity:.85}
+.wire-hit{fill:none;stroke:transparent;stroke-width:22;cursor:pointer;pointer-events:stroke}
+.wire-del circle{fill:#0a1120;stroke:var(--mag);stroke-width:1.5;filter:drop-shadow(0 0 6px var(--mag))}
+.wire-del text{fill:var(--mag);font-size:13px;text-anchor:middle;font-weight:bold}
+.wire-del{cursor:pointer}
+
+/* ===== TRANSPORT ===== */
+.transport{
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:25;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;
+  max-width:calc(100% - 20px);
+  padding:7px 10px;border:1px solid rgba(0,229,255,.3);border-radius:13px;
+  background:rgba(6,10,20,.85);backdrop-filter:blur(6px);
+  box-shadow:0 0 20px rgba(0,229,255,.12), inset 0 0 20px rgba(0,229,255,.03);
+}
+.tr-btn{
+  min-width:40px;min-height:38px;padding:6px 10px;border-radius:9px;font-size:15px;
+  border:1px solid rgba(0,229,255,.35);background:rgba(0,229,255,.06);color:var(--txt);transition:.18s;
+}
+.tr-btn:hover{box-shadow:0 0 12px rgba(0,229,255,.4)}
+.tr-btn:active{transform:scale(.94)}
+.tr-btn.power{border-color:rgba(255,47,214,.5);color:var(--mag);font-size:17px}
+.tr-btn.power.on{background:rgba(255,47,214,.2);box-shadow:0 0 16px rgba(255,47,214,.6);color:#ffd7f5}
+.tr-btn.rec{border-color:rgba(255,51,85,.55);color:var(--red);font-size:12px;letter-spacing:.6px}
+.tr-btn.rec.on{background:rgba(255,51,85,.22);box-shadow:0 0 18px rgba(255,51,85,.65);animation:recPulse 1s ease-in-out infinite}
+@keyframes recPulse{50%{box-shadow:0 0 30px rgba(255,51,85,.95)}}
+.tr-btn.loop-on{border-color:var(--lime);color:var(--lime);box-shadow:0 0 12px rgba(157,255,0,.5)}
+.tr-seg{display:flex;background:#0a1120;border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.tr-seg button{border:none;background:transparent;color:var(--mut);padding:7px 11px;border-radius:8px;font-size:14px;min-height:32px}
+.tr-seg button.active{background:rgba(0,229,255,.15);color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.25) inset}
+.tr-time{font-size:11px;color:var(--cyan);text-shadow:0 0 6px rgba(0,229,255,.6);min-width:86px;text-align:center}
+.tr-fname{font-size:10px;color:var(--mut);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===== VISUALIZER ===== */
+.viz{
+  position:absolute;left:10px;right:10px;bottom:12px;height:82px;z-index:18;
+  display:flex;gap:12px;align-items:stretch;
+  background:rgba(6,10,20,.75);border:1px solid var(--line);border-radius:12px;
+  padding:8px 12px;backdrop-filter:blur(4px);pointer-events:none;
+}
+.viz-meters{display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:200px}
+.mrow{display:flex;align-items:center;gap:8px}
+.mrow small{color:var(--mut);font-size:10px;width:12px;flex:none}
+.mrow canvas{width:140px;height:8px;flex:none;border-radius:4px;background:#070c18}
+.mrow span{font-size:9px;color:var(--cyan);min-width:52px;text-shadow:0 0 6px rgba(0,229,255,.5)}
+.spec-wrap{flex:1;min-width:100px;position:relative}
+#spectrum{position:absolute;inset:0;width:100%;height:100%;display:block}
+.viz-state{position:absolute;right:6px;top:2px;font-size:8px;letter-spacing:1px;color:#3d4d6e;z-index:2}
+.viz-state.live{color:var(--lime);text-shadow:0 0 6px rgba(157,255,0,.7)}
+
+/* nodes */
+#nodes-layer{position:absolute;left:0;top:0}
+.node{
+  position:absolute;left:0;top:0;width:180px;border-radius:12px;
+  background:var(--panel); border:1px solid var(--nc,#2a3f6b);
+  box-shadow:0 0 14px color-mix(in srgb, var(--nc,#00e5ff) 30%, transparent), 0 6px 20px rgba(0,0,0,.5);
+  backdrop-filter:blur(6px); user-select:none; cursor:move; transition:box-shadow .2s;
+}
+.node.selected{box-shadow:0 0 26px color-mix(in srgb, var(--nc,#00e5ff) 65%, transparent), 0 6px 24px rgba(0,0,0,.55)}
+.node.bypassed{opacity:.55;filter:saturate(.4)}
+.n-head{display:flex;align-items:center;gap:6px;padding:8px 9px;border-bottom:1px solid rgba(255,255,255,.06)}
+.n-icon{color:var(--nc);text-shadow:0 0 9px var(--nc);font-size:15px}
+.n-title{font-family:'Russo One';font-size:10.5px;letter-spacing:.8px;color:var(--nc);
+  text-shadow:0 0 10px color-mix(in srgb,var(--nc) 70%, transparent);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.n-actions{display:flex;gap:4px}
+.n-btn{width:27px;height:27px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);
+  color:var(--mut);font-size:12px;line-height:1;padding:0;transition:.15s}
+.n-btn:hover{color:#fff;border-color:var(--nc);box-shadow:0 0 8px var(--nc)}
+.n-btn.byp-on{color:var(--amb);border-color:var(--amb);box-shadow:0 0 8px var(--amb)}
+.n-body{padding:8px 9px 10px}
+.n-summary{font-size:10px;color:var(--mut);min-height:24px;line-height:1.3;margin-bottom:7px;word-break:break-word}
+.n-cfg{width:100%;padding:8px;border-radius:8px;border:1px solid color-mix(in srgb,var(--nc) 45%, transparent);
+  background:color-mix(in srgb,var(--nc) 10%, transparent);color:var(--txt);font-size:11px;letter-spacing:.5px;min-height:34px}
+.n-cfg:hover{box-shadow:0 0 12px color-mix(in srgb,var(--nc) 45%, transparent)}
+.port{
+  position:absolute;width:20px;height:20px;border-radius:50%;top:30px;
+  background:#0a1120;border:2px solid var(--nc);box-shadow:0 0 8px var(--nc);cursor:crosshair;transition:transform .15s;z-index:3;
+}
+.port::after{content:'';position:absolute;inset:-12px}
+.port:hover,.port.live{transform:scale(1.4);background:var(--nc)}
+.pin{left:-11px}.pout{right:-11px}
+.port.pin.multi{border-color:#fff}
+.port.pin.multi::before{
+  content:attr(data-cnt);position:absolute;top:-19px;left:50%;transform:translateX(-50%);
+  font-size:9px;color:#fff;background:rgba(10,17,32,.95);border:1px solid var(--nc);
+  border-radius:6px;padding:1px 5px;box-shadow:0 0 8px var(--nc);pointer-events:none;
+}
+
+/* HUD */
+.hud{position:absolute;right:10px;bottom:106px;display:flex;flex-direction:column;gap:7px;z-index:20}
+.hud .btn{width:44px;height:42px;padding:0;font-size:17px;display:grid;place-items:center}
+.hint{position:absolute;left:12px;bottom:106px;color:var(--mut);font-size:10px;z-index:19;
+  padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:rgba(6,10,20,.6);max-width:44%;pointer-events:none}
+.zoom-lbl{position:absolute;left:12px;top:10px;z-index:20;font-size:10px;color:var(--cyan);
+  padding:4px 9px;border:1px solid rgba(0,229,255,.25);border-radius:7px;background:rgba(6,10,20,.6);text-shadow:0 0 6px rgba(0,229,255,.6)}
+.fab{display:none;position:absolute;left:14px;bottom:106px;z-index:35;width:60px;height:60px;border-radius:50%;
+  border:1px solid var(--mag);background:rgba(255,47,214,.2);color:#ffd7f5;font-size:28px;
+  box-shadow:0 0 24px rgba(255,47,214,.6)}
+
+/* ===== MODALS ===== */
+.mback{position:fixed;inset:0;background:rgba(3,5,10,.75);backdrop-filter:blur(5px);z-index:60;
+  display:none;align-items:center;justify-content:center;padding:16px}
+.mback.open{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}}
+.modal{width:100%;max-width:460px;max-height:92dvh;overflow-y:auto;background:linear-gradient(180deg,#0c1428,#080d1a);
+  border:1px solid rgba(0,229,255,.35);border-radius:14px;padding:16px 18px;
+  box-shadow:0 0 40px rgba(0,229,255,.18), inset 0 0 30px rgba(0,229,255,.03);animation:rise .22s}
+@keyframes rise{from{transform:translateY(14px);opacity:0}}
+.modal h3{margin:0 0 12px;font-family:'Russo One';font-size:14px;letter-spacing:1.5px;color:var(--cyan);
+  text-shadow:0 0 12px rgba(0,229,255,.6);display:flex;justify-content:space-between;align-items:center}
+.m-close{background:none;border:none;color:var(--mut);font-size:22px;min-width:36px;min-height:36px}
+.m-close:hover{color:var(--mag)}
+.frow{margin-bottom:14px}
+.frow label{display:block;font-size:10.5px;color:var(--mut);letter-spacing:.8px;margin-bottom:6px;text-transform:uppercase}
+.frow .val{float:right;color:var(--cyan);text-shadow:0 0 6px rgba(0,229,255,.6)}
+input[type=text],input[type=number],select{
+  width:100%;padding:10px 11px;border-radius:9px;border:1px solid var(--line);background:#070c18;color:var(--txt);
+  font-family:inherit;font-size:13px;outline:none;min-height:42px}
+input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.3)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--mag));box-shadow:0 0 8px rgba(0,229,255,.45)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-9px;border-radius:50%;
+  background:#0a1120;border:2px solid var(--cyan);box-shadow:0 0 10px var(--cyan);cursor:pointer}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--mag))}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#0a1120;border:2px solid var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.chk{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;min-height:36px}
+.chk input{accent-color:var(--cyan);width:18px;height:18px}
+.m-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.progress{height:8px;border-radius:4px;background:#0a1120;border:1px solid var(--line);overflow:hidden;margin:8px 0}
+.progress i{display:block;height:100%;width:0%;border-radius:4px;transition:width .25s;
+  background:linear-gradient(90deg,var(--cyan),var(--mag));box-shadow:0 0 10px var(--cyan)}
+.status-line{font-size:11px;color:var(--mut);min-height:15px}
+.plist-item{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:rgba(10,16,30,.5)}
+.plist-item b{font-size:12.5px;color:#bfe9ff;display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plist-item small{color:var(--mut);font-size:9.5px}
+.plist-item .grow{flex:1;min-width:0}
+.plist-item .btn{min-height:40px;padding:8px 12px}
+.radio-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.radio-row label{display:flex;gap:7px;align-items:center;cursor:pointer;font-size:12px;text-transform:none;color:var(--txt);min-height:34px}
+.radio-row input{accent-color:var(--mag);width:17px;height:17px}
+.help-li{margin:0 0 9px;padding-left:2px;line-height:1.55;color:#a9bce0}
+.help-li b{color:var(--cyan)}
+
+/* toasts */
+#toasts{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:7px;align-items:center;pointer-events:none}
+.toast{padding:10px 17px;border-radius:9px;background:rgba(8,13,26,.95);border:1px solid var(--cyan);
+  color:var(--txt);font-size:12px;box-shadow:0 0 18px rgba(0,229,255,.35);animation:rise .25s;max-width:86vw;text-align:center}
+.toast.err{border-color:#ff4466;box-shadow:0 0 18px rgba(255,68,102,.4)}
+.toast.ok{border-color:var(--lime);box-shadow:0 0 18px rgba(157,255,0,.3)}
+
+/* ===== MOBILE ===== */
+@media (max-width:820px){
+  .brand-txt small{display:none}
+  .brand-txt b{font-size:11px;letter-spacing:1px}
+  .brand-logo{width:30px;height:30px;font-size:14px}
+  .tb-project{max-width:96px;padding:5px 8px;font-size:11px}
+  .btn{padding:8px 9px;font-size:11px}
+  .palette-wrap{
+    position:fixed;left:0;right:0;bottom:0;top:auto;width:auto;height:56dvh;
+    transform:translateY(106%);transition:transform .28s cubic-bezier(.3,.8,.3,1);
+    border-right:none;border-top:1px solid rgba(0,229,255,.45);box-shadow:0 -8px 44px rgba(0,229,255,.16);
+    border-radius:18px 18px 0 0;
+  }
+  .palette-wrap::before{content:'';display:block;width:44px;height:4px;border-radius:2px;background:#233457;margin:8px auto 0}
+  body.pal-open .palette-wrap{transform:none}
+  body.pal-open .pal-overlay{display:block}
+  .pal-close{display:block}
+  .fab{display:grid;place-items:center}
+  .hint,.zoom-lbl{display:none}
+  .transport{left:8px;right:8px;top:8px;transform:none;gap:6px;padding:6px 8px}
+  .tr-time{min-width:70px;font-size:10px}
+  .tr-fname{max-width:90px}
+  .viz{height:68px;left:8px;right:8px;bottom:10px;padding:6px 9px;gap:8px}
+  .viz-meters{min-width:150px}
+  .mrow canvas{width:96px}
+  .mrow span{display:none}
+  .hud{bottom:90px;right:8px}
+  .fab{bottom:90px}
+  .mback{padding:0}
+  .modal{max-width:100%;height:100dvh;max-height:100dvh;border-radius:0;border-left:none;border-right:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-logo">◉</span>
+    <div class="brand-txt"><b>NEON VOICE LAB</b><small>voice fx constructor</small></div>
+  </div>
+  <div class="tb-project"><span id="proj-name">—</span><span class="save-dot" id="save-dot"></span></div>
+  <div class="tb-btns">
+    <button class="btn" id="btn-projects">💾 Проекты</button>
+    <button class="btn accent2" id="btn-export">⬇ Экспорт</button>
+    <button class="btn icon" id="btn-help" title="Справка">?</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="palette-wrap">
+    <div class="palette-head">
+      <div class="pal-tabs">
+        <button class="pal-tab active" data-tab="mods">⚡ Модули</button>
+        <button class="pal-tab" data-tab="presets">✨ Пресеты</button>
+      </div>
+      <button class="pal-close" id="pal-close">✕</button>
+    </div>
+    <div class="pal-body">
+      <div id="tab-mods" class="pal-tabpane active">
+        <div class="mod-grid" id="mod-grid"></div>
+        <div class="pal-note">Нажмите — модуль появится на холсте.<br>К одному входу можно подключить несколько веток — параллельные цепочки.</div>
+      </div>
+      <div id="tab-presets" class="pal-tabpane">
+        <div id="preset-list"></div>
+        <div class="pal-note">Пресет заменяет текущую цепь на холсте.<br>Значок ⑂ — параллельные ветки.</div>
+      </div>
+    </div>
+  </aside>
+  <div class="pal-overlay" id="pal-overlay"></div>
+
+  <main class="stage" id="stage">
+    <div id="world">
+      <svg id="wires"></svg>
+      <div id="nodes-layer"></div>
+    </div>
+
+    <div class="zoom-lbl" id="zoom-lbl">100%</div>
+
+    <!-- транспорт: питание, источник, файл, запись -->
+    <div class="transport" id="transport">
+      <button class="tr-btn power" id="tr-power" title="Питание аудио-движка">⏻</button>
+      <div class="tr-seg">
+        <button id="tr-mic" title="Микрофон">🎙</button>
+        <button id="tr-file" title="Файл">🎵</button>
+      </div>
+      <div id="tr-file-panel" style="display:none;align-items:center;gap:8px">
+        <button class="tr-btn" id="tr-play" title="Играть/пауза">▶</button>
+        <button class="tr-btn" id="tr-stop" title="Стоп">⏹</button>
+        <button class="tr-btn" id="tr-loop" title="Зациклить">⟳</button>
+        <button class="tr-btn" id="tr-load" title="Загрузить файл">📂</button>
+        <span class="tr-time" id="tr-time">0:00 / 0:00</span>
+        <span class="tr-fname" id="tr-fname"></span>
+      </div>
+      <div id="tr-rec-panel" style="display:flex;align-items:center;gap:8px">
+        <button class="tr-btn rec" id="tr-rec">● REC</button>
+        <span class="tr-time" id="tr-rec-time"></span>
+      </div>
+    </div>
+
+    <div class="hint" id="hint">Несколько проводов могут входить в один порт — параллельные цепи суммируются</div>
+
+    <div class="hud">
+      <button class="btn" id="hz-in" title="Приблизить">＋</button>
+      <button class="btn" id="hz-out" title="Отдалить">－</button>
+      <button class="btn" id="hz-fit" title="Показать всё">⤢</button>
+    </div>
+    <button class="fab" id="fab-add">＋</button>
+
+    <!-- визуализатор: спектр + уровни каналов -->
+    <div class="viz">
+      <div class="viz-meters">
+        <div class="mrow"><small>L</small><canvas id="meterL" width="140" height="8"></canvas><span id="dbL">-∞</span></div>
+        <div class="mrow"><small>R</small><canvas id="meterR" width="140" height="8"></canvas><span id="dbR">-∞</span></div>
+      </div>
+      <div class="spec-wrap">
+        <div class="viz-state" id="viz-state">ОЖИДАНИЕ</div>
+        <canvas id="spectrum"></canvas>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div class="mback" id="modal-params"><div class="modal">
+  <h3><span id="pm-title">Параметры</span><button class="m-close" data-close>✕</button></h3>
+  <div id="pm-body"></div>
+  <div class="m-actions">
+    <button class="btn" id="pm-reset">↺ Сброс</button>
+    <button class="btn accent" id="pm-byp" style="display:none">⏻ Байпас</button>
+    <button class="btn accent2" data-close style="margin-left:auto">Готово</button>
+  </div>
+</div></div>
+
+<div class="mback" id="modal-projects"><div class="modal">
+  <h3><span>💾 ПРОЕКТЫ</span><button class="m-close" data-close>✕</button></h3>
+  <div class="frow" style="display:flex;gap:8px">
+    <input type="text" id="np-name" placeholder="Название нового проекта" style="flex:1">
+    <button class="btn accent" id="np-create">＋ Создать</button>
+  </div>
+  <div class="m-actions" style="margin:0 0 12px">
+    <button class="btn accent2" id="np-save">💾 Сохранить текущий</button>
+  </div>
+  <div id="proj-list"></div>
+</div></div>
+
+<div class="mback" id="modal-export"><div class="modal">
+  <h3><span>⬇ ЭКСПОРТ ЗВУКА</span><button class="m-close" data-close>✕</button></h3>
+  <div class="frow"><label>Формат</label>
+    <select id="exp-format">
+      <option value="mp3">MP3 (lamejs, 192 kbps)</option>
+      <option value="ogg">OGG Vorbis (ffmpeg.wasm)</option>
+      <option value="wav">WAV (без сжатия)</option>
+    </select>
+  </div>
+  <div class="frow"><label>Источник</label>
+    <div class="radio-row">
+      <label><input type="radio" name="exp-src" id="exp-src-rec"> <span id="exp-rec-lbl">Из записи</span></label>
+      <label><input type="radio" name="exp-src" id="exp-src-live" checked> Вживую (сек)</label>
+      <input type="number" id="exp-dur" value="5" min="1" max="60" style="width:70px;min-height:40px">
+      <label><input type="radio" name="exp-src" id="exp-src-file"> Файл (офлайн)</label>
+    </div>
+  </div>
+  <div class="frow"><label>Имя файла</label><input type="text" id="exp-name" value="neon-voice"></div>
+  <div class="progress"><i id="exp-bar"></i></div>
+  <div class="status-line" id="exp-status">Запись делается кнопкой ● REC на панели транспорта. При первом экспорте в OGG загружается кодек (~30 МБ).</div>
+  <div class="m-actions">
+    <button class="btn accent2" id="exp-run">▶ Сформировать</button>
+    <a id="exp-link" style="display:none;margin-left:auto;color:var(--lime);font-size:12px" download>⬇ Скачать ещё раз</a>
+  </div>
+</div></div>
+
+<div class="mback" id="modal-help"><div class="modal">
+  <h3><span>ℹ СПРАВКА</span><button class="m-close" data-close>✕</button></h3>
+  <p class="help-li"><b>Транспорт</b> (панель на холсте): ⏻ — питание аудио-движка; 🎙/🎵 — выбор источника.</p>
+  <p class="help-li"><b>Файл</b> — в режиме 🎵: 📂 загрузка, ▶/⏸ воспроизведение через цепь фильтров, ⏹ стоп, ⟳ зацикливание.</p>
+  <p class="help-li"><b>Запись</b> — в режиме 🎙 кнопка ● REC пишет обработанный сигнал с микрофона. Дубль сохраняется и доступен в «Экспорт → Из записи».</p>
+  <p class="help-li"><b>Визуализатор</b> — спектр и уровни L/R выходного сигнала внизу холста. Если сигнала нет — подсказка «НЕТ СИГНАЛА».</p>
+  <p class="help-li"><b>Палитра</b> (кнопка «＋» внизу слева на мобильных) — вкладки «Модули» и «Пресеты».</p>
+  <p class="help-li"><b>Соединения</b> — тяните от правого порта к левому. Клик по проводу выделяет его (✕ — удалить).</p>
+  <p class="help-li"><b>Параллельные цепочки</b> — разветвляйте выход и подключайте до 4 веток к одному входу: сигналы суммируются.</p>
+  <p class="help-li"><b>Холст</b> — колесо/пинч для масштаба, перетаскивание фона для перемещения.</p>
+  <p class="help-li"><b>Проекты</b> хранятся локально в IndexedDB. Экспорт: MP3 / OGG / WAV, полностью на клиенте. Наденьте наушники при работе с микрофоном!</p>
+</div></div>
+
+<div id="toasts"></div>
+<input type="file" id="file-input" accept="audio/*" hidden>
+
+<!-- Libraries via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@breezystack/lamejs@1.2.7/dist/lamejs.iife.min.js"></script>
+
+<script>
+"use strict";
+/* ============================================================ helpers */
+const byId = id => document.getElementById(id);
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-3);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function fmtT(s) { if (!isFinite(s) || s < 0) s = 0; const m = Math.floor(s / 60), ss = Math.floor(s % 60); return m + ':' + String(ss).padStart(2, '0'); }
+
+function toast(msg, kind) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind ? ' ' + kind : '');
+  t.textContent = msg;
+  byId('toasts').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = '.4s'; setTimeout(() => t.remove(), 420); }, 2800);
+}
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error('CDN: ' + src));
+    document.head.appendChild(s);
+  });
+}
+
+/* ============================================================ module definitions */
+const NODE_W = 180, PORT_Y = 40, MAX_FAN_IN = 4;
+
+function makeShell(ctx, cores) {
+  const inN = ctx.createGain(), outN = ctx.createGain();
+  cores.forEach(c => { try { inN.connect(c); } catch (e) {} });
+  return {
+    ctx, in: inN, out: outN, _cores: cores,
+    setBypass(b) {
+      try { this.in.disconnect(); } catch (e) {}
+      if (b) { this.in.connect(this.out); }
+      else { this._cores.forEach(c => { try { this.in.connect(c); } catch (e) {} }); }
+    }
+  };
+}
+
+/* Granular pitch shifter (2 overlapping modulated delay lines) */
+class PitchFX {
+  constructor(ctx) {
+    this.ctx = ctx; this.T = 0.12;
+    const sr = ctx.sampleRate, N = Math.max(4, Math.floor(this.T * sr));
+    const mk = f => { const b = ctx.createBuffer(1, N, sr); const d = b.getChannelData(0); for (let i = 0; i < N; i++) d[i] = f(i / (N - 1)); return b; };
+    this.win = mk(t => 0.5 - 0.5 * Math.cos(2 * Math.PI * t));
+    this.upBuf = mk(t => 1 - t);
+    this.downBuf = mk(t => t);
+    this.input = ctx.createGain(); this.output = ctx.createGain();
+    this.voices = [this._voice(0), this._voice(1)];
+  }
+  _voice(idx) {
+    const ctx = this.ctx, T = this.T;
+    const delay = ctx.createDelay(1.5); delay.delayTime.value = 0.05;
+    const vg = ctx.createGain(); vg.gain.value = 0;
+    this.input.connect(delay); delay.connect(vg); vg.connect(this.output);
+    const win = ctx.createBufferSource(); win.buffer = this.win; win.loop = true;
+    win.connect(vg.gain); win.start(0, (idx * T / 2) % T);
+    const rampGain = ctx.createGain(); rampGain.gain.value = 0; rampGain.connect(delay.delayTime);
+    return { delay, vg, win, rampGain, ramp: null, idx };
+  }
+  apply(semi) {
+    const r = Math.pow(2, semi / 12), T = this.T;
+    const upDir = r >= 1, k = Math.abs(r - 1) * T;
+    for (const v of this.voices) {
+      if (v.ramp) { try { v.ramp.stop(); } catch (e) {} try { v.ramp.disconnect(); } catch (e) {} }
+      const s = this.ctx.createBufferSource();
+      s.buffer = upDir ? this.upBuf : this.downBuf; s.loop = true;
+      s.connect(v.rampGain); s.start(0, (v.idx * T / 2) % T);
+      v.ramp = s;
+      v.rampGain.gain.value = k;
+      v.delay.delayTime.value = upDir ? (k + 0.008) : 0.008;
+    }
+  }
+  destroy() {
+    for (const v of this.voices) {
+      try { v.win.stop(); } catch (e) {}
+      try { v.ramp && v.ramp.stop(); } catch (e) {}
+      try { v.delay.disconnect(); v.vg.disconnect(); v.rampGain.disconnect(); } catch (e) {}
+    }
+    try { this.input.disconnect(); this.output.disconnect(); } catch (e) {}
+  }
+}
+
+const MODULE_DEFS = {
+  pitch: {
+    name: 'Питч-шифт', icon: '⇕', color: '#ff2fd6',
+    params: [
+      { key: 'semitones', label: 'Полутона', type: 'slider', min: -24, max: 24, step: 0.5, def: 0, unit: ' ст' },
+      { key: 'mix', label: 'Микс', type: 'slider', min: 0, max: 100, step: 1, def: 100, unit: '%' }
+    ],
+    summary: p => (p.semitones > 0 ? '+' : '') + p.semitones + ' ст',
+    audio(ctx, p) {
+      const ps = new PitchFX(ctx);
+      const dry = ctx.createGain(), wet = ctx.createGain();
+      ps.output.connect(wet);
+      const sh = makeShell(ctx, [dry, ps.input]);
+      dry.connect(sh.out); wet.connect(sh.out);
+      wet.gain.value = p.mix / 100; dry.gain.value = 1 - p.mix / 100;
+      ps.apply(p.semitones);
+      return Object.assign(sh, {
+        set(k, v) {
+          if (k === 'semitones') ps.apply(v);
+          if (k === 'mix') { wet.gain.value = v / 100; dry.gain.value = 1 - v / 100; }
+        },
+        dispose() { ps.destroy(); try { dry.disconnect(); wet.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  eq: {
+    name: 'Эквалайзер', icon: '◨', color: '#00e5ff',
+    params: [
+      { key: 'type', label: 'Тип фильтра', type: 'select', def: 'peaking', options: [
+        { v: 'lowpass', label: 'Lowpass (НЧ срез)' }, { v: 'highpass', label: 'Highpass (ВЧ срез)' },
+        { v: 'bandpass', label: 'Bandpass' }, { v: 'peaking', label: 'Peaking' }, { v: 'notch', label: 'Notch' } ] },
+      { key: 'freq', label: 'Частота', type: 'slider', min: 40, max: 16000, step: 10, def: 1200, unit: ' Гц' },
+      { key: 'q', label: 'Добротность Q', type: 'slider', min: 0.1, max: 18, step: 0.1, def: 1 },
+      { key: 'gain', label: 'Усиление', type: 'slider', min: -24, max: 24, step: 0.5, def: 0, unit: ' дБ' }
+    ],
+    summary: p => p.type + ' · ' + Math.round(p.freq) + ' Гц',
+    audio(ctx, p) {
+      const b = ctx.createBiquadFilter();
+      b.type = p.type; b.frequency.value = p.freq; b.Q.value = p.q; b.gain.value = p.gain;
+      const sh = makeShell(ctx, [b]); b.connect(sh.out);
+      return Object.assign(sh, {
+        set(k, v) {
+          const t = ctx.currentTime;
+          if (k === 'type') b.type = v;
+          if (k === 'freq') b.frequency.setTargetAtTime(v, t, 0.02);
+          if (k === 'q') b.Q.setTargetAtTime(v, t, 0.02);
+          if (k === 'gain') b.gain.setTargetAtTime(v, t, 0.02);
+        },
+        dispose() { try { b.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  distortion: {
+    name: 'Дисторшн', icon: '⌁', color: '#ff6b1a',
+    params: [ { key: 'drive', label: 'Перегруз', type: 'slider', min: 0, max: 100, step: 1, def: 35, unit: '%' } ],
+    summary: p => 'drive ' + p.drive + '%',
+    audio(ctx, p) {
+      const pre = ctx.createGain(), shaper = ctx.createWaveShaper(), post = ctx.createGain();
+      shaper.oversample = '4x'; pre.connect(shaper); shaper.connect(post);
+      const sh = makeShell(ctx, [pre]); post.connect(sh.out);
+      const apply = () => {
+        const k = p.drive * 2 + 0.1, n = 1024, c = new Float32Array(n);
+        for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = (Math.PI + k) * x / (Math.PI + k * Math.abs(x)); }
+        shaper.curve = c;
+        pre.gain.value = 1 + p.drive / 60;
+        post.gain.value = 1 / (1 + p.drive / 80);
+      };
+      apply();
+      return Object.assign(sh, {
+        set(k, v) { if (k === 'drive') apply(); },
+        dispose() { try { pre.disconnect(); shaper.disconnect(); post.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  crusher: {
+    name: 'Крашер', icon: '▦', color: '#ffe600',
+    params: [ { key: 'bits', label: 'Разрядность', type: 'slider', min: 2, max: 16, step: 1, def: 8, unit: ' бит' } ],
+    summary: p => p.bits + ' бит',
+    audio(ctx, p) {
+      const shaper = ctx.createWaveShaper();
+      const sh = makeShell(ctx, [shaper]); shaper.connect(sh.out);
+      const apply = () => {
+        const lv = Math.pow(2, p.bits), n = 1024, c = new Float32Array(n);
+        for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; c[i] = Math.round(x * lv) / lv; }
+        shaper.curve = c;
+      };
+      apply();
+      return Object.assign(sh, {
+        set(k, v) { if (k === 'bits') apply(); },
+        dispose() { try { shaper.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  chorus: {
+    name: 'Хорус', icon: '≈', color: '#7c4dff',
+    params: [
+      { key: 'rate', label: 'Скорость', type: 'slider', min: 0.1, max: 8, step: 0.1, def: 1.6, unit: ' Гц' },
+      { key: 'depth', label: 'Глубина', type: 'slider', min: 0, max: 20, step: 0.5, def: 6, unit: ' мс' },
+      { key: 'mix', label: 'Микс', type: 'slider', min: 0, max: 100, step: 1, def: 50, unit: '%' }
+    ],
+    summary: p => p.rate + ' Гц · ' + p.depth + ' мс',
+    audio(ctx, p) {
+      const dl = ctx.createDelay(0.2); dl.delayTime.value = 0.028;
+      const lfo = ctx.createOscillator(); lfo.frequency.value = p.rate;
+      const lg = ctx.createGain(); lg.gain.value = p.depth / 1000;
+      lfo.connect(lg); lg.connect(dl.delayTime); lfo.start();
+      const dry = ctx.createGain(), wet = ctx.createGain();
+      dl.connect(wet);
+      const sh = makeShell(ctx, [dry, dl]); dry.connect(sh.out); wet.connect(sh.out);
+      wet.gain.value = p.mix / 100; dry.gain.value = 1 - p.mix / 100;
+      return Object.assign(sh, {
+        set(k, v) {
+          const t = ctx.currentTime;
+          if (k === 'rate') lfo.frequency.setTargetAtTime(v, t, 0.03);
+          if (k === 'depth') lg.gain.setTargetAtTime(v / 1000, t, 0.03);
+          if (k === 'mix') { wet.gain.value = v / 100; dry.gain.value = 1 - v / 100; }
+        },
+        dispose() { try { lfo.stop(); } catch (e) {} try { dl.disconnect(); lg.disconnect(); dry.disconnect(); wet.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  echo: {
+    name: 'Эхо', icon: '⟲', color: '#00ffa3',
+    params: [
+      { key: 'time', label: 'Задержка', type: 'slider', min: 0.05, max: 1, step: 0.01, def: 0.3, unit: ' с' },
+      { key: 'feedback', label: 'Обратная связь', type: 'slider', min: 0, max: 0.9, step: 0.01, def: 0.45 },
+      { key: 'mix', label: 'Микс', type: 'slider', min: 0, max: 100, step: 1, def: 50, unit: '%' }
+    ],
+    summary: p => p.time + ' с · fb ' + p.feedback,
+    audio(ctx, p) {
+      const dl = ctx.createDelay(3); dl.delayTime.value = p.time;
+      const fb = ctx.createGain(); fb.gain.value = p.feedback;
+      dl.connect(fb); fb.connect(dl);
+      const dry = ctx.createGain(), wet = ctx.createGain();
+      dl.connect(wet);
+      const sh = makeShell(ctx, [dry, dl]); dry.connect(sh.out); wet.connect(sh.out);
+      wet.gain.value = p.mix / 100; dry.gain.value = 1 - p.mix / 100;
+      return Object.assign(sh, {
+        set(k, v) {
+          const t = ctx.currentTime;
+          if (k === 'time') dl.delayTime.setTargetAtTime(v, t, 0.03);
+          if (k === 'feedback') fb.gain.setTargetAtTime(v, t, 0.03);
+          if (k === 'mix') { wet.gain.value = v / 100; dry.gain.value = 1 - v / 100; }
+        },
+        dispose() { try { dl.disconnect(); fb.disconnect(); dry.disconnect(); wet.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  reverb: {
+    name: 'Ревербератор', icon: '◍', color: '#4d9fff',
+    params: [
+      { key: 'decay', label: 'Длина хвоста', type: 'slider', min: 0.2, max: 6, step: 0.1, def: 2.2, unit: ' с' },
+      { key: 'mix', label: 'Микс', type: 'slider', min: 0, max: 100, step: 1, def: 40, unit: '%' }
+    ],
+    summary: p => p.decay + ' с',
+    audio(ctx, p) {
+      const conv = ctx.createConvolver();
+      const gen = () => {
+        const dur = clamp(p.decay, 0.2, 8), sr = ctx.sampleRate;
+        const len = Math.max(Math.floor(sr * 0.15), Math.floor(dur * sr));
+        const buf = ctx.createBuffer(2, len, sr);
+        for (let ch = 0; ch < 2; ch++) {
+          const d = buf.getChannelData(ch);
+          for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.2) * Math.exp(-3 * i / len);
+        }
+        conv.buffer = buf;
+      };
+      gen();
+      let timer = null;
+      const dry = ctx.createGain(), wet = ctx.createGain();
+      conv.connect(wet);
+      const sh = makeShell(ctx, [dry, conv]); dry.connect(sh.out); wet.connect(sh.out);
+      wet.gain.value = p.mix / 100; dry.gain.value = 1 - p.mix / 100;
+      return Object.assign(sh, {
+        set(k, v) {
+          if (k === 'decay') { clearTimeout(timer); timer = setTimeout(gen, 150); }
+          if (k === 'mix') { wet.gain.value = v / 100; dry.gain.value = 1 - v / 100; }
+        },
+        dispose() { clearTimeout(timer); try { conv.disconnect(); dry.disconnect(); wet.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  ring: {
+    name: 'Робот', icon: '∞', color: '#ff3355',
+    params: [
+      { key: 'freq', label: 'Частота кольца', type: 'slider', min: 20, max: 2000, step: 5, def: 140, unit: ' Гц' },
+      { key: 'mix', label: 'Микс', type: 'slider', min: 0, max: 100, step: 1, def: 100, unit: '%' }
+    ],
+    summary: p => Math.round(p.freq) + ' Гц',
+    audio(ctx, p) {
+      const rg = ctx.createGain(); rg.gain.value = 0;
+      const osc = ctx.createOscillator(); osc.frequency.value = p.freq; osc.start();
+      osc.connect(rg.gain);
+      const dry = ctx.createGain(), wet = ctx.createGain();
+      rg.connect(wet);
+      const sh = makeShell(ctx, [dry, rg]); dry.connect(sh.out); wet.connect(sh.out);
+      wet.gain.value = p.mix / 100; dry.gain.value = 1 - p.mix / 100;
+      return Object.assign(sh, {
+        set(k, v) {
+          if (k === 'freq') osc.frequency.setTargetAtTime(v, ctx.currentTime, 0.03);
+          if (k === 'mix') { wet.gain.value = v / 100; dry.gain.value = 1 - v / 100; }
+        },
+        dispose() { try { osc.stop(); } catch (e) {} try { rg.disconnect(); dry.disconnect(); wet.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  compressor: {
+    name: 'Компрессор', icon: '↧', color: '#9dff00',
+    params: [
+      { key: 'threshold', label: 'Порог', type: 'slider', min: -60, max: 0, step: 1, def: -24, unit: ' дБ' },
+      { key: 'ratio', label: 'Степень', type: 'slider', min: 1, max: 20, step: 0.5, def: 4 },
+      { key: 'attack', label: 'Атака', type: 'slider', min: 0, max: 0.2, step: 0.001, def: 0.004, unit: ' с' },
+      { key: 'release', label: 'Отпускание', type: 'slider', min: 0.05, max: 1, step: 0.01, def: 0.25, unit: ' с' }
+    ],
+    summary: p => p.threshold + ' дБ · ' + p.ratio + ':1',
+    audio(ctx, p) {
+      const c = ctx.createDynamicsCompressor();
+      c.threshold.value = p.threshold; c.knee.value = 20; c.ratio.value = p.ratio;
+      c.attack.value = p.attack; c.release.value = p.release;
+      const sh = makeShell(ctx, [c]); c.connect(sh.out);
+      return Object.assign(sh, {
+        set(k, v) {
+          const t = ctx.currentTime;
+          if (k === 'threshold') c.threshold.setTargetAtTime(v, t, 0.03);
+          if (k === 'ratio') c.ratio.setTargetAtTime(v, t, 0.03);
+          if (k === 'attack') c.attack.setTargetAtTime(v, t, 0.03);
+          if (k === 'release') c.release.setTargetAtTime(v, t, 0.03);
+        },
+        dispose() { try { c.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  },
+  gain: {
+    name: 'Громкость', icon: '●', color: '#c8d4ff',
+    params: [ { key: 'gain', label: 'Коэффициент', type: 'slider', min: 0, max: 4, step: 0.01, def: 1, unit: '×' } ],
+    summary: p => '×' + p.gain,
+    audio(ctx, p) {
+      const g = ctx.createGain(); g.gain.value = p.gain;
+      const sh = makeShell(ctx, [g]); g.connect(sh.out);
+      return Object.assign(sh, {
+        set(k, v) { if (k === 'gain') g.gain.setTargetAtTime(v, ctx.currentTime, 0.02); },
+        dispose() { try { g.disconnect(); sh.in.disconnect(); sh.out.disconnect(); } catch (e) {} }
+      });
+    }
+  }
+};
+
+const SPECIAL_DEFS = {
+  input: {
+    name: 'Вход', icon: '▶', color: '#00ffa3', fixed: true,
+    params: [
+      { key: 'source', label: 'Источник', type: 'select', def: 'mic', options: [ { v: 'mic', label: 'Микрофон' }, { v: 'file', label: 'Аудиофайл' } ] },
+      { key: 'gain', label: 'Уровень входа', type: 'slider', min: 0, max: 2, step: 0.01, def: 1, unit: '×' },
+      { key: 'loop', label: 'Зациклить файл', type: 'check', def: false }
+    ],
+    summary: p => p.source === 'file' ? 'файл' : 'микрофон'
+  },
+  output: {
+    name: 'Выход', icon: '◉', color: '#00e5ff', fixed: true,
+    params: [ { key: 'volume', label: 'Громкость', type: 'slider', min: 0, max: 2, step: 0.01, def: 0.9, unit: '×' } ],
+    summary: p => 'vol ×' + p.volume
+  }
+};
+const defOf = t => MODULE_DEFS[t] || SPECIAL_DEFS[t];
+const defaultsOf = d => { const o = {}; d.params.forEach(p => o[p.key] = p.def); return o; };
+
+/* ============================================================ presets */
+const PRESETS = [
+  { id: 'empty', name: 'Пустая цепь', icon: '◇', desc: 'Только вход и выход — соберите свою', steps: [] },
+  {
+    id: 'clean', name: 'Чистый голос', icon: '🎤', desc: 'Срез гула, мягкий подъём верхов, компрессия',
+    steps: [
+      { t: 'eq', p: { type: 'highpass', freq: 90, q: 0.7, gain: 0 } },
+      { t: 'eq', p: { type: 'peaking', freq: 3200, q: 1.1, gain: 3.5 } },
+      { t: 'compressor', p: { threshold: -28, ratio: 3, attack: 0.005, release: 0.25 } }
+    ]
+  },
+  {
+    id: 'chipmunk', name: 'Бурундук', icon: '🐿', desc: 'Высокий мультяшный голос (+10 полутонов)',
+    steps: [
+      { t: 'pitch', p: { semitones: 10, mix: 100 } },
+      { t: 'compressor', p: { threshold: -24, ratio: 4, attack: 0.004, release: 0.2 } }
+    ]
+  },
+  {
+    id: 'demon', name: 'Демон', icon: '👹', desc: 'Низкий рык: питч вниз, перегруз, мрачная комната',
+    steps: [
+      { t: 'pitch', p: { semitones: -12, mix: 100 } },
+      { t: 'distortion', p: { drive: 30 } },
+      { t: 'reverb', p: { decay: 1.6, mix: 25 } }
+    ]
+  },
+  {
+    id: 'robot', name: 'Робот', icon: '🤖', desc: 'Кольцевая модуляция + цифровой краш',
+    steps: [
+      { t: 'ring', p: { freq: 130, mix: 100 } },
+      { t: 'crusher', p: { bits: 8 } },
+      { t: 'compressor', p: { threshold: -20, ratio: 8, attack: 0.003, release: 0.2 } }
+    ]
+  },
+  {
+    id: 'space', name: 'Космос', icon: '🌌', desc: 'Хорус, эхо и длинный космический хвост',
+    steps: [
+      { t: 'chorus', p: { rate: 0.8, depth: 10, mix: 60 } },
+      { t: 'echo', p: { time: 0.42, feedback: 0.5, mix: 40 } },
+      { t: 'reverb', p: { decay: 4.5, mix: 55 } }
+    ]
+  },
+  {
+    id: 'radio', name: 'Старое радио', icon: '📻', desc: 'Полосовой фильтр, перегруз и зерно',
+    steps: [
+      { t: 'eq', p: { type: 'bandpass', freq: 1400, q: 1.8, gain: 0 } },
+      { t: 'distortion', p: { drive: 42 } },
+      { t: 'crusher', p: { bits: 12 } },
+      { t: 'compressor', p: { threshold: -18, ratio: 10, attack: 0.003, release: 0.15 } }
+    ]
+  },
+  {
+    id: 'stadium', name: 'Стадион', icon: '🏟', desc: 'Огромная арена: эхо + длинная реверберация',
+    steps: [
+      { t: 'echo', p: { time: 0.5, feedback: 0.55, mix: 30 } },
+      { t: 'reverb', p: { decay: 5.5, mix: 60 } }
+    ]
+  },
+  {
+    id: 'glitch', name: 'Глитч', icon: '⚡', desc: 'Ломаем голос: 4 бита, кольцо 460 Гц, дребезг',
+    steps: [
+      { t: 'crusher', p: { bits: 4 } },
+      { t: 'ring', p: { freq: 460, mix: 65 } },
+      { t: 'echo', p: { time: 0.13, feedback: 0.72, mix: 45 } }
+    ]
+  },
+  {
+    id: 'phone', name: 'Телефон', icon: '☎', desc: 'Узкая телефонная полоса 350–3200 Гц',
+    steps: [
+      { t: 'eq', p: { type: 'highpass', freq: 350, q: 0.8, gain: 0 } },
+      { t: 'eq', p: { type: 'lowpass', freq: 3200, q: 0.8, gain: 0 } },
+      { t: 'compressor', p: { threshold: -22, ratio: 6, attack: 0.004, release: 0.2 } }
+    ]
+  },
+  {
+    id: 'par-space', name: 'Параллель: рык + космос', icon: '⑂',
+    desc: 'Две ветки от входа: питч-вниз с перегрузом и хорус с эхом. Суммируются на выходе',
+    nodes: [
+      { t: 'pitch', p: { semitones: -7, mix: 100 }, col: 1, row: -1 },
+      { t: 'distortion', p: { drive: 22 }, col: 2, row: -1 },
+      { t: 'chorus', p: { rate: 1.2, depth: 7, mix: 70 }, col: 1, row: 1 },
+      { t: 'echo', p: { time: 0.38, feedback: 0.45, mix: 60 }, col: 2, row: 1 }
+    ],
+    edges: [ ['in', 0], [0, 1], [1, 'out'], ['in', 2], [2, 3], [3, 'out'] ]
+  },
+  {
+    id: 'par-radio', name: 'Параллель: рация + пещера', icon: '⧉',
+    desc: 'Телефонно-радийная ветка параллельно с большим залом',
+    nodes: [
+      { t: 'eq', p: { type: 'bandpass', freq: 1400, q: 1.6, gain: 0 }, col: 1, row: -1 },
+      { t: 'distortion', p: { drive: 35 }, col: 2, row: -1 },
+      { t: 'reverb', p: { decay: 4, mix: 85 }, col: 1, row: 1 },
+      { t: 'gain', p: { gain: 0.7 }, col: 2, row: 1 }
+    ],
+    edges: [ ['in', 0], [0, 1], [1, 'out'], ['in', 2], [2, 3], [3, 'out'] ]
+  }
+];
+
+/* ============================================================ state */
+const state = { nodes: [], edges: [], fileRaw: null, fileName: '' };
+let project = { id: null, name: 'Без названия' };
+const view = { x: 60, y: 40, z: 1 };
+let selNode = null, selEdge = null;
+const nodeEls = new Map();
+const audioObjs = new Map();
+/* master — точка съёма выходного сигнала: динамики + анализаторы + рекордер */
+const engine = { ctx: null, running: false, micStream: null, fileBuffer: null, master: null,
+                 analyser: null, anL: null, anR: null, collect: false, chunks: null };
+
+const recorder = { active: false, start: 0, timer: null };
+let lastRecording = null; // {channels, sampleRate, duration}
+
+const stage = byId('stage'), world = byId('world'), wiresSvg = byId('wires'), nodesLayer = byId('nodes-layer');
+const nodeById = id => state.nodes.find(n => n.id === id);
+const inputNode = () => state.nodes.find(n => n.type === 'input');
+let tempWire = null;
+
+/* ============================================================ IndexedDB */
+const IDB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      if (this.db) return res(this.db);
+      const r = indexedDB.open('nvlab-db', 1);
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('projects')) r.result.createObjectStore('projects', { keyPath: 'id' }); };
+      r.onsuccess = () => { this.db = r.result; res(this.db); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async tx(mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('projects', mode), s = t.objectStore('projects'), rq = fn(s);
+      t.oncomplete = () => res(rq && rq.result);
+      t.onerror = () => rej(t.error);
+    });
+  },
+  all() { return this.tx('readonly', s => s.getAll()); },
+  get(id) { return this.tx('readonly', s => s.get(id)); },
+  put(o) { return this.tx('readwrite', s => s.put(o)); },
+  del(id) { return this.tx('readwrite', s => s.delete(id)); }
+};
+
+let dirtyTimer = null;
+function dirty() {
+  byId('save-dot').className = 'save-dot dirty';
+  clearTimeout(dirtyTimer);
+  dirtyTimer = setTimeout(saveCurrent, 900);
+}
+async function saveCurrent(silent) {
+  try {
+    const data = {
+      id: project.id, name: project.name, updatedAt: Date.now(),
+      nodes: state.nodes.map(n => ({ id: n.id, type: n.type, x: Math.round(n.x), y: Math.round(n.y), params: n.params, bypass: !!n.bypass })),
+      edges: state.edges.map(e => ({ id: e.id, from: e.from, to: e.to })),
+      file: state.fileRaw ? { name: state.fileName, data: state.fileRaw } : null
+    };
+    await IDB.put(data);
+    byId('save-dot').className = 'save-dot saved';
+    if (!silent) toast('Проект сохранён', 'ok');
+  } catch (e) { toast('Ошибка сохранения: ' + e.message, 'err'); }
+}
+
+/* ============================================================ audio engine */
+function inputAudio(ctx, p, env) {
+  const out = ctx.createGain(); out.gain.value = p.gain;
+  let cur = null, srcStart = 0, offset = 0, playing = false, manualStop = false;
+
+  function stopSrc() {
+    if (cur) { try { cur.onended = null; cur.stop && cur.stop(); } catch (e) {} try { cur.disconnect(); } catch (e) {} cur = null; }
+  }
+  function rebuild() {
+    stopSrc(); playing = false; offset = 0;
+    if (p.source === 'mic' && env.micStream) {
+      cur = ctx.createMediaStreamSource(env.micStream); cur.connect(out); playing = true;
+    }
+    updateTransportUI();
+  }
+  const player = {
+    get duration() { return env.fileBuffer ? env.fileBuffer.duration : 0; },
+    get time() {
+      if (!playing || !cur) return offset;
+      return Math.min(this.duration, offset + ctx.currentTime - srcStart);
+    },
+    get playing() { return playing; },
+    play() {
+      if (!env.fileBuffer) return;
+      stopSrc(); manualStop = false;
+      cur = ctx.createBufferSource(); cur.buffer = env.fileBuffer; cur.loop = !!p.loop;
+      cur.connect(out);
+      cur.onended = () => {
+        if (manualStop) return;
+        playing = false; offset = 0; updateTransportUI();
+      };
+      if (offset >= this.duration) offset = 0;
+      cur.start(0, offset);
+      srcStart = ctx.currentTime; playing = true;
+      updateTransportUI();
+    },
+    pause() {
+      if (!playing || !cur) return;
+      offset = this.time; manualStop = true;
+      stopSrc(); playing = false; updateTransportUI();
+    },
+    stop() {
+      manualStop = true; stopSrc(); playing = false; offset = 0; updateTransportUI();
+    },
+    setLoop(v) { p.loop = v; if (cur) cur.loop = v; }
+  };
+  rebuild();
+  return {
+    in: null, out, rebuild, player,
+    set(k, v) {
+      if (k === 'gain') out.gain.setTargetAtTime(v, ctx.currentTime, 0.02);
+      else if (k === 'loop') player.setLoop(v);
+      else rebuild();
+    },
+    setBypass() {},
+    dispose() { manualStop = true; stopSrc(); try { out.disconnect(); } catch (e) {} }
+  };
+}
+function outputAudio(ctx, p, env) {
+  const inN = ctx.createGain(), vol = ctx.createGain(); vol.gain.value = p.volume;
+  inN.connect(vol);
+  /* весь выход идёт через мастер-шину: она подключена к динамикам,
+     анализаторам спектра/уровней и рекордеру */
+  vol.connect(env.master ? env.master : ctx.destination);
+  return {
+    in: inN, out: null,
+    set(k, v) { if (k === 'volume') vol.gain.setTargetAtTime(v, ctx.currentTime, 0.02); },
+    setBypass() {},
+    dispose() { try { inN.disconnect(); vol.disconnect(); } catch (e) {} }
+  };
+}
+function makeNodeAudio(ctx, n, env) {
+  if (n.type === 'input') return inputAudio(ctx, n.params, env);
+  if (n.type === 'output') return outputAudio(ctx, n.params, env);
+  return MODULE_DEFS[n.type].audio(ctx, n.params, env);
+}
+function disposeAllAudio() {
+  audioObjs.forEach(a => { try { a.dispose(); } catch (e) {} });
+  audioObjs.clear();
+}
+function rebuildGraph() {
+  if (!engine.ctx) return;
+  audioObjs.forEach(a => { if (a.out) { try { a.out.disconnect(); } catch (e) {} } });
+  for (const e of state.edges) {
+    const s = audioObjs.get(e.from), t = audioObjs.get(e.to);
+    if (s && t && s.out && t.in) { try { s.out.connect(t.in); } catch (err) {} }
+  }
+}
+function buildAllAudio() {
+  disposeAllAudio();
+  const env = { fileBuffer: engine.fileBuffer, micStream: engine.micStream, master: engine.master, offline: false };
+  for (const n of state.nodes) audioObjs.set(n.id, makeNodeAudio(engine.ctx, n, env));
+  rebuildGraph();
+}
+
+/* мастер-шина: динамики + спектр + уровни каналов + рекордер */
+async function setupMasterBus(ctx) {
+  engine.collect = false; engine.chunks = [];
+
+  engine.master = ctx.createGain(); engine.master.gain.value = 1;
+
+  /* анализатор спектра */
+  engine.analyser = ctx.createAnalyser();
+  engine.analyser.fftSize = 2048;
+  engine.analyser.smoothingTimeConstant = 0.82;
+  engine.master.connect(engine.analyser);
+
+  /* уровни по каналам */
+  engine.anL = ctx.createAnalyser(); engine.anL.fftSize = 1024;
+  engine.anR = ctx.createAnalyser(); engine.anR.fftSize = 1024;
+  const split = ctx.createChannelSplitter(2);
+  engine.master.connect(split);
+  split.connect(engine.anL, 0);
+  split.connect(engine.anR, 1);
+
+  spData = null; tdL = null; tdR = null;
+
+  /* рекордер (захват PCM для экспорта/записи) */
+  const silent = ctx.createGain(); silent.gain.value = 0; silent.connect(ctx.destination);
+  const WORKLET = "class NVCapture extends AudioWorkletProcessor{process(i){const c=i[0];if(c&&c.length){const cp=c.map(x=>new Float32Array(x));this.port.postMessage(cp,cp.map(x=>x.buffer));}return true;}}registerProcessor('nv-capture',NVCapture);";
+  try {
+    const url = URL.createObjectURL(new Blob([WORKLET], { type: 'application/javascript' }));
+    await ctx.audioWorklet.addModule(url);
+    const node = new AudioWorkletNode(ctx, 'nv-capture', { numberOfInputs: 1, numberOfOutputs: 1, channelCount: 2 });
+    engine.master.connect(node); node.connect(silent);
+    node.port.onmessage = e => { if (engine.collect && engine.chunks) engine.chunks.push(e.data); };
+    engine._capture = node;
+  } catch (err) {
+    const sp = ctx.createScriptProcessor(4096, 2, 2);
+    engine.master.connect(sp); sp.connect(silent);
+    sp.onaudioprocess = e => {
+      if (engine.collect && engine.chunks) {
+        const ib = e.inputBuffer, cp = [];
+        for (let c = 0; c < ib.numberOfChannels; c++) cp.push(new Float32Array(ib.getChannelData(c)));
+        engine.chunks.push(cp);
+      }
+    };
+    engine._capture = sp;
+  }
+
+  /* финальное подключение к динамикам */
+  engine.master.connect(ctx.destination);
+}
+
+async function engineStart() {
+  if (engine.running) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) { toast('Web Audio не поддерживается', 'err'); return; }
+  try {
+    if (!engine.ctx) engine.ctx = new AC({ latencyHint: 'interactive' });
+    await engine.ctx.resume();
+    const inp = inputNode();
+    const wantMic = !inp || inp.params.source === 'mic';
+    if (wantMic && !engine.micStream && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        engine.micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      } catch (e) { toast('Микрофон недоступен: ' + e.name, 'err'); }
+    }
+    if (state.fileRaw && !engine.fileBuffer) {
+      try { engine.fileBuffer = await engine.ctx.decodeAudioData(state.fileRaw.slice(0)); } catch (e) {}
+    }
+    await setupMasterBus(engine.ctx);
+    buildAllAudio();
+    engine.running = true;
+    updateTransportUI();
+    toast('Аудио-движок запущен 🎧', 'ok');
+  } catch (e) { toast('Ошибка старта: ' + e.message, 'err'); }
+}
+function engineStop() {
+  if (!engine.running) return;
+  if (recorder.active) stopRec();
+  disposeAllAudio();
+  if (engine.micStream) { engine.micStream.getTracks().forEach(t => t.stop()); engine.micStream = null; }
+  try { engine.master && engine.master.disconnect(); } catch (e) {}
+  try { engine._capture && engine._capture.disconnect && engine._capture.disconnect(); } catch (e) {}
+  engine.master = null; engine.analyser = null; engine.anL = null; engine.anR = null;
+  engine.running = false;
+  updateTransportUI();
+}
+
+/* источник: микрофон / файл */
+function setSource(mode) {
+  const inp = inputNode(); if (!inp) return;
+  if (mode === 'file' && !state.fileRaw && !engine.fileBuffer) { toast('Сначала загрузите аудиофайл', 'err'); return; }
+  if (mode === 'file' && engine.micStream) { engine.micStream.getTracks().forEach(t => t.stop()); engine.micStream = null; }
+  inp.params.source = mode;
+  const a = audioObjs.get(inp.id); if (a) a.set('source', mode);
+  refreshNodeCard(inp.id); dirty(); updateTransportUI();
+}
+
+/* запись с микрофона (обработанный сигнал) */
+async function toggleRec() {
+  if (recorder.active) { stopRec(); return; }
+  const inp = inputNode();
+  if (inp && inp.params.source === 'file') setSource('mic');
+  if (!engine.running) await engineStart();
+  if (!engine.running) return;
+  if (!engine.micStream) { toast('Микрофон не подключён', 'err'); return; }
+  engine.chunks = []; engine.collect = true;
+  recorder.active = true; recorder.start = performance.now();
+  clearInterval(recorder.timer);
+  recorder.timer = setInterval(() => {
+    byId('tr-rec-time').textContent = '● ' + fmtT((performance.now() - recorder.start) / 1000);
+  }, 200);
+  updateTransportUI();
+}
+function stopRec() {
+  if (!recorder.active) return;
+  engine.collect = false; recorder.active = false;
+  clearInterval(recorder.timer);
+  if (engine.ctx && engine.chunks && engine.chunks.length) {
+    const pcm = mergeChunks(engine.chunks, engine.ctx.sampleRate);
+    lastRecording = { channels: pcm.channels, sampleRate: pcm.sampleRate, duration: pcm.channels[0].length / pcm.sampleRate };
+    toast('Дубль ' + fmtT(lastRecording.duration) + ' сохранён — доступен в экспорте', 'ok');
+  }
+  updateTransportUI();
+}
+
+/* ============================================================ transport UI */
+function updateTransportUI() {
+  const inp = inputNode();
+  const mode = inp ? inp.params.source : 'mic';
+  byId('tr-power').classList.toggle('on', engine.running);
+  byId('tr-mic').classList.toggle('active', mode === 'mic');
+  byId('tr-file').classList.toggle('active', mode === 'file');
+  byId('tr-file-panel').style.display = mode === 'file' ? 'flex' : 'none';
+  byId('tr-rec-panel').style.display = mode === 'mic' ? 'flex' : 'none';
+  byId('tr-fname').textContent = mode === 'file' ? (state.fileName || 'нет файла') : '';
+  const a = inp ? audioObjs.get(inp.id) : null;
+  const playing = !!(a && a.player && a.player.playing);
+  byId('tr-play').textContent = playing ? '⏸' : '▶';
+  byId('tr-loop').classList.toggle('loop-on', !!(inp && inp.params.loop));
+  if (!playing && a && a.player) byId('tr-time').textContent = '0:00 / ' + fmtT(a.player.duration);
+  byId('tr-rec').classList.toggle('on', recorder.active);
+  if (!recorder.active) {
+    byId('tr-rec-time').textContent = lastRecording ? 'дубль: ' + fmtT(lastRecording.duration) : '';
+  }
+}
+byId('tr-power').onclick = () => { engine.running ? engineStop() : engineStart(); };
+byId('tr-mic').onclick = () => setSource('mic');
+byId('tr-file').onclick = () => { if (state.fileRaw || engine.fileBuffer) setSource('file'); else byId('file-input').click(); };
+byId('tr-load').onclick = () => byId('file-input').click();
+byId('tr-play').onclick = async () => {
+  const inp = inputNode(); if (!inp) return;
+  if (inp.params.source !== 'file') setSource('file');
+  if (!engine.running) await engineStart();
+  const a = audioObjs.get(inp.id);
+  if (!a || !a.player || !a.player.duration) { toast('Загрузите аудиофайл', 'err'); return; }
+  a.player.playing ? a.player.pause() : a.player.play();
+};
+byId('tr-stop').onclick = () => { const inp = inputNode(); const a = inp && audioObjs.get(inp.id); if (a && a.player) a.player.stop(); };
+byId('tr-loop').onclick = () => {
+  const inp = inputNode(); if (!inp) return;
+  inp.params.loop = !inp.params.loop;
+  const a = audioObjs.get(inp.id); if (a) a.set('loop', inp.params.loop);
+  dirty(); updateTransportUI();
+};
+byId('tr-rec').onclick = toggleRec;
+
+function updatePlayTime() {
+  const inp = inputNode();
+  if (!inp || inp.params.source !== 'file') return;
+  const a = audioObjs.get(inp.id);
+  if (a && a.player) byId('tr-time').textContent = fmtT(a.player.time) + ' / ' + fmtT(a.player.duration);
+}
+
+/* ============================================================ canvas: view */
+function applyView() {
+  world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.z})`;
+  stage.style.backgroundSize = (24 * view.z) + 'px ' + (24 * view.z) + 'px';
+  stage.style.backgroundPosition = view.x + 'px ' + view.y + 'px';
+  byId('zoom-lbl').textContent = Math.round(view.z * 100) + '%';
+}
+function toWorld(cx, cy) {
+  const r = stage.getBoundingClientRect();
+  return { x: (cx - r.left - view.x) / view.z, y: (cy - r.top - view.y) / view.z };
+}
+function zoomAt(cx, cy, f) {
+  const nz = clamp(view.z * f, 0.3, 2.5);
+  const r = stage.getBoundingClientRect();
+  const wx = (cx - r.left - view.x) / view.z, wy = (cy - r.top - view.y) / view.z;
+  view.x = cx - r.left - wx * nz; view.y = cy - r.top - wy * nz; view.z = nz;
+  applyView();
+}
+function fitView() {
+  if (!state.nodes.length) return;
+  let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9;
+  state.nodes.forEach(n => { x1 = Math.min(x1, n.x); y1 = Math.min(y1, n.y); x2 = Math.max(x2, n.x + NODE_W); y2 = Math.max(y2, n.y + 120); });
+  const r = stage.getBoundingClientRect();
+  const z = clamp(Math.min((r.width - 60) / (x2 - x1), (r.height - 60) / (y2 - y1)), 0.3, 1.6);
+  view.z = z; view.x = (r.width - (x2 - x1) * z) / 2 - x1 * z; view.y = (r.height - (y2 - y1) * z) / 2 - y1 * z;
+  applyView();
+}
+
+/* ============================================================ canvas: nodes & wires */
+function createNodeEl(n) {
+  const d = defOf(n.type);
+  const el = document.createElement('div');
+  el.className = 'node'; el.dataset.id = n.id;
+  el.style.setProperty('--nc', d.color);
+  el.style.transform = `translate(${n.x}px,${n.y}px)`;
+  el.innerHTML =
+    `<div class="n-head">
+       <span class="n-icon">${d.icon}</span><span class="n-title">${d.name.toUpperCase()}</span>
+       <span class="n-actions">
+         ${MODULE_DEFS[n.type] ? '<button class="n-btn n-byp" title="Байпас">⏻</button>' : ''}
+         ${d.fixed ? '' : '<button class="n-btn n-del" title="Удалить">✕</button>'}
+       </span>
+     </div>
+     <div class="n-body">
+       <div class="n-summary"></div>
+       <button class="n-cfg">⚙ Параметры…</button>
+     </div>
+     ${n.type !== 'input' ? '<div class="port pin" title="вход"></div>' : ''}
+     ${n.type !== 'output' ? '<div class="port pout" title="выход"></div>' : ''}`;
+  nodesLayer.appendChild(el);
+  nodeEls.set(n.id, el);
+  refreshNodeCard(n.id);
+  return el;
+}
+function refreshNodeCard(id) {
+  const n = nodeById(id), el = nodeEls.get(id);
+  if (!n || !el) return;
+  const d = defOf(n.type);
+  let txt = d.summary ? d.summary(n.params) : '';
+  if (n.type === 'input' && n.params.source === 'file') txt = 'файл: ' + (state.fileName || 'нет');
+  el.querySelector('.n-summary').textContent = txt;
+  el.classList.toggle('bypassed', !!n.bypass);
+  const bb = el.querySelector('.n-byp'); if (bb) bb.classList.toggle('byp-on', !!n.bypass);
+}
+function addNode(type) {
+  if (!MODULE_DEFS[type]) return;
+  const r = stage.getBoundingClientRect();
+  const c = toWorld(r.left + r.width / 2, r.top + r.height / 2);
+  const n = { id: uid(), type, x: c.x - NODE_W / 2 + (Math.random() * 80 - 40), y: c.y - 60 + (Math.random() * 80 - 40), params: defaultsOf(MODULE_DEFS[type]), bypass: false };
+  state.nodes.push(n);
+  createNodeEl(n);
+  selectNode(n.id);
+  dirty();
+}
+function removeNode(id) {
+  const n = nodeById(id);
+  if (!n) return;
+  if (defOf(n.type).fixed) { toast('Этот модуль нельзя удалить', 'err'); return; }
+  const a = audioObjs.get(id); if (a) { try { a.dispose(); } catch (e) {} audioObjs.delete(id); }
+  state.nodes = state.nodes.filter(x => x.id !== id);
+  state.edges = state.edges.filter(e => e.from !== id && e.to !== id);
+  const el = nodeEls.get(id); if (el) el.remove(); nodeEls.delete(id);
+  if (selNode === id) selNode = null;
+  if (selEdge && !state.edges.find(e => e.id === selEdge)) selEdge = null;
+  rebuildGraph(); updateWires(); dirty();
+}
+function selectNode(id) {
+  selNode = id; selEdge = null;
+  nodeEls.forEach((el, nid) => el.classList.toggle('selected', nid === id));
+  updateWires();
+}
+function selectEdge(eid) { selEdge = eid; selNode = null; nodeEls.forEach(el => el.classList.remove('selected')); updateWires(); }
+function deselectAll() { selNode = null; selEdge = null; nodeEls.forEach(el => el.classList.remove('selected')); updateWires(); }
+
+function wouldCycle(fromId, toId) {
+  const seen = new Set(), stack = [toId];
+  while (stack.length) {
+    const id = stack.pop();
+    if (id === fromId) return true;
+    if (seen.has(id)) continue; seen.add(id);
+    state.edges.filter(e => e.from === id).forEach(e => stack.push(e.to));
+  }
+  return false;
+}
+function tryConnect(fromId, toId) {
+  if (!fromId || !toId || fromId === toId) return;
+  const fn = nodeById(fromId), tn = nodeById(toId);
+  if (!fn || !tn || fn.type === 'output' || tn.type === 'input') return;
+  if (wouldCycle(fromId, toId)) { toast('Соединение создало бы цикл', 'err'); return; }
+  if (state.edges.find(e => e.from === fromId && e.to === toId)) return;
+  const fanIn = state.edges.filter(e => e.to === toId).length;
+  if (fanIn >= MAX_FAN_IN) { toast('Не больше ' + MAX_FAN_IN + ' параллельных веток на один вход', 'err'); return; }
+  state.edges.push({ id: uid(), from: fromId, to: toId });
+  rebuildGraph(); updateWires(); dirty();
+  if (fanIn >= 1) toast('Параллельная ветка подключена ⑂', 'ok');
+}
+function removeEdge(eid) {
+  state.edges = state.edges.filter(e => e.id !== eid);
+  if (selEdge === eid) selEdge = null;
+  rebuildGraph(); updateWires(); dirty();
+}
+
+function portPos(n, kind) {
+  return kind === 'out' ? { x: n.x + NODE_W, y: n.y + PORT_Y } : { x: n.x, y: n.y + PORT_Y };
+}
+function updatePortBadges() {
+  for (const n of state.nodes) {
+    const el = nodeEls.get(n.id); if (!el) continue;
+    const pin = el.querySelector('.port.pin'); if (!pin) continue;
+    const cnt = state.edges.filter(e => e.to === n.id).length;
+    pin.classList.toggle('multi', cnt > 1);
+    if (cnt > 1) pin.setAttribute('data-cnt', cnt); else pin.removeAttribute('data-cnt');
+  }
+}
+function updateWires() {
+  let html = '';
+  for (const e of state.edges) {
+    const fn = nodeById(e.from), tn = nodeById(e.to);
+    if (!fn || !tn) continue;
+    const p1 = portPos(fn, 'out'), p2 = portPos(tn, 'in');
+    const dx = Math.max(46, Math.abs(p2.x - p1.x) * 0.5);
+    const d = `M ${p1.x} ${p1.y} C ${p1.x + dx} ${p1.y}, ${p2.x - dx} ${p2.y}, ${p2.x} ${p2.y}`;
+    const c = defOf(fn.type).color;
+    const selCls = e.id === selEdge ? ' sel' : '';
+    html += `<path class="wire${selCls}" d="${d}" style="stroke:${c};filter:drop-shadow(0 0 5px ${c})"/>`;
+    html += `<path class="wire-hit" data-eid="${e.id}" d="${d}"/>`;
+    if (e.id === selEdge) {
+      const mx = (p1.x + 3 * (p1.x + dx) + 3 * (p2.x - dx) + p2.x) / 8, my = (p1.y + p2.y) / 2;
+      html += `<g class="wire-del" data-eid="${e.id}" transform="translate(${mx},${my})"><circle r="11"/><text y="4">×</text></g>`;
+    }
+  }
+  if (tempWire) html += `<path class="wire temp" d="${tempWire.d}" style="stroke:${tempWire.color};filter:drop-shadow(0 0 6px ${tempWire.color})"/>`;
+  wiresSvg.innerHTML = html;
+  updatePortBadges();
+}
+
+/* ============================================================ canvas: gestures */
+const pointers = new Map();
+let gesture = null;
+
+function isUiControl(t) {
+  return !!(t.closest && t.closest('button, a, input, select, .transport, .hud, .viz, .fab'));
+}
+
+stage.addEventListener('pointerdown', e => {
+  if (isUiControl(e.target)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    gesture = {
+      type: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, z0: view.z,
+      w0: toWorld((a.x + b.x) / 2, (a.y + b.y) / 2)
+    };
+    tempWire = null; updateWires();
+    return;
+  }
+  try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+  const port = e.target.closest && e.target.closest('.port');
+  if (port) { startWireGesture(e, port); return; }
+  const nd = e.target.closest && e.target.closest('.node');
+  if (nd) {
+    if (e.target.closest('button')) return;
+    const n = nodeById(nd.dataset.id);
+    selectNode(n.id);
+    const w = toWorld(e.clientX, e.clientY);
+    gesture = { type: 'node', id: n.id, ox: w.x - n.x, oy: w.y - n.y };
+    return;
+  }
+  const wh = e.target.closest && e.target.closest('.wire-hit');
+  if (wh) { selectEdge(wh.dataset.eid); gesture = null; return; }
+  deselectAll();
+  gesture = { type: 'pan', sx: e.clientX, sy: e.clientY, vx: view.x, vy: view.y };
+});
+
+stage.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (gesture && gesture.type === 'pinch' && pointers.size >= 2) {
+    const [a, b] = [...pointers.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+    const nz = clamp(gesture.z0 * d / gesture.d0, 0.3, 2.5);
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const r = stage.getBoundingClientRect();
+    view.z = nz; view.x = mid.x - r.left - gesture.w0.x * nz; view.y = mid.y - r.top - gesture.w0.y * nz;
+    applyView();
+    return;
+  }
+  if (!gesture) return;
+  if (gesture.type === 'pan') {
+    view.x = gesture.vx + (e.clientX - gesture.sx);
+    view.y = gesture.vy + (e.clientY - gesture.sy);
+    applyView();
+  } else if (gesture.type === 'node') {
+    const n = nodeById(gesture.id); if (!n) return;
+    const w = toWorld(e.clientX, e.clientY);
+    n.x = Math.round(w.x - gesture.ox); n.y = Math.round(w.y - gesture.oy);
+    const el = nodeEls.get(n.id); if (el) el.style.transform = `translate(${n.x}px,${n.y}px)`;
+    updateWires();
+  } else if (gesture.type === 'wire') {
+    const src = nodeById(gesture.fromId); if (!src) return;
+    const p1 = portPos(src, 'out'), p2 = toWorld(e.clientX, e.clientY);
+    const dx = Math.max(46, Math.abs(p2.x - p1.x) * 0.5);
+    tempWire = { d: `M ${p1.x} ${p1.y} C ${p1.x + dx} ${p1.y}, ${p2.x - dx} ${p2.y}, ${p2.x} ${p2.y}`, color: defOf(src.type).color };
+    updateWires();
+    document.querySelectorAll('.port.live').forEach(p => p.classList.remove('live'));
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const pin = under && under.closest && under.closest('.port.pin');
+    if (pin) pin.classList.add('live');
+  }
+});
+
+function endPointer(e) {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.delete(e.pointerId);
+  if (gesture && gesture.type === 'pinch') { if (pointers.size < 2) gesture = null; return; }
+  if (gesture && gesture.type === 'wire') {
+    const under = document.elementFromPoint(e.clientX, e.clientY);
+    const pin = under && under.closest && under.closest('.port.pin');
+    document.querySelectorAll('.port.live').forEach(p => p.classList.remove('live'));
+    if (pin) {
+      const dstEl = pin.closest('.node');
+      tryConnect(gesture.fromId, dstEl.dataset.id);
+    }
+    tempWire = null; updateWires();
+  }
+  if (gesture && gesture.type === 'node') dirty();
+  gesture = null;
+}
+stage.addEventListener('pointerup', endPointer);
+stage.addEventListener('pointercancel', endPointer);
+
+function startWireGesture(e, port) {
+  const nd = port.closest('.node'); const nid = nd.dataset.id;
+  if (port.classList.contains('pout')) {
+    gesture = { type: 'wire', fromId: nid };
+  } else {
+    const incs = state.edges.filter(x => x.to === nid);
+    if (incs.length === 1) {
+      state.edges = state.edges.filter(x => x.id !== incs[0].id);
+      rebuildGraph();
+      gesture = { type: 'wire', fromId: incs[0].from };
+      updateWires();
+    } else if (incs.length > 1) {
+      toast('Несколько веток: выберите провод, чтобы удалить', 'err');
+    }
+  }
+  e.stopPropagation();
+}
+
+stage.addEventListener('wheel', e => {
+  if (isUiControl(e.target)) return;
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0012));
+}, { passive: false });
+
+wiresSvg.addEventListener('pointerdown', e => {
+  const del = e.target.closest && e.target.closest('.wire-del');
+  if (del) { removeEdge(del.dataset.eid); e.stopPropagation(); }
+});
+
+byId('hz-in').onclick = () => { const r = stage.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.25); };
+byId('hz-out').onclick = () => { const r = stage.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 0.8); };
+byId('hz-fit').onclick = fitView;
+
+nodesLayer.addEventListener('click', e => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  e.stopPropagation();
+  const nd = btn.closest('.node'); const id = nd.dataset.id; const n = nodeById(id);
+  if (btn.classList.contains('n-del')) removeNode(id);
+  else if (btn.classList.contains('n-cfg')) openParams(id);
+  else if (btn.classList.contains('n-byp')) {
+    n.bypass = !n.bypass;
+    const a = audioObjs.get(id); if (a && a.setBypass) a.setBypass(n.bypass);
+    refreshNodeCard(id); dirty();
+  }
+});
+nodesLayer.addEventListener('pointerdown', e => { if (e.target.closest('button')) e.stopPropagation(); });
+
+/* ============================================================ palette & presets UI */
+function setPalTab(name) {
+  document.querySelectorAll('.pal-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  byId('tab-mods').classList.toggle('active', name === 'mods');
+  byId('tab-presets').classList.toggle('active', name === 'presets');
+}
+function openPalette(tab) {
+  setPalTab(tab || 'mods');
+  document.body.classList.add('pal-open');
+}
+function closePalette() { document.body.classList.remove('pal-open'); }
+
+function buildPalette() {
+  const grid = byId('mod-grid');
+  Object.entries(MODULE_DEFS).forEach(([type, d]) => {
+    const b = document.createElement('button');
+    b.className = 'mod-btn';
+    b.style.setProperty('--mc', d.color);
+    b.innerHTML = `<span class="mi">${d.icon}</span><span>${d.name}</span>`;
+    b.addEventListener('click', () => { addNode(type); toast(d.name + ' добавлен', 'ok'); });
+    grid.appendChild(b);
+  });
+  const list = byId('preset-list');
+  PRESETS.forEach(p => {
+    const card = document.createElement('button');
+    card.className = 'preset-card';
+    card.innerHTML = `<span class="pi">${p.icon}</span><span><b>${p.name}</b><small>${p.desc}</small></span>`;
+    card.addEventListener('click', () => applyPreset(p));
+    list.appendChild(card);
+  });
+}
+function applyPreset(preset) {
+  disposeAllAudio();
+  state.nodes = []; state.edges = [];
+  nodesLayer.innerHTML = ''; nodeEls.clear();
+  selNode = null; selEdge = null; tempWire = null;
+
+  const y0 = 220, gap = 238;
+  const inp = { id: uid(), type: 'input', x: 60, y: y0, params: defaultsOf(SPECIAL_DEFS.input), bypass: false };
+  if (state.fileRaw) inp.params.source = 'file';
+  state.nodes.push(inp); createNodeEl(inp);
+
+  const mods = [];
+  if (Array.isArray(preset.steps)) {
+    let idx = 1, prev = inp.id;
+    for (const s of preset.steps) {
+      const def = MODULE_DEFS[s.t]; if (!def) continue;
+      const n = {
+        id: uid(), type: s.t, x: 60 + gap * idx, y: y0 + (idx % 2 ? 30 : -8),
+        params: Object.assign(defaultsOf(def), s.p || {}), bypass: false
+      };
+      state.nodes.push(n); createNodeEl(n); mods.push(n);
+      state.edges.push({ id: uid(), from: prev, to: n.id });
+      prev = n.id; idx++;
+    }
+    const outp = { id: uid(), type: 'output', x: 60 + gap * idx, y: y0, params: defaultsOf(SPECIAL_DEFS.output), bypass: false };
+    state.nodes.push(outp); createNodeEl(outp);
+    state.edges.push({ id: uid(), from: prev, to: outp.id });
+  } else if (Array.isArray(preset.nodes)) {
+    preset.nodes.forEach(s => {
+      const def = MODULE_DEFS[s.t]; if (!def) return;
+      const col = s.col != null ? s.col : 1, row = s.row != null ? s.row : 0;
+      const n = {
+        id: uid(), type: s.t, x: 60 + gap * col, y: y0 + row * 150,
+        params: Object.assign(defaultsOf(def), s.p || {}), bypass: false
+      };
+      state.nodes.push(n); createNodeEl(n); mods.push(n);
+    });
+    const maxCol = preset.nodes.reduce((m, s) => Math.max(m, s.col != null ? s.col : 1), 1);
+    const outp = { id: uid(), type: 'output', x: 60 + gap * (maxCol + 1), y: y0, params: defaultsOf(SPECIAL_DEFS.output), bypass: false };
+    state.nodes.push(outp); createNodeEl(outp);
+    const ref = i => i === 'in' ? inp.id : i === 'out' ? outp.id : (mods[i] ? mods[i].id : null);
+    (preset.edges || []).forEach(([a, b]) => {
+      const fa = ref(a), tb = ref(b);
+      if (fa && tb) state.edges.push({ id: uid(), from: fa, to: tb });
+    });
+  }
+
+  updateWires();
+  if (engine.running) buildAllAudio();
+  fitView(); dirty();
+  closePalette();
+  toast(preset.nodes || preset.steps.length ? 'Пресет «' + preset.name + '» применён' : 'Холст очищен', 'ok');
+}
+
+document.querySelectorAll('.pal-tab').forEach(b => b.addEventListener('click', () => setPalTab(b.dataset.tab)));
+byId('pal-close').onclick = closePalette;
+byId('pal-overlay').onclick = closePalette;
+byId('fab-add').onclick = () => document.body.classList.contains('pal-open') ? closePalette() : openPalette('mods');
+
+/* ============================================================ params modal */
+let pmNode = null;
+function openParams(id) {
+  const n = nodeById(id); if (!n) return;
+  pmNode = n;
+  const d = defOf(n.type);
+  byId('pm-title').textContent = d.icon + ' ' + d.name.toUpperCase();
+  const body = byId('pm-body'); body.innerHTML = '';
+  d.params.forEach(pd => {
+    const row = document.createElement('div'); row.className = 'frow';
+    if (pd.type === 'slider') {
+      row.innerHTML = `<label>${pd.label}<span class="val"></span></label>
+        <input type="range" min="${pd.min}" max="${pd.max}" step="${pd.step}" value="${n.params[pd.key]}">`;
+      const inp = row.querySelector('input'), val = row.querySelector('.val');
+      const show = () => { val.textContent = (Math.round(parseFloat(inp.value) * 100) / 100) + (pd.unit || ''); };
+      show();
+      inp.addEventListener('input', () => {
+        const v = parseFloat(inp.value);
+        n.params[pd.key] = v; show();
+        const a = audioObjs.get(n.id); if (a) a.set(pd.key, v);
+        refreshNodeCard(n.id); dirty();
+      });
+    } else if (pd.type === 'select') {
+      row.innerHTML = `<label>${pd.label}</label><select>${pd.options.map(o => `<option value="${o.v}" ${o.v === n.params[pd.key] ? 'selected' : ''}>${o.label}</option>`).join('')}</select>`;
+      row.querySelector('select').addEventListener('change', ev => {
+        n.params[pd.key] = ev.target.value;
+        const a = audioObjs.get(n.id); if (a) a.set(pd.key, ev.target.value);
+        refreshNodeCard(n.id); dirty();
+        if (n.type === 'input') updateTransportUI();
+      });
+    } else if (pd.type === 'check') {
+      row.innerHTML = `<label class="chk"><input type="checkbox" ${n.params[pd.key] ? 'checked' : ''}> ${pd.label}</label>`;
+      row.querySelector('input').addEventListener('change', ev => {
+        n.params[pd.key] = ev.target.checked;
+        const a = audioObjs.get(n.id); if (a) a.set(pd.key, ev.target.checked);
+        dirty();
+      });
+    }
+    body.appendChild(row);
+  });
+  const bypBtn = byId('pm-byp');
+  if (MODULE_DEFS[n.type]) {
+    bypBtn.style.display = '';
+    bypBtn.textContent = n.bypass ? '⏻ Байпас: вкл' : '⏻ Байпас: выкл';
+  } else bypBtn.style.display = 'none';
+  openModal('modal-params');
+}
+byId('pm-byp').onclick = () => {
+  if (!pmNode) return;
+  pmNode.bypass = !pmNode.bypass;
+  const a = audioObjs.get(pmNode.id); if (a && a.setBypass) a.setBypass(pmNode.bypass);
+  byId('pm-byp').textContent = pmNode.bypass ? '⏻ Байпас: вкл' : '⏻ Байпас: выкл';
+  refreshNodeCard(pmNode.id); dirty();
+};
+byId('pm-reset').onclick = () => {
+  if (!pmNode) return;
+  const d = defOf(pmNode.type);
+  pmNode.params = defaultsOf(d);
+  const a = audioObjs.get(pmNode.id);
+  if (a) d.params.forEach(pd => a.set(pd.key, pmNode.params[pd.key]));
+  refreshNodeCard(pmNode.id); dirty();
+  openParams(pmNode.id);
+};
+
+/* ============================================================ modals */
+function openModal(id) { byId(id).classList.add('open'); }
+function closeModal(el) { el.classList.remove('open'); }
+document.querySelectorAll('.mback').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModal(m); });
+  m.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeModal(m)));
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { document.querySelectorAll('.mback.open').forEach(closeModal); closePalette(); }
+  const tag = document.activeElement && document.activeElement.tagName;
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !/INPUT|TEXTAREA|SELECT/.test(tag || '')) {
+    if (selNode) removeNode(selNode);
+    else if (selEdge) removeEdge(selEdge);
+  }
+});
+
+/* ============================================================ projects */
+function makeDefaultProject() {
+  const id = uid();
+  const inp = { id: uid(), type: 'input', x: 70, y: 220, params: defaultsOf(SPECIAL_DEFS.input), bypass: false };
+  const outp = { id: uid(), type: 'output', x: 660, y: 220, params: defaultsOf(SPECIAL_DEFS.output), bypass: false };
+  return {
+    id, name: 'Новый проект', updatedAt: Date.now(),
+    nodes: [inp, outp], edges: [{ id: uid(), from: inp.id, to: outp.id }], file: null
+  };
+}
+function applyProject(p) {
+  if (engine.running) engineStop();
+  project = { id: p.id, name: p.name };
+  state.nodes = (p.nodes || []).map(n => ({ ...n, params: { ...n.params } }));
+  state.edges = (p.edges || []).map(e => ({ ...e }));
+  state.fileRaw = p.file ? p.file.data : null;
+  state.fileName = p.file ? p.file.name : '';
+  engine.fileBuffer = null;
+  nodesLayer.innerHTML = ''; nodeEls.clear();
+  state.nodes.forEach(createNodeEl);
+  selNode = null; selEdge = null; tempWire = null;
+  updateWires();
+  byId('proj-name').textContent = project.name;
+  localStorage.setItem('nvlab.cur', project.id);
+  fitView();
+  updateTransportUI();
+}
+async function bootProjects() {
+  let p = null;
+  const cur = localStorage.getItem('nvlab.cur');
+  if (cur) { try { p = await IDB.get(cur); } catch (e) {} }
+  if (!p) { p = makeDefaultProject(); try { await IDB.put(p); } catch (e) {} }
+  applyProject(p);
+}
+async function renderProjList() {
+  const list = await IDB.all();
+  list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  const host = byId('proj-list'); host.innerHTML = '';
+  if (!list.length) { host.innerHTML = '<div class="status-line">Проектов пока нет</div>'; return; }
+  list.forEach(p => {
+    const row = document.createElement('div'); row.className = 'plist-item';
+    row.innerHTML = `<div class="grow"><b>${escapeHtml(p.name)}</b>
+      <small>${new Date(p.updatedAt || Date.now()).toLocaleString('ru-RU')} · модулей: ${(p.nodes || []).length}</small></div>
+      <button class="btn">⤴</button><button class="btn" style="border-color:rgba(255,68,102,.5)">🗑</button>`;
+    const [loadBtn, delBtn] = row.querySelectorAll('button');
+    loadBtn.onclick = async () => { applyProject(p); closeModal(byId('modal-projects')); toast('Проект загружен', 'ok'); };
+    delBtn.onclick = async () => {
+      if (!confirm('Удалить проект «' + p.name + '»?')) return;
+      await IDB.del(p.id);
+      if (p.id === project.id) { const np = makeDefaultProject(); await IDB.put(np); applyProject(np); }
+      renderProjList();
+    };
+    host.appendChild(row);
+  });
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+byId('btn-projects').onclick = () => { renderProjList(); openModal('modal-projects'); };
+byId('np-create').onclick = async () => {
+  const np = makeDefaultProject();
+  const nm = byId('np-name').value.trim();
+  if (nm) np.name = nm;
+  await IDB.put(np); applyProject(np); renderProjList();
+  byId('np-name').value = '';
+  toast('Проект создан', 'ok');
+};
+byId('np-save').onclick = async () => { await saveCurrent(); renderProjList(); };
+
+/* ============================================================ file input */
+byId('file-input').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  if (f.size > 25 * 1024 * 1024) { toast('Файл больше 25 МБ', 'err'); return; }
+  try {
+    state.fileRaw = await f.arrayBuffer();
+    state.fileName = f.name;
+    engine.fileBuffer = null;
+    if (engine.ctx) { try { engine.fileBuffer = await engine.ctx.decodeAudioData(state.fileRaw.slice(0)); } catch (err) {} }
+    setSource('file');
+    dirty();
+    toast('Файл загружен: ' + f.name, 'ok');
+  } catch (err) { toast('Не удалось прочитать файл', 'err'); }
+});
+
+/* ============================================================ export */
+function pcmToWavBytes(chs, sr) {
+  const nCh = chs.length, len = chs[0].length, dataSize = len * nCh * 2;
+  const buf = new ArrayBuffer(44 + dataSize), dv = new DataView(buf);
+  const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  wstr(0, 'RIFF'); dv.setUint32(4, 36 + dataSize, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, nCh, true);
+  dv.setUint32(24, sr, true); dv.setUint32(28, sr * nCh * 2, true);
+  dv.setUint16(32, nCh * 2, true); dv.setUint16(34, 16, true);
+  wstr(36, 'data'); dv.setUint32(40, dataSize, true);
+  let off = 44;
+  for (let i = 0; i < len; i++) for (let c = 0; c < nCh; c++) {
+    dv.setInt16(off, clamp(chs[c][i], -1, 1) * 32767, true); off += 2;
+  }
+  return new Uint8Array(buf);
+}
+function mergeChunks(chunks, sr) {
+  if (!chunks.length) return { channels: [new Float32Array(sr)], sampleRate: sr };
+  const nCh = Math.max(...chunks.map(c => c.length));
+  const total = chunks.reduce((s, c) => s + c[0].length, 0);
+  const out = []; for (let c = 0; c < nCh; c++) out.push(new Float32Array(total));
+  let off = 0;
+  for (const ch of chunks) {
+    for (let c = 0; c < nCh; c++) out[c].set(ch[Math.min(c, ch.length - 1)], off);
+    off += ch[0].length;
+  }
+  return { channels: out, sampleRate: sr };
+}
+function encodeMP3(pcm) {
+  const ch = pcm.channels.length, sr = pcm.sampleRate;
+  const enc = new lamejs.Mp3Encoder(ch, sr, 192);
+  const L = pcm.channels[0], R = ch > 1 ? pcm.channels[1] : null;
+  const block = 1152, out = [];
+  const toI16 = a => { const o = new Int16Array(a.length); for (let i = 0; i < a.length; i++) o[i] = clamp(a[i], -1, 1) * 32767; return o; };
+  for (let i = 0; i < L.length; i += block) {
+    const l = toI16(L.subarray(i, i + block));
+    const d = ch === 1 ? enc.encodeBuffer(l) : enc.encodeBuffer(l, toI16(R.subarray(i, i + block)));
+    if (d.length) out.push(new Int8Array(d));
+  }
+  const end = enc.flush(); if (end.length) out.push(new Int8Array(end));
+  return new Blob(out, { type: 'audio/mpeg' });
+}
+
+let ffInstance = null, ffLoading = null;
+function toBlobURL(url, mime) {
+  return fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+    .then(b => URL.createObjectURL(new Blob([b], { type: mime })));
+}
+function getFFmpeg(onStatus) {
+  if (ffInstance) return Promise.resolve(ffInstance);
+  if (ffLoading) return ffLoading;
+  ffLoading = (async () => {
+    onStatus && onStatus('Загрузка FFmpeg-модуля…');
+    await loadScript('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js');
+    const { FFmpeg } = window.FFmpegWASM;
+    const ff = new FFmpeg();
+    ff.on('progress', ev => setExportProgress(70 + (ev.progress || 0) * 28, 'Кодирование OGG…'));
+    const base = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
+    onStatus && onStatus('Загрузка ядра кодеков (~30 МБ)…');
+    await ff.load({
+      coreURL: await toBlobURL(base + '/ffmpeg-core.js', 'text/javascript'),
+      wasmURL: await toBlobURL(base + '/ffmpeg-core.wasm', 'application/wasm')
+    });
+    ffInstance = ff;
+    return ff;
+  })();
+  ffLoading.catch(() => { ffLoading = null; });
+  return ffLoading;
+}
+async function encodeOGG(pcm) {
+  const ff = await getFFmpeg((s) => setExportProgress(72, s));
+  const wav = pcmToWavBytes(pcm.channels, pcm.sampleRate);
+  await ff.writeFile('in.wav', wav);
+  try {
+    await ff.exec(['-i', 'in.wav', '-vn', '-c:a', 'libvorbis', '-q:a', '6', 'out.ogg']);
+  } catch (e) {
+    await ff.exec(['-i', 'in.wav', '-vn', '-c:a', 'libopus', '-b:a', '160k', 'out.ogg']);
+  }
+  const data = await ff.readFile('out.ogg');
+  try { await ff.deleteFile('in.wav'); await ff.deleteFile('out.ogg'); } catch (e) {}
+  return new Blob([data], { type: 'audio/ogg' });
+}
+
+function setExportProgress(pct, text) {
+  byId('exp-bar').style.width = clamp(pct, 0, 100) + '%';
+  if (text) byId('exp-status').textContent = text;
+}
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 5000);
+  const link = byId('exp-link');
+  link.href = URL.createObjectURL(blob); link.download = name; link.style.display = '';
+  link.textContent = '⬇ ' + name;
+}
+function captureLive(sec) {
+  return new Promise(res => {
+    engine.chunks = []; engine.collect = true;
+    const t0 = performance.now();
+    const iv = setInterval(() => {
+      const el = (performance.now() - t0) / (sec * 1000);
+      setExportProgress(6 + el * 58, '🔴 Запись… ' + Math.min(sec, (performance.now() - t0) / 1000).toFixed(1) + ' c');
+      if (performance.now() - t0 >= sec * 1000) {
+        clearInterval(iv); engine.collect = false;
+        res(mergeChunks(engine.chunks, engine.ctx.sampleRate));
+      }
+    }, 120);
+  });
+}
+async function renderOfflineFile() {
+  const probe = new OfflineAudioContext(1, 8, 44100);
+  const buf = await probe.decodeAudioData(state.fileRaw.slice(0));
+  const sr = buf.sampleRate, tail = 3;
+  const octx = new OfflineAudioContext(2, Math.ceil((buf.duration + tail) * sr), sr);
+  const env = { fileBuffer: buf, micStream: null, master: null, offline: true };
+  const objs = new Map();
+  for (const n of state.nodes) objs.set(n.id, makeNodeAudio(octx, n, env));
+  for (const e of state.edges) {
+    const s = objs.get(e.from), t = objs.get(e.to);
+    if (s && t && s.out && t.in) s.out.connect(t.in);
+  }
+  const rendered = await octx.startRendering();
+  const chs = [];
+  for (let c = 0; c < rendered.numberOfChannels; c++) chs.push(rendered.getChannelData(c).slice(0));
+  objs.forEach(a => { try { a.dispose && a.dispose(); } catch (e) {} });
+  return { channels: chs, sampleRate: sr };
+}
+async function runExport() {
+  const fmt = byId('exp-format').value;
+  const src = byId('exp-src-file').checked && state.fileRaw ? 'file'
+            : byId('exp-src-rec').checked && lastRecording ? 'rec' : 'live';
+  const dur = clamp(parseFloat(byId('exp-dur').value) || 5, 1, 60);
+  const name = (byId('exp-name').value || 'voice').trim().replace(/[\\/:*?"<>|]+/g, '_');
+  const runBtn = byId('exp-run'); runBtn.disabled = true;
+  byId('exp-link').style.display = 'none';
+  setExportProgress(2, 'Подготовка…');
+  try {
+    let pcm, autoStarted = false;
+    if (src === 'rec') {
+      setExportProgress(10, 'Берём сохранённый дубль…');
+      pcm = { channels: lastRecording.channels, sampleRate: lastRecording.sampleRate };
+    } else if (src === 'file') {
+      setExportProgress(8, 'Офлайн-рендер через цепь фильтров…');
+      pcm = await renderOfflineFile();
+    } else {
+      if (!engine.running) { await engineStart(); autoStarted = true; }
+      if (!engine.running) throw new Error('аудио-движок не запущен');
+      pcm = await captureLive(dur);
+      if (autoStarted) engineStop();
+    }
+    setExportProgress(68, 'Кодирование ' + fmt.toUpperCase() + '…');
+    await sleep(30);
+    let blob, ext;
+    if (fmt === 'wav') { blob = new Blob([pcmToWavBytes(pcm.channels, pcm.sampleRate)], { type: 'audio/wav' }); ext = 'wav'; }
+    else if (fmt === 'mp3') {
+      if (!window.lamejs) throw new Error('библиотека lamejs не загрузилась');
+      blob = encodeMP3(pcm); ext = 'mp3';
+    } else { blob = await encodeOGG(pcm); ext = 'ogg'; }
+    setExportProgress(100, 'Готово ✔ ' + (blob.size / 1024).toFixed(0) + ' КБ');
+    downloadBlob(blob, name + '.' + ext);
+    toast('Экспорт завершён', 'ok');
+  } catch (err) {
+    console.error(err);
+    setExportProgress(0, 'Ошибка: ' + err.message);
+    toast('Ошибка экспорта: ' + err.message, 'err');
+  }
+  runBtn.disabled = false;
+}
+byId('btn-export').onclick = () => {
+  byId('exp-src-file').disabled = !state.fileRaw;
+  byId('exp-src-rec').disabled = !lastRecording;
+  byId('exp-rec-lbl').textContent = lastRecording ? 'Из записи (' + fmtT(lastRecording.duration) + ')' : 'Из записи (нет дубля)';
+  if (lastRecording) byId('exp-src-rec').checked = true;
+  else if (!state.fileRaw) byId('exp-src-live').checked = true;
+  byId('exp-name').value = project.name.replace(/[\\/:*?"<>|]+/g, '_') || 'neon-voice';
+  openModal('modal-export');
+};
+byId('exp-run').onclick = runExport;
+
+/* ============================================================ topbar */
+byId('btn-help').onclick = () => openModal('modal-help');
+
+/* ============================================================ visualizer: spectrum + channel meters */
+const specC = byId('spectrum'), specCtx = specC.getContext('2d');
+const mLc = byId('meterL'), mLctx = mLc.getContext('2d');
+const mRc = byId('meterR'), mRctx = mRc.getContext('2d');
+const vizStateEl = byId('viz-state');
+let spData = null, tdL = null, tdR = null, peakL = 0, peakR = 0, idlePhase = 0, silentFrames = 0;
+
+function resizeViz() {
+  const w = Math.max(60, Math.floor(specC.clientWidth || 300));
+  const h = Math.max(20, Math.floor(specC.clientHeight || 50));
+  if (specC.width !== w || specC.height !== h) { specC.width = w; specC.height = h; }
+}
+window.addEventListener('resize', resizeViz);
+
+function rmsFromTd(arr) {
+  let s = 0;
+  for (let i = 0; i < arr.length; i++) { const v = (arr[i] - 128) / 128; s += v * v; }
+  return Math.sqrt(s / arr.length);
+}
+function drawMeter(g, cv, lvl, peak) {
+  const W = cv.width, H = cv.height;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = '#070c18'; g.fillRect(0, 0, W, H);
+  const grad = g.createLinearGradient(0, 0, W, 0);
+  grad.addColorStop(0, '#00e5ff'); grad.addColorStop(0.65, '#ff2fd6'); grad.addColorStop(1, '#ff3355');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, clamp(lvl, 0, 1) * W, H);
+  g.fillStyle = 'rgba(255,255,255,.9)';
+  g.fillRect(clamp(peak, 0, 1) * W - 1.5, 0, 2, H);
+}
+let lastPlayingState = null;
+function drawVisuals() {
+  requestAnimationFrame(drawVisuals);
+  resizeViz();
+  const W = specC.width, H = specC.height;
+  specCtx.clearRect(0, 0, W, H);
+
+  const has = engine.running && engine.analyser;
+  let l = 0, r = 0, energy = 0;
+
+  if (has) {
+    if (!spData || spData.length !== engine.analyser.frequencyBinCount) {
+      spData = new Uint8Array(engine.analyser.frequencyBinCount);
+    }
+    engine.analyser.getByteFrequencyData(spData);
+
+    if (!tdL || tdL.length !== engine.anL.fftSize) {
+      tdL = new Uint8Array(engine.anL.fftSize);
+      tdR = new Uint8Array(engine.anR.fftSize);
+    }
+    engine.anL.getByteTimeDomainData(tdL); l = rmsFromTd(tdL);
+    engine.anR.getByteTimeDomainData(tdR); r = rmsFromTd(tdR);
+
+    /* спектр: логарифмическая разбивка по частотам */
+    const bars = Math.max(24, Math.floor(W / 11)), bw = W / bars;
+    for (let i = 0; i < bars; i++) {
+      const idx = Math.min(spData.length - 1, Math.floor(Math.pow(i / bars, 1.6) * spData.length * 0.72));
+      const v = spData[idx] / 255;
+      energy += v;
+      const h = Math.max(2, v * (H - 2));
+      specCtx.fillStyle = `hsla(${190 + (i / bars) * 130},100%,60%,.92)`;
+      specCtx.fillRect(i * bw + 1, H - h, bw - 2, h);
+    }
+  } else {
+    /* дежурная анимация, когда движок выключен */
+    idlePhase += 0.04;
+    const bars = Math.max(24, Math.floor(W / 11)), bw = W / bars;
+    for (let i = 0; i < bars; i++) {
+      const v = 0.05 + 0.04 * Math.sin(idlePhase + i * 0.35);
+      specCtx.fillStyle = 'rgba(0,229,255,.16)';
+      specCtx.fillRect(i * bw + 1, H - Math.max(2, v * H), bw - 2, Math.max(2, v * H));
+    }
+  }
+
+  /* индикатор наличия сигнала */
+  const signal = energy > 0.35 || (l + r) > 0.004;
+  if (has && !signal) silentFrames++; else silentFrames = 0;
+  if (!has) { vizStateEl.textContent = 'ОЖИДАНИЕ'; vizStateEl.className = 'viz-state'; }
+  else if (silentFrames > 90) { vizStateEl.textContent = 'НЕТ СИГНАЛА'; vizStateEl.className = 'viz-state'; }
+  else { vizStateEl.textContent = 'LIVE'; vizStateEl.className = 'viz-state live'; }
+
+  /* уровни каналов */
+  peakL = Math.max(l * 1.15, peakL * 0.965);
+  peakR = Math.max(r * 1.15, peakR * 0.965);
+  drawMeter(mLctx, mLc, l * 1.6, peakL * 1.6);
+  drawMeter(mRctx, mRc, r * 1.6, peakR * 1.6);
+  byId('dbL').textContent = l > 0.0005 ? (20 * Math.log10(l)).toFixed(1) + ' дБ' : '-∞';
+  byId('dbR').textContent = r > 0.0005 ? (20 * Math.log10(r)).toFixed(1) + ' дБ' : '-∞';
+
+  /* время воспроизведения файла + синхронизация кнопки */
+  if (has) {
+    updatePlayTime();
+    const inp = inputNode();
+    const a = inp ? audioObjs.get(inp.id) : null;
+    const playing = !!(a && a.player && a.player.playing);
+    if (playing !== lastPlayingState) { lastPlayingState = playing; updateTransportUI(); }
+  }
+}
+
+/* ============================================================ boot */
+window.addEventListener('beforeunload', () => { try { saveCurrent(true); } catch (e) {} });
+(async function boot() {
+  buildPalette();
+  await bootProjects();
+  applyView();
+  updateTransportUI();
+  drawVisuals();
+})();
+</script>
+</body>
+</html>
