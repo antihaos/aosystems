@@ -1,0 +1,494 @@
+```json
+{
+  "meta": {
+    "title": "Справка по блокам LMS Player",
+    "description": "Подробное руководство по всем типам блоков и их параметрам",
+    "author": "AI Assistant",
+    "duration": "2 часа",
+    "level": "Начинающий",
+    "theme": {}
+  },
+  "lessons": [
+    {
+      "id": "lesson-1",
+      "title": "Основные текстовые и структурные блоки",
+      "description": "Блоки для организации текста и простого контента.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: section",
+          "children": [
+            { "type": "text", "text": "Секция используется для группировки других блоков. Может иметь заголовок и вложенные блоки." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок секции", "Да"],
+              ["children", "array", "Массив вложенных блоков", "Да"],
+              ["id", "string", "Якорь для навигации", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"section\",\n  \"title\": \"Заголовок\",\n  \"children\": [\n    { \"type\": \"text\", \"text\": \"Вложенный текст\" }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: heading",
+          "children": [
+            { "type": "text", "text": "Заголовок уровня h1-h6." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["level", "number", "Уровень заголовка (1-6), по умолчанию 2", "Нет"],
+              ["text", "string", "Текст заголовка", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"heading\",\n  \"level\": 2,\n  \"text\": \"Заголовок\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: text",
+          "children": [
+            { "type": "text", "text": "Обычный абзац текста." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["text", "string", "Текстовое содержимое", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"text\",\n  \"text\": \"Пример текста\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: list",
+          "children": [
+            { "type": "text", "text": "Маркированный или нумерованный список." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["ordered", "boolean", "Если true — нумерованный список, иначе маркированный", "Нет"],
+              ["items", "array", "Массив строк элементов", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"list\",\n  \"ordered\": false,\n  \"items\": [\"Элемент 1\", \"Элемент 2\"]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: callout",
+          "children": [
+            { "type": "text", "text": "Выделенный блок для привлечения внимания. Может содержать текст или вложенные блоки." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["variant", "string", "info, warning, success (по умолчанию info)", "Нет"],
+              ["title", "string", "Заголовок блока", "Нет"],
+              ["text", "string", "Текст (если нет children)", "Нет"],
+              ["children", "array", "Вложенные блоки (альтернатива text)", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"callout\",\n  \"variant\": \"info\",\n  \"title\": \"Важно\",\n  \"text\": \"Текст предупреждения\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: code",
+          "children": [
+            { "type": "text", "text": "Блок с исходным кодом." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["language", "string", "Язык программирования (для подсветки)", "Нет"],
+              ["code", "string", "Код", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"code\",\n  \"language\": \"javascript\",\n  \"code\": \"console.log('Hello');\"\n}" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-2",
+      "title": "Медиа и визуальные блоки",
+      "description": "Изображения, видео, аудио, карусели и сравнения.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: image",
+          "children": [
+            { "type": "text", "text": "Изображение с подписью и возможностью предпросмотра." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["src", "string", "URL изображения", "Да"],
+              ["caption", "string", "Подпись", "Нет"],
+              ["previewWidth", "string", "Ширина окна предпросмотра", "Нет"],
+              ["previewHeight", "string", "Высота окна предпросмотра", "Нет"],
+              ["autoScale", "boolean", "Автоматическое масштабирование (по умолчанию true)", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"image\",\n  \"src\": \"https://picsum.photos/400/300\",\n  \"caption\": \"Пример изображения\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: video",
+          "children": [
+            { "type": "text", "text": "Видео с возможностью контроля скорости." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["src", "string", "URL видео", "Да"],
+              ["poster", "string", "URL постера", "Нет"],
+              ["caption", "string", "Подпись", "Нет"],
+              ["speedControl", "boolean", "Показывать переключатель скорости", "Нет"],
+              ["mimeType", "string", "MIME-тип видео (по умолчанию video/mp4)", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"video\",\n  \"src\": \"https://example.com/video.mp4\",\n  \"poster\": \"https://picsum.photos/400/300\",\n  \"caption\": \"Видео\",\n  \"speedControl\": true\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: audio",
+          "children": [
+            { "type": "text", "text": "Аудио с возможностью контроля скорости." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["src", "string", "URL аудио", "Да"],
+              ["caption", "string", "Подпись", "Нет"],
+              ["speedControl", "boolean", "Показывать переключатель скорости", "Нет"],
+              ["mimeType", "string", "MIME-тип аудио (по умолчанию audio/mpeg)", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"audio\",\n  \"src\": \"https://example.com/audio.mp3\",\n  \"caption\": \"Аудио\",\n  \"speedControl\": true\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: embed",
+          "children": [
+            { "type": "text", "text": "Встраивание внешнего контента через iframe." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["src", "string", "URL для iframe", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"embed\",\n  \"src\": \"https://example.com\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: carousel",
+          "children": [
+            { "type": "text", "text": "Карусель изображений или произвольного контента." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["items", "array", "Массив элементов: {image, caption} или {content: blocks}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"carousel\",\n  \"items\": [\n    { \"image\": \"https://picsum.photos/400/300\", \"caption\": \"Слайд 1\" },\n    { \"image\": \"https://picsum.photos/400/301\", \"caption\": \"Слайд 2\" }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: before-after",
+          "children": [
+            { "type": "text", "text": "Сравнение двух изображений с перетаскиваемым разделителем." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["before", "string", "URL изображения 'до'", "Да"],
+              ["after", "string", "URL изображения 'после'", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"before-after\",\n  \"before\": \"https://picsum.photos/400/300\",\n  \"after\": \"https://picsum.photos/400/302\"\n}" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-3",
+      "title": "Интерактивные блоки (проверка знаний)",
+      "description": "Викторины, сопоставления, сортировки, опросы и другие интерактивные элементы.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: quiz",
+          "children": [
+            { "type": "text", "text": "Одиночный выбор с проверкой." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["question", "string", "Вопрос", "Да"],
+              ["options", "array", "Массив вариантов ответа", "Да"],
+              ["correct", "number", "Индекс правильного варианта", "Да"],
+              ["explanation", "string", "Пояснение после ответа", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"quiz\",\n  \"question\": \"Сколько будет 2+2?\",\n  \"options\": [\"3\", \"4\", \"5\"],\n  \"correct\": 1,\n  \"explanation\": \"2+2=4\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: multi-quiz",
+          "children": [
+            { "type": "text", "text": "Множественный выбор." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["question", "string", "Вопрос", "Да"],
+              ["options", "array", "Массив вариантов", "Да"],
+              ["correct", "array", "Массив индексов правильных вариантов", "Да"],
+              ["explanation", "string", "Пояснение", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"multi-quiz\",\n  \"question\": \"Выберите чётные числа\",\n  \"options\": [\"1\", \"2\", \"3\", \"4\"],\n  \"correct\": [1, 3],\n  \"explanation\": \"Чётные числа: 2 и 4\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: match",
+          "children": [
+            { "type": "text", "text": "Сопоставление пар (термин и определение)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["instruction", "string", "Инструкция", "Нет"],
+              ["pairs", "array", "Массив объектов {left, right}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"match\",\n  \"instruction\": \"Сопоставьте термины\",\n  \"pairs\": [\n    { \"left\": \"HTML\", \"right\": \"Язык разметки\" },\n    { \"left\": \"CSS\", \"right\": \"Язык стилей\" }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: sort",
+          "children": [
+            { "type": "text", "text": "Сортировка элементов с помощью стрелок." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["instruction", "string", "Инструкция", "Нет"],
+              ["items", "array", "Исходный порядок элементов", "Да"],
+              ["correctOrder", "array", "Правильный порядок", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"sort\",\n  \"instruction\": \"Расставьте числа по возрастанию\",\n  \"items\": [\"3\", \"1\", \"2\"],\n  \"correctOrder\": [\"1\", \"2\", \"3\"]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: fill-blank",
+          "children": [
+            { "type": "text", "text": "Заполнение пропусков в тексте." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["instruction", "string", "Инструкция", "Нет"],
+              ["text", "string", "Текст с пропусками в формате {{1}}, {{2}}", "Да"],
+              ["answers", "object", "Объект с ключами-номерами пропусков и правильными ответами", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"fill-blank\",\n  \"instruction\": \"Заполните пропуски\",\n  \"text\": \"Столица Франции — {{1}}.\",\n  \"answers\": { \"1\": \"Париж\" }\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: flip-card",
+          "children": [
+            { "type": "text", "text": "Переворачивающаяся карточка (вопрос-ответ)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["front", "string|array", "Содержимое лицевой стороны (текст или блоки)", "Да"],
+              ["back", "string|array", "Содержимое обратной стороны", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"flip-card\",\n  \"front\": \"Вопрос\",\n  \"back\": \"Ответ\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: poll",
+          "children": [
+            { "type": "text", "text": "Опрос с отображением результатов." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["question", "string", "Вопрос", "Да"],
+              ["options", "array", "Варианты ответа", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"poll\",\n  \"question\": \"Ваш любимый цвет?\",\n  \"options\": [\"Красный\", \"Синий\", \"Зелёный\"]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: drag-sort",
+          "children": [
+            { "type": "text", "text": "Сортировка перетаскиванием." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["instruction", "string", "Инструкция", "Нет"],
+              ["items", "array", "Элементы в исходном порядке", "Да"],
+              ["correctOrder", "array", "Правильный порядок", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"drag-sort\",\n  \"instruction\": \"Перетащите в правильном порядке\",\n  \"items\": [\"Второй\", \"Первый\", \"Третий\"],\n  \"correctOrder\": [\"Первый\", \"Второй\", \"Третий\"]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: slider",
+          "children": [
+            { "type": "text", "text": "Ползунок для ввода числового значения." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["label", "string", "Подпись", "Нет"],
+              ["min", "number", "Минимальное значение (по умолчанию 0)", "Нет"],
+              ["max", "number", "Максимальное значение (по умолчанию 100)", "Нет"],
+              ["default", "number", "Значение по умолчанию", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"slider\",\n  \"label\": \"Оцените курс\",\n  \"min\": 0,\n  \"max\": 10,\n  \"default\": 5\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: progress-tracker",
+          "children": [
+            { "type": "text", "text": "Интерактивный список задач для отметки выполнения." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["tasks", "array", "Массив объектов {label}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"progress-tracker\",\n  \"tasks\": [\n    { \"label\": \"Изучить теорию\" },\n    { \"label\": \"Выполнить практику\" }\n  ]\n}" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-4",
+      "title": "Составные блоки и организация контента",
+      "description": "Вкладки, аккордеоны, колонки, шаги, модальные окна, таймлайны, сравнения.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: tabs",
+          "children": [
+            { "type": "text", "text": "Вкладки для переключения контента." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["tabs", "array", "Массив объектов {label, content: blocks}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"tabs\",\n  \"tabs\": [\n    { \"label\": \"Вкладка 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Содержимое 1\" } ] },\n    { \"label\": \"Вкладка 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Содержимое 2\" } ] }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: accordion",
+          "children": [
+            { "type": "text", "text": "Аккордеон для скрытия/раскрытия контента." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["items", "array", "Массив объектов {title, content: blocks}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"accordion\",\n  \"items\": [\n    { \"title\": \"Раздел 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Текст 1\" } ] },\n    { \"title\": \"Раздел 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Текст 2\" } ] }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: columns",
+          "children": [
+            { "type": "text", "text": "Расположение контента в несколько колонок." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["columns", "array", "Массив объектов {blocks: array}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"columns\",\n  \"columns\": [\n    { \"blocks\": [ { \"type\": \"text\", \"text\": \"Левая колонка\" } ] },\n    { \"blocks\": [ { \"type\": \"text\", \"text\": \"Правая колонка\" } ] }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: steps",
+          "children": [
+            { "type": "text", "text": "Пошаговое отображение контента с навигацией." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["steps", "array", "Массив объектов {title, content: blocks}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"steps\",\n  \"steps\": [\n    { \"title\": \"Шаг 1\", \"content\": [ { \"type\": \"text\", \"text\": \"Первый шаг\" } ] },\n    { \"title\": \"Шаг 2\", \"content\": [ { \"type\": \"text\", \"text\": \"Второй шаг\" } ] }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: modal",
+          "children": [
+            { "type": "text", "text": "Кнопка, открывающая модальное окно с контентом." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["buttonText", "string", "Текст кнопки", "Да"],
+              ["content", "array", "Блоки для отображения в модальном окне", "Нет (если есть text)"],
+              ["text", "string", "Простой текст в модальном окне", "Нет (если есть content)"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"modal\",\n  \"buttonText\": \"Открыть\",\n  \"content\": [\n    { \"type\": \"text\", \"text\": \"Содержимое модального окна\" }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: timeline",
+          "children": [
+            { "type": "text", "text": "Таймлайн для отображения последовательности событий." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["items", "array", "Массив объектов {title, description}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"timeline\",\n  \"items\": [\n    { \"title\": \"Событие 1\", \"description\": \"Описание 1\" },\n    { \"title\": \"Событие 2\", \"description\": \"Описание 2\" }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: compare",
+          "children": [
+            { "type": "text", "text": "Сравнение двух наборов контента с перетаскиваемым разделителем." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["left", "array", "Блоки для левой части", "Да"],
+              ["right", "array", "Блоки для правой части", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"compare\",\n  \"left\": [ { \"type\": \"text\", \"text\": \"Левая часть\" } ],\n  \"right\": [ { \"type\": \"text\", \"text\": \"Правая часть\" } ]\n}" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-5",
+      "title": "Специализированные блоки",
+      "description": "Таблицы, диаграммы, SVG, HTML, формулы и подсказки.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: table",
+          "children": [
+            { "type": "text", "text": "Таблица с произвольным количеством строк и столбцов." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["headers", "array", "Массив заголовков столбцов", "Да"],
+              ["rows", "array", "Массив строк (каждая строка — массив ячеек)", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"table\",\n  \"headers\": [\"Имя\", \"Возраст\"],\n  \"rows\": [\n    [\"Анна\", 25],\n    [\"Иван\", 30]\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: chart",
+          "children": [
+            { "type": "text", "text": "Столбчатая диаграмма." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок диаграммы", "Нет"],
+              ["labels", "array", "Подписи столбцов", "Да"],
+              ["values", "array", "Значения (числа)", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"chart\",\n  \"title\": \"Продажи\",\n  \"labels\": [\"Янв\", \"Фев\", \"Мар\"],\n  \"values\": [80, 120, 95]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: pie",
+          "children": [
+            { "type": "text", "text": "Круговая диаграмма." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок", "Нет"],
+              ["segments", "array", "Массив объектов {label, value, color}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"pie\",\n  \"title\": \"Распределение\",\n  \"segments\": [\n    { \"label\": \"Сегмент 1\", \"value\": 40, \"color\": \"#ff0000\" },\n    { \"label\": \"Сегмент 2\", \"value\": 60, \"color\": \"#00ff00\" }\n  ]\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: mermaid",
+          "children": [
+            { "type": "text", "text": "Диаграммы Mermaid (flowchart, sequence и т.д.)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["code", "string", "Код диаграммы Mermaid", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"mermaid\",\n  \"code\": \"graph TD; A-->B;\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: svg",
+          "children": [
+            { "type": "text", "text": "Встроенное SVG-изображение." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["code", "string", "SVG-код", "Да"],
+              ["caption", "string", "Подпись", "Нет"],
+              ["previewWidth", "string", "Ширина предпросмотра", "Нет"],
+              ["previewHeight", "string", "Высота предпросмотра", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"svg\",\n  \"code\": \"<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='40' fill='red'/></svg>\",\n  \"caption\": \"Красный круг\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: html",
+          "children": [
+            { "type": "text", "text": "Произвольный HTML-код (без скриптов)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["code", "string", "HTML-код", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"html\",\n  \"code\": \"<p style='color: red;'>Красный текст</p>\"\n}" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: tooltip",
+          "children": [
+            { "type": "text", "text": "Текст с всплывающей подсказкой при наведении." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["text", "string", "Основной текст", "Да"],
+              ["tooltipText", "string", "Текст подсказки", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"tooltip\",\n  \"text\": \"Наведите на меня\",\n  \"tooltipText\": \"Подсказка\"\n}" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
