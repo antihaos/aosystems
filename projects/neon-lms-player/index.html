@@ -44,7 +44,6 @@
   }
   #app { max-width: 1200px; margin: 0 auto; }
 
-  /* Шапка курса */
   .course-header {
     text-align: center;
     padding: 40px 20px 30px;
@@ -70,7 +69,6 @@
   .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
   .badge { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: rgba(0,240,255,0.1); color: var(--cyan); font-size: 0.9em; }
 
-  /* Кнопка редактора (иконка) */
   .edit-course-btn {
     background: rgba(0,240,255,0.1);
     border: 1px solid var(--cyan);
@@ -229,7 +227,19 @@
   .pie-legend-color { width: 15px; height: 15px; border-radius: 3px; }
 
   .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; }
-  .modal-content { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px; max-width: 600px; width: 90%; position: relative; box-shadow: 0 0 30px rgba(0,240,255,0.3); animation: slideUp 0.3s ease; }
+  .modal-content { 
+    background: var(--panel); 
+    border: 1px solid var(--border); 
+    border-radius: 10px; 
+    padding: 20px; 
+    max-width: 600px; 
+    width: 90%; 
+    position: relative; 
+    box-shadow: 0 0 30px rgba(0,240,255,0.3); 
+    animation: slideUp 0.3s ease;
+    max-height: 80vh;      
+    overflow-y: auto;      
+  }
   @keyframes slideUp {
     from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
@@ -262,7 +272,6 @@
 
   .mermaid { background: #0a0c14; padding: 10px; border-radius: 8px; overflow-x: auto; }
 
-  /* Стили для блока управления скоростью */
   .speed-control { 
     display: flex; 
     align-items: center; 
@@ -287,10 +296,9 @@
 
   .svg-container { margin: 15px 0; text-align: center; }
   .svg-wrapper { display: inline-block; max-width: 100%; overflow: auto; }
-  .svg-wrapper svg { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 0 12px rgba(0,240,255,0.2); }
+  .svg-wrapper svg { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 0 12px rgba(0,240,255,0.2); cursor: zoom-in; }
   .svg-caption { color: var(--muted); font-size: 0.9em; margin-top: 8px; }
 
-  /* Новый блок HTML */
   .html-block {
     margin: 15px 0;
     padding: 15px;
@@ -463,6 +471,42 @@
     width: 100%;
     accent-color: var(--cyan);
     cursor: pointer;
+  }
+
+  .image-preview-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.8);
+  }
+  .image-preview-content {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0,240,255,0.3);
+    animation: slideUp 0.3s ease;
+  }
+  .image-preview-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    display: block;
+    margin: 0 auto;
+    border-radius: 6px;
+  }
+  .svg-preview-wrapper {
+    max-width: 100%;
+    overflow: auto;
+  }
+  .preview-caption {
+    text-align: center;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 0.9em;
   }
 
   @media (max-width: 600px) {
@@ -651,7 +695,6 @@
     if (!course) return null;
     const header = h('header', { class: 'course-header' });
 
-    // Строка с заголовком и кнопкой редактора
     const titleRow = h('div', { class: 'course-title-row' });
     titleRow.appendChild(h('h1', { textContent: course.meta.title }));
 
@@ -659,7 +702,7 @@
       class: 'edit-course-btn',
       type: 'button',
       title: 'Редактор JSON',
-      textContent: '✎' // иконка карандаша
+      textContent: '✎'
     });
     editBtn.addEventListener('click', () => {
       const recordId = course.meta._recordId;
@@ -716,7 +759,6 @@
 
     const buttonRow = h('div', { style: 'display:flex; gap:10px; flex-wrap:wrap; margin:10px 0;' });
 
-    // Загрузка из файла
     const fileInput = h('input', { type: 'file', accept: '.json,application/json', style: 'display:none' });
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
@@ -734,7 +776,6 @@
     buttonRow.appendChild(fileInput);
     buttonRow.appendChild(fileBtn);
 
-    // Кнопка "Новый курс"
     const newCourseBtn = h('button', { class: 'quiz-button', textContent: 'Новый курс', type: 'button' });
     newCourseBtn.addEventListener('click', () => {
       const emptyCourse = {
@@ -763,7 +804,6 @@
 
     manager.appendChild(buttonRow);
 
-    // Отдельная строка для URL
     const urlRow = h('div', { style: 'display:flex; gap:10px; margin:10px 0;' });
     const urlInput = h('input', { type: 'text', placeholder: 'URL JSON курса', class: 'fill-blank-input', style: 'flex:1;' });
     const urlBtn = h('button', { class: 'quiz-button', textContent: 'Загрузить по URL', type: 'button' });
@@ -783,7 +823,6 @@
     urlRow.appendChild(urlBtn);
     manager.appendChild(urlRow);
 
-    // Список сохранённых курсов
     const savedTitle = h('h4', { textContent: 'Сохранённые курсы:', style: 'margin-top:15px;' });
     manager.appendChild(savedTitle);
     const savedList = h('div', { class: 'saved-courses-list', id: 'savedCoursesList' });
@@ -842,8 +881,8 @@
     content.appendChild(textarea);
 
     const buttonRow = h('div', { style: 'display:flex; gap:10px; margin-top:10px;' });
-    const loadBtn = h('button', { class: 'quiz-button', textContent: 'Загрузить', type: 'button' });
-    loadBtn.addEventListener('click', async () => {
+    const saveBtn = h('button', { class: 'quiz-button', textContent: 'Сохранить', type: 'button' });
+    saveBtn.addEventListener('click', async () => {
       try {
         const data = JSON.parse(textarea.value);
         await loadCourseFromObject(data, recordId);
@@ -854,9 +893,46 @@
     });
     const cancelBtn = h('button', { class: 'quiz-button', textContent: 'Отмена', type: 'button' });
     cancelBtn.addEventListener('click', () => overlay.remove());
-    buttonRow.appendChild(loadBtn);
+    buttonRow.appendChild(saveBtn); // ИСПРАВЛЕНО: было loadBtn
     buttonRow.appendChild(cancelBtn);
     content.appendChild(buttonRow);
+
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+
+  // ---------- ПРЕВЬЮ ИЗОБРАЖЕНИЙ ----------
+  function openImagePreview(src, svgContent, caption, previewWidth, previewHeight) {
+    const overlay = h('div', { class: 'modal-overlay image-preview-overlay' });
+    const content = h('div', { class: 'image-preview-content' });
+    const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
+    closeBtn.addEventListener('click', () => overlay.remove());
+    content.appendChild(closeBtn);
+
+    if (previewWidth) {
+      content.style.maxWidth = previewWidth;
+      content.style.width = 'auto';
+    }
+    if (previewHeight) {
+      content.style.maxHeight = previewHeight;
+      content.style.height = 'auto';
+    }
+
+    if (src) {
+      const img = h('img', { src: src, alt: caption || '' });
+      content.appendChild(img);
+    } else if (svgContent) {
+      const div = h('div', { class: 'svg-preview-wrapper' });
+      div.innerHTML = svgContent;
+      content.appendChild(div);
+    }
+
+    if (caption) {
+      content.appendChild(h('div', { class: 'preview-caption', textContent: caption }));
+    }
 
     overlay.appendChild(content);
     document.body.appendChild(overlay);
@@ -918,7 +994,7 @@
         <li><strong>section</strong> — секция с заголовком и вложенными блоками.</li>
         <li><strong>heading</strong> — заголовок уровня h1-h6.</li>
         <li><strong>text</strong> — абзац текста.</li>
-        <li><strong>image</strong> — изображение с подписью.</li>
+        <li><strong>image</strong> — изображение с подписью (клик открывает превью; поддерживаются поля <code>previewWidth</code> и <code>previewHeight</code> для размера окна предпросмотра).</li>
         <li><strong>video</strong> — видео (с возможностью контроля скорости).</li>
         <li><strong>audio</strong> — аудио (с возможностью контроля скорости).</li>
         <li><strong>list</strong> — маркированный/нумерованный список.</li>
@@ -949,11 +1025,12 @@
         <li><strong>mermaid</strong> — диаграмма Mermaid.</li>
         <li><strong>drag-sort</strong> — сортировка перетаскиванием.</li>
         <li><strong>progress-tracker</strong> — интерактивный трекер прогресса.</li>
-        <li><strong>svg</strong> — встроенное SVG-изображение.</li>
+        <li><strong>svg</strong> — встроенное SVG-изображение (клик открывает превью; поддерживаются поля <code>previewWidth</code> и <code>previewHeight</code> для размера окна предпросмотра).</li>
         <li><strong>html</strong> — произвольный HTML-код для расширенного форматирования (поле <code>code</code>).</li>
       </ul>
+      <p><strong>Размеры блоков:</strong> Любой блок может содержать поля <code>width</code>, <code>height</code>, <code>maxWidth</code>, <code>maxHeight</code>, <code>minWidth</code>, <code>minHeight</code> для явного указания размеров. Поле <code>autoScale</code> (по умолчанию <code>true</code>) автоматически масштабирует блок под ширину контейнера и сохраняет пропорции для медиаэлементов. Чтобы отключить, установите <code>autoScale: false</code>.</p>
       <p>Подробное описание параметров каждого блока смотрите в JSON-схеме (открывается через "Генерация промпта").</p>
-      <p><strong>Создание нового курса:</strong> В панели управления нажмите кнопку "Новый курс", чтобы открыть редактор с шаблоном. Замените содержимое на свой JSON и нажмите "Загрузить".</p>
+      <p><strong>Создание нового курса:</strong> В панели управления нажмите кнопку "Новый курс", чтобы открыть редактор с шаблоном. Замените содержимое на свой JSON и нажмите "Сохранить".</p>
     `;
     content.appendChild(helpDiv);
     overlay.appendChild(content);
@@ -1049,7 +1126,7 @@
 1. section: { "type": "section", "title": "Заголовок секции", "children": [ ...блоки... ] }
 2. heading: { "type": "heading", "level": 2, "text": "Текст заголовка" } // level: 1-6
 3. text: { "type": "text", "text": "Текст абзаца" }
-4. image: { "type": "image", "src": "URL изображения", "caption": "Подпись (необязательно)" }
+4. image: { "type": "image", "src": "URL изображения", "caption": "Подпись (необязательно)", "previewWidth": "600px", "previewHeight": "400px" } // previewWidth/Height - размер окна превью (необязательно)
 5. video: { "type": "video", "src": "URL видео", "poster": "URL постера", "caption": "Подпись", "speedControl": true } // speedControl - показать переключатель скорости
 6. audio: { "type": "audio", "src": "URL аудио", "caption": "Подпись", "speedControl": true }
 7. list: { "type": "list", "ordered": false, "items": ["Элемент 1", "Элемент 2"] } // ordered - true для нумерованного
@@ -1080,7 +1157,7 @@
 32. mermaid: { "type": "mermaid", "code": "graph TD; A-->B;" }
 33. drag-sort: { "type": "drag-sort", "instruction": "Перетащите", "items": ["Элемент 1", "Элемент 2"], "correctOrder": ["Элемент 2", "Элемент 1"] }
 34. progress-tracker: { "type": "progress-tracker", "tasks": [ { "label": "Задача 1" }, ... ] }
-35. svg: { "type": "svg", "code": "<svg xmlns=\"http://www.w3.org/2000/svg\">...</svg>", "caption": "Подпись (необязательно)" } // Встраиваемый SVG-код
+35. svg: { "type": "svg", "code": "<svg xmlns=\"http://www.w3.org/2000/svg\">...</svg>", "caption": "Подпись (необязательно)", "previewWidth": "600px", "previewHeight": "400px" } // Встраиваемый SVG-код
 36. html: { "type": "html", "code": "<div style=\"...\">...</div>" } // Произвольный HTML-код
 `;
 
@@ -1104,6 +1181,15 @@
 - При желании можешь добавить кастомную тему через meta.theme.
 - SVG-код должен быть валидным и не содержать скриптов (безопасность).
 - HTML-код должен быть корректным и не содержать скриптов.
+
+ФОРМУЛЫ:
+- Для вставки математических формул в текстовых блоках (type: "text") используй синтаксис KaTeX: inline формулы заключай в \(...\), display формулы — в \[...\]. Также можно использовать $...$ для inline и $$...$$ для display.
+- В HTML-блоках (type: "html") формулы можно вставлять внутри HTML-кода, используя те же разделители KaTeX. Например: <p>Скорость равна \(v = \frac{s}{t}\)</p>.
+- Если теоретический материал содержит много абзацев или требует расширенного форматирования (списки, выделение, таблицы), используй блок "html" с соответствующими HTML-тегами, а не множественные блоки "text".
+
+РАЗМЕРЫ БЛОКОВ:
+- Любой блок может содержать поля width, height, maxWidth, maxHeight, minWidth, minHeight для явного указания размеров (CSS-значения, например "500px", "80%", "auto").
+- Поле autoScale (по умолчанию true) автоматически масштабирует блок под ширину контейнера и сохраняет пропорции для медиаэлементов. Чтобы отключить, установите autoScale: false.
 
 Схема:
 ${schema}
@@ -1198,8 +1284,49 @@ ${schema}
       courseProgress[key] = [...completedLessons];
       localStorage.setItem('lms_course_progress', JSON.stringify(courseProgress));
       showLesson(lessonId);
+      setTimeout(() => {
+        const nav = document.querySelector('.lessons-nav');
+        if (nav) nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     });
     lessonContainer.appendChild(completeBtn);
+
+    // ----- ДОБАВЛЕНА НАВИГАЦИЯ МЕЖДУ УРОКАМИ -----
+    const lessonIndex = course.lessons.findIndex(l => l.id === lessonId);
+    const navContainer = h('div', { style: 'display: flex; gap: 10px; margin-top: 20px; justify-content: space-between;' });
+
+    const prevBtn = h('button', {
+      class: 'quiz-button',
+      textContent: '← Предыдущий урок',
+      type: 'button',
+      disabled: lessonIndex === 0
+    });
+    prevBtn.addEventListener('click', () => {
+      if (lessonIndex > 0) {
+        const prevLesson = course.lessons[lessonIndex - 1];
+        showLesson(prevLesson.id);
+        window.scrollTo(0, 0);
+      }
+    });
+
+    const nextBtn = h('button', {
+      class: 'quiz-button',
+      textContent: 'Следующий урок →',
+      type: 'button',
+      disabled: lessonIndex === course.lessons.length - 1
+    });
+    nextBtn.addEventListener('click', () => {
+      if (lessonIndex < course.lessons.length - 1) {
+        const nextLesson = course.lessons[lessonIndex + 1];
+        showLesson(nextLesson.id);
+        window.scrollTo(0, 0);
+      }
+    });
+
+    navContainer.appendChild(prevBtn);
+    navContainer.appendChild(nextBtn);
+    lessonContainer.appendChild(navContainer);
+    // ----- КОНЕЦ НАВИГАЦИИ -----
 
     app.appendChild(lessonContainer);
     postProcess(lessonContainer);
@@ -1322,34 +1449,56 @@ ${schema}
     divider.addEventListener('touchstart', startDrag, { passive: false });
   }
 
+  function applySizing(block, element) {
+    if (!element) return;
+    const sizingFields = ['width', 'height', 'maxWidth', 'maxHeight', 'minWidth', 'minHeight'];
+    sizingFields.forEach(field => {
+      if (block[field] !== undefined) {
+        element.style[field] = block[field];
+      }
+    });
+    const autoScale = block.autoScale !== undefined ? block.autoScale : true; // autoScale включен по умолчанию
+    if (autoScale) {
+      element.style.maxWidth = '100%';
+      if (['IMG', 'VIDEO', 'AUDIO', 'SVG'].includes(element.tagName)) {
+        element.style.height = 'auto';
+        element.style.objectFit = 'contain';
+      }
+    }
+  }
+
   function renderBlock(block, idx) {
+    let element;
     switch (block.type) {
-      case 'section': {
-        const section = h('section', { class: 'block-section', id: block.id || slugify(block.title) });
-        section.appendChild(h('h2', { class: 'section-title', textContent: block.title }));
+      case 'section':
+        element = h('section', { class: 'block-section', id: block.id || slugify(block.title) });
+        element.appendChild(h('h2', { class: 'section-title', textContent: block.title }));
         if (block.children) {
           const content = h('div', { class: 'section-content' });
           renderBlocks(block.children, content);
-          section.appendChild(content);
+          element.appendChild(content);
         }
-        return section;
-      }
+        break;
       case 'heading':
-        return h(`h${block.level || 2}`, { class: 'heading', textContent: block.text });
+        element = h(`h${block.level || 2}`, { class: 'heading', textContent: block.text });
+        break;
       case 'text':
-        return h('p', { class: 'text', textContent: block.text });
-      case 'image': {
-        const fig = h('figure', { class: 'figure' });
-        fig.appendChild(h('img', { src: block.src, alt: block.caption || '' }));
-        if (block.caption) fig.appendChild(h('figcaption', { textContent: block.caption }));
-        return fig;
-      }
-      case 'video': {
-        const fig = h('figure', { class: 'figure' });
+        element = h('p', { class: 'text', textContent: block.text });
+        break;
+      case 'image':
+        element = h('figure', { class: 'figure' });
+        const img = h('img', { src: block.src, alt: block.caption || '' });
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', () => openImagePreview(block.src, null, block.caption, block.previewWidth, block.previewHeight));
+        element.appendChild(img);
+        if (block.caption) element.appendChild(h('figcaption', { textContent: block.caption }));
+        break;
+      case 'video':
+        element = h('figure', { class: 'figure' });
         const video = h('video', { controls: '' });
         if (block.poster) video.setAttribute('poster', block.poster);
         video.appendChild(h('source', { src: block.src, type: block.mimeType || 'video/mp4' }));
-        fig.appendChild(video);
+        element.appendChild(video);
         if (block.speedControl) {
           const speedControl = h('div', { class: 'speed-control' });
           speedControl.appendChild(h('label', { textContent: 'Скорость:' }));
@@ -1358,16 +1507,15 @@ ${schema}
           speedSelect.value = '1';
           speedSelect.addEventListener('change', () => video.playbackRate = parseFloat(speedSelect.value));
           speedControl.appendChild(speedSelect);
-          fig.appendChild(speedControl);
+          element.appendChild(speedControl);
         }
-        if (block.caption) fig.appendChild(h('figcaption', { textContent: block.caption }));
-        return fig;
-      }
-      case 'audio': {
-        const fig = h('figure', { class: 'figure' });
+        if (block.caption) element.appendChild(h('figcaption', { textContent: block.caption }));
+        break;
+      case 'audio':
+        element = h('figure', { class: 'figure' });
         const audio = h('audio', { controls: '' });
         audio.appendChild(h('source', { src: block.src, type: block.mimeType || 'audio/mpeg' }));
-        fig.appendChild(audio);
+        element.appendChild(audio);
         if (block.speedControl) {
           const speedControl = h('div', { class: 'speed-control' });
           speedControl.appendChild(h('label', { textContent: 'Скорость:' }));
@@ -1376,38 +1524,34 @@ ${schema}
           speedSelect.value = '1';
           speedSelect.addEventListener('change', () => audio.playbackRate = parseFloat(speedSelect.value));
           speedControl.appendChild(speedSelect);
-          fig.appendChild(speedControl);
+          element.appendChild(speedControl);
         }
-        if (block.caption) fig.appendChild(h('figcaption', { textContent: block.caption }));
-        return fig;
-      }
-      case 'list': {
-        const list = h(block.ordered ? 'ol' : 'ul', { class: 'list' });
-        block.items.forEach(item => list.appendChild(h('li', { textContent: item })));
-        return list;
-      }
-      case 'code': {
-        const wrapper = h('div', { class: 'code-block' });
-        wrapper.appendChild(h('div', { class: 'code-header', textContent: block.language || 'code' }));
+        if (block.caption) element.appendChild(h('figcaption', { textContent: block.caption }));
+        break;
+      case 'list':
+        element = h(block.ordered ? 'ol' : 'ul', { class: 'list' });
+        block.items.forEach(item => element.appendChild(h('li', { textContent: item })));
+        break;
+      case 'code':
+        element = h('div', { class: 'code-block' });
+        element.appendChild(h('div', { class: 'code-header', textContent: block.language || 'code' }));
         const pre = h('pre');
         pre.appendChild(h('code', { textContent: block.code }));
-        wrapper.appendChild(pre);
-        return wrapper;
-      }
-      case 'callout': {
-        const callout = h('div', { class: `callout callout-${block.variant || 'info'}` });
-        if (block.title) callout.appendChild(h('h4', { textContent: block.title }));
+        element.appendChild(pre);
+        break;
+      case 'callout':
+        element = h('div', { class: `callout callout-${block.variant || 'info'}` });
+        if (block.title) element.appendChild(h('h4', { textContent: block.title }));
         if (block.children) {
           const content = h('div');
           renderBlocks(block.children, content);
-          callout.appendChild(content);
+          element.appendChild(content);
         } else if (block.text) {
-          callout.appendChild(h('p', { textContent: block.text }));
+          element.appendChild(h('p', { textContent: block.text }));
         }
-        return callout;
-      }
-      case 'tabs': {
-        const tabs = h('div', { class: 'tabs' });
+        break;
+      case 'tabs':
+        element = h('div', { class: 'tabs' });
         const btnContainer = h('div', { class: 'tab-buttons' });
         const panelContainer = h('div', { class: 'tab-panels' });
         block.tabs.forEach((tab, tabIdx) => {
@@ -1423,12 +1567,11 @@ ${schema}
           btnContainer.appendChild(btn);
           panelContainer.appendChild(panel);
         });
-        tabs.appendChild(btnContainer);
-        tabs.appendChild(panelContainer);
-        return tabs;
-      }
-      case 'accordion': {
-        const accordion = h('div', { class: 'accordion' });
+        element.appendChild(btnContainer);
+        element.appendChild(panelContainer);
+        break;
+      case 'accordion':
+        element = h('div', { class: 'accordion' });
         block.items.forEach((item) => {
           const itemEl = h('div', { class: 'accordion-item' });
           const header = h('button', { class: 'accordion-header', type: 'button' });
@@ -1440,7 +1583,7 @@ ${schema}
           body.appendChild(inner);
           header.addEventListener('click', () => {
             const isOpen = itemEl.classList.contains('open');
-            accordion.querySelectorAll('.accordion-item').forEach(el => {
+            element.querySelectorAll('.accordion-item').forEach(el => {
               el.classList.remove('open');
               el.querySelector('.accordion-body').style.maxHeight = '0';
             });
@@ -1451,13 +1594,12 @@ ${schema}
           });
           itemEl.appendChild(header);
           itemEl.appendChild(body);
-          accordion.appendChild(itemEl);
+          element.appendChild(itemEl);
         });
-        return accordion;
-      }
-      case 'quiz': {
-        const quiz = h('div', { class: 'quiz' });
-        quiz.appendChild(h('p', { class: 'question', textContent: block.question }));
+        break;
+      case 'quiz':
+        element = h('div', { class: 'quiz' });
+        element.appendChild(h('p', { class: 'question', textContent: block.question }));
         const optionsContainer = h('div', { class: 'quiz-options' });
         const radioName = `quiz-${idx}-${Math.random().toString(36).substring(2, 11)}`;
         let selected = null;
@@ -1469,11 +1611,11 @@ ${schema}
           label.appendChild(document.createTextNode(opt));
           optionsContainer.appendChild(label);
         });
-        quiz.appendChild(optionsContainer);
-        const button = h('button', { class: 'quiz-button', textContent: 'Проверить', type: 'button' });
-        const feedback = h('div', { class: 'quiz-feedback' });
-        button.addEventListener('click', () => {
-          if (selected === null) { feedback.textContent = 'Выберите вариант!'; feedback.style.color = 'var(--yellow)'; return; }
+        element.appendChild(optionsContainer);
+        const quizButton = h('button', { class: 'quiz-button', textContent: 'Проверить', type: 'button' });
+        const quizFeedback = h('div', { class: 'quiz-feedback' });
+        quizButton.addEventListener('click', () => {
+          if (selected === null) { quizFeedback.textContent = 'Выберите вариант!'; quizFeedback.style.color = 'var(--yellow)'; return; }
           const correct = block.correct;
           const labels = optionsContainer.querySelectorAll('.quiz-option');
           labels.forEach((label, i) => {
@@ -1482,45 +1624,43 @@ ${schema}
             if (i === correct) label.classList.add('correct');
             else if (i === selected) label.classList.add('wrong');
           });
-          feedback.textContent = selected === correct ? 'Верно! ' + (block.explanation || '') : 'Неверно. ' + (block.explanation || '');
-          feedback.style.color = selected === correct ? 'var(--green)' : 'var(--pink)';
-          button.disabled = true;
+          quizFeedback.textContent = selected === correct ? 'Верно! ' + (block.explanation || '') : 'Неверно. ' + (block.explanation || '');
+          quizFeedback.style.color = selected === correct ? 'var(--green)' : 'var(--pink)';
+          quizButton.disabled = true;
         });
-        quiz.appendChild(button);
-        quiz.appendChild(feedback);
-        return quiz;
-      }
-      case 'multi-quiz': {
-        const container = h('div', { class: 'quiz multi-quiz' });
-        container.appendChild(h('p', { class: 'question', textContent: block.question }));
-        const optionsContainer = h('div', { class: 'multi-quiz-options' });
+        element.appendChild(quizButton);
+        element.appendChild(quizFeedback);
+        break;
+      case 'multi-quiz':
+        element = h('div', { class: 'quiz multi-quiz' });
+        element.appendChild(h('p', { class: 'question', textContent: block.question }));
+        const multiOptionsContainer = h('div', { class: 'multi-quiz-options' });
         block.options.forEach((opt, i) => {
           const label = h('label', { class: 'option' });
           const input = h('input', { type: 'checkbox', value: i });
           label.appendChild(input);
           label.appendChild(document.createTextNode(opt));
-          optionsContainer.appendChild(label);
+          multiOptionsContainer.appendChild(label);
         });
-        container.appendChild(optionsContainer);
-        const button = h('button', { class: 'quiz-button', textContent: 'Проверить', type: 'button' });
-        const feedback = h('div', { class: 'feedback' });
-        button.addEventListener('click', () => {
+        element.appendChild(multiOptionsContainer);
+        const multiButton = h('button', { class: 'quiz-button', textContent: 'Проверить', type: 'button' });
+        const multiFeedback = h('div', { class: 'feedback' });
+        multiButton.addEventListener('click', () => {
           const selected = [];
-          optionsContainer.querySelectorAll('input:checked').forEach(inp => selected.push(parseInt(inp.value)));
+          multiOptionsContainer.querySelectorAll('input:checked').forEach(inp => selected.push(parseInt(inp.value)));
           const correct = block.correct;
           const isCorrect = selected.length === correct.length && selected.every(v => correct.includes(v));
-          feedback.textContent = isCorrect ? 'Верно! ' + (block.explanation || '') : 'Неверно. ' + (block.explanation || '');
-          feedback.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
-          optionsContainer.querySelectorAll('input').forEach(inp => inp.disabled = true);
-          button.disabled = true;
+          multiFeedback.textContent = isCorrect ? 'Верно! ' + (block.explanation || '') : 'Неверно. ' + (block.explanation || '');
+          multiFeedback.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
+          multiOptionsContainer.querySelectorAll('input').forEach(inp => inp.disabled = true);
+          multiButton.disabled = true;
         });
-        container.appendChild(button);
-        container.appendChild(feedback);
-        return container;
-      }
-      case 'match': {
-        const container = h('div', { class: 'match-container' });
-        if (block.instruction) container.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        element.appendChild(multiButton);
+        element.appendChild(multiFeedback);
+        break;
+      case 'match':
+        element = h('div', { class: 'match-container' });
+        if (block.instruction) element.appendChild(h('p', { class: 'text', textContent: block.instruction }));
         const rightOptions = [...new Set(block.pairs.map(p => p.right))];
         const selects = [];
         block.pairs.forEach((pair, i) => {
@@ -1530,57 +1670,55 @@ ${schema}
           select.appendChild(h('option', { value: '', textContent: 'Выберите...' }));
           rightOptions.forEach(opt => select.appendChild(h('option', { value: opt, textContent: opt })));
           item.appendChild(select);
-          container.appendChild(item);
+          element.appendChild(item);
           selects.push({ select, correct: pair.right });
         });
-        const checkBtn = h('button', { class: 'match-check-btn', textContent: 'Проверить', type: 'button' });
-        const result = h('div', { class: 'match-result' });
-        checkBtn.addEventListener('click', () => {
+        const matchCheckBtn = h('button', { class: 'match-check-btn', textContent: 'Проверить', type: 'button' });
+        const matchResult = h('div', { class: 'match-result' });
+        matchCheckBtn.addEventListener('click', () => {
           let allCorrect = true;
           selects.forEach(({ select, correct }) => {
             if (select.value !== correct) { allCorrect = false; select.style.borderColor = 'var(--pink)'; }
             else select.style.borderColor = 'var(--green)';
           });
-          result.textContent = allCorrect ? 'Все верно!' : 'Есть ошибки.';
-          result.style.color = allCorrect ? 'var(--green)' : 'var(--pink)';
+          matchResult.textContent = allCorrect ? 'Все верно!' : 'Есть ошибки.';
+          matchResult.style.color = allCorrect ? 'var(--green)' : 'var(--pink)';
         });
-        container.appendChild(checkBtn);
-        container.appendChild(result);
-        return container;
-      }
-      case 'sort': {
-        const container = h('div', { class: 'sort-container' });
-        if (block.instruction) container.appendChild(h('p', { class: 'text', textContent: block.instruction }));
-        const list = h('ul', { class: 'sort-list' });
+        element.appendChild(matchCheckBtn);
+        element.appendChild(matchResult);
+        break;
+      case 'sort':
+        element = h('div', { class: 'sort-container' });
+        if (block.instruction) element.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        const sortList = h('ul', { class: 'sort-list' });
         let items = [...block.items];
-        const renderList = () => {
-          list.innerHTML = '';
+        const renderSortList = () => {
+          sortList.innerHTML = '';
           items.forEach((item, i) => {
             const li = h('li', { class: 'sort-item' });
             li.appendChild(h('span', { textContent: item }));
             const controls = h('div', { class: 'sort-controls' });
-            if (i > 0) controls.appendChild(h('button', { class: 'sort-btn', textContent: '↑', type: 'button', onclick: () => { [items[i-1], items[i]] = [items[i], items[i-1]]; renderList(); }}));
-            if (i < items.length - 1) controls.appendChild(h('button', { class: 'sort-btn', textContent: '↓', type: 'button', onclick: () => { [items[i], items[i+1]] = [items[i+1], items[i]]; renderList(); }}));
+            if (i > 0) controls.appendChild(h('button', { class: 'sort-btn', textContent: '↑', type: 'button', onclick: () => { [items[i-1], items[i]] = [items[i], items[i-1]]; renderSortList(); }}));
+            if (i < items.length - 1) controls.appendChild(h('button', { class: 'sort-btn', textContent: '↓', type: 'button', onclick: () => { [items[i], items[i+1]] = [items[i+1], items[i]]; renderSortList(); }}));
             li.appendChild(controls);
-            list.appendChild(li);
+            sortList.appendChild(li);
           });
         };
-        renderList();
-        container.appendChild(list);
-        const checkBtn = h('button', { class: 'sort-check-btn', textContent: 'Проверить', type: 'button' });
-        const result = h('div', { class: 'match-result' });
-        checkBtn.addEventListener('click', () => {
+        renderSortList();
+        element.appendChild(sortList);
+        const sortCheckBtn = h('button', { class: 'sort-check-btn', textContent: 'Проверить', type: 'button' });
+        const sortResult = h('div', { class: 'match-result' });
+        sortCheckBtn.addEventListener('click', () => {
           const isCorrect = JSON.stringify(items) === JSON.stringify(block.correctOrder);
-          result.textContent = isCorrect ? 'Правильный порядок!' : 'Неправильно.';
-          result.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
+          sortResult.textContent = isCorrect ? 'Правильный порядок!' : 'Неправильно.';
+          sortResult.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
         });
-        container.appendChild(checkBtn);
-        container.appendChild(result);
-        return container;
-      }
-      case 'fill-blank': {
-        const container = h('div', { class: 'fill-blank' });
-        if (block.instruction) container.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        element.appendChild(sortCheckBtn);
+        element.appendChild(sortResult);
+        break;
+      case 'fill-blank':
+        element = h('div', { class: 'fill-blank' });
+        if (block.instruction) element.appendChild(h('p', { class: 'text', textContent: block.instruction }));
         const regex = /\{\{(\d+)\}\}/g;
         const parts = [];
         let lastIndex = 0, match;
@@ -1596,28 +1734,27 @@ ${schema}
         if (lastIndex < block.text.length) parts.push(block.text.substring(lastIndex));
         parts.forEach(part => {
           if (typeof part === 'string') {
-            container.appendChild(document.createTextNode(part));
+            element.appendChild(document.createTextNode(part));
           } else {
-            container.appendChild(part);
+            element.appendChild(part);
           }
         });
-        const checkBtn = h('button', { class: 'fill-blank-check-btn', textContent: 'Проверить', type: 'button' });
-        const feedback = h('div', { class: 'fill-blank-feedback' });
-        checkBtn.addEventListener('click', () => {
+        const fillCheckBtn = h('button', { class: 'fill-blank-check-btn', textContent: 'Проверить', type: 'button' });
+        const fillFeedback = h('div', { class: 'fill-blank-feedback' });
+        fillCheckBtn.addEventListener('click', () => {
           let allCorrect = true;
           for (const key in block.answers) {
             if (inputs[key].value.trim().toLowerCase() !== block.answers[key].toLowerCase()) { allCorrect = false; inputs[key].style.borderColor = 'var(--pink)'; }
             else inputs[key].style.borderColor = 'var(--green)';
           }
-          feedback.textContent = allCorrect ? 'Верно!' : 'Есть ошибки.';
-          feedback.style.color = allCorrect ? 'var(--green)' : 'var(--pink)';
+          fillFeedback.textContent = allCorrect ? 'Верно!' : 'Есть ошибки.';
+          fillFeedback.style.color = allCorrect ? 'var(--green)' : 'var(--pink)';
         });
-        container.appendChild(checkBtn);
-        container.appendChild(feedback);
-        return container;
-      }
-      case 'flip-card': {
-        const card = h('div', { class: 'flip-card' });
+        element.appendChild(fillCheckBtn);
+        element.appendChild(fillFeedback);
+        break;
+      case 'flip-card':
+        element = h('div', { class: 'flip-card' });
         const inner = h('div', { class: 'flip-card-inner' });
         const front = h('div', { class: 'flip-card-front' });
         renderContentOrText(block.front, front);
@@ -1625,109 +1762,101 @@ ${schema}
         const back = h('div', { class: 'flip-card-back' });
         renderContentOrText(block.back, back);
         inner.appendChild(back);
-        card.appendChild(inner);
-        card.addEventListener('click', () => card.classList.toggle('flipped'));
-        return card;
-      }
-      case 'poll': {
-        const container = h('div', { class: 'poll' });
-        container.appendChild(h('p', { class: 'question', textContent: block.question }));
-        const optionsContainer = h('div', { class: 'poll-options' });
-        const resultsContainer = h('div', { class: 'poll-results' });
-        let selected = null;
+        element.appendChild(inner);
+        element.addEventListener('click', () => element.classList.toggle('flipped'));
+        break;
+      case 'poll':
+        element = h('div', { class: 'poll' });
+        element.appendChild(h('p', { class: 'question', textContent: block.question }));
+        const pollOptionsContainer = h('div', { class: 'poll-options' });
+        const pollResultsContainer = h('div', { class: 'poll-results' });
+        let pollSelected = null;
         block.options.forEach((opt, i) => {
           const optionEl = h('div', { class: 'poll-option', textContent: opt });
           optionEl.addEventListener('click', () => {
-            selected = i;
-            optionsContainer.querySelectorAll('.poll-option').forEach(el => el.classList.remove('selected'));
+            pollSelected = i;
+            pollOptionsContainer.querySelectorAll('.poll-option').forEach(el => el.classList.remove('selected'));
             optionEl.classList.add('selected');
-            resultsContainer.innerHTML = '';
+            pollResultsContainer.innerHTML = '';
             block.options.forEach((o, idx) => {
               const percent = idx === i ? 60 : Math.floor(Math.random() * 30 + 5);
               const bar = h('div', { class: 'poll-bar' });
               bar.appendChild(h('div', { class: 'poll-bar-fill', style: `width: ${percent}%` }));
-              resultsContainer.appendChild(h('div', { textContent: `${o}: ${percent}%` }));
-              resultsContainer.appendChild(bar);
+              pollResultsContainer.appendChild(h('div', { textContent: `${o}: ${percent}%` }));
+              pollResultsContainer.appendChild(bar);
             });
-            resultsContainer.style.animation = 'fadeIn 0.5s ease';
+            pollResultsContainer.style.animation = 'fadeIn 0.5s ease';
           });
-          optionsContainer.appendChild(optionEl);
+          pollOptionsContainer.appendChild(optionEl);
         });
-        container.appendChild(optionsContainer);
-        container.appendChild(resultsContainer);
-        return container;
-      }
-      case 'compare': {
-        const container = h('div', { class: 'compare-container' });
+        element.appendChild(pollOptionsContainer);
+        element.appendChild(pollResultsContainer);
+        break;
+      case 'compare':
+        element = h('div', { class: 'compare-container' });
         const left = h('div', { class: 'compare-left' });
         if (block.left) renderBlocks(block.left, left);
-        container.appendChild(left);
+        element.appendChild(left);
         const divider = h('div', { class: 'compare-divider' });
-        container.appendChild(divider);
+        element.appendChild(divider);
         const right = h('div', { class: 'compare-right' });
         if (block.right) renderBlocks(block.right, right);
-        container.appendChild(right);
-        setupCompareDrag(container, left, divider);
-        return container;
-      }
-      case 'slider': {
-        const container = h('div', { class: 'slider-container' });
-        const labelRow = h('div', { class: 'slider-label' });
-        labelRow.appendChild(h('span', { textContent: block.label || 'Значение:' }));
-        const valueDisplay = h('span', { class: 'slider-value', textContent: block.default || 0 });
-        labelRow.appendChild(valueDisplay);
-        container.appendChild(labelRow);
-        const slider = h('input', { type: 'range', class: 'slider-input', min: block.min || 0, max: block.max || 100, value: block.default || 0 });
-        slider.addEventListener('input', () => valueDisplay.textContent = slider.value);
-        container.appendChild(slider);
-        return container;
-      }
-      case 'timeline': {
-        const timeline = h('div', { class: 'timeline' });
+        element.appendChild(right);
+        setupCompareDrag(element, left, divider);
+        break;
+      case 'slider':
+        element = h('div', { class: 'slider-container' });
+        const sliderLabelRow = h('div', { class: 'slider-label' });
+        sliderLabelRow.appendChild(h('span', { textContent: block.label || 'Значение:' }));
+        const sliderValue = h('span', { class: 'slider-value', textContent: block.default || 0 });
+        sliderLabelRow.appendChild(sliderValue);
+        element.appendChild(sliderLabelRow);
+        const sliderInput = h('input', { type: 'range', class: 'slider-input', min: block.min || 0, max: block.max || 100, value: block.default || 0 });
+        sliderInput.addEventListener('input', () => sliderValue.textContent = sliderInput.value);
+        element.appendChild(sliderInput);
+        break;
+      case 'timeline':
+        element = h('div', { class: 'timeline' });
         block.items.forEach(item => {
           const itemEl = h('div', { class: 'timeline-item' });
           itemEl.appendChild(h('div', { class: 'timeline-title', textContent: item.title }));
           itemEl.appendChild(h('div', { class: 'timeline-desc', textContent: item.description }));
-          timeline.appendChild(itemEl);
+          element.appendChild(itemEl);
         });
-        return timeline;
-      }
-      case 'steps': {
-        const container = h('div', { class: 'steps-container' });
-        const header = h('div', { class: 'steps-header' });
-        const contentContainer = h('div', { class: 'step-content' });
+        break;
+      case 'steps':
+        element = h('div', { class: 'steps-container' });
+        const stepsHeader = h('div', { class: 'steps-header' });
+        const stepsContent = h('div', { class: 'step-content' });
         let currentStep = 0;
-        const renderStep = () => {
-          header.innerHTML = '';
+        const renderSteps = () => {
+          stepsHeader.innerHTML = '';
           block.steps.forEach((step, i) => {
             const btn = h('button', { class: 'step-btn' + (i === currentStep ? ' active' : ''), textContent: step.title, type: 'button' });
-            btn.addEventListener('click', () => { currentStep = i; renderStep(); });
-            header.appendChild(btn);
+            btn.addEventListener('click', () => { currentStep = i; renderSteps(); });
+            stepsHeader.appendChild(btn);
           });
-          contentContainer.innerHTML = '';
-          renderBlocks(block.steps[currentStep].content || [], contentContainer);
+          stepsContent.innerHTML = '';
+          renderBlocks(block.steps[currentStep].content || [], stepsContent);
         };
-        renderStep();
-        container.appendChild(header);
-        container.appendChild(contentContainer);
-        return container;
-      }
-      case 'embed': {
-        const wrapper = h('div', { class: 'embed' });
-        wrapper.appendChild(h('iframe', { src: block.src, allowfullscreen: '' }));
-        return wrapper;
-      }
-      case 'columns': {
-        const cols = h('div', { class: 'columns' });
+        renderSteps();
+        element.appendChild(stepsHeader);
+        element.appendChild(stepsContent);
+        break;
+      case 'embed':
+        element = h('div', { class: 'embed' });
+        element.appendChild(h('iframe', { src: block.src, allowfullscreen: '' }));
+        break;
+      case 'columns':
+        element = h('div', { class: 'columns' });
         block.columns.forEach(col => {
           const colDiv = h('div', { class: 'column' });
           renderBlocks(col.blocks || [], colDiv);
-          cols.appendChild(colDiv);
+          element.appendChild(colDiv);
         });
-        return cols;
-      }
-      case 'carousel': {
-        const carousel = h('div', { class: 'carousel' });
+        break;
+      case 'carousel':
+        element = h('div', { class: 'carousel' });
         const track = h('div', { class: 'carousel-track' });
         const slides = block.items.map(item => {
           const slide = h('div', { class: 'carousel-slide' });
@@ -1740,61 +1869,65 @@ ${schema}
           return slide;
         });
         slides.forEach(s => track.appendChild(s));
-        carousel.appendChild(track);
-        let current = 0;
-        const update = () => {
-          track.style.transform = `translateX(-${current * 100}%)`;
-          dots.forEach((dot, i) => dot.classList.toggle('active', i === current));
+        element.appendChild(track);
+        let currentSlide = 0;
+        const updateCarousel = () => {
+          track.style.transform = `translateX(-${currentSlide * 100}%)`;
+          carouselDots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
         };
-        carousel.appendChild(h('button', { class: 'carousel-btn prev', textContent: '‹', type: 'button', onclick: () => { current = (current - 1 + slides.length) % slides.length; update(); }}));
-        carousel.appendChild(h('button', { class: 'carousel-btn next', textContent: '›', type: 'button', onclick: () => { current = (current + 1) % slides.length; update(); }}));
+        const prevBtn = h('button', { class: 'carousel-btn prev', textContent: '‹', type: 'button' });
+        prevBtn.addEventListener('click', () => { currentSlide = (currentSlide - 1 + slides.length) % slides.length; updateCarousel(); });
+        element.appendChild(prevBtn);
+        const nextBtn = h('button', { class: 'carousel-btn next', textContent: '›', type: 'button' });
+        nextBtn.addEventListener('click', () => { currentSlide = (currentSlide + 1) % slides.length; updateCarousel(); });
+        element.appendChild(nextBtn);
         const dotsContainer = h('div', { class: 'carousel-dots' });
-        const dots = slides.map((_, i) => h('span', { class: 'carousel-dot' + (i === 0 ? ' active' : ''), onclick: () => { current = i; update(); }}));
-        dots.forEach(d => dotsContainer.appendChild(d));
-        carousel.appendChild(dotsContainer);
-        update();
-        return carousel;
-      }
-      case 'before-after': {
-        const container = h('div', { class: 'before-after' });
-        container.appendChild(h('img', { src: block.before, alt: 'before' }));
+        const carouselDots = slides.map((_, i) => h('span', { class: 'carousel-dot' + (i === 0 ? ' active' : '') }));
+        carouselDots.forEach(dot => {
+          dot.addEventListener('click', () => {
+            currentSlide = carouselDots.indexOf(dot);
+            updateCarousel();
+          });
+          dotsContainer.appendChild(dot);
+        });
+        element.appendChild(dotsContainer);
+        updateCarousel();
+        break;
+      case 'before-after':
+        element = h('div', { class: 'before-after' });
+        element.appendChild(h('img', { src: block.before, alt: 'before' }));
         const after = h('div', { class: 'after' });
         after.appendChild(h('img', { src: block.after, alt: 'after' }));
-        container.appendChild(after);
-        const divider = h('div', { class: 'divider' });
-        container.appendChild(divider);
-
-        const setPos = (x) => {
-          const rect = container.getBoundingClientRect();
+        element.appendChild(after);
+        const baDivider = h('div', { class: 'divider' });
+        element.appendChild(baDivider);
+        setupDrag(baDivider, element, (x) => {
+          const rect = element.getBoundingClientRect();
           const pos = Math.max(0, Math.min(x - rect.left, rect.width));
           after.style.width = pos + 'px';
-          divider.style.left = pos + 'px';
-        };
-
-        setupDrag(divider, container, setPos);
-        return container;
-      }
-      case 'table': {
-        const container = h('div', { class: 'table-container' });
+          baDivider.style.left = pos + 'px';
+        });
+        break;
+      case 'table':
+        element = h('div', { class: 'table-container' });
         const table = h('table');
         const thead = h('thead');
-        const tr = h('tr');
-        block.headers.forEach(hd => tr.appendChild(h('th', { textContent: hd })));
-        thead.appendChild(tr);
+        const headerRow = h('tr');
+        block.headers.forEach(hd => headerRow.appendChild(h('th', { textContent: hd })));
+        thead.appendChild(headerRow);
         table.appendChild(thead);
         const tbody = h('tbody');
         block.rows.forEach(row => {
-          const tr2 = h('tr');
-          row.forEach(cell => tr2.appendChild(h('td', { textContent: cell })));
-          tbody.appendChild(tr2);
+          const tr = h('tr');
+          row.forEach(cell => tr.appendChild(h('td', { textContent: cell })));
+          tbody.appendChild(tr);
         });
         table.appendChild(tbody);
-        container.appendChild(table);
-        return container;
-      }
-      case 'chart': {
-        const container = h('div', { class: 'chart-block' });
-        if (block.title) container.appendChild(h('h4', { textContent: block.title, class: 'heading' }));
+        element.appendChild(table);
+        break;
+      case 'chart':
+        element = h('div', { class: 'chart-block' });
+        if (block.title) element.appendChild(h('h4', { textContent: block.title, class: 'heading' }));
         const chart = h('div', { class: 'chart-container' });
         const max = Math.max(...block.values);
         block.values.forEach((val, i) => {
@@ -1805,12 +1938,11 @@ ${schema}
           barWrap.appendChild(h('div', { class: 'chart-bar-label', textContent: block.labels[i] }));
           chart.appendChild(barWrap);
         });
-        container.appendChild(chart);
-        return container;
-      }
-      case 'pie': {
-        const container = h('div', { class: 'pie-block' });
-        if (block.title) container.appendChild(h('h4', { textContent: block.title, class: 'heading' }));
+        element.appendChild(chart);
+        break;
+      case 'pie':
+        element = h('div', { class: 'pie-block' });
+        if (block.title) element.appendChild(h('h4', { textContent: block.title, class: 'heading' }));
         const total = block.segments.reduce((sum, seg) => sum + seg.value, 0);
         let cumulative = 0;
         const gradientStops = block.segments.map(seg => {
@@ -1820,7 +1952,7 @@ ${schema}
           return `${seg.color} ${start}% ${end}%`;
         }).join(', ');
         const pie = h('div', { class: 'pie-chart', style: `background: conic-gradient(${gradientStops});` });
-        container.appendChild(pie);
+        element.appendChild(pie);
         const legend = h('div', { class: 'pie-legend' });
         block.segments.forEach(seg => {
           const item = h('div', { class: 'pie-legend-item' });
@@ -1828,14 +1960,13 @@ ${schema}
           item.appendChild(h('span', { textContent: `${seg.label} (${seg.value}%)` }));
           legend.appendChild(item);
         });
-        container.appendChild(legend);
-        return container;
-      }
-      case 'modal': {
-        const wrapper = h('div', { class: 'modal-block' });
-        const btn = h('button', { class: 'modal-open-btn', textContent: block.buttonText || 'Открыть', type: 'button' });
-        wrapper.appendChild(btn);
-        btn.addEventListener('click', () => {
+        element.appendChild(legend);
+        break;
+      case 'modal':
+        element = h('div', { class: 'modal-block' });
+        const modalOpenBtn = h('button', { class: 'modal-open-btn', textContent: block.buttonText || 'Открыть', type: 'button' });
+        element.appendChild(modalOpenBtn);
+        modalOpenBtn.addEventListener('click', () => {
           const overlay = h('div', { class: 'modal-overlay' });
           const content = h('div', { class: 'modal-content' });
           const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
@@ -1846,45 +1977,40 @@ ${schema}
           overlay.appendChild(content);
           document.body.appendChild(overlay);
           postProcess(content);
-          overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) overlay.remove();
-          });
+          overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
         });
-        return wrapper;
-      }
-      case 'tooltip': {
-        const tooltip = h('span', { class: 'tooltip', textContent: block.text });
-        const tip = h('span', { class: 'tooltip-text', textContent: block.tooltipText });
-        tooltip.appendChild(tip);
-        return tooltip;
-      }
-      case 'mermaid': {
-        const container = h('div', { class: 'mermaid', textContent: block.code });
-        return container;
-      }
-      case 'svg': {
-        const container = h('div', { class: 'svg-container' });
-        const wrapper = h('div', { class: 'svg-wrapper' });
-        wrapper.innerHTML = block.code;
-        container.appendChild(wrapper);
-        if (block.caption) {
-          container.appendChild(h('div', { class: 'svg-caption', textContent: block.caption }));
+        break;
+      case 'tooltip':
+        element = h('span', { class: 'tooltip', textContent: block.text });
+        element.appendChild(h('span', { class: 'tooltip-text', textContent: block.tooltipText }));
+        break;
+      case 'mermaid':
+        element = h('div', { class: 'mermaid', textContent: block.code });
+        break;
+      case 'svg':
+        element = h('div', { class: 'svg-container' });
+        const svgWrapper = h('div', { class: 'svg-wrapper' });
+        svgWrapper.innerHTML = block.code;
+        const svgElement = svgWrapper.querySelector('svg');
+        if (svgElement) {
+          svgElement.style.cursor = 'zoom-in';
+          svgElement.addEventListener('click', () => openImagePreview(null, block.code, block.caption, block.previewWidth, block.previewHeight));
         }
-        return container;
-      }
-      case 'html': {
-        const container = h('div', { class: 'html-block' });
-        container.innerHTML = block.code;
-        return container;
-      }
-      case 'drag-sort': {
-        const container = h('div', { class: 'drag-sort' });
-        if (block.instruction) container.appendChild(h('p', { class: 'text', textContent: block.instruction }));
-        const list = h('ul', { class: 'drag-sort-list' });
-        let items = [...block.items];
-        const renderList = () => {
-          list.innerHTML = '';
-          items.forEach((item, index) => {
+        element.appendChild(svgWrapper);
+        if (block.caption) element.appendChild(h('div', { class: 'svg-caption', textContent: block.caption }));
+        break;
+      case 'html':
+        element = h('div', { class: 'html-block' });
+        element.innerHTML = block.code;
+        break;
+      case 'drag-sort':
+        element = h('div', { class: 'drag-sort' });
+        if (block.instruction) element.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        const dragList = h('ul', { class: 'drag-sort-list' });
+        let dragItems = [...block.items];
+        const renderDragList = () => {
+          dragList.innerHTML = '';
+          dragItems.forEach((item, index) => {
             const li = h('li', { class: 'drag-sort-item', draggable: 'true', textContent: item, dataset: { index: index } });
             li.addEventListener('dragstart', (e) => {
               li.classList.add('dragging');
@@ -1897,40 +2023,46 @@ ${schema}
               const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
               const toIndex = index;
               if (fromIndex !== toIndex) {
-                const [moved] = items.splice(fromIndex, 1);
-                items.splice(toIndex, 0, moved);
-                renderList();
+                const [moved] = dragItems.splice(fromIndex, 1);
+                dragItems.splice(toIndex, 0, moved);
+                renderDragList();
               }
             });
-            list.appendChild(li);
+            dragList.appendChild(li);
           });
         };
-        renderList();
-        container.appendChild(list);
-        const checkBtn = h('button', { class: 'sort-check-btn', textContent: 'Проверить', type: 'button' });
-        const result = h('div', { class: 'match-result' });
-        checkBtn.addEventListener('click', () => {
-          const isCorrect = JSON.stringify(items) === JSON.stringify(block.correctOrder);
-          result.textContent = isCorrect ? 'Правильный порядок!' : 'Неправильно.';
-          result.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
+        renderDragList();
+        element.appendChild(dragList);
+        const dragCheckBtn = h('button', { class: 'sort-check-btn', textContent: 'Проверить', type: 'button' });
+        const dragResult = h('div', { class: 'match-result' });
+        dragCheckBtn.addEventListener('click', () => {
+          const isCorrect = JSON.stringify(dragItems) === JSON.stringify(block.correctOrder);
+          dragResult.textContent = isCorrect ? 'Правильный порядок!' : 'Неправильно.';
+          dragResult.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
         });
-        container.appendChild(checkBtn);
-        container.appendChild(result);
-        return container;
-      }
-      case 'progress-tracker': {
-        const container = h('div', { class: 'progress-tracker' });
+        element.appendChild(dragCheckBtn);
+        element.appendChild(dragResult);
+        break;
+      case 'progress-tracker':
+        element = h('div', { class: 'progress-tracker' });
         block.tasks.forEach(task => {
           const step = h('div', { class: 'progress-step', textContent: task.label });
           step.addEventListener('click', () => step.classList.toggle('done'));
-          container.appendChild(step);
+          element.appendChild(step);
         });
-        return container;
-      }
+        break;
       default:
         console.warn('Unknown block type:', block.type);
-        return null;
+        element = null;
     }
+    if (element) {
+      applySizing(block, element);
+      if (block.type === 'image' || block.type === 'video' || block.type === 'audio') {
+        const media = element.querySelector('img, video, audio');
+        if (media) applySizing(block, media);
+      }
+    }
+    return element;
   }
 
   // ---------- ИНИЦИАЛИЗАЦИЯ ----------

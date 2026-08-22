@@ -127,10 +127,22 @@ button{font-family:inherit; cursor:pointer}
 .stage:active{cursor:grabbing}
 #world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
 #wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible}
-.wire{fill:none;stroke-width:2.4;opacity:.95}
+
+/* --- провода: базовый слой + бегущий "энергетический" поток --- */
+.wire{fill:none;stroke-width:2.4;opacity:.95;transition:opacity .3s}
+#wires.live .wire{animation:wireBreath 2.4s ease-in-out infinite}
+@keyframes wireBreath{50%{opacity:.68}}
+.wire-flow{
+  fill:none;stroke:#eaffff;stroke-width:1.7;opacity:0;pointer-events:none;
+  stroke-dasharray:5 16;stroke-linecap:round;
+  animation:wireFlow 1.1s linear infinite;
+}
+#wires.live .wire-flow{opacity:.9;filter:drop-shadow(0 0 4px #fff)}
+@keyframes wireFlow{to{stroke-dashoffset:-21}}
 .wire.sel{stroke-width:3.6;animation:wirePulse 1s ease-in-out infinite}
 @keyframes wirePulse{50%{opacity:.55}}
-.wire.temp{stroke-dasharray:7 6;opacity:.85}
+.wire.temp{stroke-dasharray:7 6;opacity:.85;animation:tempFlow .45s linear infinite}
+@keyframes tempFlow{to{stroke-dashoffset:-13}}
 .wire-hit{fill:none;stroke:transparent;stroke-width:22;cursor:pointer;pointer-events:stroke}
 .wire-del circle{fill:#0a1120;stroke:var(--mag);stroke-width:1.5;filter:drop-shadow(0 0 6px var(--mag))}
 .wire-del text{fill:var(--mag);font-size:13px;text-anchor:middle;font-weight:bold}
@@ -180,7 +192,7 @@ button{font-family:inherit; cursor:pointer}
 .viz-state{position:absolute;right:6px;top:2px;font-size:8px;letter-spacing:1px;color:#3d4d6e;z-index:2}
 .viz-state.live{color:var(--lime);text-shadow:0 0 6px rgba(157,255,0,.7)}
 
-/* nodes */
+/* ===== nodes: неоновое дыхание, появление, порты ===== */
 #nodes-layer{position:absolute;left:0;top:0}
 .node{
   position:absolute;left:0;top:0;width:180px;border-radius:12px;
@@ -188,10 +200,21 @@ button{font-family:inherit; cursor:pointer}
   box-shadow:0 0 14px color-mix(in srgb, var(--nc,#00e5ff) 30%, transparent), 0 6px 20px rgba(0,0,0,.5);
   backdrop-filter:blur(6px); user-select:none; cursor:move; transition:box-shadow .2s;
 }
-.node.selected{box-shadow:0 0 26px color-mix(in srgb, var(--nc,#00e5ff) 65%, transparent), 0 6px 24px rgba(0,0,0,.55)}
+.node.spawn{animation:spawnIn .55s cubic-bezier(.22,1.2,.36,1)}
+@keyframes spawnIn{
+  0%{opacity:0;filter:brightness(2.6) blur(3px)}
+  55%{opacity:1;filter:brightness(1.5) blur(0)}
+  100%{filter:none}
+}
+.node.selected{animation:selGlow 1.8s ease-in-out infinite}
+@keyframes selGlow{
+  0%,100%{box-shadow:0 0 16px color-mix(in srgb,var(--nc) 55%,transparent),0 6px 24px rgba(0,0,0,.55)}
+  50%{box-shadow:0 0 36px color-mix(in srgb,var(--nc) 90%,transparent),0 6px 24px rgba(0,0,0,.55)}
+}
 .node.bypassed{opacity:.55;filter:saturate(.4)}
 .n-head{display:flex;align-items:center;gap:6px;padding:8px 9px;border-bottom:1px solid rgba(255,255,255,.06)}
-.n-icon{color:var(--nc);text-shadow:0 0 9px var(--nc);font-size:15px}
+.n-icon{color:var(--nc);text-shadow:0 0 9px var(--nc);font-size:15px;animation:iconFloat 3.4s ease-in-out infinite}
+@keyframes iconFloat{50%{text-shadow:0 0 16px var(--nc);transform:translateY(-1px)}}
 .n-title{font-family:'Russo One';font-size:10.5px;letter-spacing:.8px;color:var(--nc);
   text-shadow:0 0 10px color-mix(in srgb,var(--nc) 70%, transparent);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .n-actions{display:flex;gap:4px}
@@ -206,10 +229,15 @@ button{font-family:inherit; cursor:pointer}
 .n-cfg:hover{box-shadow:0 0 12px color-mix(in srgb,var(--nc) 45%, transparent)}
 .port{
   position:absolute;width:20px;height:20px;border-radius:50%;top:30px;
-  background:#0a1120;border:2px solid var(--nc);box-shadow:0 0 8px var(--nc);cursor:crosshair;transition:transform .15s;z-index:3;
+  background:#0a1120;border:2px solid var(--nc);cursor:crosshair;transition:transform .15s;z-index:3;
+  animation:portPulse 2.4s ease-in-out infinite;
+}
+@keyframes portPulse{
+  0%,100%{box-shadow:0 0 8px var(--nc)}
+  50%{box-shadow:0 0 18px var(--nc),0 0 5px var(--nc) inset}
 }
 .port::after{content:'';position:absolute;inset:-12px}
-.port:hover,.port.live{transform:scale(1.4);background:var(--nc)}
+.port:hover,.port.live{transform:scale(1.4);background:var(--nc);animation-play-state:paused;box-shadow:0 0 20px var(--nc)}
 .pin{left:-11px}.pout{right:-11px}
 .port.pin.multi{border-color:#fff}
 .port.pin.multi::before{
@@ -227,7 +255,8 @@ button{font-family:inherit; cursor:pointer}
   padding:4px 9px;border:1px solid rgba(0,229,255,.25);border-radius:7px;background:rgba(6,10,20,.6);text-shadow:0 0 6px rgba(0,229,255,.6)}
 .fab{display:none;position:absolute;left:14px;bottom:106px;z-index:35;width:60px;height:60px;border-radius:50%;
   border:1px solid var(--mag);background:rgba(255,47,214,.2);color:#ffd7f5;font-size:28px;
-  box-shadow:0 0 24px rgba(255,47,214,.6)}
+  animation:fabPulse 2.6s ease-in-out infinite}
+@keyframes fabPulse{50%{box-shadow:0 0 36px rgba(255,47,214,.9)}}
 
 /* ===== MODALS ===== */
 .mback{position:fixed;inset:0;background:rgba(3,5,10,.75);backdrop-filter:blur(5px);z-index:60;
@@ -361,7 +390,6 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 
     <div class="zoom-lbl" id="zoom-lbl">100%</div>
 
-    <!-- транспорт: питание, источник, файл, запись -->
     <div class="transport" id="transport">
       <button class="tr-btn power" id="tr-power" title="Питание аудио-движка">⏻</button>
       <div class="tr-seg">
@@ -391,7 +419,6 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
     </div>
     <button class="fab" id="fab-add">＋</button>
 
-    <!-- визуализатор: спектр + уровни каналов -->
     <div class="viz">
       <div class="viz-meters">
         <div class="mrow"><small>L</small><canvas id="meterL" width="140" height="8"></canvas><span id="dbL">-∞</span></div>
@@ -464,7 +491,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   </div>
   <div class="frow"><label>Имя файла</label><input type="text" id="exp-name" value="neon-voice"></div>
   <div class="progress"><i id="exp-bar"></i></div>
-  <div class="status-line" id="exp-status">Записывается звук, который прямо сейчас проходит через цепь фильтров (микрофон или файл — что играет на холсте).</div>
+  <div class="status-line" id="exp-status">Записывается звук, который прямо сейчас проходит через цепь фильтров.</div>
   <div class="m-actions">
     <button class="btn" id="exp-cancel" style="display:none">✕ Прервать</button>
     <a id="exp-link" style="display:none;margin-left:auto;color:var(--lime);font-size:12px" download>⬇ Скачать ещё раз</a>
@@ -476,8 +503,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <p class="help-li"><b>Транспорт</b> (панель на холсте): ⏻ — питание аудио-движка; 🎙/🎵 — выбор источника.</p>
   <p class="help-li"><b>Файл</b> — в режиме 🎵: 📂 загрузка, ▶/⏸ воспроизведение через цепь фильтров, ⏹ стоп, ⟳ зацикливание.</p>
   <p class="help-li"><b>Запись</b> — в режиме 🎙 кнопка ● REC пишет обработанный сигнал с микрофона до остановки; дубль можно экспортировать из окна «Экспорт». Доступ к микрофону работает только на https или localhost.</p>
-  <p class="help-li"><b>Экспорт</b> — три способа, всегда обрабатывается текущая цепь: 🔴 запись звука вживую; ⚡ офлайн-рендер загруженного файла; ⬇ экспорт дубля. Для OGG при первом использовании скачивается кодек (~31 МБ) — прогресс виден в строке состояния; при недоступности кодека применяется резервное кодирование (если браузер поддерживает OGG/Opus) либо предлагается WAV/MP3.</p>
-  <p class="help-li"><b>Визуализатор</b> — спектр и уровни L/R выходного сигнала внизу холста.</p>
+  <p class="help-li"><b>Экспорт OGG</b> — при первом использовании скачивается кодек (~31 МБ, прогресс виден в строке состояния). Если он недоступен, автоматически включается резервное кодирование средствами браузера (там, где поддерживается OGG/Opus), иначе предлагаются WAV/MP3. Длительные операции можно прервать кнопкой «✕ Прервать».</p>
+  <p class="help-li"><b>Визуализатор</b> — спектр и уровни L/R выходного сигнала внизу холста. При работающем движке по проводам течёт «энергия».</p>
   <p class="help-li"><b>Палитра</b> (кнопка «＋» внизу слева на мобильных) — вкладки «Модули» и «Пресеты».</p>
   <p class="help-li"><b>Соединения</b> — тяните от правого порта к левому. Клик по проводу выделяет его (✕ — удалить).</p>
   <p class="help-li"><b>Параллельные цепочки</b> — разветвляйте выход и подключайте до 4 веток к одному входу: сигналы суммируются.</p>
@@ -494,7 +521,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 <script>
 "use strict";
 /* ============================================================ version & logging */
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.7.0';
 const APP_NAME = 'NEON VOICE LAB';
 document.title = APP_NAME + ' v' + APP_VERSION + ' — конструктор голосовых эффектов';
 
@@ -1263,6 +1290,7 @@ async function engineStart() {
     await setupMasterBus(engine.ctx);
     buildAllAudio();
     engine.running = true;
+    wiresSvg.classList.add('live');
     updateTransportUI();
     nvlog.info('Аудио-движок запущен, sampleRate=' + engine.ctx.sampleRate);
     toast('Аудио-движок запущен 🎧', 'ok');
@@ -1280,6 +1308,7 @@ function engineStop() {
   try { engine._capture && engine._capture.disconnect && engine._capture.disconnect(); } catch (e) {}
   engine.master = null; engine.analyser = null; engine.anL = null; engine.anR = null;
   engine.running = false;
+  wiresSvg.classList.remove('live');
   updateTransportUI();
   nvlog.info('Аудио-движок остановлен');
 }
@@ -1418,7 +1447,7 @@ function fitView() {
 function createNodeEl(n) {
   const d = defOf(n.type);
   const el = document.createElement('div');
-  el.className = 'node'; el.dataset.id = n.id;
+  el.className = 'node spawn'; el.dataset.id = n.id;
   el.style.setProperty('--nc', d.color);
   el.style.transform = `translate(${n.x}px,${n.y}px)`;
   el.innerHTML =
@@ -1438,6 +1467,7 @@ function createNodeEl(n) {
   nodesLayer.appendChild(el);
   nodeEls.set(n.id, el);
   refreshNodeCard(n.id);
+  setTimeout(() => el.classList.remove('spawn'), 700);
   return el;
 }
 function refreshNodeCard(id) {
@@ -1531,6 +1561,7 @@ function updateWires() {
     const c = defOf(fn.type).color;
     const selCls = e.id === selEdge ? ' sel' : '';
     html += `<path class="wire${selCls}" d="${d}" style="stroke:${c};filter:drop-shadow(0 0 5px ${c})"/>`;
+    html += `<path class="wire-flow" d="${d}"/>`;
     html += `<path class="wire-hit" data-eid="${e.id}" d="${d}"/>`;
     if (e.id === selEdge) {
       const mx = (p1.x + 3 * (p1.x + dx) + 3 * (p2.x - dx) + p2.x) / 8, my = (p1.y + p2.y) / 2;
@@ -1539,6 +1570,7 @@ function updateWires() {
   }
   if (tempWire) html += `<path class="wire temp" d="${tempWire.d}" style="stroke:${tempWire.color};filter:drop-shadow(0 0 6px ${tempWire.color})"/>`;
   wiresSvg.innerHTML = html;
+  wiresSvg.classList.toggle('live', engine.running);
   updatePortBadges();
 }
 
@@ -2020,8 +2052,14 @@ function encodeMP3(pcm) {
   return new Blob(out, { type: 'audio/mpeg' });
 }
 
-/* ---------- ffmpeg.wasm с прогрессом и таймаутом ---------- */
+/* ---------- OGG: ffmpeg.wasm (прогресс, таймауты, инвалидация, проверка магии) ---------- */
 let ffInstance = null, ffLoading = null;
+
+function invalidateFFmpeg(reason) {
+  nvlog.warn('FFmpeg деактивирован:', reason || 'без причины');
+  try { if (ffInstance && ffInstance.terminate) ffInstance.terminate(); } catch (e) {}
+  ffInstance = null; ffLoading = null;
+}
 
 async function fetchToBlobURL(url, mime, label) {
   const res = await fetch(url);
@@ -2064,30 +2102,37 @@ function getFFmpeg() {
     const wasmURL = await fetchToBlobURL(base + '/ffmpeg-core.wasm', 'application/wasm', 'Кодек: ядро');
     if (exportAbort) throw new Error('прервано пользователем');
     setExportProgress(27, 'Инициализация FFmpeg…');
-    await withTimeout(ff.load({ coreURL, wasmURL }), 120000,
-      'таймаут инициализации FFmpeg (120 с) — проверьте сеть и повторите');
+    try {
+      await withTimeout(ff.load({ coreURL, wasmURL }), 120000,
+        'таймаут инициализации FFmpeg (120 с) — проверьте сеть и повторите');
+    } catch (e) {
+      try { ff.terminate(); } catch (err) {}
+      throw e;
+    }
     ffInstance = ff;
     nvlog.info('FFmpeg.wasm готов');
     return ff;
   })();
-  ffLoading.catch(e => {
-    nvlog.err('FFmpeg загрузка не удалась:', e);
-    ffLoading = null;
-    if (ffInstance == null) { /* инстанс не создан */ }
-  });
+  ffLoading.catch(e => { nvlog.err('FFmpeg загрузка не удалась:', e); ffLoading = null; });
   return ffLoading;
 }
 
-/* резервное OGG-кодирование через MediaRecorder (Firefox и др. браузеры с поддержкой audio/ogg) */
+function isOggBlob(bytes) {
+  return bytes && bytes.length > 512 && bytes[0] === 0x4f && bytes[1] === 0x67 && bytes[2] === 0x67 && bytes[3] === 0x53;
+}
+
 function canRecorderOGG() {
   try {
     return typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/ogg;codecs=opus');
   } catch (e) { return false; }
 }
+
+/* резервное OGG-кодирование: проигрываем PCM в MediaStream и пишем MediaRecorder'ом */
 async function encodeOGGRealtime(pcm) {
   const mime = 'audio/ogg;codecs=opus';
   const sr = pcm.sampleRate;
-  const ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: sr });
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  try { await ctx.resume(); } catch (e) { nvlog.warn('resume AudioContext:', e.message); }
   const buf = ctx.createBuffer(pcm.channels.length, pcm.channels[0].length, sr);
   pcm.channels.forEach((c, i) => buf.copyToChannel(c, i));
   const dest = ctx.createMediaStreamDestination();
@@ -2096,24 +2141,28 @@ async function encodeOGGRealtime(pcm) {
   const chunks = [];
   rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   const stopped = new Promise(res => { rec.onstop = res; });
-  const dur = buf.duration;
+  const dur = Math.max(0.2, buf.duration);
   const iv = setInterval(() => {
     setExportProgress(70 + clamp(ctx.currentTime / dur, 0, 1) * 28,
-      'Фолбэк-кодирование в реальном времени… ' + fmtT(Math.min(ctx.currentTime, dur)) + ' / ' + fmtT(dur));
+      'Резервное кодирование в реальном времени… ' + fmtT(Math.min(ctx.currentTime, dur)) + ' / ' + fmtT(dur));
+    if (exportAbort) { try { if (rec.state !== 'inactive') rec.stop(); } catch (e) {} }
   }, 250);
-  rec.start(250);
-  src.start();
-  await new Promise(res => { src.onended = res; });
-  setTimeout(() => { try { rec.stop(); } catch (e) { res(); } }, 250);
-  await stopped;
-  clearInterval(iv);
-  try { ctx.close(); } catch (e) {}
-  if (!chunks.length) throw new Error('фолбэк-рекордер не дал данных');
+  try {
+    rec.start(250);
+    src.start();
+    await new Promise(res => { src.onended = res; });
+    setTimeout(() => { try { if (rec.state !== 'inactive') rec.stop(); } catch (e) {} }, 300);
+    await withTimeout(stopped, dur * 1000 + 15000, 'резервный рекордер не завершился');
+  } finally {
+    clearInterval(iv);
+    try { ctx.close(); } catch (e) {}
+  }
+  if (!chunks.length) throw new Error('резервный рекордер не дал данных');
   return new Blob(chunks, { type: 'audio/ogg' });
 }
 
 async function encodeOGG(pcm) {
-  /* 1) пробуем ffmpeg.wasm */
+  let ffError = null;
   try {
     const ff = await getFFmpeg();
     if (exportAbort) throw new Error('прервано пользователем');
@@ -2122,22 +2171,33 @@ async function encodeOGG(pcm) {
     const inName = 'in_' + rnd + '.wav';
     const outName = 'out_' + rnd + '.ogg';
     await ff.writeFile(inName, wav);
+
     let encoded = false;
     setExportProgress(68, 'Кодирование OGG (libvorbis)…');
     try {
       await withTimeout(ff.exec(['-y', '-i', inName, '-vn', '-c:a', 'libvorbis', '-q:a', '6', outName]),
-        180000, 'таймаут кодирования ffmpeg');
+        240000, 'таймаут кодирования ffmpeg (240 с)');
       encoded = true;
-    } catch (e) { nvlog.warn('libvorbis не справился, пробуем libopus:', e.message); }
-    if (!encoded) {
+    } catch (e) {
+      nvlog.warn('libvorbis не удался:', e.message);
+      if (/таймаут/.test(e.message)) invalidateFFmpeg('таймаут exec (libvorbis)');
+    }
+    if (!encoded && ffInstance === ff) {
       setExportProgress(68, 'Кодирование OGG (libopus)…');
       try {
         await withTimeout(ff.exec(['-y', '-i', inName, '-vn', '-c:a', 'libopus', '-b:a', '160k', outName]),
-          180000, 'таймаут кодирования ffmpeg');
+          240000, 'таймаут кодирования ffmpeg (240 с)');
         encoded = true;
-      } catch (e) { nvlog.warn('libopus тоже не справился:', e.message); }
+      } catch (e) {
+        nvlog.warn('libopus не удался:', e.message);
+        if (/таймаут/.test(e.message)) invalidateFFmpeg('таймаут exec (libopus)');
+      }
     }
-    if (!encoded) { try { await ff.deleteFile(inName); } catch (e) {} throw new Error('ffmpeg не смог закодировать OGG'); }
+    if (!encoded) {
+      try { await ff.deleteFile(inName); } catch (e) {}
+      throw new Error('ffmpeg не смог закодировать OGG');
+    }
+
     let data;
     try { data = await ff.readFile(outName); }
     finally {
@@ -2145,18 +2205,18 @@ async function encodeOGG(pcm) {
       try { await ff.deleteFile(outName); } catch (e) {}
     }
     const src = data instanceof Uint8Array ? data : new Uint8Array(data);
-    const bytes = new Uint8Array(src);
-    if (bytes.length < 512) throw new Error('OGG получился пустым');
+    const bytes = new Uint8Array(src); // копия вне кучи wasm
+    if (!isOggBlob(bytes)) throw new Error('ffmpeg вернул повреждённый OGG');
     return new Blob([bytes], { type: 'audio/ogg' });
-  } catch (ffErr) {
-    if (String(ffErr.message).includes('прервано')) throw ffErr;
-    nvlog.warn('ffmpeg.wasm недоступен — пробую фолбэк:', ffErr.message);
-    /* 2) фолбэк: MediaRecorder с OGG/Opus, если браузер умеет */
+  } catch (e) {
+    if (String(e.message || e).includes('прервано')) throw e;
+    ffError = e;
+    nvlog.warn('ffmpeg.wasm путь не пройден — пробую резерв:', e.message);
     if (canRecorderOGG()) {
       toast('FFmpeg недоступен — использую резервное кодирование браузера', 'err');
       return encodeOGGRealtime(pcm);
     }
-    throw new Error('OGG недоступен: ' + ffErr.message + '. Попробуйте WAV или MP3.');
+    throw new Error('OGG недоступен: ' + (ffError && ffError.message ? ffError.message : 'неизвестная ошибка') + '. Попробуйте WAV или MP3.');
   }
 }
 
