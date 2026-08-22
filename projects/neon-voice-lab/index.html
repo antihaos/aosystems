@@ -269,6 +269,7 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .dub-box{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px;border:1px dashed rgba(255,47,214,.4);
   border-radius:10px;background:rgba(255,47,214,.05)}
 .dub-box .tr-time{text-align:left;min-width:60px}
+.dub-box .finfo{font-size:11px;color:#bfe9ff;flex:1;min-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .help-li{margin:0 0 9px;padding-left:2px;line-height:1.55;color:#a9bce0}
 .help-li b{color:var(--cyan)}
 
@@ -440,6 +441,13 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
       <button class="btn accent" id="exp-run" style="min-width:130px">🔴 Записать</button>
     </div>
   </div>
+  <div class="frow" id="exp-file-row" style="display:none">
+    <label>Офлайн-рендер загруженного файла</label>
+    <div class="dub-box">
+      <span class="finfo" id="exp-file-info"></span>
+      <button class="btn accent2" id="exp-file-run">⚡ Рендер файла</button>
+    </div>
+  </div>
   <div class="frow" id="exp-dub-row" style="display:none">
     <label>Последний дубль (● REC)</label>
     <div class="dub-box">
@@ -459,8 +467,8 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
   <h3><span>ℹ СПРАВКА</span><button class="m-close" data-close>✕</button></h3>
   <p class="help-li"><b>Транспорт</b> (панель на холсте): ⏻ — питание аудио-движка; 🎙/🎵 — выбор источника.</p>
   <p class="help-li"><b>Файл</b> — в режиме 🎵: 📂 загрузка, ▶/⏸ воспроизведение через цепь фильтров, ⏹ стоп, ⟳ зацикливание.</p>
-  <p class="help-li"><b>Запись</b> — в режиме 🎙 кнопка ● REC пишет обработанный сигнал с микрофона до остановки; дубль можно экспортировать из окна «Экспорт».</p>
-  <p class="help-li"><b>Экспорт</b> — всегда пишет текущий обработанный звук холста: что сейчас звучит (микрофон или играющий файл), то и попадает в MP3/OGG/WAV.</p>
+  <p class="help-li"><b>Запись</b> — в режиме 🎙 кнопка ● REC пишет обработанный сигнал с микрофона до остановки; дубль можно экспортировать из окна «Экспорт». Доступ к микрофону работает только на https или localhost.</p>
+  <p class="help-li"><b>Экспорт</b> — три способа, всегда обрабатывается текущая цепь: 🔴 запись звука вживую; ⚡ офлайн-рендер загруженного файла (быстрее реального времени, без проигрывания); ⬇ экспорт дубля.</p>
   <p class="help-li"><b>Визуализатор</b> — спектр и уровни L/R выходного сигнала внизу холста.</p>
   <p class="help-li"><b>Палитра</b> (кнопка «＋» внизу слева на мобильных) — вкладки «Модули» и «Пресеты».</p>
   <p class="help-li"><b>Соединения</b> — тяните от правого порта к левому. Клик по проводу выделяет его (✕ — удалить).</p>
@@ -496,6 +504,12 @@ function loadScript(src) {
     s.src = src; s.onload = res; s.onerror = () => rej(new Error('CDN: ' + src));
     document.head.appendChild(s);
   });
+}
+async function requestMic() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw new Error('нет доступа к getUserMedia (нужен https/localhost)');
+  }
+  return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
 }
 
 /* ============================================================ module definitions */
@@ -934,8 +948,7 @@ const audioObjs = new Map();
 const engine = { ctx: null, running: false, micStream: null, fileBuffer: null, master: null,
                  analyser: null, anL: null, anR: null, collect: false, chunks: null };
 
-/* «живое» окружение для аудио-узлов: всегда видит актуальное состояние движка,
-   даже если файл загрузили после старта */
+/* «живое» окружение для аудио-узлов: всегда видит актуальное состояние движка */
 const liveEnv = {
   get fileBuffer() { return engine.fileBuffer; },
   get micStream() { return engine.micStream; },
@@ -1058,7 +1071,6 @@ function inputAudio(ctx, p, env) {
 function outputAudio(ctx, p, env) {
   const inN = ctx.createGain(), vol = ctx.createGain(); vol.gain.value = p.volume;
   inN.connect(vol);
-  /* весь выход идёт через мастер-шину: динамики + анализаторы + рекордер */
   vol.connect(env.master ? env.master : ctx.destination);
   return {
     in: inN, out: null,
@@ -1144,10 +1156,9 @@ async function engineStart() {
     await engine.ctx.resume();
     const inp = inputNode();
     const wantMic = !inp || inp.params.source === 'mic';
-    if (wantMic && !engine.micStream && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        engine.micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-      } catch (e) { toast('Микрофон недоступен: ' + e.name, 'err'); }
+    if (wantMic && !engine.micStream) {
+      try { engine.micStream = await requestMic(); }
+      catch (e) { toast('Микрофон недоступен: ' + e.message, 'err'); }
     }
     if (state.fileRaw && !engine.fileBuffer) {
       try { engine.fileBuffer = await engine.ctx.decodeAudioData(state.fileRaw.slice(0)); } catch (e) {}
@@ -1171,12 +1182,20 @@ function engineStop() {
   updateTransportUI();
 }
 
-/* источник: микрофон / файл */
-function setSource(mode) {
+/* источник: микрофон / файл.
+   при переключении на микрофон во время работы движка — запрашиваем доступ
+   и пересобираем вход, чтобы поток сразу попал в цепь */
+async function setSource(mode) {
   const inp = inputNode(); if (!inp) return;
   if (mode === 'file' && !state.fileRaw && !engine.fileBuffer) { toast('Сначала загрузите аудиофайл', 'err'); return; }
   if (mode === 'file' && engine.micStream) { engine.micStream.getTracks().forEach(t => t.stop()); engine.micStream = null; }
   inp.params.source = mode;
+
+  if (mode === 'mic' && engine.running && !engine.micStream) {
+    try { engine.micStream = await requestMic(); }
+    catch (e) { toast('Микрофон недоступен: ' + e.message, 'err'); }
+  }
+
   const a = audioObjs.get(inp.id); if (a) a.set('source', mode);
   refreshNodeCard(inp.id); dirty(); updateTransportUI();
 }
@@ -1185,10 +1204,20 @@ function setSource(mode) {
 async function toggleRec() {
   if (recorder.active) { stopRec(); return; }
   const inp = inputNode();
-  if (inp && inp.params.source === 'file') setSource('mic');
+  if (inp && inp.params.source === 'file') await setSource('mic');
   if (!engine.running) await engineStart();
   if (!engine.running) return;
-  if (!engine.micStream) { toast('Микрофон не подключён', 'err'); return; }
+
+  if (!engine.micStream) {
+    try { engine.micStream = await requestMic(); } catch (e) {}
+    if (engine.micStream) {
+      const a = inp && audioObjs.get(inp.id);
+      if (a) a.set('source', 'mic'); // пересобрать вход со свежим потоком
+      updateTransportUI();
+    }
+  }
+  if (!engine.micStream) { toast('Микрофон недоступен (нужен https/localhost и разрешение)', 'err'); return; }
+
   engine.chunks = []; engine.collect = true;
   recorder.active = true; recorder.start = performance.now();
   clearInterval(recorder.timer);
@@ -1235,7 +1264,7 @@ byId('tr-file').onclick = () => { if (state.fileRaw || engine.fileBuffer) setSou
 byId('tr-load').onclick = () => byId('file-input').click();
 byId('tr-play').onclick = async () => {
   const inp = inputNode(); if (!inp) return;
-  if (inp.params.source !== 'file') setSource('file');
+  if (inp.params.source !== 'file') await setSource('file');
   if (!engine.running) await engineStart();
   const a = audioObjs.get(inp.id);
   if (!a || !a.player || !a.player.duration) { toast('Загрузите аудиофайл', 'err'); return; }
@@ -1793,9 +1822,7 @@ byId('np-create').onclick = async () => {
 };
 byId('np-save').onclick = async () => { await saveCurrent(); renderProjList(); };
 
-/* ============================================================ file input
-   важно: буфер декодируется сразу и виден плееру через «живой» liveEnv,
-   перезапуск движка не требуется */
+/* ============================================================ file input */
 byId('file-input').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = '';
   if (!f) return;
@@ -1806,7 +1833,6 @@ byId('file-input').addEventListener('change', async e => {
     state.fileName = f.name;
     engine.fileBuffer = null;
 
-    /* если движок запущен — декодируем в его контексте и сохраняем состояние плеера */
     let wasPlaying = false;
     const inp = inputNode();
     const a = inp ? audioObjs.get(inp.id) : null;
@@ -1817,9 +1843,8 @@ byId('file-input').addEventListener('change', async e => {
       catch (err) { toast('Не удалось декодировать аудио', 'err'); }
     }
 
-    setSource('file');
+    await setSource('file');
 
-    /* если что-то играло — продолжаем играть новый файл */
     const a2 = inp ? audioObjs.get(inp.id) : null;
     if (a2 && a2.player && a2.player.duration) {
       if (wasPlaying) a2.player.play();
@@ -1830,8 +1855,7 @@ byId('file-input').addEventListener('change', async e => {
   } catch (err) { toast('Не удалось прочитать файл', 'err'); }
 });
 
-/* ============================================================ export
-   всегда пишем ТЕКУЩИЙ обработанный звук холста (мастер-шину) */
+/* ============================================================ export */
 function pcmToWavBytes(chs, sr) {
   const nCh = chs.length, len = chs[0].length, dataSize = len * nCh * 2;
   const buf = new ArrayBuffer(44 + dataSize), dv = new DataView(buf);
@@ -1951,6 +1975,26 @@ function captureLive(sec) {
   });
 }
 
+/* офлайн-рендер загруженного файла через текущую цепь фильтров */
+async function renderOfflineFile() {
+  const probe = new OfflineAudioContext(1, 8, 44100);
+  const buf = await probe.decodeAudioData(state.fileRaw.slice(0));
+  const sr = buf.sampleRate, tail = 3;
+  const octx = new OfflineAudioContext(2, Math.ceil((buf.duration + tail) * sr), sr);
+  const env = { fileBuffer: buf, micStream: null, master: null, offline: true };
+  const objs = new Map();
+  for (const n of state.nodes) objs.set(n.id, makeNodeAudio(octx, n, env));
+  for (const e of state.edges) {
+    const s = objs.get(e.from), t = objs.get(e.to);
+    if (s && t && s.out && t.in) s.out.connect(t.in);
+  }
+  const rendered = await octx.startRendering();
+  const chs = [];
+  for (let c = 0; c < rendered.numberOfChannels; c++) chs.push(rendered.getChannelData(c).slice(0));
+  objs.forEach(a => { try { a.dispose && a.dispose(); } catch (e) {} });
+  return { channels: chs, sampleRate: sr };
+}
+
 /* запись текущего звука холста */
 async function runExportLive() {
   const fmt = byId('exp-format').value;
@@ -1979,6 +2023,30 @@ async function runExportLive() {
   runBtn.disabled = false;
 }
 
+/* офлайн-экспорт файла */
+async function runExportFile() {
+  if (!state.fileRaw) { toast('Файл не загружен', 'err'); return; }
+  const fmt = byId('exp-format').value;
+  const name = ((byId('exp-name').value || 'voice').trim().replace(/[\\/:*?"<>|]+/g, '_'));
+  const btn = byId('exp-file-run'); btn.disabled = true;
+  byId('exp-link').style.display = 'none';
+  setExportProgress(5, 'Офлайн-рендер файла через цепь фильтров…');
+  try {
+    const pcm = await renderOfflineFile();
+    setExportProgress(68, 'Кодирование ' + fmt.toUpperCase() + '…');
+    await sleep(30);
+    const { blob, ext } = await encodePcm(pcm, fmt);
+    setExportProgress(100, 'Готово ✔ ' + (blob.size / 1024).toFixed(0) + ' КБ');
+    downloadBlob(blob, name + '-render.' + ext);
+    toast('Офлайн-рендер завершён', 'ok');
+  } catch (err) {
+    console.error(err);
+    setExportProgress(0, 'Ошибка: ' + err.message);
+    toast('Ошибка рендера: ' + err.message, 'err');
+  }
+  btn.disabled = false;
+}
+
 /* экспорт последнего дубля (● REC) тем же форматом */
 async function runExportDub() {
   if (!lastRecording) return;
@@ -2003,6 +2071,12 @@ async function runExportDub() {
 
 byId('btn-export').onclick = () => {
   byId('exp-name').value = project.name.replace(/[\\/:*?"<>|]+/g, '_') || 'neon-voice';
+  const fileRow = byId('exp-file-row');
+  if (state.fileRaw) {
+    fileRow.style.display = '';
+    byId('exp-file-info').textContent = state.fileName +
+      (engine.fileBuffer ? ' · ' + fmtT(engine.fileBuffer.duration) : '');
+  } else fileRow.style.display = 'none';
   const dubRow = byId('exp-dub-row');
   if (lastRecording) {
     dubRow.style.display = '';
@@ -2012,6 +2086,7 @@ byId('btn-export').onclick = () => {
   openModal('modal-export');
 };
 byId('exp-run').onclick = runExportLive;
+byId('exp-file-run').onclick = runExportFile;
 byId('exp-dub-run').onclick = runExportDub;
 
 /* ============================================================ topbar */
