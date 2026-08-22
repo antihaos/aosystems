@@ -44,6 +44,53 @@
   }
   #app { max-width: 1200px; margin: 0 auto; }
 
+  /* ---------- НОВЫЙ СТИЛЬ ДЛЯ ЗАГОЛОВКА ПРИЛОЖЕНИЯ ---------- */
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+  }
+  .app-header .app-icon {
+    font-size: 2.5em;
+    line-height: 1;
+    animation: glow 2s infinite alternate;
+  }
+  @keyframes glow {
+    from { text-shadow: 0 0 5px var(--cyan), 0 0 10px var(--cyan); }
+    to { text-shadow: 0 0 15px var(--cyan), 0 0 30px var(--cyan); }
+  }
+  .app-header .app-info {
+    flex: 1;
+    min-width: 200px;
+  }
+  .app-header .app-name {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 10px var(--cyan);
+  }
+  .app-header .app-description {
+    color: var(--muted);
+    font-size: 0.9em;
+  }
+  .app-header .app-version {
+    padding: 4px 10px;
+    border: 1px solid var(--cyan);
+    border-radius: 20px;
+    background: rgba(0,240,255,0.1);
+    color: var(--cyan);
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
+  /* ---------- КОНЕЦ НОВЫХ СТИЛЕЙ ---------- */
+
   .course-header {
     text-align: center;
     padding: 40px 20px 30px;
@@ -515,6 +562,8 @@
     .compare-container { flex-direction: column; }
     .compare-left, .compare-right { width: 100% !important; flex: 1 1 auto; }
     .compare-divider { display: none; }
+    .app-header { flex-direction: column; align-items: flex-start; }
+    .app-header .app-info { min-width: 100%; }
   }
 </style>
 </head>
@@ -689,6 +738,19 @@
       courseManagerPanel.style.display = isHidden ? 'block' : 'none';
     }
   }
+
+  // ---------- НОВАЯ ФУНКЦИЯ: ЗАГОЛОВОК ПРИЛОЖЕНИЯ ----------
+  function renderAppHeader() {
+    const header = h('div', { class: 'app-header' });
+    header.appendChild(h('span', { class: 'app-icon', textContent: '🎓' })); // иконка
+    const info = h('div', { class: 'app-info' });
+    info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
+    info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
+    header.appendChild(info);
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.0.0' }));
+    return header;
+  }
+  // ---------- КОНЕЦ НОВОЙ ФУНКЦИИ ----------
 
   // ---------- РЕНДЕРИНГ UI ----------
   function renderCourseHeader() {
@@ -1201,6 +1263,9 @@ ${schema}
 
   // ---------- РЕНДЕРИНГ БАЗОВОГО UI ----------
   function renderBaseUI() {
+    // Добавляем заголовок приложения в начало
+    app.appendChild(renderAppHeader());
+
     const buttonsContainer = h('div', { style: 'display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;' });
 
     const toggleBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Управление курсами', type: 'button' });
@@ -1291,7 +1356,7 @@ ${schema}
     });
     lessonContainer.appendChild(completeBtn);
 
-    // ----- ДОБАВЛЕНА НАВИГАЦИЯ МЕЖДУ УРОКАМИ -----
+    // ----- НАВИГАЦИЯ МЕЖДУ УРОКАМИ -----
     const lessonIndex = course.lessons.findIndex(l => l.id === lessonId);
     const navContainer = h('div', { style: 'display: flex; gap: 10px; margin-top: 20px; justify-content: space-between;' });
 
