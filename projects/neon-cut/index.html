@@ -472,7 +472,7 @@ letter-spacing: 0
 .tbtn input[type=checkbox] {
 margin: 0
 }
-/* ---------- split-кнопка «Вписать» + меню вариантов ---------- */
+/* ---------- split-кнопка «Вписать» + меню вариантов отображения ---------- */
 #fitWrap {
 display: inline-flex;
 border: 1px solid var(--line2);
@@ -1259,9 +1259,9 @@ width: 242px
 </g>
 </svg>
 <div>
-<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.20.0</span></div>
-<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, полный набор вариантов
-отображения (fit) с применением после раскладки, инструмент «Измерение» и автосохранение.</div>
+<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.21.0</span></div>
+<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, корректный расчёт области
+и позиционирования для всех вариантов отображения (fit) после раскладки.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -1286,7 +1286,7 @@ width: 242px
 <div class="preset-grid" id="presetsList"></div>
 </div>
 <div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани
-(0,0)<br>⤢ — варианты отображения: F всё · A детали · S выбранная · T ткань · W ширина · H
+(0,0)<br>⤢ — отображение: F всё · A детали · S выбранная · T ткань · W ширина · H
 высота<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · 📐 — линейка (двойной клик —
 параметры)</div>
 </aside>
@@ -1298,7 +1298,7 @@ width: 242px
 <div id="fitWrap">
 <button id="btnFitMenu" title="Показать всё: ткань и детали целиком (F / 0)">⤢ Вписать</button>
 <button id="btnFitDrop"
-title="Все варианты отображения: всё целиком / все детали / выбранная деталь / ткань / по ширине / по высоте">▾</button>
+title="Все варианты отображения: всё / детали / выбранная / ткань / по ширине / по высоте">▾</button>
 </div>
 <button class="tbtn" id="btnOrigin" title="Показать начало ткани (0,0) (Home)">⌖ 0,0</button>
 <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
@@ -1461,8 +1461,8 @@ class="fi-lbl">Выбранную деталь</span><kbd>S</kbd></button>
 высоте ткани (кусок)</span><kbd>H</kbd></button>
 <button class="fit-item" data-fit="origin"><span class="fi-ico">⌖</span><span class="fi-lbl">К
 началу ткани (0,0)</span><kbd>Home</kbd></button>
-<div class="pop-note">Запрошенный вид применяется после завершения раскладки — только тогда
-положение и границы (bounds) деталей определены.</div>
+<div class="pop-note">Область рассчитывается по точным границам деталей (включая кривые и
+припуски) и применяется после завершения раскладки.</div>
 </div>
 </div>
 <div id="canvasWrap">
@@ -2275,17 +2275,31 @@ else if (c[0] === 'Z') { cx = sx; cy = sy; }
 }
 return pts;
 }
+/*
+* Точные границы контура.
+* ВАЖНО для корректного fit: для квадратичных кривых Безье экстремумы
+* вычисляются аналитически (t = (p0 - c) / (p0 - 2c + p1)), а не только
+* по семплам — иначе область могла занижаться и деталь «обрезалась» при вписывании.
+*/
 function cmdsBounds(cmds) {
 let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9, cx = 0, cy = 0, sx = 0, sy = 0;
 const add = (x, y) => { if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; };
+const bez = (p0, pc, p1, t) => (1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * pc + t * t * p1;
 for (const c of cmds) {
 if (c[0] === 'M') { cx = c[1]; cy = c[2]; sx = cx; sy = cy; add(cx, cy); }
 else if (c[0] === 'L') { cx = c[1]; cy = c[2]; add(cx, cy); }
 else if (c[0] === 'Q') {
-const x0 = cx, y0 = cy, cx1 = c[1], cy1 = c[2], x1 = c[3], y1 = c[4];
-for (let i = 1; i <= 8; i++) {
-const t = i / 8, mt = 1 - t;
-add(mt * mt * x0 + 2 * mt * t * cx1 + t * t * x1, mt * mt * y0 + 2 * mt * t * cy1 + t * t * y1);
+const x0 = cx, y0 = cy, qx = c[1], qy = c[2], x1 = c[3], y1 = c[4];
+add(x0, y0); add(x1, y1);
+const dx = x0 - 2 * qx + x1;
+if (Math.abs(dx) > 1e-9) {
+const tx = (x0 - qx) / dx;
+if (tx > 0 && tx < 1) add(bez(x0, qx, x1, tx), bez(y0, qy, y1, tx));
+}
+const dy = y0 - 2 * qy + y1;
+if (Math.abs(dy) > 1e-9) {
+const ty = (y0 - qy) / dy;
+if (ty > 0 && ty < 1) add(bez(x0, qx, x1, ty), bez(y0, qy, y1, ty));
 }
 cx = x1; cy = y1;
 }
@@ -2401,11 +2415,9 @@ let editorId = null, saving = false, lastSavedAt = null, storageFailedNoted = fa
 /* fitMode: 'free' | 'fit' | 'pieces' | 'selected' | 'fabric' | 'fabW' | 'fabH' */
 let fitMode = 'fit';
 /*
-* nestingBusy — раскладка выполняется прямо сейчас;
-* pendingFit  — запрошенный вариант отображения, который нужно применить
-*               сразу после завершения раскладки/расстановки деталей.
-* До завершения раскладки положения деталей (и их bounds) ещё не определены,
-* поэтому fit запросы ставятся в очередь.
+* nestingBusy — раскладка выполняется прямо сейчас (позиции деталей ещё не финализированы);
+* pendingFit  — вариант отображения, запрошенный во время раскладки: будет применён
+*               сразу после её завершения в finishPlacement(), когда bounds определимы.
 */
 let nestingBusy = false;
 let pendingFit = null;
@@ -2864,7 +2876,7 @@ if (pieceMode) toast(`⚠ Не поместились в кусок: ${overflow.
 }
 finishPlacement('⚡ Полочная раскладка выполнена');
 }
-/* завершение раскладки: применить запрошенный вариант отображения (или «вписать всё») */
+/* завершение раскладки: позиции финализированы → применяем запрошенный либо дефолтный вид */
 function finishPlacement(msg) {
 nestingBusy = false;
 markDirty();
@@ -2872,7 +2884,7 @@ if (pendingFit) {
 const m = pendingFit; pendingFit = null;
 applyFit(m);
 } else {
-fitView();
+applyFit('fit');
 }
 if (msg) toast(msg);
 }
@@ -3323,25 +3335,19 @@ if (pointInPhysRuler(w.x, w.y)) { openRulerSettings(); }
 });
 /* ============================ вид / вписывание ============================ */
 /*
-* Полный набор вариантов отображения (fit):
-*  fit      — всё целиком: детали + ткань
-*  pieces   — все детали (независимо от границ ткани)
-*  selected — только выбранная деталь
-*  fabric   — вся область ткани (для рулона — по ширине)
-*  fabW     — точно по ширине ткани
-*  fabH     — точно по высоте ткани (только режим «Кусок»)
-*  origin   — к началу ткани (0,0)
-*
-* ВАЖНО: bounds деталей можно определить только после того, как геометрия
-* пересобрана, а раскладка/расстановка завершена. Поэтому:
-*  1) перед любым fit выполняется rebuildPiece() для всех деталей;
-*  2) если раскладка уже выполняется (nestingBusy) — запрос сохраняется
-*     в pendingFit и применяется в finishPlacement();
-*  3) если раскладка только запланирована (repackTimer) — она запускается
-*     немедленно, а fit применяется после её завершения.
+* Система отображения (fit).
+* Математика: мировые координаты (см) → экранные (px):  sx = wx * s + ox.
+* Прямоугольник области вписывается в контент-зону
+* (W − padL − padR) × (H − padT − padB) с центрированием:
+*   s  = min(availW / bw, availH / bh)
+*   ox = padL + (availW − bw·s)/2 − rect.minx·s
+*   oy = padT + (availH − bh·s)/2 − rect.miny·s
+* Границы берутся ТОЛЬКО после пересборки геометрии (rebuildPiece) и после
+* завершения раскладки — иначе позиции и bounds ещё не определены.
 */
 function requestFit(mode) {
 if (mode === 'origin') { focusOrigin(); return; }
+/* если автораскладка запланирована — сначала выполняем её, чтобы bounds были актуальными */
 if (repackTimer) {
 clearTimeout(repackTimer); repackTimer = null;
 if (autoPackOn() && state.pieces.length) {
@@ -3350,42 +3356,25 @@ runPlacement(true);
 return;
 }
 }
+/* раскладка в процессе — вид применится сразу после неё */
 if (nestingBusy) {
+const had = pendingFit;
 pendingFit = mode;
-toast('⏳ Вид будет применён после завершения раскладки');
+if (!had) toast('⏳ Вид будет применён после завершения раскладки');
 return;
 }
 applyFit(mode);
 }
-function computeFit(view, rect, cw, ch, opts) {
-const padL = opts.padL != null ? opts.padL : 40;
-const padR = opts.padR != null ? opts.padR : 40;
-const padT = opts.padT != null ? opts.padT : 40;
-const padB = opts.padB != null ? opts.padB : 40;
+/* вписывание прямоугольника (см) в текущую видимую область с центрированием */
+function fitRectIntoView(rect, pads, maxS) {
 const bw = Math.max(0.001, rect.maxx - rect.minx);
 const bh = Math.max(0.001, rect.maxy - rect.miny);
-const availW = Math.max(20, cw - padL - padR);
-const availH = Math.max(20, ch - padT - padB);
-const s = clamp(Math.min(availW / bw, availH / bh), opts.minS != null ? opts.minS : 0.05, opts.maxS != null ? opts.maxS : 120);
-let ox, oy;
-if (opts.align === 'center') {
-ox = padL + (availW - bw * s) / 2 - rect.minx * s;
-oy = padT + (availH - bh * s) / 2 - rect.miny * s;
-} else {
-ox = padL - rect.minx * s;
-oy = padT - rect.miny * s;
-}
-view.scale = s; view.ox = ox; view.oy = oy;
-const tlx = rect.minx * s + ox, tly = rect.miny * s + oy;
-if (tlx < 4) view.ox += 4 - tlx;
-if (tly < 4) view.oy += 4 - tly;
-}
-function zoomAt(px, py, f) {
-fitMode = 'free';
-const v = state.view, w = s2w(px, py);
-v.scale = clamp(v.scale * f, 0.05, 120);
-v.ox = px - w.x * v.scale; v.oy = py - w.y * v.scale;
-draw();
+const availW = Math.max(10, W - pads.l - pads.r);
+const availH = Math.max(10, H - pads.t - pads.b);
+const s = clamp(Math.min(availW / bw, availH / bh), 0.02, maxS || 40);
+state.view.scale = s;
+state.view.ox = pads.l + (availW - bw * s) / 2 - rect.minx * s;
+state.view.oy = pads.t + (availH - bh * s) / 2 - rect.miny * s;
 }
 function contentBounds() {
 if (!state.pieces.length) return null;
@@ -3415,7 +3404,7 @@ else maxy = Math.max(maxy, miny + 60);
 }
 return { minx: minx, miny: miny, maxx: maxx, maxy: maxy };
 }
-/* ядро вписывания по ширине ткани (без изменения fitMode) */
+/* точное вписывание по ширине (без изменения fitMode) */
 function fitFabricWidthCore() {
 let minx, maxx;
 if (state.fabric) { minx = 0; maxx = state.fabricW; }
@@ -3427,14 +3416,12 @@ minx = b0.minx; maxx = b0.maxx;
 const padL = 28, padR = 28;
 const padT = 32 + toolbarPopReserve();
 const availW = Math.max(40, W - padL - padR);
-const s = clamp(availW / Math.max(1, maxx - minx), 0.05, 120);
+const s = clamp(availW / Math.max(1, maxx - minx), 0.02, 120);
 const b = contentBounds();
 const topY = b ? Math.min(b.miny, 0) : 0;
 state.view.scale = s;
 state.view.ox = padL - minx * s;
 state.view.oy = padT - topY * s;
-const tly = topY * s + state.view.oy;
-if (tly < 4) state.view.oy += 4 - tly;
 return true;
 }
 /* универсальная реализация всех вариантов отображения */
@@ -3446,11 +3433,11 @@ if (W < 80 || H < 80) {
 if ((retry || 0) < 10) requestAnimationFrame(function () { applyFit(mode, (retry || 0) + 1); });
 return;
 }
-/* актуальные bounds: пересобираем геометрию всех деталей */
+/* актуальные границы: пересобираем геометрию всех деталей */
 for (const p of state.pieces) rebuildPiece(p);
 const topReserve = toolbarPopReserve();
-let padL = 44, padR = 44, padT = 40 + topReserve, padB = 56;
-let rect = null;
+const pads = { l: 44, r: 44, t: 40 + topReserve, b: 56 };
+let rect = null, maxS = 40;
 if (mode === 'fit') {
 rect = fitBounds();
 } else if (mode === 'pieces') {
@@ -3458,14 +3445,15 @@ const b = contentBounds();
 if (!b) { toast('Холст пуст — нет деталей для отображения', 'warn'); return; }
 const padCm = Math.max(1, Math.max(b.maxx - b.minx, b.maxy - b.miny) * 0.025);
 rect = { minx: b.minx - padCm, miny: b.miny - padCm, maxx: b.maxx + padCm, maxy: b.maxy + padCm };
-padL = 36; padR = 36; padT = 32 + topReserve; padB = 48;
+pads.l = 36; pads.r = 36; pads.t = 32 + topReserve; pads.b = 48;
 } else if (mode === 'selected') {
 const p = byId(state.selId);
 if (!p) { toast('Нет выбранной детали — показываю всё', 'warn'); applyFit('fit'); return; }
 const bb = pieceEffAABB(p);
-const padCm = Math.max(1.5, Math.max(bb.w, bb.h) * 0.06);
+const padCm = Math.max(1.5, Math.max(bb.w, bb.h) * 0.08);
 rect = { minx: bb.minx - padCm, miny: bb.miny - padCm, maxx: bb.maxx + padCm, maxy: bb.maxy + padCm };
-padL = 60; padR = 60; padT = 46 + topReserve; padB = 56;
+pads.l = 60; pads.r = 60; pads.t = 46 + topReserve; pads.b = 56;
+maxS = 24;
 } else if (mode === 'fabric') {
 if (!state.fabric) { toast('Ткань отключена — включите её на панели инструментов', 'warn'); return; }
 if (state.fabricMode !== 'piece') {
@@ -3474,7 +3462,7 @@ if (fitFabricWidthCore()) { fitMode = 'fabric'; draw(); }
 return;
 }
 rect = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricH };
-padL = 36; padR = 36; padT = 32 + topReserve; padB = 48;
+pads.l = 36; pads.r = 36; pads.t = 32 + topReserve; pads.b = 48;
 } else if (mode === 'fabW') {
 if (!state.fabric) toast('Ткань отключена — вписываю по границам деталей', 'warn');
 if (fitFabricWidthCore()) { fitMode = 'fabW'; draw(); }
@@ -3486,14 +3474,14 @@ return;
 }
 const pT = 32 + topReserve, pB = 48;
 const availH = Math.max(20, H - pT - pB);
-const s = clamp(availH / Math.max(1, state.fabricH), 0.05, 120);
+const s = clamp(availH / Math.max(1, state.fabricH), 0.02, 120);
 state.view.scale = s;
 state.view.ox = W / 2 - (state.fabricW / 2) * s;
 state.view.oy = pT;
 fitMode = 'fabH'; draw();
 return;
 }
-computeFit(state.view, rect, W, H, { padL: padL, padR: padR, padT: padT, padB: padB, align: 'center', minS: 0.05, maxS: 120 });
+fitRectIntoView(rect, pads, maxS);
 fitMode = mode;
 draw();
 }
@@ -3521,6 +3509,37 @@ else if (m === 'fabW') b.disabled = !state.fabric && !state.pieces.length;
 }
 const main = $('#btnFitMenu');
 if (main) main.textContent = FIT_SHORT[fitMode] || '⤢ Вписать';
+}
+/* используется редактором контура */
+function computeFit(view, rect, cw, ch, opts) {
+const padL = opts.padL != null ? opts.padL : 40;
+const padR = opts.padR != null ? opts.padR : 40;
+const padT = opts.padT != null ? opts.padT : 40;
+const padB = opts.padB != null ? opts.padB : 40;
+const bw = Math.max(0.001, rect.maxx - rect.minx);
+const bh = Math.max(0.001, rect.maxy - rect.miny);
+const availW = Math.max(20, cw - padL - padR);
+const availH = Math.max(20, ch - padT - padB);
+const s = clamp(Math.min(availW / bw, availH / bh), opts.minS != null ? opts.minS : 0.05, opts.maxS != null ? opts.maxS : 120);
+let ox, oy;
+if (opts.align === 'center') {
+ox = padL + (availW - bw * s) / 2 - rect.minx * s;
+oy = padT + (availH - bh * s) / 2 - rect.miny * s;
+} else {
+ox = padL - rect.minx * s;
+oy = padT - rect.miny * s;
+}
+view.scale = s; view.ox = ox; view.oy = oy;
+const tlx = rect.minx * s + ox, tly = rect.miny * s + oy;
+if (tlx < 4) view.ox += 4 - tlx;
+if (tly < 4) view.oy += 4 - tly;
+}
+function zoomAt(px, py, f) {
+fitMode = 'free';
+const v = state.view, w = s2w(px, py);
+v.scale = clamp(v.scale * f, 0.05, 120);
+v.ox = px - w.x * v.scale; v.oy = py - w.y * v.scale;
+draw();
 }
 /* ============================ выбор ============================ */
 function worldToLocal(p, wx, wy) {
@@ -4315,7 +4334,7 @@ buildLibrary();
 }
 function exportTemplates() {
 if (!userTemplates.length) { toast('Нет шаблонов для экспорта', 'warn'); return; }
-const data = { app: 'NEONCUT', kind: 'templates', version: '1.20.0', exportedAt: Date.now(), templates: userTemplates };
+const data = { app: 'NEONCUT', kind: 'templates', version: '1.21.0', exportedAt: Date.now(), templates: userTemplates };
 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
 const a = document.createElement('a');
 a.href = URL.createObjectURL(blob);
@@ -4904,7 +4923,7 @@ fitView(); updateStorageChip(); toast('✦ Новый проект');
 $('#btnNew').onclick = function () { if (state.dirty && !confirm('Несохранённые изменения будут потеряны. Продолжить?')) return; newProject(); };
 $('#btnSave').onclick = function () { saveProject(true); };
 $('#btnExport').onclick = function () {
-const blob = new Blob([JSON.stringify(Object.assign({ app: 'NEONCUT', version: '1.20.0' }, projectData()), null, 2)], { type: 'application/json' });
+const blob = new Blob([JSON.stringify(Object.assign({ app: 'NEONCUT', version: '1.21.0' }, projectData()), null, 2)], { type: 'application/json' });
 const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
 a.download = (state.project.name || 'project') + '.neoncut.json'; a.click();
 setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
@@ -5336,14 +5355,14 @@ if (modalOpen) return;
 if (e.key === 'Delete' || e.key === 'Backspace') { if (state.selId) removePiece(state.selId); return; }
 if (e.key === '+' || e.key === '=') zoomAt(W / 2, H / 2, 1.25);
 if (e.key === '-') zoomAt(W / 2, H / 2, 0.8);
-/* варианты отображения (запрашиваются с учётом состояния раскладки) */
-if (e.key === '0') requestFit('fit');
-if (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') requestFit('fit');
-if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'ф') requestFit('pieces');
-if (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'ы') requestFit('selected');
-if (e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'е') requestFit('fabric');
-if (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'ц') requestFit('fabW');
-if (e.key.toLowerCase() === 'h' || e.key.toLowerCase() === 'р') requestFit('fabH');
+/* варианты отображения (запрос учитывает состояние раскладки) */
+if (e.key === '0') { requestFit('fit'); return; }
+if (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') { requestFit('fit'); return; }
+if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'ф') { requestFit('pieces'); return; }
+if (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'ы') { requestFit('selected'); return; }
+if (e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'е') { requestFit('fabric'); return; }
+if (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'ц') { requestFit('fabW'); return; }
+if (e.key.toLowerCase() === 'h' || e.key.toLowerCase() === 'р') { requestFit('fabH'); return; }
 if (e.key === 'Home') { focusOrigin(); return; }
 /* [ ] — поворот физической линейки, если она включена и деталь не выделена */
 if ((e.key === ']' || e.key === '[') && state.physRuler.on && !state.selId) {
