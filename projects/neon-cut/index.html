@@ -354,8 +354,8 @@ header{padding:8px 10px; gap:8px}
 </g>
 </svg>
 <div>
-<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.14.0</span></div>
-<div class="desc">Студия швейных выкроек: точный нестинг, стили визуализации, привязка к началу ткани (0,0), корректное автопозиционирование «Вписать» / «По ширине» и автосохранение настроек.</div>
+<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.16.0</span></div>
+<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов включая дизайнерские коллекции, точный нестинг и автосохранение настроек.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -377,7 +377,7 @@ header{padding:8px 10px; gap:8px}
 <div class="cat-title">Готовые комплекты</div>
 <div class="preset-grid" id="presetsList"></div>
 </div>
-<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · все настройки сохраняются автоматически</div>
+<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · настройки сохраняются автоматически</div>
 </aside>
 <section id="stage">
 <div id="toolbar">
@@ -605,7 +605,7 @@ header{padding:8px 10px; gap:8px}
 </div>
 </div>
 </div>
-<!-- Графический редактор контура (растягиваемый, полноэкранный) -->
+<!-- Графический редактор контура -->
 <div class="overlay" id="contourOverlay">
 <div class="modal wide" id="cContourModal">
 <div class="m-head">
@@ -623,7 +623,7 @@ header{padding:8px 10px; gap:8px}
 <span class="c-status" id="cStatus"></span>
 </div>
 <div id="cWrap"><canvas id="cCv"></canvas></div>
-<div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · ⛶ — во весь экран · уголок справа-внизу — изменить размер окна</div>
+<div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида</div>
 </div>
 <div class="m-foot">
 <span class="spacer"></span>
@@ -683,7 +683,7 @@ function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&25
 const PALETTE=['#00e5ff','#39ffa0','#8b5cff','#ff3df0','#ffc24d','#4d8bff','#ff5c5c','#e8ecff'];
 const CC={cyan:'#00e5ff',grn:'#39ffa0',vio:'#8b5cff',mag:'#ff3df0',amb:'#ffc24d'};
 const BASE=3;
-/* ============================ генераторы контуров ============================ */
+/* ============================ генераторы контуров (базовые) ============================ */
 function rectBuild(p){return[['M',0,0],['L',p.w,0],['L',p.w,p.h],['L',0,p.h],['Z']];}
 function bodiceBuild(p){
 const w=p.chest,len=p.length,ah=p.armhole,nw=p.neckW,nd=p.neckD,sh=p.shoulder;
@@ -731,11 +731,133 @@ function briefsBackBuild(p){const W=p.waist,H=p.height;
 return [['M',0,0],['Q',W/2,1.8,W,0],['Q',W+0.5,H*0.34,W-0.8,H*0.6],
 ['Q',W*0.72,H*0.95,W*0.58,H],['L',W*0.42,H],['Q',W*0.28,H*0.95,0.8,H*0.6],
 ['Q',-0.5,H*0.34,0,0],['Z']];}
+/* ============================ генераторы контуров (дизайнерские) ============================ */
+function biasBuild(p){const L=p.len,w=p.w,sk=Math.min(w*1.2,8);
+return [['M',sk,0],['L',L,0],['L',L-sk,w],['L',0,w],['Z']];}
+function kimonoBodiceBuild(p){
+const w=p.chest,len=p.length,ah=p.armhole,ex=p.extend,nw=p.neckW,nd=p.neckD,sh=4;
+return [['M',nw,0],['L',w*0.72,sh],
+['Q',w*0.98,sh+2,w+ex*0.55,sh+ah*0.42],
+['Q',w+ex*0.68,sh+ah*0.58,w+ex*0.32,sh+ah*0.66],
+['L',w*0.98,ah+6],
+['Q',w+0.6,(ah+len)/2,w-1.4,len],
+['L',0,len],['L',0,nd],['Q',nw,nd,nw,0],['Z']];
+}
+function corsetPanelBuild(p){
+const b=p.bust,wst=Math.min(p.waist,b-1),L=p.length,cy=L*0.42;
+return [['M',b*0.06,0],
+['Q',b*0.5,-1,b*0.94,0],
+['Q',b*1.05,cy*0.55,wst,cy],
+['Q',b*1.0,L*0.72,b*0.86,L],
+['Q',b*0.46,L+1.4,b*0.1,L],
+['Q',b*-0.02,L*0.7,b*0.02,cy],
+['Q',b*-0.02,cy*0.5,b*0.06,0],
+['Z']];
+}
+function raglanSleeveBuild(p){
+const w=p.width,c=p.capH,l=p.length;
+return [['M',w*0.5,0],
+['L',w*0.78,c*0.4],['Q',w*0.96,c*0.72,w,c],
+['L',w-1.5,l],['L',1.5,l],['L',0,c],
+['Q',w*0.04,c*0.72,w*0.22,c*0.4],
+['Z']];
+}
+function bellSleeveBuild(p){
+const w=p.width,c=p.capH,l=p.length,f=p.flare;
+return [['M',w/2,0],['Q',w*0.09,c*0.22,0,c],
+['Q',-f*0.25,l*0.7,-f,l],
+['Q',w/2,l+f*0.5,w+f,l],
+['Q',w+f*0.25,l*0.7,w,c],
+['Q',w*0.91,c*0.22,w/2,0],['Z']];
+}
+function hoodBuild(p){
+const d=p.depth,h=p.height;
+return [['M',0,h],
+['Q',-d*0.06,h*0.3,d*0.34,h*0.06],
+['Q',d*0.72,-h*0.06,d*0.94,h*0.34],
+['Q',d*1.0,h*0.62,d*0.58,h*0.78],
+['L',d*0.34,h],
+['Q',d*0.17,h*1.03,0,h],
+['Z']];
+}
+function hoodFacingBuild(p){const L=p.len,w=p.w;
+return [['M',0,0],['Q',L*0.5,-w*0.9,L,0],
+['L',L*0.94,w],['Q',L*0.5,w*0.25,L*0.06,w],['Z']];}
+function palazzoBuild(p){
+const W=p.hip,R=p.rise,L=p.length,c=Math.min(p.crotch,W*0.35);
+const hw=Math.max(p.hem,W*0.7);
+const xc=(W+c)/2+1;
+return [['M',0,0],['L',W-2,0],
+['Q',W+0.8,R*0.3,W,R*0.6],['L',W,R+2],
+['L',xc+hw/2,L],['L',xc-hw/2,L],
+['L',c+1,R+2],
+['Q',c*0.35,R-1,0,R-6],
+['L',0,0],['Z']];
+}
+function circleSkirtBuild(p){
+const r=Math.max(4,p.waistR),L=Math.max(6,p.len),R=r+L;
+const cmds=[['M',R,0]];
+for(let a=10;a<=90;a+=10){const rad=a*Math.PI/180;cmds.push(['L',R*Math.cos(rad),R*Math.sin(rad)]);}
+for(let a=90;a>=0;a-=10){const rad=a*Math.PI/180;cmds.push(['L',r*Math.cos(rad),r*Math.sin(rad)]);}
+cmds.push(['Z']);
+return cmds;
+}
+function asymSkirtBuild(p){
+const wst=p.waist,hp=p.hip,L=p.length,f=p.flare;
+return [['M',0,0],['L',wst,0],
+['Q',hp+1,8,hp+0.4,20],
+['L',hp+f,L*0.78],
+['Q',(hp+f)*0.45,L*0.92,0,L],
+['Z']];
+}
+function collarStandBuild(p){const L=p.len,h=p.h;
+return [['M',0,h*0.4],['Q',L/2,-h*0.3,L,h*0.4],['L',L,h],['Q',L/2,h*0.45,0,h],['Z']];}
+function weltBuild(p){const w=p.w,h=p.h,r=Math.min(h/2,w*0.12);
+return [['M',r,0],['L',w-r,0],['Q',w,0,w,r],['L',w,h-r],['Q',w,h,w-r,h],
+['L',r,h],['Q',0,h,0,h-r],['L',0,r],['Q',0,0,r,0],['Z']];}
+function flapBuild(p){const w=p.w,h=p.h;
+return [['M',0,0],['L',w,0],['L',w*0.94,h*0.55],
+['Q',w*0.5,h*1.25,w*0.06,h*0.55],['Z']];}
+function epauletteBuild(p){const L=p.len,w=p.w;
+return [['M',0,w*0.25],['L',L*0.7,w*0.1],
+['Q',L,w*0.1,L,w*0.5],['Q',L,w*0.9,L*0.7,w*0.9],
+['L',0,w*0.75],['Q',-w*0.25,w*0.5,0,w*0.25],['Z']];}
+function obiBuild(p){const L=p.len,w=p.w,t=Math.min(p.tip,L*0.2);
+return [['M',0,w*0.15],['L',t,0],['L',L-t,0],['L',L,w*0.15],
+['L',L,w*0.85],['L',L-t,w],['L',t,w],['L',0,w*0.85],['Z']];}
+function ribbonTailBuild(p){const L=p.len,w=p.w,t=Math.min(p.tip,L*0.3);
+return [['M',0,0],['L',L-t,w*0.12],['L',L,w*0.5],['L',L-t,w*0.88],
+['L',0,w],['Q',-w*0.15,w*0.5,0,0],['Z']];}
+function capeBuild(p){
+const t=p.top,b=p.hem,L=p.len,dx=(b-t)/2;
+return [['M',dx,0],['L',dx+t,0],
+['Q',b+L*0.05,L*0.55,b*0.9,L],
+['Q',b*0.5,L*1.07,b*0.1,L],
+['Q',-L*0.05,L*0.55,dx,0],
+['Z']];
+}
+function flounceBuild(p){
+const r=Math.max(3,p.innerR),w=Math.max(2.5,p.w),R=r+w;
+const cmds=[['M',R,0]];
+for(let a=15;a<=180;a+=15){const rad=a*Math.PI/180;cmds.push(['L',R*Math.cos(rad),R*Math.sin(rad)]);}
+for(let a=180;a>=0;a-=15){const rad=a*Math.PI/180;cmds.push(['L',r*Math.cos(rad),r*Math.sin(rad)]);}
+cmds.push(['Z']);
+return cmds;
+}
+function godetBuild(p){const w=p.w,h=p.h;
+return [['M',w/2,0],
+['Q',w*0.85,h*0.45,w,h],
+['Q',w/2,h*1.15,0,h],
+['Q',w*0.15,h*0.45,w/2,0],
+['Z']];
+}
 const SHAPES={
 rect:{name:'Прямоугольник',cat:'Базовые',build:rectBuild,
 params:[{k:'w',label:'Ширина, см',def:30,min:2,max:400},{k:'h',label:'Высота, см',def:20,min:2,max:400}]},
 band:{name:'Пояс / полоса',cat:'Базовые',build:rectBuild,
 params:[{k:'w',label:'Длина, см',def:70,min:4,max:400},{k:'h',label:'Ширина, см',def:7,min:1,max:60}]},
+biasTape:{name:'Бейка косая',cat:'Базовые',build:biasBuild,
+params:[{k:'len',label:'Длина, см',def:90,min:10,max:400},{k:'w',label:'Ширина, см',def:4,min:1.5,max:20}]},
 bodiceFront:{name:'Полочка',cat:'Верх',build:bodiceBuild,quick:['chest','length'],
 params:[{k:'chest',label:'Полуобхват груди, см',def:26,min:14,max:70},
 {k:'length',label:'Длина, см',def:66,min:20,max:150},
@@ -750,11 +872,36 @@ params:[{k:'chest',label:'Полуобхват груди, см',def:26,min:14,m
 {k:'neckW',label:'Ширина горловины, см',def:7,min:3,max:16},
 {k:'neckD',label:'Глубина горловины, см',def:2.5,min:1,max:20},
 {k:'shoulder',label:'Спуск плеча, см',def:4.5,min:0,max:12}]},
+kimonoBodice:{name:'Полочка кимоно',cat:'Верх',build:kimonoBodiceBuild,quick:['chest','length'],
+params:[{k:'chest',label:'Полуобхват груди, см',def:27,min:14,max:80},
+{k:'length',label:'Длина, см',def:68,min:20,max:160},
+{k:'armhole',label:'Глубина проймы, см',def:20,min:10,max:55},
+{k:'extend',label:'Выступ кимоно, см',def:13,min:4,max:40},
+{k:'neckW',label:'Ширина горловины, см',def:7,min:3,max:16},
+{k:'neckD',label:'Глубина горловины, см',def:12,min:1,max:40}]},
+corsetPanel:{name:'Панель корсета',cat:'Верх',build:corsetPanelBuild,quick:['bust','length'],
+params:[{k:'bust',label:'Ширина по груди, см',def:24,min:10,max:60},
+{k:'waist',label:'Ширина по талии, см',def:17,min:6,max:50},
+{k:'length',label:'Длина, см',def:55,min:20,max:120}]},
 sleeve:{name:'Рукав',cat:'Верх',build:sleeveBuild,quick:['width','length'],
 params:[{k:'width',label:'Ширина рукава, см',def:34,min:16,max:90},
 {k:'capH',label:'Высота оката, см',def:13,min:5,max:30},
 {k:'length',label:'Длина рукава, см',def:22,min:5,max:95},
 {k:'hemIn',label:'Заужение к низу, см',def:2,min:0,max:15}]},
+raglanSleeve:{name:'Рукав реглан',cat:'Верх',build:raglanSleeveBuild,quick:['width','length'],
+params:[{k:'width',label:'Ширина рукава, см',def:38,min:16,max:90},
+{k:'capH',label:'Высота оката, см',def:16,min:6,max:40},
+{k:'length',label:'Длина рукава, см',def:58,min:5,max:95}]},
+bellSleeve:{name:'Рукав-колокол',cat:'Верх',build:bellSleeveBuild,quick:['width','length'],
+params:[{k:'width',label:'Ширина рукава, см',def:34,min:16,max:90},
+{k:'capH',label:'Высота оката, см',def:13,min:5,max:30},
+{k:'length',label:'Длина, см',def:45,min:10,max:90},
+{k:'flare',label:'Расклешение, см',def:14,min:2,max:40}]},
+hoodMain:{name:'Капюшон',cat:'Верх',build:hoodBuild,quick:['depth','height'],
+params:[{k:'depth',label:'Глубина, см',def:26,min:14,max:50},
+{k:'height',label:'Высота, см',def:33,min:15,max:60}]},
+hoodFacing:{name:'Подборт капюшона',cat:'Верх',build:hoodFacingBuild,
+params:[{k:'len',label:'Длина, см',def:42,min:10,max:100},{k:'w',label:'Ширина, см',def:4,min:1.5,max:12}]},
 yoke:{name:'Кокетка',cat:'Верх',build:yokeBuild,
 params:[{k:'w',label:'Ширина, см',def:42,min:10,max:110},
 {k:'h',label:'Высота, см',def:12,min:3,max:40},
@@ -771,6 +918,12 @@ params:[{k:'hip',label:'Ширина по бёдрам, см',def:30,min:14,max:
 {k:'length',label:'Длина, см',def:102,min:20,max:160},
 {k:'crotch',label:'Выступ банта, см',def:11,min:2,max:26},
 {k:'hem',label:'Ширина низа, см',def:22,min:10,max:64}]},
+palazzo:{name:'Палаццо',cat:'Низ',build:palazzoBuild,quick:['length','hip'],
+params:[{k:'hip',label:'Ширина по бёдрам, см',def:30,min:14,max:80},
+{k:'rise',label:'Высота сидения, см',def:27,min:12,max:50},
+{k:'length',label:'Длина, см',def:104,min:20,max:160},
+{k:'hem',label:'Ширина низа, см',def:46,min:20,max:100},
+{k:'crotch',label:'Выступ банта, см',def:6,min:1,max:20}]},
 skirtFront:{name:'Юбка — перед',cat:'Низ',build:skirtBuild,quick:['length','waist'],
 params:[{k:'waist',label:'Полуобхват талии, см',def:21,min:12,max:60},
 {k:'hip',label:'Полуобхват бёдер, см',def:25,min:14,max:70},
@@ -781,6 +934,14 @@ params:[{k:'waist',label:'Полуобхват талии, см',def:22.5,min:12
 {k:'hip',label:'Полуобхват бёдер, см',def:26.5,min:14,max:70},
 {k:'length',label:'Длина, см',def:60,min:15,max:130},
 {k:'flare',label:'Расширение, см',def:4,min:0,max:40}]},
+circleSkirt:{name:'Клин юбки-солнце',cat:'Низ',build:circleSkirtBuild,quick:['len','waistR'],
+params:[{k:'waistR',label:'Радиус талии, см',def:12,min:4,max:60},
+{k:'len',label:'Длина юбки, см',def:60,min:15,max:140}]},
+asymSkirt:{name:'Юбка асимметричная',cat:'Низ',build:asymSkirtBuild,quick:['length','waist'],
+params:[{k:'waist',label:'Полуобхват талии, см',def:21,min:12,max:60},
+{k:'hip',label:'Полуобхват бёдер, см',def:25,min:14,max:70},
+{k:'length',label:'Длина, см',def:66,min:15,max:130},
+{k:'flare',label:'Расширение, см',def:10,min:0,max:40}]},
 briefsFront:{name:'Трусы — перед',cat:'Низ',build:briefsFrontBuild,quick:['waist','height'],
 params:[{k:'waist',label:'Ширина по талии, см',def:23,min:12,max:60},
 {k:'height',label:'Высота, см',def:20,min:8,max:50}]},
@@ -791,6 +952,8 @@ collar:{name:'Воротник',cat:'Детали',build:collarBuild,
 params:[{k:'len',label:'Длина, см',def:38,min:10,max:90},{k:'h',label:'Высота, см',def:7,min:2,max:20}]},
 neckband:{name:'Бейка горловины',cat:'Детали',build:neckbandBuild,
 params:[{k:'len',label:'Длина, см',def:44,min:10,max:120},{k:'w',label:'Ширина, см',def:2.5,min:1,max:10}]},
+collarStand:{name:'Стойка воротника',cat:'Детали',build:collarStandBuild,
+params:[{k:'len',label:'Длина, см',def:38,min:10,max:90},{k:'h',label:'Высота, см',def:3,min:1,max:12}]},
 cuff:{name:'Манжета',cat:'Детали',build:cuffBuild,
 params:[{k:'w',label:'Ширина, см',def:26,min:5,max:60},{k:'h',label:'Высота, см',def:8,min:2,max:25}]},
 facing:{name:'Обтачка горловины',cat:'Детали',build:facingBuild,
@@ -799,8 +962,30 @@ params:[{k:'len',label:'Длина дуги, см',def:40,min:10,max:100},
 {k:'w',label:'Ширина обтачки, см',def:4,min:1.5,max:12}]},
 pocket:{name:'Карман',cat:'Детали',build:pocketBuild,
 params:[{k:'w',label:'Ширина, см',def:14,min:4,max:40},{k:'h',label:'Высота, см',def:16,min:4,max:50}]},
+weltPocket:{name:'Рамка кармана',cat:'Детали',build:weltBuild,
+params:[{k:'w',label:'Ширина, см',def:15,min:4,max:40},{k:'h',label:'Высота, см',def:4.5,min:1,max:15}]},
+flapPocket:{name:'Клапан кармана',cat:'Детали',build:flapBuild,
+params:[{k:'w',label:'Ширина, см',def:14,min:4,max:40},{k:'h',label:'Высота, см',def:9,min:2,max:25}]},
+buttonPlacket:{name:'Планка застёжки',cat:'Детали',build:rectBuild,
+params:[{k:'w',label:'Длина, см',def:62,min:6,max:200},{k:'h',label:'Ширина, см',def:3.5,min:1,max:12}]},
+epaulette:{name:'Погон / патка',cat:'Детали',build:epauletteBuild,
+params:[{k:'len',label:'Длина, см',def:14,min:4,max:40},{k:'w',label:'Ширина, см',def:4,min:1.5,max:15}]},
+obiBelt:{name:'Пояс оби',cat:'Детали',build:obiBuild,
+params:[{k:'len',label:'Длина, см',def:85,min:20,max:300},{k:'w',label:'Ширина, см',def:13,min:3,max:40},{k:'tip',label:'Скос угла, см',def:9,min:1,max:30}]},
+ribbonTail:{name:'Хвост банта',cat:'Детали',build:ribbonTailBuild,
+params:[{k:'len',label:'Длина, см',def:30,min:6,max:100},{k:'w',label:'Ширина, см',def:8,min:2,max:30},{k:'tip',label:'Остриё, см',def:6,min:1,max:20}]},
 gusset:{name:'Ластовица',cat:'Детали',build:gussetBuild,
 params:[{k:'w',label:'Ширина, см',def:14,min:4,max:40},{k:'h',label:'Высота, см',def:8,min:2,max:30}]},
+cape:{name:'Пелерина / кейп',cat:'Дизайн',build:capeBuild,quick:['hem','len'],
+params:[{k:'top',label:'Ширина горловины, см',def:18,min:8,max:60},
+{k:'hem',label:'Ширина низа, см',def:95,min:30,max:300},
+{k:'len',label:'Длина, см',def:62,min:15,max:150}]},
+peplum:{name:'Пеплум (волан)',cat:'Дизайн',build:flounceBuild,quick:['innerR','w'],
+params:[{k:'innerR',label:'Радиус талии, см',def:20,min:6,max:80},{k:'w',label:'Ширина волана, см',def:16,min:4,max:50}]},
+ruffle:{name:'Волан',cat:'Дизайн',build:flounceBuild,quick:['innerR','w'],
+params:[{k:'innerR',label:'Внутр. радиус, см',def:12,min:4,max:80},{k:'w',label:'Ширина волана, см',def:7,min:2,max:40}]},
+godet:{name:'Годе (клин)',cat:'Дизайн',build:godetBuild,
+params:[{k:'w',label:'Ширина, см',def:18,min:4,max:60},{k:'h',label:'Высота, см',def:30,min:6,max:90}]},
 };
 const PRESETS=[
 {id:'tshirt',icon:'👕',name:'Футболка',pieces:[
@@ -815,8 +1000,10 @@ const PRESETS=[
 {t:'sleeve',n:'Рукав',c:CC.grn,p:{width:40,capH:15,length:58,hemIn:3}},
 {t:'sleeve',n:'Рукав',c:CC.grn,p:{width:40,capH:15,length:58,hemIn:3}},
 {t:'collar',n:'Воротник',c:CC.amb,p:{len:40,h:7.5}},
+{t:'collarStand',n:'Стойка воротника',c:CC.amb,p:{len:40,h:2.8}},
 {t:'cuff',n:'Манжета',c:CC.amb,p:{w:26,h:9}},
 {t:'cuff',n:'Манжета',c:CC.amb,p:{w:26,h:9}},
+{t:'buttonPlacket',n:'Планка застёжки',c:CC.mag,p:{}},
 {t:'pocket',n:'Карман',c:CC.mag,p:{w:12,h:14}}]},
 {id:'pants',icon:'👖',name:'Брюки',pieces:[
 {t:'pantsFront',n:'Перед. половинка',c:CC.vio,p:{}},
@@ -857,6 +1044,67 @@ const PRESETS=[
 {t:'pantsBack',n:'Задн. половинка',c:CC.vio,p:{}},
 {t:'pantsBack',n:'Задн. половинка',c:CC.vio,p:{}},
 {t:'band',n:'Пояс',c:CC.amb,p:{w:76,h:7}}]},
+{id:'hoodie',icon:'🧥',name:'Худи',pieces:[
+{t:'bodiceFront',n:'Полочка',c:CC.cyan,p:{chest:28,length:66,armhole:22,neckW:8,neckD:9}},
+{t:'bodiceBack',n:'Спинка',c:CC.cyan,p:{chest:28,length:66,armhole:22,neckW:8,neckD:2.5}},
+{t:'sleeve',n:'Рукав',c:CC.grn,p:{width:38,capH:14,length:58,hemIn:2}},
+{t:'sleeve',n:'Рукав',c:CC.grn,p:{width:38,capH:14,length:58,hemIn:2}},
+{t:'hoodMain',n:'Капюшон',c:CC.amb,p:{}},
+{t:'hoodMain',n:'Капюшон',c:CC.amb,p:{}},
+{t:'hoodFacing',n:'Подборт капюшона',c:CC.mag,p:{}},
+{t:'pocket',n:'Карман-кенгуру',c:CC.mag,p:{w:30,h:22}},
+{t:'cuff',n:'Манжета',c:CC.amb,p:{w:24,h:8}},
+{t:'cuff',n:'Манжета',c:CC.amb,p:{w:24,h:8}}]},
+{id:'kimono',icon:'🎎',name:'Кимоно',pieces:[
+{t:'kimonoBodice',n:'Полочка кимоно',c:CC.mag,p:{neckD:14}},
+{t:'kimonoBodice',n:'Полочка кимоно',c:CC.mag,p:{neckD:14}},
+{t:'kimonoBodice',n:'Спинка кимоно',c:CC.mag,p:{neckD:2.5,length:72}},
+{t:'obiBelt',n:'Пояс оби',c:CC.amb,p:{}},
+{t:'biasTape',n:'Бейка косая',c:CC.grn,p:{}},
+{t:'biasTape',n:'Бейка косая',c:CC.grn,p:{}}]},
+{id:'gown',icon:'💃',name:'Вечернее платье',pieces:[
+{t:'corsetPanel',n:'Панель корсета',c:CC.vio,p:{}},
+{t:'corsetPanel',n:'Панель корсета',c:CC.vio,p:{}},
+{t:'corsetPanel',n:'Панель корсета',c:CC.vio,p:{}},
+{t:'corsetPanel',n:'Панель корсета',c:CC.vio,p:{}},
+{t:'circleSkirt',n:'Клин юбки-солнце',c:CC.vio,p:{}},
+{t:'circleSkirt',n:'Клин юбки-солнце',c:CC.vio,p:{}},
+{t:'circleSkirt',n:'Клин юбки-солнце',c:CC.vio,p:{}},
+{t:'circleSkirt',n:'Клин юбки-солнце',c:CC.vio,p:{}},
+{t:'ruffle',n:'Волан',c:CC.mag,p:{}},
+{t:'ribbonTail',n:'Хвост банта',c:CC.amb,p:{}}]},
+{id:'capeLook',icon:'🧛',name:'Плащ-пелерина',pieces:[
+{t:'cape',n:'Пелерина',c:CC.vio,p:{}},
+{t:'cape',n:'Пелерина',c:CC.vio,p:{}},
+{t:'hoodMain',n:'Капюшон',c:CC.amb,p:{}},
+{t:'hoodMain',n:'Капюшон',c:CC.amb,p:{}},
+{t:'collarStand',n:'Стойка воротника',c:CC.amb,p:{}},
+{t:'obiBelt',n:'Пояс',c:CC.mag,p:{w:9,len:95}}]},
+{id:'palazzoLook',icon:'🌊',name:'Палаццо',pieces:[
+{t:'palazzo',n:'Половинка палаццо',c:CC.cyan,p:{}},
+{t:'palazzo',n:'Половинка палаццо',c:CC.cyan,p:{}},
+{t:'palazzo',n:'Половинка палаццо',c:CC.cyan,p:{}},
+{t:'palazzo',n:'Половинка палаццо',c:CC.cyan,p:{}},
+{t:'band',n:'Пояс',c:CC.amb,p:{w:76,h:6}},
+{t:'epaulette',n:'Патка пояса',c:CC.mag,p:{len:10,w:5}},
+{t:'epaulette',n:'Патка пояса',c:CC.mag,p:{len:10,w:5}}]},
+{id:'boho',icon:'🌸',name:'Блуза бохо',pieces:[
+{t:'bodiceFront',n:'Полочка',c:CC.grn,p:{chest:26,length:64,armhole:21,neckW:8,neckD:11,shoulder:5}},
+{t:'bodiceBack',n:'Спинка',c:CC.grn,p:{chest:26,length:64,armhole:21,neckW:8,neckD:9,shoulder:5}},
+{t:'bellSleeve',n:'Рукав-колокол',c:CC.mag,p:{}},
+{t:'bellSleeve',n:'Рукав-колокол',c:CC.mag,p:{}},
+{t:'ruffle',n:'Волан по низу',c:CC.mag,p:{innerR:22,w:9}},
+{t:'collarStand',n:'Стойка воротника',c:CC.amb,p:{}},
+{t:'buttonPlacket',n:'Планка застёжки',c:CC.amb,p:{}},
+{t:'peplum',n:'Пеплум',c:CC.vio,p:{}}]},
+{id:'skirtDesigner',icon:'✨',name:'Юбка дизайнерская',pieces:[
+{t:'asymSkirt',n:'Асимметрия — перед',c:CC.mag,p:{}},
+{t:'asymSkirt',n:'Асимметрия — зад',c:CC.mag,p:{flare:14}},
+{t:'godet',n:'Годе (клин)',c:CC.vio,p:{}},
+{t:'godet',n:'Годе (клин)',c:CC.vio,p:{}},
+{t:'godet',n:'Годе (клин)',c:CC.vio,p:{}},
+{t:'band',n:'Пояс',c:CC.amb,p:{w:72,h:6}},
+{t:'flapPocket',n:'Клапан',c:CC.grn,p:{}}]},
 ];
 /* ============================ геометрия ============================ */
 function cmdsToPath(cmds){
@@ -1731,7 +1979,6 @@ v.scale=clamp(v.scale*f,0.05,120);
 v.ox=px-w.x*v.scale; v.oy=py-w.y*v.scale;
 draw();
 }
-/* габариты ВСЕХ размещённых деталей целиком (с припусками на швы) */
 function contentBounds(){
 if(!state.pieces.length)return null;
 let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
@@ -1742,7 +1989,6 @@ if(bb.miny<miny)miny=bb.miny; if(bb.maxy>maxy)maxy=bb.maxy;
 }
 return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
-/* общая рамка для «Вписать»: ткань + все детали целиком */
 function fitBounds(){
 const b=contentBounds();
 let minx,miny,maxx,maxy;
@@ -1761,9 +2007,6 @@ else maxy=Math.max(maxy,miny+60);
 }
 return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
-/* «Вписать»: автоматический масштаб и автопозиционирование так, чтобы
-   ВСЕ размещённые на ткани детали были видны ЦЕЛИКОМ (вместе с тканью);
-   содержимое центрируется в фактической видимой области холста */
 function fitView(retry){
 ensureSize();
 if(W<80||H<80){
@@ -1776,8 +2019,6 @@ computeFit(state.view,rect,W,H,{padL:44,padR:44,padT:40+topReserve,padB:56,align
 fitMode='fit';
 draw();
 }
-/* «По ширине»: масштаб и позиция подбираются строго по границам (ширине) ткани;
-   детали, выступающие за ширину ткани, в расчёт масштаба не берутся */
 function fitFabricWidth(retry){
 ensureSize();
 if(W<80||H<80){
@@ -2422,7 +2663,7 @@ buildLibrary();
 }
 function exportTemplates(){
 if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-const data={app:'NEONCUT',kind:'templates',version:'1.14.0',exportedAt:Date.now(),templates:userTemplates};
+const data={app:'NEONCUT',kind:'templates',version:'1.16.0',exportedAt:Date.now(),templates:userTemplates};
 const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
 const a=document.createElement('a');
 a.href=URL.createObjectURL(blob);
@@ -2581,7 +2822,7 @@ grid.appendChild(item);
 }
 list.appendChild(grid);
 }
-const cats=['Базовые','Верх','Низ','Детали'];
+const cats=['Базовые','Верх','Низ','Детали','Дизайн'];
 for(const cat of cats){
 const types=Object.keys(SHAPES).filter(function(t){return SHAPES[t].cat===cat;});
 if(!types.length)continue;
@@ -2693,7 +2934,7 @@ delT:function(id){return this.rq(this.storeN('templates','readwrite').delete(id)
 allP:function(){return this.rq(this.storeN('presets','readonly').getAll());},
 putP:function(t){return this.rq(this.storeN('presets','readwrite').put(t));},
 delP:function(id){return this.rq(this.storeN('presets','readwrite').delete(id));},
-getSetting:function(key){return this.rq(this.storeN('settings','readonly').get(key)).then(function(r){return r?r.value:null;});},
+getSetting:function(key){return this.rq(this.storeN('settings','readonly').get(key)).then(function(rec){return rec?rec.value:null;});},
 putSetting:function(key,val){return this.rq(this.storeN('settings','readwrite').put({id:key,value:val}));}
 };
 function failStorage(){
@@ -2882,10 +3123,7 @@ try{data=await IDB.getSetting(UI_PREFS_KEY);}catch(e){data=null;}
 if(!data){
 try{
 const raw=localStorage.getItem(LS_UI_KEY);
-if(raw){
-const parsed=JSON.parse(raw);
-if(parsed&&typeof parsed==='object')data=parsed;
-}
+if(raw){const parsed=JSON.parse(raw); if(parsed&&typeof parsed==='object')data=parsed;}
 }catch(e){data=null;}
 }
 if(data){applyUIPrefs(data);lastUISavedAt=new Date(data.savedAt||Date.now());}
@@ -2977,7 +3215,7 @@ fitView(); updateStorageChip(); toast('✦ Новый проект');
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.14.0'},projectData()),null,2)],{type:'application/json'});
+const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.16.0'},projectData()),null,2)],{type:'application/json'});
 const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
 a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
 setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
