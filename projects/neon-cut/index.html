@@ -472,6 +472,88 @@ letter-spacing: 0
 .tbtn input[type=checkbox] {
 margin: 0
 }
+/* ---------- split-кнопка «Вписать» + меню вариантов ---------- */
+#fitWrap {
+display: inline-flex;
+border: 1px solid var(--line2);
+border-radius: 8px;
+background: #101430;
+overflow: hidden;
+transition: .15s;
+}
+#fitWrap:hover {
+border-color: var(--cyan);
+box-shadow: 0 0 10px rgba(0, 229, 255, .3)
+}
+#fitWrap button {
+background: transparent;
+border: none;
+color: var(--txt);
+padding: 7px 11px;
+font: 600 12px var(--font-ui);
+cursor: pointer;
+transition: .15s;
+display: inline-flex;
+align-items: center;
+gap: 6px;
+touch-action: manipulation;
+white-space: nowrap;
+}
+#fitWrap button:hover {
+color: #9ef7ff;
+background: rgba(0, 229, 255, .08)
+}
+#btnFitDrop {
+border-left: 1px solid var(--line2) !important;
+padding-left: 8px !important;
+padding-right: 8px !important;
+}
+.fit-item {
+display: flex;
+align-items: center;
+gap: 9px;
+width: 100%;
+background: #0d1130;
+border: 1px solid var(--line2);
+color: var(--txt);
+border-radius: 8px;
+padding: 8px 10px;
+font: 600 12px var(--font-ui);
+cursor: pointer;
+transition: .15s;
+text-align: left;
+}
+.fit-item:hover:not(:disabled) {
+border-color: var(--cyan);
+color: #fff;
+box-shadow: 0 0 10px rgba(0, 229, 255, .25)
+}
+.fit-item.active {
+border-color: rgba(0, 229, 255, .55);
+color: #9ef7ff;
+background: rgba(0, 229, 255, .08)
+}
+.fit-item:disabled {
+opacity: .38;
+cursor: default
+}
+.fi-ico {
+width: 18px;
+text-align: center;
+color: var(--cyan);
+flex: none
+}
+.fi-lbl {
+flex: 1
+}
+.fit-item kbd {
+font: 700 9.5px var(--font-mono);
+color: var(--dim);
+border: 1px solid var(--line2);
+border-radius: 4px;
+padding: 2px 5px;
+flex: none
+}
 #fabWrap,
 #gridWrap {
 cursor: default
@@ -586,7 +668,8 @@ box-shadow: 0 0 9px rgba(255, 77, 109, .25)
 }
 #gridPanel,
 #nestPanel,
-#viewPanel {
+#viewPanel,
+#fitPanel {
 position: absolute;
 top: calc(100% + 8px);
 right: 12px;
@@ -1109,6 +1192,10 @@ gap: 8px
 padding: 10px 12px;
 font-size: 13px
 }
+#fitWrap button {
+padding: 10px 12px;
+font-size: 13px
+}
 .btn {
 padding: 10px 14px;
 font-size: 13px
@@ -1146,7 +1233,8 @@ width: 52px
 }
 #gridPanel,
 #nestPanel,
-#viewPanel {
+#viewPanel,
+#fitPanel {
 right: 8px;
 width: 242px
 }
@@ -1171,9 +1259,9 @@ width: 242px
 </g>
 </svg>
 <div>
-<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.19.0</span></div>
-<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, инструмент «Измерение»,
-физическая линейка с настройками (двойной клик) и автосохранение.</div>
+<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.20.0</span></div>
+<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, полный набор вариантов
+отображения (fit) с применением после раскладки, инструмент «Измерение» и автосохранение.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -1197,21 +1285,21 @@ width: 242px
 <div class="cat-title">Готовые комплекты</div>
 <div class="preset-grid" id="presetsList"></div>
 </div>
-<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ —
-алгоритм, углы, зазоры · ✎ — редактор контура · 📐 — линейка (двойной клик — параметры)</div>
+<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани
+(0,0)<br>⤢ — варианты отображения: F всё · A детали · S выбранная · T ткань · W ширина · H
+высота<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · 📐 — линейка (двойной клик —
+параметры)</div>
 </aside>
 <section id="stage">
 <div id="toolbar">
 <button class="tbtn" id="btnZoomOut" title="Уменьшить (−)">−</button>
 <span class="zoomlbl" id="zoomLbl">100%</span>
 <button class="tbtn" id="btnZoomIn" title="Увеличить (+)">+</button>
-<button class="tbtn" id="btnFit" title="Вписать все детали целиком вместе с тканью (F / 0)">⤢
-Вписать</button>
-<button class="tbtn" id="btnFitW" title="Показать точно по границам ширины ткани (W)">⇤ По
-ширине</button>
-<button class="tbtn" id="btnFitPieces"
-title="Автомасштабирование: показать все детали холста в видимой рабочей области (A)">👁 Все
-детали</button>
+<div id="fitWrap">
+<button id="btnFitMenu" title="Показать всё: ткань и детали целиком (F / 0)">⤢ Вписать</button>
+<button id="btnFitDrop"
+title="Все варианты отображения: всё целиком / все детали / выбранная деталь / ткань / по ширине / по высоте">▾</button>
+</div>
 <button class="tbtn" id="btnOrigin" title="Показать начало ткани (0,0) (Home)">⌖ 0,0</button>
 <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
 <button class="tbtn toggle" id="btnPhysRuler"
@@ -1356,6 +1444,25 @@ title="Рекомендуемая длина ткани при заданной 
 <label class="chk"><input type="checkbox" id="vGrain" checked> Долевая</label>
 <label class="chk"><input type="checkbox" id="vSeam" checked> Припуски</label>
 </div>
+</div>
+<div id="fitPanel" class="hidden">
+<div class="pop-title">Показать на холсте</div>
+<button class="fit-item" data-fit="fit"><span class="fi-ico">⤢</span><span class="fi-lbl">Всё
+целиком · ткань + детали</span><kbd>F</kbd></button>
+<button class="fit-item" data-fit="pieces"><span class="fi-ico">◈</span><span class="fi-lbl">Все
+детали</span><kbd>A</kbd></button>
+<button class="fit-item" data-fit="selected"><span class="fi-ico">◉</span><span
+class="fi-lbl">Выбранную деталь</span><kbd>S</kbd></button>
+<button class="fit-item" data-fit="fabric"><span class="fi-ico">▭</span><span class="fi-lbl">Всю
+ткань</span><kbd>T</kbd></button>
+<button class="fit-item" data-fit="fabW"><span class="fi-ico">⇤</span><span class="fi-lbl">По
+ширине ткани</span><kbd>W</kbd></button>
+<button class="fit-item" data-fit="fabH"><span class="fi-ico">⇕</span><span class="fi-lbl">По
+высоте ткани (кусок)</span><kbd>H</kbd></button>
+<button class="fit-item" data-fit="origin"><span class="fi-ico">⌖</span><span class="fi-lbl">К
+началу ткани (0,0)</span><kbd>Home</kbd></button>
+<div class="pop-note">Запрошенный вид применяется после завершения раскладки — только тогда
+положение и границы (bounds) деталей определены.</div>
 </div>
 </div>
 <div id="canvasWrap">
@@ -2291,7 +2398,26 @@ project: { id: null, name: 'Новый проект' },
 dirty: false,
 };
 let editorId = null, saving = false, lastSavedAt = null, storageFailedNoted = false, saveTimer = null, repackTimer = null;
+/* fitMode: 'free' | 'fit' | 'pieces' | 'selected' | 'fabric' | 'fabW' | 'fabH' */
 let fitMode = 'fit';
+/*
+* nestingBusy — раскладка выполняется прямо сейчас;
+* pendingFit  — запрошенный вариант отображения, который нужно применить
+*               сразу после завершения раскладки/расстановки деталей.
+* До завершения раскладки положения деталей (и их bounds) ещё не определены,
+* поэтому fit запросы ставятся в очередь.
+*/
+let nestingBusy = false;
+let pendingFit = null;
+const FIT_MODES = { fit: 1, pieces: 1, selected: 1, fabric: 1, fabW: 1, fabH: 1 };
+const FIT_SHORT = {
+fit: '⤢ Вписать',
+pieces: '◈ Все детали',
+selected: '◉ Выбранная',
+fabric: '▭ Вся ткань',
+fabW: '⇤ По ширине',
+fabH: '⇕ По высоте'
+};
 let ctrEd = null;
 let userTemplates = [];
 let userPresets = [];
@@ -2317,7 +2443,7 @@ return { x: wx * state.view.scale + state.view.ox, y: wy * state.view.scale + st
 /* ============================ видимая область холста ============================ */
 function toolbarPopReserve() {
 let extra = 0;
-['#gridPanel', '#nestPanel', '#viewPanel'].forEach(function (id) {
+['#gridPanel', '#nestPanel', '#viewPanel', '#fitPanel'].forEach(function (id) {
 const el = $(id);
 if (el && !el.classList.contains('hidden')) {
 extra = Math.max(extra, (el.offsetHeight || 0) + 20);
@@ -2352,17 +2478,13 @@ return true;
 return false;
 }
 function refitIfAuto() {
-if (fitMode === 'fit') fitView();
-else if (fitMode === 'fitW') fitFabricWidth();
-else if (fitMode === 'fitPieces') fitAllPieces();
+if (FIT_MODES[fitMode]) applyFit(fitMode);
 }
 function onAreaResize() {
 try {
 const changed = ensureSize();
 if (changed && state.pieces.length) {
-if (fitMode === 'fit') { fitView(); return; }
-if (fitMode === 'fitW') { fitFabricWidth(); return; }
-if (fitMode === 'fitPieces') { fitAllPieces(); return; }
+if (FIT_MODES[fitMode]) { applyFit(fitMode); return; }
 }
 draw();
 } catch (err) { toast('Ошибка ресайза: ' + err.message, 'err'); }
@@ -2606,6 +2728,7 @@ return arr;
 }
 function runPlacement(fast) {
 if (!state.pieces.length) return;
+nestingBusy = true;
 if (state.nestOpts.algo === 'shelf') { doShelf(); return; }
 nestPieces(fast || state.nestOpts.algo === 'nest-fast');
 }
@@ -2615,7 +2738,10 @@ const o = state.nestOpts;
 const heavy = !fast && (o.algo === 'nest-full' || o.algo === 'nest-multi');
 toast(heavy ? '⚡ Точная раскладка (может занять время)…' : '⚡ Выполняется раскладка…');
 setTimeout(function () {
-try { doNest(fast); } catch (err) { toast('Ошибка раскладки: ' + err.message, 'err'); }
+try { doNest(fast); } catch (err) {
+nestingBusy = false; pendingFit = null;
+toast('Ошибка раскладки: ' + err.message, 'err'); draw();
+}
 }, 30);
 }
 function doNest(fast) {
@@ -2681,18 +2807,20 @@ for (const it of best.over.fails) {
 placeAt(it.p, 2, fy, 0);
 fy += it.p._bounds.h + 6;
 }
-markDirty(); draw(); fitView();
 const placedN = best.main.placed.length + best.over.placed.length;
 const algoName = { 'nest-fast': 'Нестинг (быстрый)', 'nest-full': 'Нестинг (точный)', 'nest-multi': 'Мультистарт', 'shelf': 'Полочный' }[o.algo] || 'Нестинг';
 let msg = `⚡ ${algoName}: ${placedN} дет. · длина ≈ ${Math.ceil(best.totalLen / 5) * 5} см`;
 if (pieceMode && best.main.fails.length) msg += ` · вне куска: ${best.main.fails.length}`;
-toast(msg);
+finishPlacement(msg);
 }
 function doShelf() {
 if (!state.pieces.length) return;
 toast('⚡ Полочная раскладка…');
 setTimeout(function () {
-try { doShelfNow(); } catch (err) { toast('Ошибка раскладки: ' + err.message, 'err'); }
+try { doShelfNow(); } catch (err) {
+nestingBusy = false; pendingFit = null;
+toast('Ошибка раскладки: ' + err.message, 'err'); draw();
+}
 }, 30);
 }
 function doShelfNow() {
@@ -2734,8 +2862,19 @@ ox += c.w + gap; oS = Math.max(oS, c.h);
 }
 if (pieceMode) toast(`⚠ Не поместились в кусок: ${overflow.length} дет. — размещены под тканью`, 'warn');
 }
-markDirty(); draw(); fitView();
-toast('⚡ Полочная раскладка выполнена');
+finishPlacement('⚡ Полочная раскладка выполнена');
+}
+/* завершение раскладки: применить запрошенный вариант отображения (или «вписать всё») */
+function finishPlacement(msg) {
+nestingBusy = false;
+markDirty();
+if (pendingFit) {
+const m = pendingFit; pendingFit = null;
+applyFit(m);
+} else {
+fitView();
+}
+if (msg) toast(msg);
 }
 function scheduleRepack() {
 if (!autoPackOn()) return;
@@ -2819,6 +2958,7 @@ const sz = $('#stZoom'); if (sz) sz.textContent = `масштаб: ${Math.round(
 const sa = $('#stArea'); if (sa) sa.textContent = `область: ${Math.round(W)}×${Math.round(H)} px`;
 let outN = 0; if (state.fabric) for (const p of state.pieces) if (outOfFabric(p)) outN++;
 const sc = $('#stCount'); if (sc) sc.textContent = 'деталей: ' + state.pieces.length + (state.fabric ? ' · вне ткани: ' + outN : '');
+updateFitMenuState();
 positionQuick();
 }
 function drawCursor() {
@@ -3182,6 +3322,41 @@ const w = s2w(pt.x, pt.y);
 if (pointInPhysRuler(w.x, w.y)) { openRulerSettings(); }
 });
 /* ============================ вид / вписывание ============================ */
+/*
+* Полный набор вариантов отображения (fit):
+*  fit      — всё целиком: детали + ткань
+*  pieces   — все детали (независимо от границ ткани)
+*  selected — только выбранная деталь
+*  fabric   — вся область ткани (для рулона — по ширине)
+*  fabW     — точно по ширине ткани
+*  fabH     — точно по высоте ткани (только режим «Кусок»)
+*  origin   — к началу ткани (0,0)
+*
+* ВАЖНО: bounds деталей можно определить только после того, как геометрия
+* пересобрана, а раскладка/расстановка завершена. Поэтому:
+*  1) перед любым fit выполняется rebuildPiece() для всех деталей;
+*  2) если раскладка уже выполняется (nestingBusy) — запрос сохраняется
+*     в pendingFit и применяется в finishPlacement();
+*  3) если раскладка только запланирована (repackTimer) — она запускается
+*     немедленно, а fit применяется после её завершения.
+*/
+function requestFit(mode) {
+if (mode === 'origin') { focusOrigin(); return; }
+if (repackTimer) {
+clearTimeout(repackTimer); repackTimer = null;
+if (autoPackOn() && state.pieces.length) {
+pendingFit = mode;
+runPlacement(true);
+return;
+}
+}
+if (nestingBusy) {
+pendingFit = mode;
+toast('⏳ Вид будет применён после завершения раскладки');
+return;
+}
+applyFit(mode);
+}
 function computeFit(view, rect, cw, ch, opts) {
 const padL = opts.padL != null ? opts.padL : 40;
 const padR = opts.padR != null ? opts.padR : 40;
@@ -3240,33 +3415,14 @@ else maxy = Math.max(maxy, miny + 60);
 }
 return { minx: minx, miny: miny, maxx: maxx, maxy: maxy };
 }
-function fitView(retry) {
-ensureSize();
-if (W < 80 || H < 80) {
-if ((retry || 0) < 10) requestAnimationFrame(function () { fitView((retry || 0) + 1); });
-return;
-}
-const rect = fitBounds();
-const topReserve = toolbarPopReserve();
-computeFit(state.view, rect, W, H, { padL: 44, padR: 44, padT: 40 + topReserve, padB: 56, align: 'center', minS: 0.05, maxS: 120 });
-fitMode = 'fit';
-draw();
-}
-function fitFabricWidth(retry) {
-ensureSize();
-if (W < 80 || H < 80) {
-if ((retry || 0) < 10) requestAnimationFrame(function () { fitFabricWidth((retry || 0) + 1); });
-return;
-}
+/* ядро вписывания по ширине ткани (без изменения fitMode) */
+function fitFabricWidthCore() {
 let minx, maxx;
-if (state.fabric) {
-minx = 0;
-maxx = state.fabricW;
-} else {
+if (state.fabric) { minx = 0; maxx = state.fabricW; }
+else {
 const b0 = contentBounds();
-if (!b0) { toast('Холст пуст — нечего вписывать', 'warn'); return; }
+if (!b0) { toast('Холст пуст — нечего вписывать', 'warn'); return false; }
 minx = b0.minx; maxx = b0.maxx;
-toast('Ткань отключена — вписываю по границам деталей', 'warn');
 }
 const padL = 28, padR = 28;
 const padT = 32 + toolbarPopReserve();
@@ -3279,46 +3435,92 @@ state.view.ox = padL - minx * s;
 state.view.oy = padT - topY * s;
 const tly = topY * s + state.view.oy;
 if (tly < 4) state.view.oy += 4 - tly;
-fitMode = 'fitW';
-draw();
+return true;
 }
-/* показать ВСЕ детали холста в видимой рабочей области (автомасштабирование) */
-function fitAllPieces(retry) {
+/* универсальная реализация всех вариантов отображения */
+function applyFit(mode, retry) {
+if (mode === 'origin') { focusOrigin(); return; }
+if (!FIT_MODES[mode]) mode = 'fit';
 ensureSize();
 if (W < 80 || H < 80) {
-if ((retry || 0) < 10) requestAnimationFrame(function () { fitAllPieces((retry || 0) + 1); });
+if ((retry || 0) < 10) requestAnimationFrame(function () { applyFit(mode, (retry || 0) + 1); });
 return;
 }
-if (!state.pieces.length) {
-toast('Холст пуст — нет деталей для отображения', 'warn');
-return;
-}
-/* пересобираем детали, чтобы границы были актуальными */
+/* актуальные bounds: пересобираем геометрию всех деталей */
 for (const p of state.pieces) rebuildPiece(p);
-const b = contentBounds();
-if (!b) { toast('Не удалось определить границы деталей', 'warn'); return; }
-/* небольшой запас вокруг общего габарита деталей */
-const padCm = Math.max(1.5, Math.max(b.maxx - b.minx, b.maxy - b.miny) * 0.03);
-const rect = {
-minx: b.minx - padCm, miny: b.miny - padCm,
-maxx: b.maxx + padCm, maxy: b.maxy + padCm
-};
 const topReserve = toolbarPopReserve();
-computeFit(state.view, rect, W, H, {
-padL: 36, padR: 36, padT: 30 + topReserve, padB: 44,
-align: 'center', minS: 0.05, maxS: 120
-});
-fitMode = 'fitPieces';
-draw();
-const sc = Math.round(state.view.scale / BASE * 100);
-toast(`👁 Все детали в рабочей области · масштаб ${sc}%`);
+let padL = 44, padR = 44, padT = 40 + topReserve, padB = 56;
+let rect = null;
+if (mode === 'fit') {
+rect = fitBounds();
+} else if (mode === 'pieces') {
+const b = contentBounds();
+if (!b) { toast('Холст пуст — нет деталей для отображения', 'warn'); return; }
+const padCm = Math.max(1, Math.max(b.maxx - b.minx, b.maxy - b.miny) * 0.025);
+rect = { minx: b.minx - padCm, miny: b.miny - padCm, maxx: b.maxx + padCm, maxy: b.maxy + padCm };
+padL = 36; padR = 36; padT = 32 + topReserve; padB = 48;
+} else if (mode === 'selected') {
+const p = byId(state.selId);
+if (!p) { toast('Нет выбранной детали — показываю всё', 'warn'); applyFit('fit'); return; }
+const bb = pieceEffAABB(p);
+const padCm = Math.max(1.5, Math.max(bb.w, bb.h) * 0.06);
+rect = { minx: bb.minx - padCm, miny: bb.miny - padCm, maxx: bb.maxx + padCm, maxy: bb.maxy + padCm };
+padL = 60; padR = 60; padT = 46 + topReserve; padB = 56;
+} else if (mode === 'fabric') {
+if (!state.fabric) { toast('Ткань отключена — включите её на панели инструментов', 'warn'); return; }
+if (state.fabricMode !== 'piece') {
+/* рулон не ограничен по высоте — показываем по ширине */
+if (fitFabricWidthCore()) { fitMode = 'fabric'; draw(); }
+return;
 }
+rect = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricH };
+padL = 36; padR = 36; padT = 32 + topReserve; padB = 48;
+} else if (mode === 'fabW') {
+if (!state.fabric) toast('Ткань отключена — вписываю по границам деталей', 'warn');
+if (fitFabricWidthCore()) { fitMode = 'fabW'; draw(); }
+return;
+} else if (mode === 'fabH') {
+if (!state.fabric || state.fabricMode !== 'piece') {
+toast('Высота ткани определена только в режиме «Кусок»', 'warn');
+return;
+}
+const pT = 32 + topReserve, pB = 48;
+const availH = Math.max(20, H - pT - pB);
+const s = clamp(availH / Math.max(1, state.fabricH), 0.05, 120);
+state.view.scale = s;
+state.view.ox = W / 2 - (state.fabricW / 2) * s;
+state.view.oy = pT;
+fitMode = 'fabH'; draw();
+return;
+}
+computeFit(state.view, rect, W, H, { padL: padL, padR: padR, padT: padT, padB: padB, align: 'center', minS: 0.05, maxS: 120 });
+fitMode = mode;
+draw();
+}
+function fitView() { applyFit('fit'); }
+function fitFabricWidth() { applyFit('fabW'); }
 function focusOrigin() {
 ensureSize();
 state.view.ox = 44;
 state.view.oy = 48 + toolbarPopReserve();
 fitMode = 'free';
 draw();
+}
+/* состояние меню отображения: активный пункт, доступность, подпись кнопки */
+function updateFitMenuState() {
+const panel = $('#fitPanel');
+if (panel && !panel.classList.contains('hidden')) {
+panel.querySelectorAll('.fit-item').forEach(function (b) {
+const m = b.dataset.fit;
+b.classList.toggle('active', fitMode === m);
+if (m === 'selected') b.disabled = !byId(state.selId);
+else if (m === 'fabH') b.disabled = !(state.fabric && state.fabricMode === 'piece');
+else if (m === 'fabric') b.disabled = !state.fabric;
+else if (m === 'fabW') b.disabled = !state.fabric && !state.pieces.length;
+});
+}
+const main = $('#btnFitMenu');
+if (main) main.textContent = FIT_SHORT[fitMode] || '⤢ Вписать';
 }
 /* ============================ выбор ============================ */
 function worldToLocal(p, wx, wy) {
@@ -3347,8 +3549,18 @@ if (d < bestD) { bestD = d; best = p; }
 }
 return best;
 }
-function selectPiece(id) { state.selId = id; buildQuickPanel(byId(id)); draw(); }
-function deselect() { state.selId = null; const q = $('#quick'); if (q) q.classList.add('hidden'); draw(); }
+function selectPiece(id) {
+state.selId = id;
+buildQuickPanel(byId(id));
+/* режим «показать выбранную деталь» следует за выделением */
+if (fitMode === 'selected') applyFit('selected'); else draw();
+}
+function deselect() {
+state.selId = null;
+const q = $('#quick'); if (q) q.classList.add('hidden');
+if (fitMode === 'selected') fitMode = 'fit';
+draw();
+}
 /* ============================ детали ============================ */
 function makePiece(type, over, name, color, custom) {
 const def = SHAPES[type]; if (!def) return null;
@@ -3404,6 +3616,7 @@ if (i < 0) return;
 state.pieces.splice(i, 1);
 if (state.selId === id) { state.selId = null; const q = $('#quick'); if (q) q.classList.add('hidden'); }
 if (editorId === id) closeEditor(true);
+if (!state.selId && fitMode === 'selected') fitMode = 'fit';
 markDirty(); draw(); scheduleRepack();
 toast('🗑 Деталь удалена', 'warn');
 }
@@ -4102,7 +4315,7 @@ buildLibrary();
 }
 function exportTemplates() {
 if (!userTemplates.length) { toast('Нет шаблонов для экспорта', 'warn'); return; }
-const data = { app: 'NEONCUT', kind: 'templates', version: '1.19.0', exportedAt: Date.now(), templates: userTemplates };
+const data = { app: 'NEONCUT', kind: 'templates', version: '1.20.0', exportedAt: Date.now(), templates: userTemplates };
 const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
 const a = document.createElement('a');
 a.href = URL.createObjectURL(blob);
@@ -4691,7 +4904,7 @@ fitView(); updateStorageChip(); toast('✦ Новый проект');
 $('#btnNew').onclick = function () { if (state.dirty && !confirm('Несохранённые изменения будут потеряны. Продолжить?')) return; newProject(); };
 $('#btnSave').onclick = function () { saveProject(true); };
 $('#btnExport').onclick = function () {
-const blob = new Blob([JSON.stringify(Object.assign({ app: 'NEONCUT', version: '1.19.0' }, projectData()), null, 2)], { type: 'application/json' });
+const blob = new Blob([JSON.stringify(Object.assign({ app: 'NEONCUT', version: '1.20.0' }, projectData()), null, 2)], { type: 'application/json' });
 const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
 a.download = (state.project.name || 'project') + '.neoncut.json'; a.click();
 setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
@@ -4720,9 +4933,26 @@ saveTimer = setTimeout(function () { saveProject(false); }, 1200);
 /* ============================ тулбар ============================ */
 $('#btnZoomIn').onclick = function () { ensureSize(); zoomAt(W / 2, H / 2, 1.3); };
 $('#btnZoomOut').onclick = function () { ensureSize(); zoomAt(W / 2, H / 2, 1 / 1.3); };
-$('#btnFit').onclick = function () { fitView(); };
-$('#btnFitW').onclick = function () { fitFabricWidth(); };
-$('#btnFitPieces').onclick = function () { fitAllPieces(); };
+/* ---------- меню вариантов отображения ---------- */
+$('#btnFitMenu').onclick = function () { requestFit('fit'); };
+$('#btnFitDrop').addEventListener('click', function (e) {
+e.stopPropagation();
+const wasHidden = $('#fitPanel').classList.contains('hidden');
+closeAllPanels();
+if (wasHidden) {
+updateFitMenuState();
+$('#fitPanel').classList.remove('hidden');
+}
+refitIfAuto();
+});
+document.querySelectorAll('#fitPanel .fit-item').forEach(function (b) {
+b.addEventListener('click', function () {
+$('#fitPanel').classList.add('hidden');
+const m = b.dataset.fit;
+if (m === 'origin') { focusOrigin(); return; }
+requestFit(m);
+});
+});
 $('#btnOrigin').onclick = focusOrigin;
 $('#btn100').onclick = function () {
 fitMode = 'free'; ensureSize();
@@ -4766,11 +4996,13 @@ function closeAllPanels() {
 $('#gridPanel').classList.add('hidden');
 $('#nestPanel').classList.add('hidden');
 $('#viewPanel').classList.add('hidden');
+$('#fitPanel').classList.add('hidden');
 }
 function anyPanelOpen() {
 return !$('#gridPanel').classList.contains('hidden') ||
 !$('#nestPanel').classList.contains('hidden') ||
-!$('#viewPanel').classList.contains('hidden');
+!$('#viewPanel').classList.contains('hidden') ||
+!$('#fitPanel').classList.contains('hidden');
 }
 $('#btnGridOpts').addEventListener('click', function (e) {
 e.stopPropagation();
@@ -4798,6 +5030,7 @@ const wasOpen = anyPanelOpen();
 if (!e.target.closest('#gridPanel') && !e.target.closest('#btnGridOpts')) $('#gridPanel').classList.add('hidden');
 if (!e.target.closest('#nestPanel') && !e.target.closest('#btnNestOpts')) $('#nestPanel').classList.add('hidden');
 if (!e.target.closest('#viewPanel') && !e.target.closest('#btnViewOpts')) $('#viewPanel').classList.add('hidden');
+if (!e.target.closest('#fitPanel') && !e.target.closest('#fitWrap')) $('#fitPanel').classList.add('hidden');
 if (wasOpen && !anyPanelOpen()) refitIfAuto();
 });
 $('#gMajor').addEventListener('change', function (e) {
@@ -5094,6 +5327,7 @@ else if (projOv.classList.contains('open')) projOv.classList.remove('open');
 else if (!$('#gridPanel').classList.contains('hidden')) { $('#gridPanel').classList.add('hidden'); refitIfAuto(); }
 else if (!$('#nestPanel').classList.contains('hidden')) { $('#nestPanel').classList.add('hidden'); refitIfAuto(); }
 else if (!$('#viewPanel').classList.contains('hidden')) { $('#viewPanel').classList.add('hidden'); refitIfAuto(); }
+else if (!$('#fitPanel').classList.contains('hidden')) { $('#fitPanel').classList.add('hidden'); refitIfAuto(); }
 else deselect();
 return;
 }
@@ -5102,11 +5336,14 @@ if (modalOpen) return;
 if (e.key === 'Delete' || e.key === 'Backspace') { if (state.selId) removePiece(state.selId); return; }
 if (e.key === '+' || e.key === '=') zoomAt(W / 2, H / 2, 1.25);
 if (e.key === '-') zoomAt(W / 2, H / 2, 0.8);
-if (e.key === '0') fitView();
-if (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') fitView();
-if (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'ц') fitFabricWidth();
-/* A / Ф — показать все детали холста в рабочей области */
-if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'ф') { fitAllPieces(); return; }
+/* варианты отображения (запрашиваются с учётом состояния раскладки) */
+if (e.key === '0') requestFit('fit');
+if (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') requestFit('fit');
+if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'ф') requestFit('pieces');
+if (e.key.toLowerCase() === 's' || e.key.toLowerCase() === 'ы') requestFit('selected');
+if (e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'е') requestFit('fabric');
+if (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'ц') requestFit('fabW');
+if (e.key.toLowerCase() === 'h' || e.key.toLowerCase() === 'р') requestFit('fabH');
 if (e.key === 'Home') { focusOrigin(); return; }
 /* [ ] — поворот физической линейки, если она включена и деталь не выделена */
 if ((e.key === ']' || e.key === '[') && state.physRuler.on && !state.selId) {
@@ -5136,6 +5373,7 @@ syncNestUI();
 syncFabricUI();
 syncViewUI();
 updateUIChip();
+updateFitMenuState();
 ensureSize(); draw();
 const ok = await IDB.open();
 IDB.ok = ok;
