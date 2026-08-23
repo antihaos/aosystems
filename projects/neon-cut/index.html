@@ -105,6 +105,17 @@ aside{
 .lib-item canvas{width:62px; height:48px; flex:none; background:rgba(5,6,14,.65); border-radius:8px; border:1px solid var(--line)}
 .lib-item b{display:block; font:600 12.5px var(--font-ui)}
 .lib-item small{color:var(--dim); font:400 10px var(--font-mono)}
+.row-actions{margin-left:auto;display:flex;gap:4px}
+.mini-btn{
+  background:transparent;border:1px solid var(--line2);color:var(--dim);
+  border-radius:6px;padding:4px 6px;font-size:11px;cursor:pointer;line-height:1;
+}
+.mini-btn:hover{color:#fff;border-color:var(--cyan)}
+.mini-btn.del:hover{border-color:var(--red);color:#ffb3c1}
+.tpl-bar{display:flex;gap:6px;margin-bottom:8px}
+.tpl-bar .tbtn{padding:5px 9px;font-size:11px}
+.tpl-empty{color:var(--dim);font:400 10.5px/1.5 var(--font-ui);padding:2px 2px 8px}
+
 .preset-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
 .preset{
   border:1px solid var(--line); border-radius:13px; padding:12px 10px; text-align:center;
@@ -119,6 +130,11 @@ aside{
   opacity:0; transition:.16s; text-shadow:0 0 8px var(--mag);
 }
 .preset:hover .p-add{opacity:1}
+.preset .p-del{
+  position:absolute; top:5px; left:6px; background:none; border:none; color:var(--dim);
+  cursor:pointer; font-size:12px; padding:2px 4px; opacity:.65;
+}
+.preset .p-del:hover{color:#ffb3c1;text-shadow:0 0 8px rgba(255,77,109,.8);opacity:1}
 
 #btnSide{
   display:none; position:fixed; left:12px; bottom:44px; z-index:46;
@@ -214,6 +230,7 @@ aside{
 }
 .overlay.open{opacity:1; pointer-events:auto}
 #contourOverlay{z-index:70}
+#nameOverlay{z-index:80}
 .modal{
   width:min(580px,94vw); max-height:88vh; overflow:auto;
   background:linear-gradient(180deg,#101327,#0b0d1d);
@@ -222,6 +239,7 @@ aside{
   transform:translateY(10px) scale(.97); transition:.22s;
 }
 .modal.wide{width:min(800px,96vw)}
+.modal.small{width:min(380px,92vw)}
 .overlay.open .modal{transform:none}
 .m-head{display:flex; align-items:center; padding:15px 18px; border-bottom:1px solid var(--line)}
 .m-head b{flex:1; font:700 15px var(--font-ui); color:#aef6ff; text-shadow:0 0 10px rgba(0,229,255,.55)}
@@ -253,7 +271,6 @@ aside{
 }
 #mCustomNote button:hover{box-shadow:0 0 10px rgba(255,194,77,.4)}
 
-/* редактор контура */
 .c-bar{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
 .c-status{font:500 11px var(--font-mono); color:var(--dim); margin-left:auto}
 #cWrap{
@@ -332,8 +349,8 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.5.0</span></div>
-      <div class="desc">Студия швейных выкроек: автораскладка с припусками, кусок/рулон ткани и визуальный редактор контуров.</div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.6.1</span></div>
+      <div class="desc">Студия швейных выкроек: редактор контуров, свои шаблоны и пресеты, автораскладка с припусками.</div>
     </div>
   </div>
   <div class="head-actions">
@@ -356,7 +373,7 @@ aside{
       <div class="cat-title">Готовые комплекты</div>
       <div class="preset-grid" id="presetsList"></div>
     </div>
-    <div class="side-hint">Клик — выделение · двойной клик — параметры · ✎ — графический редактор контура детали</div>
+    <div class="side-hint">✎ — редактор контура · «💾 В шаблон» сохранит контур как шаблон · ★ — пресет из деталей на холсте</div>
   </aside>
 
   <section id="stage">
@@ -460,8 +477,9 @@ aside{
 
 <button id="btnSide" title="Детали и пресеты">◈</button>
 <div id="sideDim"></div>
+<input type="file" id="tplFile" accept=".json,application/json" class="hidden">
 
-<!-- Модалка параметров детали -->
+<!-- Параметры детали -->
 <div class="overlay" id="editorOverlay">
   <div class="modal">
     <div class="m-head"><b id="mTitle">Параметры детали</b><button id="mClose">✕</button></div>
@@ -526,10 +544,11 @@ aside{
         <button class="tbtn" id="cUndo" title="Отменить (Ctrl+Z)">↶ Отменить</button>
         <button class="tbtn" id="cDelPt" title="Удалить выбранную точку (Del)">⌫ Точку</button>
         <button class="tbtn" id="cReset" title="Вернуть параметрическую форму">↺ Сбросить форму</button>
+        <button class="tbtn" id="cSaveTpl" title="Сохранить контур как пользовательский шаблон детали">💾 В шаблон</button>
         <span class="c-status" id="cStatus"></span>
       </div>
       <div id="cWrap"><canvas id="cCv"></canvas></div>
-      <div class="c-hint">Перетаскивайте точки мышью/пальцем · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · Ctrl+Z — отменить · Enter — применить · Esc — отмена</div>
+      <div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · Ctrl+Z — отменить · Enter — применить · Esc — отмена</div>
     </div>
     <div class="m-foot">
       <span class="spacer"></span>
@@ -539,7 +558,19 @@ aside{
   </div>
 </div>
 
-<!-- Модалка проектов -->
+<!-- Ввод имени (шаблон / пресет) -->
+<div class="overlay" id="nameOverlay">
+  <div class="modal small">
+    <div class="m-head"><b id="nameTitle">Название</b><button id="nameClose">✕</button></div>
+    <div class="m-body"><input type="text" id="nameInput" maxlength="60"></div>
+    <div class="m-foot">
+      <button class="btn" id="nameCancel">Отмена</button>
+      <button class="btn primary" id="nameOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Проекты -->
 <div class="overlay" id="projOverlay">
   <div class="modal">
     <div class="m-head"><b>📁 Сохранённые проекты</b><button id="projClose">✕</button></div>
@@ -553,15 +584,6 @@ aside{
 
 <script>
 'use strict';
-/* =====================================================================
-   МОДЕЛЬ:
-   • МИР — сантиметры ткани, ось Y вниз.
-   • Деталь: параметрическая форма ИЛИ пользовательский контур
-     (p.custom — массив точек [x,y] в локальных координатах).
-     Если custom задан — он имеет приоритет над параметрами формы.
-   • ✎ — визуальный редактор контура (модальное окно).
-   ===================================================================== */
-
 function $(s){return document.querySelector(s);}
 function toast(msg,kind){
   const box=$('#toastBox'); if(!box)return;
@@ -576,6 +598,11 @@ function toast(msg,kind){
 window.addEventListener('error',function(e){
   toast('Ошибка: '+(e.message||'неизвестная'),'err');
 });
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
 
 const uid=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -801,7 +828,7 @@ function cmdsBounds(cmds){
       cx=x1;cy=y1;}
     else if(c[0]==='Z'){cx=sx;cy=sy;}
   }
-  return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
+  return {minx:minx,miny:miny,maxx:maxx,maxy:maxy,w:maxx-minx,h:maxy-miny};
 }
 function polyToCmds(pts){
   const cmds=[['M',pts[0][0],pts[0][1]]];
@@ -817,7 +844,6 @@ function pointInPoly(pts,x,y){
   }
   return inside;
 }
-/* Сборка геометрии: пользовательский контур имеет приоритет */
 function rebuildPiece(p){
   let cmds;
   if(p.custom&&p.custom.length>=3){
@@ -844,7 +870,7 @@ function pieceAABB(p){
     if(c[0]<minx)minx=c[0]; if(c[0]>maxx)maxx=c[0];
     if(c[1]<miny)miny=c[1]; if(c[1]>maxy)maxy=c[1];
   }
-  return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
+  return {minx:minx,miny:miny,maxx:maxx,maxy:maxy,w:maxx-minx,h:maxy-miny};
 }
 function pieceEffAABB(p){
   const bb=pieceAABB(p);
@@ -895,7 +921,9 @@ const state={
 };
 let editorId=null, saving=false, lastSavedAt=null, storageFailedNoted=false, saveTimer=null, repackTimer=null;
 let fitMode='fit';
-let ctrEd=null; // сессия редактора контура
+let ctrEd=null;
+let userTemplates=[];
+let userPresets=[];
 
 const cv=$('#cv'), ctx=cv.getContext('2d');
 const wrap=$('#canvasWrap');
@@ -904,7 +932,6 @@ const mousePos={x:0,y:0,on:false};
 
 const byId=id=>state.pieces.find(p=>p.id===id)||null;
 
-/* -------- координаты -------- */
 function clientToCanvas(cx,cy){
   const r=cv.getBoundingClientRect();
   const kx=r.width>0?W/r.width:1;
@@ -1209,7 +1236,7 @@ function contentBounds(){
     if(bb.minx<minx)minx=bb.minx; if(bb.maxx>maxx)maxx=bb.maxx;
     if(bb.miny<miny)miny=bb.miny; if(bb.maxy>maxy)maxy=bb.maxy;
   }
-  return {minx,miny,maxx,maxy};
+  return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
 function fitBounds(){
   const b=contentBounds();
@@ -1223,7 +1250,7 @@ function fitBounds(){
     miny=Math.min(miny,0);
     maxy=Math.max(maxy,state.fabricMode==='piece'?state.fabricH:miny+60);
   }
-  return {minx,miny,maxx,maxy};
+  return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
 function fitView(){
   ensureSize();
@@ -1303,8 +1330,7 @@ function makePiece(type,over,name,color,custom){
     custom:(custom&&custom.length>=3)?custom.map(pt=>[+pt[0],+pt[1]]):null};
   rebuildPiece(p); return p;
 }
-function addPieceOfType(type){
-  const p=makePiece(type); if(!p)return;
+function addPieceToCanvas(p){
   state.pieces.push(p);
   if(autoPackOn()){ packAll(); fitView(); }
   else{
@@ -1316,7 +1342,19 @@ function addPieceOfType(type){
     draw();
   }
   selectPiece(p.id); markDirty();
+}
+function addPieceOfType(type){
+  const p=makePiece(type); if(!p)return;
+  addPieceToCanvas(p);
   toast(`◈ Добавлено: ${SHAPES[type].name}`);
+  closeSide();
+}
+function addTemplatePiece(tpl){
+  const p=makePiece(tpl.baseType||'rect',{},tpl.name,tpl.color||PALETTE[0],tpl.pts);
+  if(!p)return;
+  p.seam=tpl.seam!=null?clamp(+tpl.seam,0,5):1;
+  addPieceToCanvas(p);
+  toast('◈ Добавлено из шаблона: '+tpl.name);
   closeSide();
 }
 function duplicatePiece(p){
@@ -1377,7 +1415,8 @@ function positionQuick(){
   const qw=q.offsetWidth||220, qh=q.offsetHeight||110;
   const lx=clamp(s.x-qw/2,6,W-qw-6);
   let ly=s.y-qh-14; if(ly<6)ly=s.y+20;
-  q.style.left=lx+'px'; q.style.top=Math.min(ly,H-qh-6)+'px';
+  q.style.left=lx+'px';
+  q.style.top=Math.min(ly,H-qh-6)+'px';
 }
 $('#qClose').onclick=function(){deselect();};
 $('#qRot').onclick=function(){const p=byId(state.selId);if(p){p.rot=(p.rot+90)%360;markDirty();draw();scheduleRepack();}};
@@ -1506,7 +1545,7 @@ function cPtsBounds(){
     if(pt[0]<minx)minx=pt[0]; if(pt[0]>maxx)maxx=pt[0];
     if(pt[1]<miny)miny=pt[1]; if(pt[1]>maxy)maxy=pt[1];
   }
-  return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
+  return {minx:minx,miny:miny,maxx:maxx,maxy:maxy,w:maxx-minx,h:maxy-miny};
 }
 function cFit(){
   if(!ctrEd)return;
@@ -1577,6 +1616,24 @@ function cResetShape(){
   cFit();
   toast('↺ Параметрическая форма восстановлена');
 }
+function cSaveTemplate(){
+  if(!ctrEd)return;
+  openNameModal('Название шаблона детали','Новый шаблон',function(name){
+    const p=byId(ctrEd.pieceId);
+    const tpl={
+      id:uid(), name:name,
+      pts:ctrEd.pts.map(pt=>[Math.round(pt[0]*100)/100,Math.round(pt[1]*100)/100]),
+      baseType:p?p.type:'rect',
+      seam:p?clamp(+p.seam||1,0,5):1,
+      color:p?p.color:PALETTE[0],
+      createdAt:Date.now()
+    };
+    userTemplates.unshift(tpl);
+    persistTemplate(tpl);
+    buildLibrary();
+    toast('💾 Шаблон «'+name+'» сохранён'+(IDB.ok?'':' (только в памяти)'));
+  });
+}
 function cGrid(){
   const v=ctrEd.view;
   const steps=[0.5,1,2,5,10,20,50,100];
@@ -1604,7 +1661,6 @@ function cDraw(){
   cCtx.setTransform(cdpr,0,0,cdpr,0,0);
   cCtx.clearRect(0,0,cW,cH);
   cGrid();
-  // контур
   cCtx.beginPath();
   ctrEd.pts.forEach((pt,i)=>{
     const sp=cW2S(pt[0],pt[1]);
@@ -1616,7 +1672,6 @@ function cDraw(){
   cCtx.fillStyle=hexA(col,.12); cCtx.fill();
   cCtx.lineWidth=1.8; cCtx.strokeStyle=col; cCtx.stroke();
   cCtx.shadowBlur=0;
-  // точки
   ctrEd.pts.forEach((pt,i)=>{
     const sp=cW2S(pt[0],pt[1]);
     const active=(i===ctrEd.drag||i===ctrEd.sel);
@@ -1734,13 +1789,166 @@ $('#cFit').onclick=function(){cFit();};
 $('#cUndo').onclick=function(){cUndoFn();};
 $('#cDelPt').onclick=function(){if(ctrEd&&ctrEd.sel>=0)cDeletePoint(ctrEd.sel);};
 $('#cReset').onclick=function(){cResetShape();};
+$('#cSaveTpl').onclick=function(){cSaveTemplate();};
 contourOverlay.addEventListener('click',function(e){if(e.target===contourOverlay)closeContour(false);});
 
-/* ============================ пресеты ============================ */
+/* ============================ универсальный ввод имени ============================ */
+let nameCb=null;
+function openNameModal(title,val,cb){
+  $('#nameTitle').textContent=title;
+  $('#nameInput').value=val||'';
+  nameCb=cb;
+  $('#nameOverlay').classList.add('open');
+  setTimeout(function(){const i=$('#nameInput');i.focus();i.select();},60);
+}
+function closeNameModal(ok){
+  $('#nameOverlay').classList.remove('open');
+  const cb=nameCb; nameCb=null;
+  if(ok&&cb){const v=$('#nameInput').value.trim(); if(v)cb(v);}
+}
+$('#nameOk').onclick=function(){closeNameModal(true);};
+$('#nameCancel').onclick=function(){closeNameModal(false);};
+$('#nameClose').onclick=function(){closeNameModal(false);};
+$('#nameOverlay').addEventListener('click',function(e){if(e.target===$('#nameOverlay'))closeNameModal(false);});
+$('#nameInput').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){e.preventDefault();closeNameModal(true);}
+  if(e.key==='Escape'){e.preventDefault();closeNameModal(false);}
+});
+
+/* ============================ шаблоны: панель, экспорт/импорт ============================ */
+function tplBounds(tpl){
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  for(const pt of tpl.pts){
+    if(pt[0]<minx)minx=pt[0]; if(pt[0]>maxx)maxx=pt[0];
+    if(pt[1]<miny)miny=pt[1]; if(pt[1]>maxy)maxy=pt[1];
+  }
+  return {minx:minx,miny:miny,w:maxx-minx,h:maxy-miny};
+}
+function tplThumb(tpl){
+  const c=document.createElement('canvas'); c.width=124; c.height=96;
+  const g=c.getContext('2d');
+  const bb=tplBounds(tpl);
+  const pad=12;
+  const s=Math.min((c.width-2*pad)/Math.max(bb.w,0.1),(c.height-2*pad)/Math.max(bb.h,0.1));
+  const col=tpl.color||'#00e5ff';
+  g.translate(c.width/2-(bb.minx+bb.w/2)*s, c.height/2-(bb.miny+bb.h/2)*s);
+  g.scale(s,s);
+  g.beginPath();
+  tpl.pts.forEach((pt,i)=>{if(i===0)g.moveTo(pt[0],pt[1]);else g.lineTo(pt[0],pt[1]);});
+  g.closePath();
+  g.shadowColor=col; g.shadowBlur=7;
+  g.fillStyle=hexA(col,.10); g.fill();
+  g.lineWidth=1.5/s; g.strokeStyle=col; g.stroke();
+  return c;
+}
+function persistTemplate(tpl){
+  if(IDB.ok){ IDB.putT(tpl).catch(function(){failStorage();}); }
+}
+async function deleteTemplate(id){
+  const tpl=userTemplates.find(t=>t.id===id); if(!tpl)return;
+  if(!confirm(`Удалить шаблон «${tpl.name}»?`))return;
+  userTemplates=userTemplates.filter(t=>t.id!==id);
+  if(IDB.ok){ try{await IDB.delT(id);}catch(e){failStorage();} }
+  buildLibrary();
+  toast('🗑 Шаблон удалён','warn');
+}
+function renameTemplate(id){
+  const tpl=userTemplates.find(t=>t.id===id); if(!tpl)return;
+  openNameModal('Новое название шаблона',tpl.name,function(name){
+    tpl.name=name;
+    persistTemplate(tpl);
+    buildLibrary();
+  });
+}
+function exportTemplates(){
+  if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
+  const data={app:'NEONCUT',kind:'templates',version:'1.6.1',exportedAt:Date.now(),templates:userTemplates};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='neoncut-templates.json';
+  a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
+  toast('⇩ Шаблоны выгружены: '+userTemplates.length+' шт.');
+}
+async function importTemplatesFile(file){
+  try{
+    const data=JSON.parse(await file.text());
+    const list=Array.isArray(data)?data:(data.templates||[]);
+    let n=0;
+    for(const t of list){
+      if(!t||!Array.isArray(t.pts))continue;
+      const pts=t.pts
+        .map(pt=>[+pt[0],+pt[1]])
+        .filter(pt=>isFinite(pt[0])&&isFinite(pt[1]));
+      if(pts.length<3)continue;
+      const tpl={
+        id:(typeof t.id==='string'&&t.id)?t.id:uid(),
+        name:String(t.name||'Шаблон').slice(0,60),
+        pts:pts,
+        baseType:SHAPES[t.baseType]?t.baseType:'rect',
+        seam:isFinite(+t.seam)?clamp(+t.seam,0,5):1,
+        color:(typeof t.color==='string'&&/^#[0-9a-fA-F]{6}$/.test(t.color))?t.color:PALETTE[0],
+        createdAt:+t.createdAt||Date.now()
+      };
+      const ex=userTemplates.findIndex(x=>x.id===tpl.id);
+      if(ex>=0)userTemplates[ex]=tpl; else userTemplates.push(tpl);
+      persistTemplate(tpl);
+      n++;
+    }
+    buildLibrary();
+    if(n)toast('⇧ Импортировано шаблонов: '+n);
+    else toast('⇧ Подходящих шаблонов не найдено','warn');
+  }catch(err){
+    toast('Ошибка импорта: '+err.message,'err');
+  }
+}
+
+/* ============================ пресеты: пользовательские ============================ */
+function findPreset(id){
+  return PRESETS.find(function(x){return x.id===id;})||userPresets.find(function(x){return x.id===id;});
+}
+function persistPreset(pr){
+  if(IDB.ok){ IDB.putP(pr).catch(function(){failStorage();}); }
+}
+function openPresetSave(){
+  if(!state.pieces.length){toast('Холст пуст — нечего сохранять в пресет','warn');return;}
+  openNameModal('Название нового пресета','Мой комплект',function(name){
+    const pr={
+      id:uid(), name:name, custom:true, icon:'★', createdAt:Date.now(),
+      pieces:state.pieces.map(function(p){
+        return {t:p.type,n:p.name,c:p.color,p:Object.assign({},p.params),
+          custom:p.custom?p.custom.map(pt=>[pt[0],pt[1]]):null,
+          seam:p.seam,mirror:!!p.mirror};
+      })
+    };
+    userPresets.unshift(pr);
+    persistPreset(pr);
+    buildPresetsUI();
+    toast('★ Пресет «'+name+'» сохранён'+(IDB.ok?'':' (только в памяти)'));
+  });
+}
+async function deleteUserPreset(id){
+  const pr=userPresets.find(function(x){return x.id===id;}); if(!pr)return;
+  if(!confirm(`Удалить пресет «${pr.name}»?`))return;
+  userPresets=userPresets.filter(function(x){return x.id!==id;});
+  if(IDB.ok){ try{await IDB.delP(id);}catch(e){failStorage();} }
+  buildPresetsUI();
+  toast('🗑 Пресет удалён','warn');
+}
+
+/* ============================ пресеты: добавление ============================ */
 function addPreset(id,opts){
   opts=opts||{};
-  const pr=PRESETS.find(function(x){return x.id===id;}); if(!pr)return;
-  const items=pr.pieces.map(function(cfg){return makePiece(cfg.t,cfg.p,cfg.n,cfg.c);}).filter(Boolean);
+  const pr=findPreset(id); if(!pr)return;
+  const items=pr.pieces.map(function(cfg){
+    const p=makePiece(cfg.t,cfg.p,cfg.n,cfg.c,cfg.custom);
+    if(p){
+      if(cfg.seam!=null&&isFinite(+cfg.seam))p.seam=clamp(+cfg.seam,0,5);
+      if(cfg.mirror)p.mirror=true;
+    }
+    return p;
+  }).filter(Boolean);
   if(!items.length)return;
   if(autoPackOn()){
     for(const p of items)state.pieces.push(p);
@@ -1758,7 +1966,7 @@ function addPreset(id,opts){
     }
   }
   markDirty(); fitView();
-  if(!opts.silent)toast(`${pr.icon} ${pr.name}: добавлено ${items.length} дет.`);
+  if(!opts.silent)toast(`${pr.icon||'★'} ${pr.name}: добавлено ${items.length} дет.`);
   closeSide();
 }
 
@@ -1777,6 +1985,46 @@ function makeThumb(type){
 }
 function buildLibrary(){
   const list=$('#partsList'); list.innerHTML='';
+
+  const h0=document.createElement('div'); h0.className='cat-title'; h0.textContent='Мои шаблоны';
+  list.appendChild(h0);
+  const bar=document.createElement('div'); bar.className='tpl-bar';
+  const bExp=document.createElement('button'); bExp.className='tbtn'; bExp.textContent='⇩ Экспорт';
+  bExp.title='Выгрузить пользовательские шаблоны в файл';
+  bExp.onclick=exportTemplates;
+  const bImp=document.createElement('button'); bImp.className='tbtn'; bImp.textContent='⇧ Импорт';
+  bImp.title='Загрузить пользовательские шаблоны из файла';
+  bImp.onclick=function(){$('#tplFile').click();};
+  bar.appendChild(bExp); bar.appendChild(bImp);
+  list.appendChild(bar);
+  if(!userTemplates.length){
+    const em=document.createElement('div'); em.className='tpl-empty';
+    em.textContent='Нет шаблонов. Откройте редактор контура (✎) и нажмите «💾 В шаблон».';
+    list.appendChild(em);
+  }else{
+    const grid=document.createElement('div'); grid.className='lib-grid';
+    for(const tpl of userTemplates){
+      const item=document.createElement('div'); item.className='lib-item';
+      item.title='Добавить на холст: '+tpl.name;
+      item.appendChild(tplThumb(tpl));
+      const info=document.createElement('div');
+      const nm=document.createElement('b'); nm.textContent=tpl.name;
+      const bb=tplBounds(tpl);
+      const sz=document.createElement('small'); sz.textContent=fmt(bb.w)+'×'+fmt(bb.h)+' см';
+      info.appendChild(nm); info.appendChild(sz);
+      const act=document.createElement('div'); act.className='row-actions';
+      const bRen=document.createElement('button'); bRen.className='mini-btn'; bRen.textContent='✎'; bRen.title='Переименовать шаблон';
+      bRen.onclick=function(e){e.stopPropagation();renameTemplate(tpl.id);};
+      const bDel=document.createElement('button'); bDel.className='mini-btn del'; bDel.textContent='🗑'; bDel.title='Удалить шаблон';
+      bDel.onclick=function(e){e.stopPropagation();deleteTemplate(tpl.id);};
+      act.appendChild(bRen); act.appendChild(bDel);
+      item.appendChild(info); item.appendChild(act);
+      item.onclick=function(){addTemplatePiece(tpl);};
+      grid.appendChild(item);
+    }
+    list.appendChild(grid);
+  }
+
   const cats=['Базовые','Верх','Низ','Детали'];
   for(const cat of cats){
     const types=Object.keys(SHAPES).filter(function(t){return SHAPES[t].cat===cat;});
@@ -1805,16 +2053,51 @@ function buildPresetsUI(){
   const list=$('#presetsList'); list.innerHTML='';
   for(const pr of PRESETS){
     const card=document.createElement('div'); card.className='preset';
-    card.innerHTML=`<div class="p-ico">${pr.icon}</div><b>${pr.name}</b><small>${pr.pieces.length} дет.</small><span class="p-add">＋</span>`;
+    card.innerHTML=`<div class="p-ico">${pr.icon}</div><b>${escapeHtml(pr.name)}</b><small>${pr.pieces.length} дет.</small><span class="p-add">＋</span>`;
     card.title='Добавить комплект «'+pr.name+'» на холст';
     card.onclick=function(){addPreset(pr.id);};
     list.appendChild(card);
   }
+  const panel=$('#presetsPanel');
+  const old=$('#userPresetsSec'); if(old)old.remove();
+  const sec=document.createElement('div'); sec.id='userPresetsSec';
+  const h=document.createElement('div'); h.className='cat-title'; h.textContent='Мои пресеты';
+  sec.appendChild(h);
+  const saveBtn=document.createElement('button');
+  saveBtn.className='btn wide-btn';
+  saveBtn.textContent='★ Сохранить холст как пресет';
+  saveBtn.title='Создать пользовательский пресет из деталей на холсте';
+  saveBtn.onclick=openPresetSave;
+  sec.appendChild(saveBtn);
+  if(userPresets.length){
+    const grid=document.createElement('div'); grid.className='preset-grid'; grid.style.marginTop='8px';
+    for(const up of userPresets){
+      const card=document.createElement('div'); card.className='preset';
+      card.innerHTML=`<div class="p-ico">★</div><b>${escapeHtml(up.name)}</b><small>${up.pieces.length} дет.</small><span class="p-add">＋</span>`;
+      card.title='Добавить пресет «'+up.name+'» на холст';
+      const del=document.createElement('button'); del.className='p-del'; del.textContent='✕'; del.title='Удалить пресет';
+      del.onclick=function(e){e.stopPropagation();deleteUserPreset(up.id);};
+      card.appendChild(del);
+      card.onclick=function(){addPreset(up.id);};
+      grid.appendChild(card);
+    }
+    sec.appendChild(grid);
+  }else{
+    const em=document.createElement('div'); em.className='tpl-empty'; em.style.marginTop='8px';
+    em.textContent='Сохраните детали текущего холста как собственный пресет.';
+    sec.appendChild(em);
+  }
+  panel.appendChild(sec);
 }
 $('#tabParts').onclick=function(){ $('#tabParts').classList.add('active');$('#tabPresets').classList.remove('active');
   $('#partsPanel').classList.remove('hidden');$('#presetsPanel').classList.add('hidden'); };
 $('#tabPresets').onclick=function(){ $('#tabPresets').classList.add('active');$('#tabParts').classList.remove('active');
   $('#presetsPanel').classList.remove('hidden');$('#partsPanel').classList.add('hidden'); };
+$('#tplFile').addEventListener('change',function(e){
+  const f=e.target.files&&e.target.files[0];
+  if(f)importTemplatesFile(f);
+  e.target.value='';
+});
 
 function openSide(){ $('#sidebar').classList.add('open'); $('#sideDim').classList.add('show'); }
 function closeSide(){ if(window.innerWidth<=860){ $('#sidebar').classList.remove('open'); $('#sideDim').classList.remove('show'); } }
@@ -1828,11 +2111,15 @@ const IDB={
     const self=this;
     return new Promise(function(res){
       if(!('indexedDB' in window)){res(false);return;}
-      let req; try{req=indexedDB.open('neoncut-db',1);}catch(e){res(false);return;}
+      let req; try{req=indexedDB.open('neoncut-db',2);}catch(e){res(false);return;}
       let done=false;
       const finish=function(v){if(!done){done=true;res(v);}};
-      req.onupgradeneeded=function(e){const d=e.target.result;
-        if(!d.objectStoreNames.contains('projects'))d.createObjectStore('projects',{keyPath:'id'});};
+      req.onupgradeneeded=function(e){
+        const d=e.target.result;
+        if(!d.objectStoreNames.contains('projects'))d.createObjectStore('projects',{keyPath:'id'});
+        if(!d.objectStoreNames.contains('templates'))d.createObjectStore('templates',{keyPath:'id'});
+        if(!d.objectStoreNames.contains('presets'))d.createObjectStore('presets',{keyPath:'id'});
+      };
       req.onsuccess=function(e){self.db=e.target.result;self.ok=true;finish(true);};
       req.onerror=function(){finish(false);};
       req.onblocked=function(){finish(false);};
@@ -1840,10 +2127,17 @@ const IDB={
     });
   },
   store:function(mode){return this.db.transaction('projects',mode).objectStore('projects');},
+  storeN:function(name,mode){return this.db.transaction(name,mode).objectStore(name);},
   rq:function(r){return new Promise(function(res,rej){r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};});},
   save:function(p){return this.rq(this.store('readwrite').put(p));},
   all:function(){return this.rq(this.store('readonly').getAll());},
-  del:function(id){return this.rq(this.store('readwrite').delete(id));}
+  del:function(id){return this.rq(this.store('readwrite').delete(id));},
+  allT:function(){return this.rq(this.storeN('templates','readonly').getAll());},
+  putT:function(t){return this.rq(this.storeN('templates','readwrite').put(t));},
+  delT:function(id){return this.rq(this.storeN('templates','readwrite').delete(id));},
+  allP:function(){return this.rq(this.storeN('presets','readonly').getAll());},
+  putP:function(t){return this.rq(this.storeN('presets','readwrite').put(t));},
+  delP:function(id){return this.rq(this.storeN('presets','readwrite').delete(id));}
 };
 function failStorage(){
   IDB.ok=false;
@@ -1979,7 +2273,7 @@ function newProject(){
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.5.0'},projectData()),null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.6.1'},projectData()),null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -2214,8 +2508,14 @@ cv.addEventListener('pointercancel',endPointer);
 /* ============================ клавиатура ============================ */
 window.addEventListener('keydown',function(e){
   const inInput=e.target.matches('input,textarea,select');
+  if($('#nameOverlay').classList.contains('open')){
+    if(!inInput){
+      if(e.key==='Escape')closeNameModal(false);
+      else if(e.key==='Enter')closeNameModal(true);
+    }
+    return;
+  }
   if(e.code==='Space'&&!inInput&&!ctrEd){spaceDown=true;e.preventDefault();}
-  // режим редактора контура
   if(ctrEd){
     if(inInput)return;
     if(e.key==='Escape'){e.preventDefault();closeContour(false);return;}
@@ -2265,6 +2565,13 @@ window.addEventListener('keyup',function(e){if(e.code==='Space')spaceDown=false;
     const ok=await IDB.open();
     IDB.ok=ok;
     if(!ok)failStorage(); else updateStorageChip();
+    if(ok){
+      try{userTemplates=(await IDB.allT())||[];}catch(e){userTemplates=[];}
+      try{userPresets=(await IDB.allP())||[];}catch(e){userPresets=[];}
+      userTemplates.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+      userPresets.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
+      buildLibrary(); buildPresetsUI();
+    }
     addPreset('tshirt',{silent:true});
     state.dirty=false; updateStorageChip();
     fitView();
