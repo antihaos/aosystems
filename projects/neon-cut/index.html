@@ -347,7 +347,7 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.9.0</span></div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.9.1</span></div>
       <div class="desc">Студия швейных выкроек: точный нестинг с произвольными углами поворота, припусками и мультистартом.</div>
     </div>
   </div>
@@ -1035,6 +1035,12 @@ if(document.fonts&&document.fonts.ready){
    Повороты: 0/90/180/270; опционально +45°; произвольный шаг угла. */
 const NEST_CELL=0.5;
 
+/* включена ли автоматическая пересборка раскладки */
+function autoPackOn(){
+  const el=$('#chkAuto');
+  return !!(el&&el.checked);
+}
+
 function transformPoly(poly,angleDeg,mirror){
   let pts=poly;
   if(mirror){
@@ -1137,7 +1143,6 @@ function refineSpotFor(grid,cols,rows,mk,cx,cy,mc){
   }
   return best;
 }
-/* Поиск позиции для конкретной маски (с ограничением по gy для уточнения) */
 function findSpotForMk(grid,cols,rows,mk,mc,gyCap){
   const gyMax=(gyCap!=null)?Math.min(rows-mc,gyCap+1):(rows-mc);
   const gxMax=cols-mc;
@@ -1158,7 +1163,6 @@ function findSpotForMk(grid,cols,rows,mk,mc,gyCap){
   }
   return null;
 }
-/* Поиск позиции среди набора углов (нижний-левый, ранний выходод) */
 function findSpotAny(grid,cols,rows,it,angles,mc,seamPlusFn){
   const gyMax=rows-mc,gxMax=cols-mc;
   for(let gy=mc;gy<gyMax;gy+=4){
@@ -1183,7 +1187,6 @@ function findSpotAny(grid,cols,rows,it,angles,mc,seamPlusFn){
   }
   return null;
 }
-/* Уточнение раскладки малыми поворотами вокруг текущего угла */
 function refineRotations(placed,grid,cols,rows,mc,seamPlusFn){
   const deltas=[-6,-4,-2,-1,1,2,4,6];
   for(let pass=0;pass<2;pass++){
@@ -2228,7 +2231,7 @@ function renameTemplate(id){
 }
 function exportTemplates(){
   if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-  const data={app:'NEONCUT',kind:'templates',version:'1.9.0',exportedAt:Date.now(),templates:userTemplates};
+  const data={app:'NEONCUT',kind:'templates',version:'1.9.1',exportedAt:Date.now(),templates:userTemplates};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -2670,7 +2673,7 @@ function newProject(){
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.9.0'},projectData()),null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.9.1'},projectData()),null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
