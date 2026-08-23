@@ -147,11 +147,12 @@ aside{
 .tbtn input[type=checkbox]{margin:0}
 #fabWrap,#gridWrap{cursor:default}
 #fabWrap input[type=number]{width:58px; padding:4px 6px; font-size:12px}
-#gridWrap select{
+#fabWrap select,#gridWrap select{
   width:auto; background:#0a0d1f; border:1px solid var(--line2); color:var(--txt);
   border-radius:6px; padding:3px 5px; font:500 11px var(--font-mono); outline:none; cursor:pointer;
 }
-#gridWrap select:focus{border-color:var(--cyan)}
+#fabWrap select:focus,#gridWrap select:focus{border-color:var(--cyan)}
+#fabHWrap{display:inline-flex; align-items:center; gap:6px}
 .gear{
   background:transparent; border:none; color:var(--dim); cursor:pointer;
   font-size:13px; padding:2px 4px; border-radius:6px; line-height:1;
@@ -307,8 +308,8 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.3.3</span></div>
-      <div class="desc">Студия швейных выкроек: детали, размеры и оптимальная автораскладка в области ткани.</div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.4.1</span></div>
+      <div class="desc">Студия швейных выкроек: рулон или кусок ткани, автораскладка с учётом припусков и рекомендация длины.</div>
     </div>
   </div>
   <div class="head-actions">
@@ -331,7 +332,7 @@ aside{
       <div class="cat-title">Готовые комплекты</div>
       <div class="preset-grid" id="presetsList"></div>
     </div>
-    <div class="side-hint">Клик — выделение и основные параметры · двойной клик — все параметры · перетаскивание с привязкой к ткани</div>
+    <div class="side-hint">Клик — выделение и основные параметры · двойной клик — все параметры · раскладка учитывает припуск каждой детали</div>
   </aside>
 
   <section id="stage">
@@ -366,8 +367,14 @@ aside{
       </div>
       <div class="tbtn toggle active" id="fabWrap" title="Область ткани для раскроя">
         <label><input type="checkbox" id="fabChk" checked> Ткань</label>
-        <input type="number" id="fabW" value="150" min="60" max="400" step="5" title="Ширина ткани, см">
+        <select id="fabMode" title="Тип ткани">
+          <option value="roll" selected>Рулон</option>
+          <option value="piece">Кусок</option>
+        </select>
+        <input type="number" id="fabW" value="150" min="30" max="400" step="5" title="Ширина ткани, см">
+        <span id="fabHWrap" class="hidden">×<input type="number" id="fabH" value="200" min="30" max="1000" step="5" title="Высота куска ткани, см"></span>
         <span style="color:var(--dim)">см</span>
+        <button class="gear" id="btnFabLen" title="Рекомендуемая длина ткани при заданной ширине">📏</button>
       </div>
       <span class="tsep"></span>
       <button class="tbtn danger-t" id="btnClear" title="Очистить холст">✕ Очистить</button>
@@ -492,11 +499,13 @@ aside{
 <script>
 'use strict';
 /* =====================================================================
-   МОДЕЛЬ КООРДИНАТ:
-   • МИР — сантиметры ткани, ось Y вниз, (0,0) — левая кромка ткани.
-   • ХОЛСТ — внутренние CSS-пиксели области W×H (из фактического rect).
-   • screen = world*scale + offset;  world = (screen - offset)/scale.
-   • Клик — выделение + краткие параметры; двойной клик — окно параметров.
+   МОДЕЛЬ:
+   • МИР — сантиметры ткани, ось Y вниз, (0,0) — левая верхняя кромка.
+   • Ткань: «Рулон» (ширина, длина бесконечна) или «Кусок» (Ш×В).
+   • Раскладка использует ГАБАРИТ ДЕТАЛИ ВМЕСТЕ С ПРИПУСКОМ:
+     эфф. ширина = контур + 2×припуск, эфф. высота = контур + 2×припуск;
+     припуск у каждой детали свой и учитывается индивидуально.
+   • Не поместившиеся в кусок детали компактно укладываются под куском.
    ===================================================================== */
 
 function $(s){return document.querySelector(s);}
@@ -507,10 +516,9 @@ function toast(msg,kind){
   t.textContent=msg;
   box.appendChild(t);
   requestAnimationFrame(function(){t.classList.add('show');});
-  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3000);
+  setTimeout(function(){t.classList.remove('show');setTimeout(function(){t.remove();},300);},3200);
   while(box.children.length>3){box.firstChild.remove();}
 }
-/* видимые сообщения об ошибках — чтобы скрытые сбои не «молчали» */
 window.addEventListener('error',function(e){
   toast('Ошибка: '+(e.message||'неизвестная'),'err');
 });
@@ -772,6 +780,13 @@ function pieceAABB(p){
   }
   return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
 }
+/* Габарит детали ВМЕСТЕ с припуском (припуск выступает наружу от контура) */
+function pieceEffAABB(p){
+  const bb=pieceAABB(p);
+  const s=Math.max(0,+p.seam||0);
+  return {minx:bb.minx-s,miny:bb.miny-s,maxx:bb.maxx+s,maxy:bb.maxy+s,
+          w:bb.w+2*s,h:bb.h+2*s};
+}
 function placeAt(p,X,Y,rot){
   p.rot=((rot%360)+360)%360;
   const bb=pieceAABB(p);
@@ -779,17 +794,27 @@ function placeAt(p,X,Y,rot){
 }
 function clampToFabric(p){
   if(!state.fabric)return;
-  const bb=pieceAABB(p);
+  const bb=pieceEffAABB(p);
   if(bb.w<=state.fabricW+0.001){
     if(bb.minx<0)p.x-=bb.minx;
     else if(bb.maxx>state.fabricW)p.x-=bb.maxx-state.fabricW;
   }else{
     p.x-=bb.minx;
   }
+  if(state.fabricMode==='piece'){
+    if(bb.h<=state.fabricH+0.001){
+      if(bb.miny<0)p.y-=bb.miny;
+      else if(bb.maxy>state.fabricH)p.y-=bb.maxy-state.fabricH;
+    }else{
+      p.y-=bb.miny;
+    }
+  }
 }
 function outOfFabric(p){
   if(!state.fabric)return false;
-  for(const c of pieceCorners(p)) if(c[0]<-0.01||c[0]>state.fabricW+0.01) return true;
+  const bb=pieceEffAABB(p);
+  if(bb.minx<-0.01||bb.maxx>state.fabricW+0.01)return true;
+  if(state.fabricMode==='piece'&&(bb.miny<-0.01||bb.maxy>state.fabricH+0.01))return true;
   return false;
 }
 
@@ -797,7 +822,8 @@ function outOfFabric(p){
 const state={
   pieces:[], selId:null, hoverId:null,
   view:{scale:BASE,ox:80,oy:60},
-  grid:true, fabric:true, fabricW:150,
+  grid:true,
+  fabric:true, fabricMode:'roll', fabricW:150, fabricH:200,
   gridOpts:{minor:'auto', majorEvery:5, alpha:100, axes:true, snap:true, snapStep:0.5},
   project:{id:null,name:'Новый проект'},
   dirty:false,
@@ -828,7 +854,6 @@ function w2s(wx,wy){
   return {x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy};
 }
 
-/* фактический размер видимой области */
 function ensureSize(){
   const r=wrap.getBoundingClientRect();
   const nw=Math.max(50,r.width), nh=Math.max(50,r.height);
@@ -864,26 +889,77 @@ function scheduleRepack(){
   clearTimeout(repackTimer);
   repackTimer=setTimeout(function(){packAll();fitView();markDirty();},400);
 }
+/* Раскладка: каждая деталь занимает ячейку
+   (контур + 2×её личный припуск). Между ячейками — технологический
+   зазор 1 см, отступ от кромки — 2 см. */
 function packAll(){
   if(!state.pieces.length)return;
-  const margin=2, gap=2;
-  const X0=margin, X1=(state.fabric?state.fabricW:150)-margin;
-  const items=state.pieces.map(p=>{rebuildPiece(p);return {p:p,b:p._bounds};});
-  items.sort((a,b)=>(b.b.w*b.b.h)-(a.b.w*a.b.h));
-  let x=X0, y=margin, shelfH=0;
+  const margin=2,gap=1;
+  const X0=margin,X1=(state.fabric?state.fabricW:150)-margin;
+  const pieceMode=state.fabric&&state.fabricMode==='piece';
+  const Y1=pieceMode?state.fabricH-margin:Infinity;
+  const items=state.pieces.map(function(p){
+    rebuildPiece(p);
+    const s=Math.max(0,+p.seam||0);
+    return {p:p, seam:s, ew:p._bounds.w+2*s, eh:p._bounds.h+2*s};
+  });
+  items.sort((a,b)=>(b.ew*b.eh)-(a.ew*a.eh));
+  const overflow=[];
+  let x=X0,y=margin,shelfH=0;
   for(const it of items){
-    const o0={w:it.b.w,h:it.b.h,rot:0};
-    const o90={w:it.b.h,h:it.b.w,rot:90};
-    const fits=o=>o.w<=X1-X0+0.001;
-    let o=o0;
-    if(!fits(o0)&&fits(o90))o=o90;
-    else if(fits(o0)&&fits(o90)&&o90.h<o0.h)o=o90;
-    if(x+o.w>X1+0.001&&x>X0){ y+=shelfH+gap; x=X0; shelfH=0; }
-    placeAt(it.p,x,y,o.rot);
-    x+=o.w+gap; shelfH=Math.max(shelfH,o.h);
+    const cands=[
+      {w:it.ew,h:it.eh,rot:0},
+      {w:it.eh,h:it.ew,rot:90}
+    ].filter(o=>o.w<=X1-X0+0.001).sort((a,b)=>a.h-b.h);
+    let placed=false;
+    for(const o of cands){
+      let xx=x,yy=y,sh=shelfH;
+      if(xx+o.w>X1+0.001&&xx>X0){yy=y+shelfH+gap;xx=X0;sh=0;}
+      if(yy+o.h>Y1+0.001)continue; // не проходит по высоте — другой поворот
+      placeAt(it.p,xx+it.seam,yy+it.seam,o.rot); // контур внутри ячейки с учётом припуска
+      x=xx+o.w+gap;y=yy;shelfH=Math.max(sh,o.h);
+      placed=true;break;
+    }
+    if(!placed)overflow.push(it);
   }
-  if(state.fabric) for(const p of state.pieces) clampToFabric(p);
+  const overIds=new Set(overflow.map(it=>it.p.id));
+  if(overflow.length){
+    let ox=X0, oy=pieceMode?state.fabricH+8:margin, oShelf=0;
+    for(const it of overflow){
+      const c0={w:it.ew,h:it.eh,rot:0}, c90={w:it.eh,h:it.ew,rot:90};
+      const fitsW=q=>q.w<=X1-X0+0.001;
+      let o=c0;
+      if(!fitsW(c0)&&fitsW(c90))o=c90;
+      else if(fitsW(c0)&&fitsW(c90)&&c90.h<c0.h)o=c90;
+      if(ox+o.w>X1+0.001&&ox>X0){oy+=oShelf+gap;ox=X0;oShelf=0;}
+      placeAt(it.p,ox+it.seam,oy+it.seam,o.rot);
+      ox+=o.w+gap;oShelf=Math.max(oShelf,o.h);
+    }
+    if(pieceMode)toast(`⚠ Не поместились в кусок: ${overflow.length} дет. — размещены под тканью`,'warn');
+  }
+  if(state.fabric) for(const p of state.pieces) if(!overIds.has(p.id)) clampToFabric(p);
   draw();
+}
+/* Оценка необходимой длины ткани при заданной ширине (с припусками) */
+function estimateLength(widthCm){
+  const margin=2,gap=1;
+  const X0=margin,X1=Math.max(margin+1,widthCm-margin);
+  const items=state.pieces.map(function(p){
+    const s=Math.max(0,+p.seam||0);
+    return {w:p._bounds.w+2*s, h:p._bounds.h+2*s};
+  });
+  items.sort((a,b)=>(b.w*b.h)-(a.w*a.h));
+  let x=X0,y=margin,shelfH=0;
+  for(const it of items){
+    const c0={w:it.w,h:it.h},c90={w:it.h,h:it.w};
+    const fitsW=q=>q.w<=X1-X0+0.001;
+    let o=c0;
+    if(!fitsW(c0)&&fitsW(c90))o=c90;
+    else if(fitsW(c0)&&fitsW(c90)&&c90.h<c0.h)o=c90;
+    if(x+o.w>X1+0.001&&x>X0){y+=shelfH+gap;x=X0;shelfH=0;}
+    x+=o.w+gap;shelfH=Math.max(shelfH,o.h);
+  }
+  return y+shelfH+margin;
 }
 
 /* ============================ рисование ============================ */
@@ -957,15 +1033,27 @@ function drawGrid(){
 function drawFabric(){
   if(!state.fabric)return;
   const x0=w2s(0,0).x, x1=w2s(state.fabricW,0).x;
-  ctx.fillStyle='rgba(139,92,255,.05)';
-  ctx.fillRect(x0,0,x1-x0,H);
-  ctx.save();
-  ctx.strokeStyle='rgba(139,92,255,.55)';ctx.lineWidth=1.2;ctx.setLineDash([9,7]);
-  ctx.beginPath();ctx.moveTo(x0,0);ctx.lineTo(x0,H);ctx.moveTo(x1,0);ctx.lineTo(x1,H);ctx.stroke();
-  ctx.restore();
-  ctx.fillStyle='rgba(180,150,255,.85)';
   ctx.font='600 11px "JetBrains Mono",monospace';ctx.textAlign='center';
-  ctx.fillText(`ткань · ${fmt(state.fabricW)} см`,(x0+x1)/2,18);
+  if(state.fabricMode==='piece'){
+    const y0=w2s(0,0).y, y1=w2s(0,state.fabricH).y;
+    ctx.fillStyle='rgba(139,92,255,.07)';
+    ctx.fillRect(x0,y0,x1-x0,y1-y0);
+    ctx.save();
+    ctx.strokeStyle='rgba(139,92,255,.65)';ctx.lineWidth=1.4;ctx.setLineDash([9,7]);
+    ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+    ctx.restore();
+    ctx.fillStyle='rgba(190,160,255,.9)';
+    ctx.fillText(`ткань (кусок) · ${fmt(state.fabricW)}×${fmt(state.fabricH)} см`,(x0+x1)/2,y0+16);
+  }else{
+    ctx.fillStyle='rgba(139,92,255,.05)';
+    ctx.fillRect(x0,0,x1-x0,H);
+    ctx.save();
+    ctx.strokeStyle='rgba(139,92,255,.55)';ctx.lineWidth=1.2;ctx.setLineDash([9,7]);
+    ctx.beginPath();ctx.moveTo(x0,0);ctx.lineTo(x0,H);ctx.moveTo(x1,0);ctx.lineTo(x1,H);ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle='rgba(180,150,255,.85)';
+    ctx.fillText(`ткань (рулон) · ${fmt(state.fabricW)} см`,(x0+x1)/2,18);
+  }
 }
 function drawPiece(p){
   const b=p._bounds, rad=p.rot*Math.PI/180, sv=state.view.scale;
@@ -1013,7 +1101,8 @@ function drawLabel(p){
   ctx.shadowBlur=0;
   ctx.fillStyle='rgba(200,210,255,.6)';
   ctx.font='10px "JetBrains Mono",monospace';
-  ctx.fillText(`${fmt(b.w)}×${fmt(b.h)} см`,s.x,s.y+11);
+  const seamTxt=(p.seam>0?` · припуск ${fmt(p.seam)}`:'');
+  ctx.fillText(`${fmt(b.w)}×${fmt(b.h)} см${seamTxt}`,s.x,s.y+11);
 }
 function drawWarning(p){
   const pts=pieceCorners(p).map(c=>w2s(c[0],c[1]));
@@ -1051,7 +1140,7 @@ function contentBounds(){
   if(!state.pieces.length)return null;
   let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
   for(const p of state.pieces){
-    const bb=pieceAABB(p);
+    const bb=pieceEffAABB(p);
     if(bb.minx<minx)minx=bb.minx; if(bb.maxx>maxx)maxx=bb.maxx;
     if(bb.miny<miny)miny=bb.miny; if(bb.maxy>maxy)maxy=bb.maxy;
   }
@@ -1062,18 +1151,15 @@ function fitBounds(){
   const fw=state.fabricW;
   let minx,miny,maxx,maxy;
   if(b){minx=b.minx;miny=b.miny;maxx=b.maxx;maxy=b.maxy;}
-  else{minx=0;miny=0;maxx=state.fabric?fw:150;maxy=state.fabric?Math.max(80,fw*0.6):100;}
+  else{minx=0;miny=0;maxx=state.fabric?fw:150;maxy=state.fabric?(state.fabricMode==='piece'?state.fabricH:Math.max(80,fw*0.6)):100;}
   if(state.fabric){
     minx=Math.min(minx,0);
     maxx=Math.max(maxx,fw);
     miny=Math.min(miny,0);
-    maxy=Math.max(maxy,miny+60);
+    maxy=Math.max(maxy,state.fabricMode==='piece'?state.fabricH:miny+60);
   }
   return {minx,miny,maxx,maxy};
 }
-/* Вписать область (ткань+детали) в экран: масштаб по меньшему из отношений,
-   центрирование с полями; формула проверена:
-   экранная_ширина_контента = bw*s ≤ availW, центр = W/2 */
 function fitView(){
   ensureSize();
   if(W<80||H<80)return;
@@ -1090,7 +1176,6 @@ function fitView(){
   fitMode='fit';
   draw();
 }
-/* Вписать всю ширину ткани по горизонтали; верх — начало раскроя (y=0) */
 function fitFabricWidth(){
   ensureSize();
   if(W<80||H<80)return;
@@ -1308,7 +1393,9 @@ document.querySelectorAll('[data-rot]').forEach(function(b){
 });
 $('#mSeam').addEventListener('input',function(e){const p=byId(editorId);if(!p)return;
   const v=parseFloat(e.target.value); if(!isFinite(v))return;
-  p.seam=clamp(v,0,5); markDirty(); draw();});
+  p.seam=clamp(v,0,5); markDirty(); draw();
+  scheduleRepack(); // припуск влияет на раскладку
+});
 $('#mMirror').addEventListener('change',function(e){const p=byId(editorId);if(p){p.mirror=e.target.checked;markDirty();draw();}});
 $('#mDup').onclick=function(){const p=byId(editorId);if(p){const np=duplicatePiece(p);editorId=np.id;openEditor(np);}};
 $('#mDel').onclick=function(){if(editorId)removePiece(editorId);};
@@ -1327,9 +1414,10 @@ function addPreset(id,opts){
     const maxW=(state.fabric?state.fabricW:150)-4, gap=4;
     let x=2, y=cb?cb.maxy+8:2, rowH=0;
     for(const p of items){
-      const b=p._bounds;
-      if(x>2&&x+b.w>maxW){x=2;y+=rowH+gap;rowH=0;}
-      placeAt(p,x,y,0); x+=b.w+gap; rowH=Math.max(rowH,b.h);
+      const s=Math.max(0,+p.seam||0);
+      const bw=p._bounds.w+2*s, bh=p._bounds.h+2*s;
+      if(x>2&&x+bw>maxW){x=2;y+=rowH+gap;rowH=0;}
+      placeAt(p,x+s,y+s,0); x+=bw+gap; rowH=Math.max(rowH,bh);
       state.pieces.push(p);
     }
   }
@@ -1443,7 +1531,16 @@ function projectData(){
     name:(state.project.name||'Без названия').trim()||'Без названия',
     updatedAt:Date.now(),
     gridOpts:Object.assign({},state.gridOpts),
+    fabric:{on:state.fabric,mode:state.fabricMode,w:state.fabricW,h:state.fabricH},
     pieces:state.pieces.map(serializePiece)};
+}
+function syncFabricUI(){
+  const fc=$('#fabChk'); if(fc)fc.checked=state.fabric;
+  $('#fabWrap').classList.toggle('active',state.fabric);
+  const fm=$('#fabMode'); if(fm)fm.value=state.fabricMode;
+  const fw=$('#fabW'); if(fw)fw.value=String(state.fabricW);
+  const fh=$('#fabH'); if(fh)fh.value=String(state.fabricH);
+  const hw=$('#fabHWrap'); if(hw)hw.classList.toggle('hidden',state.fabricMode!=='piece');
 }
 function applyGridOpts(o){
   if(!o||typeof o!=='object')return;
@@ -1516,6 +1613,13 @@ function loadProject(data){
     state.pieces.push(p);
   }
   applyGridOpts(data.gridOpts);
+  if(data.fabric){
+    state.fabric=!!data.fabric.on;
+    state.fabricMode=data.fabric.mode==='piece'?'piece':'roll';
+    state.fabricW=clamp(+data.fabric.w||150,30,400);
+    state.fabricH=clamp(+data.fabric.h||200,30,1000);
+    syncFabricUI();
+  }
   state.selId=null; $('#quick').classList.add('hidden');
   state.dirty=false; lastSavedAt=new Date(data.updatedAt||Date.now());
   projOv.classList.remove('open');
@@ -1537,7 +1641,7 @@ function newProject(){
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.3.3'},projectData()),null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.4.1'},projectData()),null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -1563,7 +1667,7 @@ $('#btn100').onclick=function(){
 $('#btnPack').onclick=function(){
   if(!state.pieces.length){toast('Холст пуст — нечего раскладывать','warn');return;}
   packAll(); fitView(); markDirty();
-  toast('⚡ Автораскладка выполнена');
+  toast('⚡ Автораскладка выполнена (с учётом припусков)');
 };
 $('#chkAuto').addEventListener('change',function(e){
   $('#autoWrap').classList.toggle('active',e.target.checked);
@@ -1572,20 +1676,11 @@ $('#chkAuto').addEventListener('change',function(e){
 $('#chkSnap').addEventListener('change',function(e){
   $('#snapWrap').classList.toggle('active',e.target.checked);
 });
-$('#fabChk').addEventListener('change',function(e){
-  state.fabric=e.target.checked;
-  $('#fabWrap').classList.toggle('active',state.fabric);
-  draw(); scheduleRepack();
-});
-$('#fabW').addEventListener('input',function(e){
-  const v=parseFloat(e.target.value);
-  if(isFinite(v)){state.fabricW=clamp(v,60,400);draw();scheduleRepack();}
-});
 $('#btnClear').onclick=function(){ if(!state.pieces.length)return;
   if(!confirm('Очистить холст? Все детали будут удалены.'))return;
   state.pieces=[]; deselect(); markDirty(); draw(); };
 
-/* ---- сетка: галочка + шаг + ⚙ (единообразно с «Ткань») ---- */
+/* ---- сетка ---- */
 $('#gridChk').addEventListener('change',function(e){
   state.grid=e.target.checked;
   $('#gridWrap').classList.toggle('active',state.grid);
@@ -1621,6 +1716,42 @@ $('#gSnap').addEventListener('change',function(e){state.gridOpts.snap=e.target.c
 $('#gSnapStep').addEventListener('input',function(e){
   const v=parseFloat(e.target.value);
   if(isFinite(v))state.gridOpts.snapStep=clamp(v,0.1,10);
+});
+
+/* ---- ткань ---- */
+$('#fabChk').addEventListener('change',function(e){
+  state.fabric=e.target.checked;
+  $('#fabWrap').classList.toggle('active',state.fabric);
+  draw(); scheduleRepack();
+});
+$('#fabMode').addEventListener('change',function(e){
+  state.fabricMode=e.target.value==='piece'?'piece':'roll';
+  $('#fabHWrap').classList.toggle('hidden',state.fabricMode!=='piece');
+  draw(); scheduleRepack();
+});
+$('#fabW').addEventListener('input',function(e){
+  const v=parseFloat(e.target.value);
+  if(isFinite(v)){state.fabricW=clamp(v,30,400);draw();scheduleRepack();}
+});
+$('#fabH').addEventListener('input',function(e){
+  const v=parseFloat(e.target.value);
+  if(isFinite(v)){state.fabricH=clamp(v,30,1000);draw();scheduleRepack();}
+});
+$('#btnFabLen').addEventListener('click',function(e){
+  e.stopPropagation();
+  if(!state.pieces.length){toast('Холст пуст — нечего рассчитывать','warn');return;}
+  state.pieces.forEach(rebuildPiece);
+  const need=estimateLength(state.fabricW);
+  const rec=Math.ceil(need/5)*5;
+  const m=(rec/100).toFixed(2).replace('.',',');
+  if(state.fabric&&state.fabricMode==='piece'){
+    if(rec<=state.fabricH)
+      toast(`📏 Детали помещаются в кусок ${fmt(state.fabricW)}×${fmt(state.fabricH)} см (нужно ≈ ${rec} см по длине)`);
+    else
+      toast(`📏 Нужная длина при ширине ${fmt(state.fabricW)} см: ${rec} см (≈ ${m} м) — кусок высотой ${fmt(state.fabricH)} см мал`,'warn');
+  }else{
+    toast(`📏 Рекомендуемая длина при ширине ${fmt(state.fabricW)} см: ${rec} см (≈ ${m} м)`);
+  }
 });
 
 /* ============================ указатель ============================ */
@@ -1725,7 +1856,6 @@ function endPointer(e){
   if(gesture){
     if(gesture.type==='pan'&&gesture.empty&&!gesture.moved)deselect();
     if(gesture.type==='drag'&&!gesture.moved){
-      // клик: только выделение; повторный клик <350 мс — окно параметров
       const p=byId(gesture.id);
       if(p){
         const now=performance.now();
@@ -1782,6 +1912,7 @@ window.addEventListener('keyup',function(e){if(e.code==='Space')spaceDown=false;
   try{
     buildLibrary(); buildPresetsUI();
     applyGridOpts(state.gridOpts);
+    syncFabricUI();
     ensureSize(); draw();
     const ok=await IDB.open();
     IDB.ok=ok;
