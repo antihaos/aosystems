@@ -213,6 +213,7 @@ aside{
   opacity:0; pointer-events:none; transition:.2s;
 }
 .overlay.open{opacity:1; pointer-events:auto}
+#contourOverlay{z-index:70}
 .modal{
   width:min(580px,94vw); max-height:88vh; overflow:auto;
   background:linear-gradient(180deg,#101327,#0b0d1d);
@@ -220,6 +221,7 @@ aside{
   box-shadow:0 0 0 1px rgba(0,229,255,.1), 0 0 40px rgba(0,229,255,.14), 0 30px 90px rgba(0,0,0,.65);
   transform:translateY(10px) scale(.97); transition:.22s;
 }
+.modal.wide{width:min(800px,96vw)}
 .overlay.open .modal{transform:none}
 .m-head{display:flex; align-items:center; padding:15px 18px; border-bottom:1px solid var(--line)}
 .m-head b{flex:1; font:700 15px var(--font-ui); color:#aef6ff; text-shadow:0 0 10px rgba(0,229,255,.55)}
@@ -240,6 +242,27 @@ aside{
 .swatch.active{border-color:#fff; box-shadow:0 0 12px currentColor}
 .m-foot{display:flex; gap:8px; padding:14px 18px; border-top:1px solid var(--line); justify-content:flex-end; flex-wrap:wrap}
 .m-foot .spacer{flex:1}
+#mCustomNote{
+  display:flex; align-items:center; gap:8px; padding:8px 10px;
+  border:1px solid rgba(255,194,77,.55); border-radius:9px;
+  background:rgba(255,194,77,.08); color:#ffe08a; font:600 11.5px var(--font-ui);
+}
+#mCustomNote button{
+  margin-left:auto; background:#241d05; border:1px solid rgba(255,194,77,.6); color:#ffe9b3;
+  border-radius:7px; padding:5px 9px; font:600 11px var(--font-ui); cursor:pointer; white-space:nowrap;
+}
+#mCustomNote button:hover{box-shadow:0 0 10px rgba(255,194,77,.4)}
+
+/* редактор контура */
+.c-bar{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
+.c-status{font:500 11px var(--font-mono); color:var(--dim); margin-left:auto}
+#cWrap{
+  position:relative; height:min(52vh,460px); min-height:260px;
+  border:1px solid var(--line2); border-radius:12px; overflow:hidden; background:#070912;
+}
+#cCv{position:absolute; inset:0; touch-action:none; cursor:crosshair}
+.c-hint{font:400 10.5px/1.5 var(--font-mono); color:var(--dim)}
+
 .proj{
   display:flex; align-items:center; gap:10px; padding:10px 12px; margin-bottom:8px;
   border:1px solid var(--line); border-radius:11px; background:rgba(16,19,40,.55);
@@ -291,6 +314,7 @@ aside{
   #quick{min-width:186px}
   #fabWrap input[type=number]{width:52px}
   #gridPanel{right:8px; width:232px}
+  #cWrap{height:min(44vh,420px)}
 }
 </style>
 </head>
@@ -308,8 +332,8 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.4.1</span></div>
-      <div class="desc">Студия швейных выкроек: рулон или кусок ткани, автораскладка с учётом припусков и рекомендация длины.</div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.5.0</span></div>
+      <div class="desc">Студия швейных выкроек: автораскладка с припусками, кусок/рулон ткани и визуальный редактор контуров.</div>
     </div>
   </div>
   <div class="head-actions">
@@ -332,7 +356,7 @@ aside{
       <div class="cat-title">Готовые комплекты</div>
       <div class="preset-grid" id="presetsList"></div>
     </div>
-    <div class="side-hint">Клик — выделение и основные параметры · двойной клик — все параметры · раскладка учитывает припуск каждой детали</div>
+    <div class="side-hint">Клик — выделение · двойной клик — параметры · ✎ — графический редактор контура детали</div>
   </aside>
 
   <section id="stage">
@@ -415,7 +439,8 @@ aside{
         <div class="q-fields" id="qFields"></div>
         <div class="q-actions">
           <button class="tbtn" id="qRot" title="Повернуть на 90°">⟳90°</button>
-          <button class="tbtn" id="qEdit" title="Все параметры">⚙</button>
+          <button class="tbtn" id="qEdit" title="Параметры">⚙</button>
+          <button class="tbtn" id="qCtr" title="Редактор контура">✎</button>
           <button class="tbtn" id="qDup" title="Дублировать">⧉</button>
           <button class="tbtn" id="qDel" title="Удалить">🗑</button>
         </div>
@@ -436,10 +461,15 @@ aside{
 <button id="btnSide" title="Детали и пресеты">◈</button>
 <div id="sideDim"></div>
 
+<!-- Модалка параметров детали -->
 <div class="overlay" id="editorOverlay">
   <div class="modal">
     <div class="m-head"><b id="mTitle">Параметры детали</b><button id="mClose">✕</button></div>
     <div class="m-body">
+      <div id="mCustomNote" class="hidden">
+        <span>✎ Контур изменён вручную — параметры формы не применяются</span>
+        <button id="mResetCtr">↺ Восстановить форму</button>
+      </div>
       <div class="m-row"><label>Название детали</label><input type="text" id="mName"></div>
 
       <div id="mQuickSec">
@@ -477,6 +507,7 @@ aside{
       </div>
     </div>
     <div class="m-foot">
+      <button class="btn" id="mContour" title="Визуальный редактор контура">✎ Контур</button>
       <button class="btn" id="mDup">⧉ Дублировать</button>
       <button class="btn danger" id="mDel">🗑 Удалить</button>
       <span class="spacer"></span>
@@ -485,6 +516,30 @@ aside{
   </div>
 </div>
 
+<!-- Графический редактор контура -->
+<div class="overlay" id="contourOverlay">
+  <div class="modal wide">
+    <div class="m-head"><b id="cTitle">Редактор контура</b><button id="cClose">✕</button></div>
+    <div class="m-body">
+      <div class="c-bar">
+        <button class="tbtn" id="cFit" title="Вписать контур в окно">⤢ Вписать</button>
+        <button class="tbtn" id="cUndo" title="Отменить (Ctrl+Z)">↶ Отменить</button>
+        <button class="tbtn" id="cDelPt" title="Удалить выбранную точку (Del)">⌫ Точку</button>
+        <button class="tbtn" id="cReset" title="Вернуть параметрическую форму">↺ Сбросить форму</button>
+        <span class="c-status" id="cStatus"></span>
+      </div>
+      <div id="cWrap"><canvas id="cCv"></canvas></div>
+      <div class="c-hint">Перетаскивайте точки мышью/пальцем · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · Ctrl+Z — отменить · Enter — применить · Esc — отмена</div>
+    </div>
+    <div class="m-foot">
+      <span class="spacer"></span>
+      <button class="btn" id="cCancel">Отмена</button>
+      <button class="btn primary" id="cApply">✓ Применить контур</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка проектов -->
 <div class="overlay" id="projOverlay">
   <div class="modal">
     <div class="m-head"><b>📁 Сохранённые проекты</b><button id="projClose">✕</button></div>
@@ -500,12 +555,11 @@ aside{
 'use strict';
 /* =====================================================================
    МОДЕЛЬ:
-   • МИР — сантиметры ткани, ось Y вниз, (0,0) — левая верхняя кромка.
-   • Ткань: «Рулон» (ширина, длина бесконечна) или «Кусок» (Ш×В).
-   • Раскладка использует ГАБАРИТ ДЕТАЛИ ВМЕСТЕ С ПРИПУСКОМ:
-     эфф. ширина = контур + 2×припуск, эфф. высота = контур + 2×припуск;
-     припуск у каждой детали свой и учитывается индивидуально.
-   • Не поместившиеся в кусок детали компактно укладываются под куском.
+   • МИР — сантиметры ткани, ось Y вниз.
+   • Деталь: параметрическая форма ИЛИ пользовательский контур
+     (p.custom — массив точек [x,y] в локальных координатах).
+     Если custom задан — он имеет приоритет над параметрами формы.
+   • ✎ — визуальный редактор контура (модальное окно).
    ===================================================================== */
 
 function $(s){return document.querySelector(s);}
@@ -749,6 +803,12 @@ function cmdsBounds(cmds){
   }
   return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
 }
+function polyToCmds(pts){
+  const cmds=[['M',pts[0][0],pts[0][1]]];
+  for(let i=1;i<pts.length;i++)cmds.push(['L',pts[i][0],pts[i][1]]);
+  cmds.push(['Z']);
+  return cmds;
+}
 function pointInPoly(pts,x,y){
   let inside=false;
   for(let i=0,j=pts.length-1;i<pts.length;j=i++){
@@ -757,8 +817,14 @@ function pointInPoly(pts,x,y){
   }
   return inside;
 }
+/* Сборка геометрии: пользовательский контур имеет приоритет */
 function rebuildPiece(p){
-  const cmds=SHAPES[p.type].build(p.params);
+  let cmds;
+  if(p.custom&&p.custom.length>=3){
+    cmds=polyToCmds(p.custom);
+  }else{
+    cmds=SHAPES[p.type].build(p.params);
+  }
   p._cmds=cmds; p._path=cmdsToPath(cmds);
   p._bounds=cmdsBounds(cmds); p._poly=cmdsToPoly(cmds);
 }
@@ -780,7 +846,6 @@ function pieceAABB(p){
   }
   return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
 }
-/* Габарит детали ВМЕСТЕ с припуском (припуск выступает наружу от контура) */
 function pieceEffAABB(p){
   const bb=pieceAABB(p);
   const s=Math.max(0,+p.seam||0);
@@ -830,6 +895,7 @@ const state={
 };
 let editorId=null, saving=false, lastSavedAt=null, storageFailedNoted=false, saveTimer=null, repackTimer=null;
 let fitMode='fit';
+let ctrEd=null; // сессия редактора контура
 
 const cv=$('#cv'), ctx=cv.getContext('2d');
 const wrap=$('#canvasWrap');
@@ -876,7 +942,10 @@ function onAreaResize(){
   }catch(err){ toast('Ошибка ресайза: '+err.message,'err'); }
 }
 new ResizeObserver(onAreaResize).observe(wrap);
-window.addEventListener('resize',onAreaResize);
+window.addEventListener('resize',function(){
+  onAreaResize();
+  if(ctrEd){cResize();cDraw();}
+});
 window.addEventListener('orientationchange',onAreaResize);
 if(document.fonts&&document.fonts.ready){
   document.fonts.ready.then(function(){setTimeout(onAreaResize,50);});
@@ -889,9 +958,6 @@ function scheduleRepack(){
   clearTimeout(repackTimer);
   repackTimer=setTimeout(function(){packAll();fitView();markDirty();},400);
 }
-/* Раскладка: каждая деталь занимает ячейку
-   (контур + 2×её личный припуск). Между ячейками — технологический
-   зазор 1 см, отступ от кромки — 2 см. */
 function packAll(){
   if(!state.pieces.length)return;
   const margin=2,gap=1;
@@ -915,8 +981,8 @@ function packAll(){
     for(const o of cands){
       let xx=x,yy=y,sh=shelfH;
       if(xx+o.w>X1+0.001&&xx>X0){yy=y+shelfH+gap;xx=X0;sh=0;}
-      if(yy+o.h>Y1+0.001)continue; // не проходит по высоте — другой поворот
-      placeAt(it.p,xx+it.seam,yy+it.seam,o.rot); // контур внутри ячейки с учётом припуска
+      if(yy+o.h>Y1+0.001)continue;
+      placeAt(it.p,xx+it.seam,yy+it.seam,o.rot);
       x=xx+o.w+gap;y=yy;shelfH=Math.max(sh,o.h);
       placed=true;break;
     }
@@ -940,7 +1006,6 @@ function packAll(){
   if(state.fabric) for(const p of state.pieces) if(!overIds.has(p.id)) clampToFabric(p);
   draw();
 }
-/* Оценка необходимой длины ткани при заданной ширине (с припусками) */
 function estimateLength(widthCm){
   const margin=2,gap=1;
   const X0=margin,X1=Math.max(margin+1,widthCm-margin);
@@ -1097,7 +1162,7 @@ function drawLabel(p){
   ctx.fillStyle=p.color;
   ctx.font='600 11.5px "Inter",sans-serif';
   ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=5;
-  ctx.fillText(p.name,s.x,s.y-3);
+  ctx.fillText(p.name+(p.custom?' ✎':''),s.x,s.y-3);
   ctx.shadowBlur=0;
   ctx.fillStyle='rgba(200,210,255,.6)';
   ctx.font='10px "JetBrains Mono",monospace';
@@ -1229,12 +1294,13 @@ function selectPiece(id){ state.selId=id; buildQuickPanel(byId(id)); draw(); }
 function deselect(){ state.selId=null; const q=$('#quick'); if(q)q.classList.add('hidden'); draw(); }
 
 /* ============================ детали ============================ */
-function makePiece(type,over,name,color){
+function makePiece(type,over,name,color,custom){
   const def=SHAPES[type]; if(!def)return null;
   const params={}; def.params.forEach(d=>{params[d.k]=d.def;});
   Object.assign(params,over||{});
   const p={id:uid(),type:type,name:name||def.name,x:0,y:0,rot:0,mirror:false,seam:1,
-    color:color||PALETTE[state.pieces.length%PALETTE.length],params:params};
+    color:color||PALETTE[state.pieces.length%PALETTE.length],params:params,
+    custom:(custom&&custom.length>=3)?custom.map(pt=>[+pt[0],+pt[1]]):null};
   rebuildPiece(p); return p;
 }
 function addPieceOfType(type){
@@ -1254,7 +1320,11 @@ function addPieceOfType(type){
   closeSide();
 }
 function duplicatePiece(p){
-  const np=Object.assign({},p,{id:uid(),params:Object.assign({},p.params),x:p.x+4,y:p.y+4});
+  const np={
+    id:uid(),type:p.type,name:p.name,x:p.x+4,y:p.y+4,rot:p.rot,mirror:p.mirror,
+    seam:p.seam,color:p.color,params:Object.assign({},p.params),
+    custom:p.custom?p.custom.map(pt=>[pt[0],pt[1]]):null
+  };
   rebuildPiece(np); state.pieces.push(np);
   selectPiece(np.id); markDirty();
   scheduleRepack(); draw(); return np;
@@ -1283,7 +1353,7 @@ function paramInput(pd,val,onOk){
 function buildQuickPanel(p){
   const q=$('#quick'); if(!q)return;
   if(!p){q.classList.add('hidden');return;}
-  $('#qName').textContent=p.name;
+  $('#qName').textContent=p.name+(p.custom?' ✎':'');
   const box=$('#qFields'); box.innerHTML='';
   const def=SHAPES[p.type];
   const keys=def.quick?def.quick.slice(0,2):def.params.slice(0,2).map(d=>d.k);
@@ -1312,14 +1382,19 @@ function positionQuick(){
 $('#qClose').onclick=function(){deselect();};
 $('#qRot').onclick=function(){const p=byId(state.selId);if(p){p.rot=(p.rot+90)%360;markDirty();draw();scheduleRepack();}};
 $('#qEdit').onclick=function(){const p=byId(state.selId);if(p)openEditor(p);};
+$('#qCtr').onclick=function(){const p=byId(state.selId);if(p)openContourEditor(p);};
 $('#qDup').onclick=function(){const p=byId(state.selId);if(p)duplicatePiece(p);};
 $('#qDel').onclick=function(){if(state.selId)removePiece(state.selId);};
 
-/* ============================ редактор ============================ */
+/* ============================ редактор параметров ============================ */
 const edOv=$('#editorOverlay');
 function setEditorMode(full){
   $('#mFullSec').classList.toggle('hidden',!full);
   $('#mQuickSec').classList.toggle('hidden',full);
+}
+function refreshCustomNote(p){
+  const note=$('#mCustomNote'); if(!note)return;
+  note.classList.toggle('hidden',!(p&&p.custom&&p.custom.length>=3));
 }
 function openEditor(p){
   editorId=p.id; state.selId=p.id;
@@ -1331,6 +1406,7 @@ function openEditor(p){
   $('#mSeam').value=p.seam;
   $('#mMirror').checked=!!p.mirror;
   buildSwatches(p);
+  refreshCustomNote(p);
   setEditorMode(false);
   edOv.classList.add('open');
   buildQuickPanel(p);
@@ -1394,11 +1470,271 @@ document.querySelectorAll('[data-rot]').forEach(function(b){
 $('#mSeam').addEventListener('input',function(e){const p=byId(editorId);if(!p)return;
   const v=parseFloat(e.target.value); if(!isFinite(v))return;
   p.seam=clamp(v,0,5); markDirty(); draw();
-  scheduleRepack(); // припуск влияет на раскладку
+  scheduleRepack();
 });
 $('#mMirror').addEventListener('change',function(e){const p=byId(editorId);if(p){p.mirror=e.target.checked;markDirty();draw();}});
+$('#mContour').onclick=function(){const p=byId(editorId);if(p)openContourEditor(p);};
 $('#mDup').onclick=function(){const p=byId(editorId);if(p){const np=duplicatePiece(p);editorId=np.id;openEditor(np);}};
 $('#mDel').onclick=function(){if(editorId)removePiece(editorId);};
+$('#mResetCtr').onclick=function(){
+  const p=byId(editorId); if(!p)return;
+  p.custom=null; rebuildPiece(p);
+  markDirty(); scheduleRepack(); draw(); refreshCustomNote(p);
+  toast('↺ Параметрическая форма восстановлена');
+};
+
+/* ============================ графический редактор контура ============================ */
+const contourOverlay=$('#contourOverlay');
+const cCvEl=$('#cCv'), cCtx=cCvEl.getContext('2d'), cWrapEl=$('#cWrap');
+let cW=0,cH=0,cdpr=1;
+
+function cResize(){
+  const r=cWrapEl.getBoundingClientRect();
+  cW=Math.max(60,r.width); cH=Math.max(60,r.height);
+  cdpr=window.devicePixelRatio||1;
+  cCvEl.width=Math.round(cW*cdpr); cCvEl.height=Math.round(cH*cdpr);
+}
+function cS2W(sx,sy){return {x:(sx-ctrEd.view.ox)/ctrEd.view.scale, y:(sy-ctrEd.view.oy)/ctrEd.view.scale};}
+function cW2S(wx,wy){return {x:wx*ctrEd.view.scale+ctrEd.view.ox, y:wy*ctrEd.view.scale+ctrEd.view.oy};}
+function cRel(e){
+  const r=cCvEl.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*(r.width>0?cW/r.width:1), y:(e.clientY-r.top)*(r.height>0?cH/r.height:1)};
+}
+function cPtsBounds(){
+  let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
+  for(const pt of ctrEd.pts){
+    if(pt[0]<minx)minx=pt[0]; if(pt[0]>maxx)maxx=pt[0];
+    if(pt[1]<miny)miny=pt[1]; if(pt[1]>maxy)maxy=pt[1];
+  }
+  return {minx,miny,maxx,maxy,w:maxx-minx,h:maxy-miny};
+}
+function cFit(){
+  if(!ctrEd)return;
+  const bb=cPtsBounds();
+  const pad=Math.max(4,Math.max(bb.w,bb.h)*0.12);
+  const bw=Math.max(1,bb.w+pad*2), bh=Math.max(1,bb.h+pad*2);
+  const s=clamp(Math.min(cW/bw,cH/bh),0.2,160);
+  ctrEd.view.scale=s;
+  ctrEd.view.ox=(cW-bb.w*s)/2-bb.minx*s;
+  ctrEd.view.oy=(cH-bb.h*s)/2-bb.miny*s;
+  cDraw();
+}
+function currentPts(p){
+  if(p.custom&&p.custom.length>=3)return p.custom.map(pt=>[pt[0],pt[1]]);
+  return cmdsToPoly(p._cmds).map(pt=>[pt[0],pt[1]]);
+}
+function openContourEditor(p){
+  rebuildPiece(p);
+  ctrEd={pieceId:p.id, pts:currentPts(p), undo:[], view:{scale:3,ox:0,oy:0},
+         drag:-1, sel:-1, hover:-1, pan:null};
+  $('#cTitle').textContent='Редактор контура · '+p.name;
+  contourOverlay.classList.add('open');
+  cResize(); cFit();
+}
+function closeContour(apply){
+  if(!ctrEd)return;
+  if(apply){
+    const p=byId(ctrEd.pieceId);
+    if(p&&ctrEd.pts.length>=3){
+      p.custom=ctrEd.pts.map(pt=>[Math.round(pt[0]*100)/100,Math.round(pt[1]*100)/100]);
+      rebuildPiece(p);
+      markDirty(); scheduleRepack(); draw();
+      if(editorId===p.id){refreshCustomNote(p);buildQuickPanel(p);}
+      toast('✎ Контур детали обновлён');
+    }
+  }
+  ctrEd=null;
+  contourOverlay.classList.remove('open');
+}
+function cPushUndo(){
+  if(!ctrEd)return;
+  ctrEd.undo.push(ctrEd.pts.map(pt=>[pt[0],pt[1]]));
+  if(ctrEd.undo.length>60)ctrEd.undo.shift();
+}
+function cUndoFn(){
+  if(!ctrEd||!ctrEd.undo.length)return;
+  ctrEd.pts=ctrEd.undo.pop();
+  ctrEd.sel=-1; ctrEd.drag=-1;
+  cDraw();
+}
+function cDeletePoint(i){
+  if(!ctrEd)return;
+  if(ctrEd.pts.length<=3){toast('Минимум 3 точки в контуре','warn');return;}
+  cPushUndo();
+  ctrEd.pts.splice(i,1);
+  if(ctrEd.sel===i)ctrEd.sel=-1;
+  cDraw();
+}
+function cResetShape(){
+  if(!ctrEd)return;
+  const p=byId(ctrEd.pieceId); if(!p)return;
+  cPushUndo();
+  p.custom=null; rebuildPiece(p);
+  ctrEd.pts=cmdsToPoly(p._cmds).map(pt=>[pt[0],pt[1]]);
+  ctrEd.sel=-1; ctrEd.drag=-1;
+  markDirty(); scheduleRepack(); draw();
+  if(editorId===p.id)refreshCustomNote(p);
+  cFit();
+  toast('↺ Параметрическая форма восстановлена');
+}
+function cGrid(){
+  const v=ctrEd.view;
+  const steps=[0.5,1,2,5,10,20,50,100];
+  const minor=steps.find(s=>s*v.scale>=14)||100;
+  const wl=(-v.ox)/v.scale, wr=(cW-v.ox)/v.scale, wt=(-v.oy)/v.scale, wb=(cH-v.oy)/v.scale;
+  const i0=Math.floor(wl/minor),i1=Math.ceil(wr/minor);
+  const j0=Math.floor(wt/minor),j1=Math.ceil(wb/minor);
+  if(i1-i0>2000||j1-j0>2000)return;
+  cCtx.lineWidth=1;
+  for(let i=i0;i<=i1;i++){
+    const x=i*minor,sx=x*v.scale+v.ox;
+    cCtx.strokeStyle=x===0?'rgba(0,229,255,.35)':(i%5===0)?'rgba(0,229,255,.10)':'rgba(110,130,255,.06)';
+    cCtx.beginPath();cCtx.moveTo(sx,0);cCtx.lineTo(sx,cH);cCtx.stroke();
+  }
+  for(let j=j0;j<=j1;j++){
+    const y=j*minor,sy=y*v.scale+v.oy;
+    cCtx.strokeStyle=y===0?'rgba(0,229,255,.35)':(j%5===0)?'rgba(0,229,255,.10)':'rgba(110,130,255,.06)';
+    cCtx.beginPath();cCtx.moveTo(0,sy);cCtx.lineTo(cW,sy);cCtx.stroke();
+  }
+}
+function cDraw(){
+  if(!ctrEd)return;
+  const p=byId(ctrEd.pieceId);
+  if(!p){closeContour(false);return;}
+  cCtx.setTransform(cdpr,0,0,cdpr,0,0);
+  cCtx.clearRect(0,0,cW,cH);
+  cGrid();
+  // контур
+  cCtx.beginPath();
+  ctrEd.pts.forEach((pt,i)=>{
+    const sp=cW2S(pt[0],pt[1]);
+    if(i===0)cCtx.moveTo(sp.x,sp.y); else cCtx.lineTo(sp.x,sp.y);
+  });
+  cCtx.closePath();
+  const col=p.color||'#00e5ff';
+  cCtx.shadowColor=col; cCtx.shadowBlur=16;
+  cCtx.fillStyle=hexA(col,.12); cCtx.fill();
+  cCtx.lineWidth=1.8; cCtx.strokeStyle=col; cCtx.stroke();
+  cCtx.shadowBlur=0;
+  // точки
+  ctrEd.pts.forEach((pt,i)=>{
+    const sp=cW2S(pt[0],pt[1]);
+    const active=(i===ctrEd.drag||i===ctrEd.sel);
+    const r=active?6.5:(i===ctrEd.hover?6:4.5);
+    cCtx.beginPath();cCtx.arc(sp.x,sp.y,r,0,Math.PI*2);
+    cCtx.fillStyle=active?'#ff3df0':'#0b0d1f';
+    cCtx.fill();
+    cCtx.lineWidth=1.7;
+    cCtx.strokeStyle=active?'#ff3df0':(i===ctrEd.hover?'#ffffff':'#00e5ff');
+    cCtx.stroke();
+  });
+  const bb=cPtsBounds();
+  const hoverTxt=ctrEd.hoverW?` · ${ctrEd.hoverW}`:'';
+  $('#cStatus').textContent=`точек: ${ctrEd.pts.length} · ${fmt(bb.w)}×${fmt(bb.h)} см${hoverTxt}`;
+}
+function cPickPoint(sx,sy){
+  let best=-1,bd=1e9;
+  for(let i=0;i<ctrEd.pts.length;i++){
+    const sp=cW2S(ctrEd.pts[i][0],ctrEd.pts[i][1]);
+    const d=Math.hypot(sp.x-sx,sp.y-sy);
+    if(d<=9&&d<bd){bd=d;best=i;}
+  }
+  return best;
+}
+function cPickSegment(sx,sy){
+  let best=null;
+  for(let i=0;i<ctrEd.pts.length;i++){
+    const p1=ctrEd.pts[i],p2=ctrEd.pts[(i+1)%ctrEd.pts.length];
+    const a=cW2S(p1[0],p1[1]),b=cW2S(p2[0],p2[1]);
+    const dx=b.x-a.x,dy=b.y-a.y;
+    const len2=dx*dx+dy*dy||1e-6;
+    let t=((sx-a.x)*dx+(sy-a.y)*dy)/len2;
+    t=clamp(t,0,1);
+    const px=a.x+dx*t,py=a.y+dy*t;
+    const d=Math.hypot(sx-px,sy-py);
+    if(d<=7&&(!best||d<best.d))best={d:d,i:i,t:t};
+  }
+  if(best){
+    const p1=ctrEd.pts[best.i],p2=ctrEd.pts[(best.i+1)%ctrEd.pts.length];
+    best.wx=p1[0]+(p2[0]-p1[0])*best.t;
+    best.wy=p1[1]+(p2[1]-p1[1])*best.t;
+  }
+  return best;
+}
+cCvEl.addEventListener('contextmenu',function(e){e.preventDefault();});
+cCvEl.addEventListener('pointerdown',function(e){
+  if(!ctrEd)return;
+  cCvEl.setPointerCapture(e.pointerId);
+  const pt=cRel(e);
+  if(e.button===2){
+    const i=cPickPoint(pt.x,pt.y);
+    if(i>=0)cDeletePoint(i);
+    return;
+  }
+  const i=cPickPoint(pt.x,pt.y);
+  if(i>=0){
+    cPushUndo();
+    ctrEd.drag=i; ctrEd.sel=i;
+    cDraw();
+    return;
+  }
+  const seg=cPickSegment(pt.x,pt.y);
+  if(seg){
+    cPushUndo();
+    ctrEd.pts.splice(seg.i+1,0,[seg.wx,seg.wy]);
+    ctrEd.drag=seg.i+1; ctrEd.sel=seg.i+1;
+    cDraw();
+    return;
+  }
+  ctrEd.pan={sx:pt.x,sy:pt.y,ox:ctrEd.view.ox,oy:ctrEd.view.oy};
+});
+cCvEl.addEventListener('pointermove',function(e){
+  if(!ctrEd)return;
+  const pt=cRel(e);
+  const w=cS2W(pt.x,pt.y);
+  ctrEd.hoverW=`X:${w.x.toFixed(1)} Y:${w.y.toFixed(1)}`;
+  if(ctrEd.drag>=0){
+    ctrEd.pts[ctrEd.drag]=[Math.round(w.x*10)/10,Math.round(w.y*10)/10];
+    cDraw();
+    return;
+  }
+  if(ctrEd.pan){
+    ctrEd.view.ox=ctrEd.pan.ox+(pt.x-ctrEd.pan.sx);
+    ctrEd.view.oy=ctrEd.pan.oy+(pt.y-ctrEd.pan.sy);
+    cDraw();
+    return;
+  }
+  const h=cPickPoint(pt.x,pt.y);
+  if(h!==ctrEd.hover){ctrEd.hover=h;}
+  cCvEl.style.cursor=h>=0?'grab':'crosshair';
+  cDraw();
+});
+function cEndPointer(e){
+  if(!ctrEd)return;
+  try{cCvEl.releasePointerCapture(e.pointerId);}catch(err){}
+  ctrEd.drag=-1; ctrEd.pan=null;
+  cDraw();
+}
+cCvEl.addEventListener('pointerup',cEndPointer);
+cCvEl.addEventListener('pointercancel',cEndPointer);
+cCvEl.addEventListener('wheel',function(e){
+  e.preventDefault();
+  if(!ctrEd)return;
+  const pt=cRel(e);
+  const w=cS2W(pt.x,pt.y);
+  ctrEd.view.scale=clamp(ctrEd.view.scale*Math.exp(-e.deltaY*0.0016),0.2,160);
+  ctrEd.view.ox=pt.x-w.x*ctrEd.view.scale;
+  ctrEd.view.oy=pt.y-w.y*ctrEd.view.scale;
+  cDraw();
+},{passive:false});
+$('#cClose').onclick=function(){closeContour(false);};
+$('#cCancel').onclick=function(){closeContour(false);};
+$('#cApply').onclick=function(){closeContour(true);};
+$('#cFit').onclick=function(){cFit();};
+$('#cUndo').onclick=function(){cUndoFn();};
+$('#cDelPt').onclick=function(){if(ctrEd&&ctrEd.sel>=0)cDeletePoint(ctrEd.sel);};
+$('#cReset').onclick=function(){cResetShape();};
+contourOverlay.addEventListener('click',function(e){if(e.target===contourOverlay)closeContour(false);});
 
 /* ============================ пресеты ============================ */
 function addPreset(id,opts){
@@ -1525,7 +1861,8 @@ function updateStorageChip(){
   el.className='chip ok';el.textContent='● хранилище готово';
 }
 function serializePiece(p){return {id:p.id,type:p.type,name:p.name,x:p.x,y:p.y,rot:p.rot,
-  mirror:!!p.mirror,seam:p.seam,color:p.color,params:Object.assign({},p.params)};}
+  mirror:!!p.mirror,seam:p.seam,color:p.color,params:Object.assign({},p.params),
+  custom:p.custom?p.custom:null};}
 function projectData(){
   return {id:state.project.id||uid(),
     name:(state.project.name||'Без названия').trim()||'Без названия',
@@ -1606,10 +1943,11 @@ function loadProject(data){
   state.pieces=[];
   for(const d of (data.pieces||[])){
     if(!SHAPES[d.type])continue;
-    const p=makePiece(d.type,d.params,d.name,d.color);
+    const p=makePiece(d.type,d.params,d.name,d.color,d.custom);
     if(!p)continue;
     p.id=d.id||p.id; p.x=+d.x||0; p.y=+d.y||0; p.rot=+d.rot||0;
     p.mirror=!!d.mirror; p.seam=+d.seam||0;
+    rebuildPiece(p);
     state.pieces.push(p);
   }
   applyGridOpts(data.gridOpts);
@@ -1641,7 +1979,7 @@ function newProject(){
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.4.1'},projectData()),null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.5.0'},projectData()),null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -1680,7 +2018,6 @@ $('#btnClear').onclick=function(){ if(!state.pieces.length)return;
   if(!confirm('Очистить холст? Все детали будут удалены.'))return;
   state.pieces=[]; deselect(); markDirty(); draw(); };
 
-/* ---- сетка ---- */
 $('#gridChk').addEventListener('change',function(e){
   state.grid=e.target.checked;
   $('#gridWrap').classList.toggle('active',state.grid);
@@ -1718,7 +2055,6 @@ $('#gSnapStep').addEventListener('input',function(e){
   if(isFinite(v))state.gridOpts.snapStep=clamp(v,0.1,10);
 });
 
-/* ---- ткань ---- */
 $('#fabChk').addEventListener('change',function(e){
   state.fabric=e.target.checked;
   $('#fabWrap').classList.toggle('active',state.fabric);
@@ -1754,7 +2090,7 @@ $('#btnFabLen').addEventListener('click',function(e){
   }
 });
 
-/* ============================ указатель ============================ */
+/* ============================ указатель (основной холст) ============================ */
 const pointers=new Map(); let gesture=null, spaceDown=false;
 const tapSlop=function(pt){return pt==='touch'?14:8;};
 let lastTap={id:null,t:0};
@@ -1878,7 +2214,17 @@ cv.addEventListener('pointercancel',endPointer);
 /* ============================ клавиатура ============================ */
 window.addEventListener('keydown',function(e){
   const inInput=e.target.matches('input,textarea,select');
-  if(e.code==='Space'&&!inInput){spaceDown=true;e.preventDefault();}
+  if(e.code==='Space'&&!inInput&&!ctrEd){spaceDown=true;e.preventDefault();}
+  // режим редактора контура
+  if(ctrEd){
+    if(inInput)return;
+    if(e.key==='Escape'){e.preventDefault();closeContour(false);return;}
+    if(e.key==='Enter'){e.preventDefault();closeContour(true);return;}
+    if((e.key==='Delete'||e.key==='Backspace')&&ctrEd.sel>=0){e.preventDefault();cDeletePoint(ctrEd.sel);return;}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();cUndoFn();return;}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveProject(true);return;}
+    return;
+  }
   if(inInput)return;
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveProject(true);return;}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){
@@ -1890,6 +2236,8 @@ window.addEventListener('keydown',function(e){
     else deselect();
     return;
   }
+  const modalOpen=edOv.classList.contains('open')||projOv.classList.contains('open');
+  if(modalOpen)return;
   if(e.key==='Delete'||e.key==='Backspace'){ if(state.selId)removePiece(state.selId); return; }
   if(e.key==='+'||e.key==='=')zoomAt(W/2,H/2,1.25);
   if(e.key==='-')zoomAt(W/2,H/2,0.8);
