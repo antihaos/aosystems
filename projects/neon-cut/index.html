@@ -3372,7 +3372,7 @@ const bh = Math.max(0.001, rect.maxy - rect.miny);
 const availW = Math.max(10, W - pads.l - pads.r);
 const availH = Math.max(10, H - pads.t - pads.b);
 const s = clamp(Math.min(availW / bw, availH / bh), 0.02, maxS || 40);
-state.view.scale = s;
+state.view.scale = s / 2;
 state.view.ox = pads.l + (availW - bw * s) / 2 - rect.minx * s;
 state.view.oy = pads.t + (availH - bh * s) / 2 - rect.miny * s;
 }
