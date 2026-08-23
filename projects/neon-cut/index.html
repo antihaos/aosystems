@@ -354,8 +354,8 @@ header{padding:8px 10px; gap:8px}
 </g>
 </svg>
 <div>
-<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.17.0</span></div>
-<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, линейка в редакторе контура, точный нестинг и автосохранение настроек.</div>
+<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.18.0</span></div>
+<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, инструмент «Измерение», физическая линейка на холсте и автосохранение настроек.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -377,7 +377,7 @@ header{padding:8px 10px; gap:8px}
 <div class="cat-title">Готовые комплекты</div>
 <div class="preset-grid" id="presetsList"></div>
 </div>
-<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура (📏 линейка) · настройки сохраняются автоматически</div>
+<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · 📐 — физическая линейка</div>
 </aside>
 <section id="stage">
 <div id="toolbar">
@@ -388,6 +388,7 @@ header{padding:8px 10px; gap:8px}
 <button class="tbtn" id="btnFitW" title="Показать точно по границам ширины ткани (W)">⇤ По ширине</button>
 <button class="tbtn" id="btnOrigin" title="Показать начало ткани (0,0) (Home)">⌖ 0,0</button>
 <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
+<button class="tbtn toggle" id="btnPhysRuler" title="Физическая линейка: перетаскивайте за корпус, вращайте колесом мыши или за рукоять ◈ справа. Показывает длину участка детали вдоль измерительного края.">📐 Линейка</button>
 <span class="tsep"></span>
 <button class="tbtn" id="btnPack" title="Выполнить раскладку выбранным алгоритмом">⚡ Раскладка</button>
 <button class="tbtn" id="btnNestOpts" title="Алгоритм раскладки и параметры">⚙</button>
@@ -619,13 +620,13 @@ header{padding:8px 10px; gap:8px}
 <button class="tbtn" id="cUndo" title="Отменить (Ctrl+Z)">↶ Отменить</button>
 <button class="tbtn" id="cDelPt" title="Удалить выбранную точку (Del)">⌫ Точку</button>
 <button class="tbtn" id="cReset" title="Вернуть параметрическую форму">↺ Сбросить форму</button>
-<button class="tbtn toggle" id="cRuler" title="Линейка (R): перетащите, чтобы измерить расстояние и угол. ПКМ — убрать последнее измерение, Esc — очистить">📏 Линейка</button>
-<button class="tbtn" id="cRulerClear" title="Очистить все измерения линейки">🧹 Замеры</button>
+<button class="tbtn toggle" id="cRuler" title="Измерение (R): перетащите — расстояние и угол; клик по хорде — её размер, угол и Δx/Δy. ПКМ — убрать последний замер, Esc — очистить">📏 Измерение</button>
+<button class="tbtn" id="cRulerClear" title="Очистить все замеры">🧹 Замеры</button>
 <button class="tbtn" id="cSaveTpl" title="Сохранить контур как пользовательский шаблон детали">💾 В шаблон</button>
 <span class="c-status" id="cStatus"></span>
 </div>
 <div id="cWrap"><canvas id="cCv"></canvas></div>
-<div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · 📏 линейка (R) — измерение расстояний и углов</div>
+<div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · 📏 Измерение (R): перетащите для замера или кликните по хорде, чтобы увидеть её размер, угол и Δx/Δy</div>
 </div>
 <div class="m-foot">
 <span class="spacer"></span>
@@ -1196,6 +1197,16 @@ const s=Math.max(0,+p.seam||0);
 return {minx:bb.minx-s,miny:bb.miny-s,maxx:bb.maxx+s,maxy:bb.maxy+s,
 w:bb.w+2*s,h:bb.h+2*s};
 }
+/* контур детали в мировых координатах (для измерений физической линейкой) */
+function worldPoly(p){
+const b=p._bounds, cx=p.x+b.w/2, cy=p.y+b.h/2;
+const rad=p.rot*Math.PI/180, cs=Math.cos(rad), sn=Math.sin(rad);
+return p._poly.map(function(pt){
+let dx=pt[0]-(b.minx+b.w/2), dy=pt[1]-(b.miny+b.h/2);
+if(p.mirror)dx=-dx;
+return [cx+dx*cs-dy*sn, cy+dx*sn+dy*cs];
+});
+}
 function placeAt(p,X,Y,rot){
 p.rot=((rot%360)+360)%360;
 const bb=pieceAABB(p);
@@ -1236,6 +1247,7 @@ gridOpts:{minor:'auto', majorEvery:5, alpha:100, axes:true, snap:true, snapStep:
 nestOpts:{algo:'nest-full', rotMode:'ortho', angleStep:10, refine:true, variants:3, gap:0.5, margin:2},
 pieceStyle:'neon', fabricStyle:'weave',
 show:{names:true,dims:true,grain:true,seam:true},
+physRuler:{on:false,x:25,y:20,angle:0,len:50,w:5},
 project:{id:null,name:'Новый проект'},
 dirty:false,
 };
@@ -1756,6 +1768,7 @@ for(const p of state.pieces) drawPiece(p);
 for(const p of state.pieces) drawLabel(p);
 if(state.fabric) for(const p of state.pieces) if(outOfFabric(p)) drawWarning(p);
 drawSelection();
+drawPhysRuler();
 drawCursor();
 const eh=$('#emptyHint'); if(eh)eh.classList.toggle('hidden',state.pieces.length>0);
 const zl=$('#zoomLbl'); if(zl)zl.textContent=Math.round(state.view.scale/BASE*100)+'%';
@@ -1949,6 +1962,125 @@ ctx.closePath();ctx.stroke();
 ctx.setLineDash([]);ctx.shadowBlur=0;ctx.fillStyle='#ff3df0';
 for(const pt of pts)ctx.fillRect(pt.x-3,pt.y-3,6,6);
 ctx.restore();
+}
+/* ============================ физическая линейка (основной холст) ============================ */
+function pointInPhysRuler(wx,wy){
+const r=state.physRuler;
+const rad=-r.angle*Math.PI/180, cs=Math.cos(rad), sn=Math.sin(rad);
+const dx=wx-r.x, dy=wy-r.y;
+const lx=dx*cs-dy*sn, ly=dx*sn+dy*cs;
+return Math.abs(lx)<=r.len/2 && Math.abs(ly)<=r.w/2;
+}
+function physRulerHandleWorld(){
+const r=state.physRuler;
+const rad=r.angle*Math.PI/180;
+const d=r.len/2+3;
+return [r.x+Math.cos(rad)*d, r.y+Math.sin(rad)*d];
+}
+function physRulerEdge(){
+const r=state.physRuler;
+const rad=r.angle*Math.PI/180;
+const hx=Math.cos(rad)*r.len/2, hy=Math.sin(rad)*r.len/2;
+const px=-Math.sin(rad)*r.w/2, py=Math.cos(rad)*r.w/2;
+return [[r.x-hx+px, r.y-hy+py],[r.x+hx+px, r.y+hy+py]];
+}
+function segSegT(a,b,c,d){
+const d1x=b[0]-a[0], d1y=b[1]-a[1];
+const d2x=d[0]-c[0], d2y=d[1]-c[1];
+const den=d1x*d2y-d1y*d2x;
+if(Math.abs(den)<1e-9)return null;
+const t=((c[0]-a[0])*d2y-(c[1]-a[1])*d2x)/den;
+const u=((c[0]-a[0])*d1y-(c[1]-a[1])*d1x)/den;
+if(t>=-0.0001&&t<=1.0001&&u>=-0.0001&&u<=1.0001)return clamp(t,0,1);
+return null;
+}
+function roundRectPath(g,x,y,w,h,r){
+g.beginPath();
+g.moveTo(x+r,y);
+g.arcTo(x+w,y,x+w,y+h,r);
+g.arcTo(x+w,y+h,x,y+h,r);
+g.arcTo(x,y+h,x,y,r);
+g.arcTo(x,y,x+w,y,r);
+g.closePath();
+}
+function drawPhysRuler(){
+const r=state.physRuler; if(!r||!r.on)return;
+const s=state.view.scale;
+const c=w2s(r.x,r.y);
+const L=r.len*s, Wd=r.w*s;
+ctx.save();
+ctx.translate(c.x,c.y);
+ctx.rotate(r.angle*Math.PI/180);
+ctx.shadowColor='#ffc24d'; ctx.shadowBlur=12;
+ctx.fillStyle='rgba(255,194,77,.13)';
+ctx.strokeStyle='rgba(255,194,77,.95)';
+ctx.lineWidth=1.3;
+roundRectPath(ctx,-L/2,-Wd/2,L,Wd,4);
+ctx.fill(); ctx.stroke();
+ctx.shadowBlur=0;
+ctx.strokeStyle='rgba(255,194,77,.8)';
+ctx.fillStyle='rgba(255,225,170,.95)';
+ctx.lineWidth=1;
+const fs=Math.max(8,Math.min(11,Wd*0.28));
+ctx.font='600 '+fs+'px "JetBrains Mono",monospace';
+ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+for(let i=0;i<=r.len;i++){
+const x=-L/2+i*s;
+const major=(i%5===0);
+const h=major?Wd*0.42:Wd*0.22;
+ctx.beginPath();ctx.moveTo(x,Wd/2);ctx.lineTo(x,Wd/2-h);ctx.stroke();
+if(major&&i>0&&(L/r.len)>=8)ctx.fillText(String(i),x,Wd/2-h-3);
+}
+/* рукоять вращения */
+ctx.strokeStyle='rgba(255,194,77,.6)';
+ctx.beginPath();ctx.moveTo(L/2,0);ctx.lineTo(L/2+12,0);ctx.stroke();
+ctx.beginPath();ctx.arc(L/2+12,0,5,0,Math.PI*2);
+ctx.fillStyle='#0b0d1f';ctx.fill();
+ctx.strokeStyle='#ffc24d';ctx.lineWidth=1.5;ctx.stroke();
+ctx.restore();
+drawRulerMeasurements();
+}
+function drawRulerMeasurements(){
+const r=state.physRuler; if(!r||!r.on||!state.pieces.length)return;
+const e=physRulerEdge();
+const A=e[0], B=e[1];
+for(const p of state.pieces){
+const poly=worldPoly(p);
+const ts=[];
+for(let i=0;i<poly.length;i++){
+const t=segSegT(A,B,poly[i],poly[(i+1)%poly.length]);
+if(t!=null)ts.push(t);
+}
+if(ts.length<2)continue;
+ts.sort(function(a,b){return a-b;});
+for(let k=0;k+1<ts.length;k+=2){
+const t0=ts[k], t1=ts[k+1];
+if(t1-t0<0.002)continue;
+const p0=[A[0]+(B[0]-A[0])*t0, A[1]+(B[1]-A[1])*t0];
+const p1=[A[0]+(B[0]-A[0])*t1, A[1]+(B[1]-A[1])*t1];
+const s0=w2s(p0[0],p0[1]), s1=w2s(p1[0],p1[1]);
+const lenCm=(t1-t0)*r.len;
+ctx.save();
+ctx.strokeStyle='#00e5ff'; ctx.lineWidth=3;
+ctx.shadowColor='#00e5ff'; ctx.shadowBlur=8;
+ctx.beginPath();ctx.moveTo(s0.x,s0.y);ctx.lineTo(s1.x,s1.y);ctx.stroke();
+ctx.shadowBlur=0;
+ctx.fillStyle='#00e5ff';
+ctx.beginPath();ctx.arc(s0.x,s0.y,3,0,Math.PI*2);ctx.fill();
+ctx.beginPath();ctx.arc(s1.x,s1.y,3,0,Math.PI*2);ctx.fill();
+const mx=(s0.x+s1.x)/2, my=(s0.y+s1.y)/2;
+const txt=fmt(lenCm)+' см';
+ctx.font='600 11px "JetBrains Mono",monospace';
+const tw=ctx.measureText(txt).width;
+ctx.fillStyle='rgba(5,6,14,.88)';
+ctx.strokeStyle='#00e5ff'; ctx.lineWidth=1;
+roundRectPath(ctx,mx-tw/2-6,my-27,tw+12,17,4);
+ctx.fill();ctx.stroke();
+ctx.fillStyle='#7df9ff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+ctx.fillText(txt,mx,my-18);
+ctx.restore();
+}
+}
 }
 /* ============================ вид / вписывание ============================ */
 function computeFit(view,rect,cw,ch,opts){
@@ -2334,7 +2466,7 @@ function currentPts(p){
 if(p.custom&&p.custom.length>=3)return p.custom.map(pt=>[pt[0],pt[1]]);
 return cmdsToPoly(p._cmds).map(pt=>[pt[0],pt[1]]);
 }
-/* ---------- ЛИНЕЙКА (инструмент измерения в редакторе контура) ---------- */
+/* ---------- инструмент «Измерение» в редакторе контура ---------- */
 function setRulerTool(on){
 if(!ctrEd)return;
 ctrEd.ruler=on;
@@ -2345,17 +2477,8 @@ cDraw();
 }
 function clearRuler(){
 if(!ctrEd)return;
-ctrEd.rulerPins=[]; ctrEd.rulerDrag=null;
+ctrEd.rulerPins=[]; ctrEd.rulerDrag=null; ctrEd.chordSel=null;
 cDraw();
-}
-function roundRectPath(g,x,y,w,h,r){
-g.beginPath();
-g.moveTo(x+r,y);
-g.arcTo(x+w,y,x+w,y+h,r);
-g.arcTo(x+w,y+h,x,y+h,r);
-g.arcTo(x,y+h,x,y,r);
-g.arcTo(x,y,x+w,y,r);
-g.closePath();
 }
 function rulerAngle(m){
 let ang=Math.atan2(-(m.by-m.ay),m.bx-m.ax)*180/Math.PI;
@@ -2411,12 +2534,56 @@ cCtx.fillText(txt,lx+bw/2,ly+bh/2+0.5);
 cCtx.restore();
 }
 }
+/* ---------- клик по хорде: размер и параметры ---------- */
+function cPickChord(sx,sy){
+const best=cPickSegment(sx,sy);
+if(!best)return null;
+return {i:best.i};
+}
+function drawChordSel(){
+if(!ctrEd||!ctrEd.chordSel)return;
+const i=ctrEd.chordSel.i;
+if(i>=ctrEd.pts.length){ctrEd.chordSel=null;return;}
+const p1=ctrEd.pts[i], p2=ctrEd.pts[(i+1)%ctrEd.pts.length];
+const a=cW2S(p1[0],p1[1]), b=cW2S(p2[0],p2[1]);
+const dx=p2[0]-p1[0], dy=p2[1]-p1[1];
+const dist=Math.hypot(dx,dy);
+const m={ax:p1[0],ay:p1[1],bx:p2[0],by:p2[1]};
+const ang=rulerAngle(m);
+cCtx.save();
+cCtx.strokeStyle='#00e5ff'; cCtx.lineWidth=3;
+cCtx.shadowColor='#00e5ff'; cCtx.shadowBlur=10;
+cCtx.beginPath();cCtx.moveTo(a.x,a.y);cCtx.lineTo(b.x,b.y);cCtx.stroke();
+cCtx.shadowBlur=0;
+[a,b].forEach(function(pt){
+cCtx.beginPath();cCtx.arc(pt.x,pt.y,4,0,Math.PI*2);
+cCtx.fillStyle='#00e5ff';cCtx.fill();
+});
+const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+const l1=`хорда ${i}→${(i+1)%ctrEd.pts.length}: ${fmt(dist)} см · ${ang.toFixed(1)}°`;
+const l2=`Δx ${fmt(dx)} · Δy ${fmt(dy)}`;
+cCtx.font='600 11px "JetBrains Mono",monospace';
+const tw=Math.max(cCtx.measureText(l1).width,cCtx.measureText(l2).width);
+const bw=tw+14, bh=34;
+let lx=mx-bw/2, ly=my-bh-12;
+if(ly<4)ly=my+12;
+if(lx<4)lx=4;
+if(lx+bw>cW-4)lx=cW-4-bw;
+cCtx.fillStyle='rgba(5,6,14,.9)';
+cCtx.strokeStyle='#00e5ff'; cCtx.lineWidth=1;
+roundRectPath(cCtx,lx,ly,bw,bh,5); cCtx.fill();cCtx.stroke();
+cCtx.fillStyle='#7df9ff'; cCtx.textAlign='center'; cCtx.textBaseline='middle';
+cCtx.fillText(l1,lx+bw/2,ly+10);
+cCtx.fillStyle='rgba(200,210,255,.8)';
+cCtx.fillText(l2,lx+bw/2,ly+24);
+cCtx.restore();
+}
 /* ---------- редактор контура: основные функции ---------- */
 function openContourEditor(p){
 rebuildPiece(p);
 ctrEd={pieceId:p.id, pts:currentPts(p), undo:[], view:{scale:3,ox:0,oy:0},
 drag:-1, sel:-1, hover:-1, pan:null,
-ruler:false, rulerDrag:null, rulerPins:[]};
+ruler:false, rulerDrag:null, rulerPins:[], chordSel:null};
 const rb=$('#cRuler'); if(rb)rb.classList.remove('active');
 $('#cTitle').textContent='Редактор контура · '+p.name;
 contourOverlay.classList.add('open');
@@ -2447,7 +2614,7 @@ if(ctrEd.undo.length>60)ctrEd.undo.shift();
 function cUndoFn(){
 if(!ctrEd||!ctrEd.undo.length)return;
 ctrEd.pts=ctrEd.undo.pop();
-ctrEd.sel=-1; ctrEd.drag=-1;
+ctrEd.sel=-1; ctrEd.drag=-1; ctrEd.chordSel=null;
 cDraw();
 }
 function cDeletePoint(i){
@@ -2456,6 +2623,7 @@ if(ctrEd.pts.length<=3){toast('Минимум 3 точки в контуре','w
 cPushUndo();
 ctrEd.pts.splice(i,1);
 if(ctrEd.sel===i)ctrEd.sel=-1;
+ctrEd.chordSel=null;
 cDraw();
 }
 function cResetShape(){
@@ -2464,7 +2632,7 @@ const p=byId(ctrEd.pieceId); if(!p)return;
 cPushUndo();
 p.custom=null; rebuildPiece(p);
 ctrEd.pts=cmdsToPoly(p._cmds).map(pt=>[pt[0],pt[1]]);
-ctrEd.sel=-1; ctrEd.drag=-1;
+ctrEd.sel=-1; ctrEd.drag=-1; ctrEd.chordSel=null;
 markDirty(); scheduleRepack(); draw();
 if(editorId===p.id)refreshCustomNote(p);
 cFit();
@@ -2538,13 +2706,14 @@ cCtx.strokeStyle=active?'#ff3df0':(i===ctrEd.hover?'#ffffff':'#00e5ff');
 cCtx.stroke();
 });
 drawRulerOverlay();
+drawChordSel();
 const bb=cPtsBounds();
 let hoverTxt=ctrEd.hoverW?` · ${ctrEd.hoverW}`:'';
 if(ctrEd.rulerDrag){
 const rd=Math.hypot(ctrEd.rulerDrag.bx-ctrEd.rulerDrag.ax,ctrEd.rulerDrag.by-ctrEd.rulerDrag.ay);
 hoverTxt+=` · 📏 ${fmt(rd)} см`;
 }else if(ctrEd.ruler){
-hoverTxt+=` · 📏 режим линейки`;
+hoverTxt+=` · 📏 режим измерения`;
 }
 $('#cStatus').textContent=`точек: ${ctrEd.pts.length} · ${fmt(bb.w)}×${fmt(bb.h)} см${hoverTxt}`;
 }
@@ -2582,7 +2751,6 @@ cCvEl.addEventListener('pointerdown',function(e){
 if(!ctrEd)return;
 cCvEl.setPointerCapture(e.pointerId);
 const pt=cRel(e);
-/* режим линейки: перетаскивание создаёт измерение, ПКМ убирает последнее */
 if(ctrEd.ruler){
 if(e.button===2){
 if(ctrEd.rulerPins.length)ctrEd.rulerPins.pop();
@@ -2591,6 +2759,15 @@ cDraw();
 return;
 }
 if(e.button===0){
+/* клик по хорде — показать её размер и параметры */
+const chord=cPickChord(pt.x,pt.y);
+if(chord){
+ctrEd.chordSel=chord;
+ctrEd.rulerDrag=null;
+cDraw();
+return;
+}
+ctrEd.chordSel=null;
 const w0=cS2W(pt.x,pt.y);
 ctrEd.rulerDrag={ax:w0.x,ay:w0.y,bx:w0.x,by:w0.y};
 cDraw();
@@ -2605,7 +2782,7 @@ return;
 const i=cPickPoint(pt.x,pt.y);
 if(i>=0){
 cPushUndo();
-ctrEd.drag=i; ctrEd.sel=i;
+ctrEd.drag=i; ctrEd.sel=i; ctrEd.chordSel=null;
 cDraw();
 return;
 }
@@ -2613,7 +2790,7 @@ const seg=cPickSegment(pt.x,pt.y);
 if(seg){
 cPushUndo();
 ctrEd.pts.splice(seg.i+1,0,[seg.wx,seg.wy]);
-ctrEd.drag=seg.i+1; ctrEd.sel=seg.i+1;
+ctrEd.drag=seg.i+1; ctrEd.sel=seg.i+1; ctrEd.chordSel=null;
 cDraw();
 return;
 }
@@ -2788,7 +2965,7 @@ buildLibrary();
 }
 function exportTemplates(){
 if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-const data={app:'NEONCUT',kind:'templates',version:'1.17.0',exportedAt:Date.now(),templates:userTemplates};
+const data={app:'NEONCUT',kind:'templates',version:'1.18.0',exportedAt:Date.now(),templates:userTemplates};
 const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
 const a=document.createElement('a');
 a.href=URL.createObjectURL(blob);
@@ -3184,6 +3361,8 @@ gridOpts:Object.assign({},state.gridOpts),
 nestOpts:Object.assign({},state.nestOpts),
 fabric:{on:state.fabric,mode:state.fabricMode,w:state.fabricW,h:state.fabricH},
 view:{pieceStyle:state.pieceStyle,fabricStyle:state.fabricStyle,show:Object.assign({},state.show)},
+physRuler:{on:state.physRuler.on,x:state.physRuler.x,y:state.physRuler.y,
+angle:state.physRuler.angle,len:state.physRuler.len,w:state.physRuler.w},
 activeTab:$('#tabPresets').classList.contains('active')?'presets':'parts',
 savedAt:Date.now()
 };
@@ -3212,6 +3391,17 @@ state.fabricMode=pr.fabric.mode==='piece'?'piece':'roll';
 if(isFinite(+pr.fabric.w))state.fabricW=clamp(+pr.fabric.w,30,400);
 if(isFinite(+pr.fabric.h))state.fabricH=clamp(+pr.fabric.h,30,1000);
 syncFabricUI();
+}
+if(pr.physRuler&&typeof pr.physRuler==='object'){
+const prl=pr.physRuler;
+const r=state.physRuler;
+if(typeof prl.on==='boolean')r.on=prl.on;
+if(isFinite(+prl.x))r.x=+prl.x;
+if(isFinite(+prl.y))r.y=+prl.y;
+if(isFinite(+prl.angle))r.angle=+prl.angle;
+if(isFinite(+prl.len))r.len=clamp(+prl.len,10,300);
+if(isFinite(+prl.w))r.w=clamp(+prl.w,2,20);
+const b=$('#btnPhysRuler'); if(b)b.classList.toggle('active',r.on);
 }
 if(pr.activeTab==='presets'){$('#tabPresets').click();}
 else{$('#tabParts').click();}
@@ -3340,7 +3530,7 @@ fitView(); updateStorageChip(); toast('✦ Новый проект');
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.17.0'},projectData()),null,2)],{type:'application/json'});
+const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.18.0'},projectData()),null,2)],{type:'application/json'});
 const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
 a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
 setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -3378,6 +3568,12 @@ const c=s2w(W/2,H/2);
 state.view.scale=BASE;
 state.view.ox=W/2-c.x*BASE;state.view.oy=H/2-c.y*BASE;
 draw();
+};
+$('#btnPhysRuler').onclick=function(){
+state.physRuler.on=!state.physRuler.on;
+$('#btnPhysRuler').classList.toggle('active',state.physRuler.on);
+if(state.physRuler.on)toast('📐 Линейка: перетаскивайте за корпус · колесо мыши над линейкой — поворот (Shift — крупнее) · рукоять ◈ справа — вращение');
+scheduleUISave(); draw();
 };
 $('#btnPack').onclick=function(){
 if(!state.pieces.length){toast('Холст пуст — нечего раскладывать','warn');return;}
@@ -3533,6 +3729,16 @@ cv.addEventListener('contextmenu',function(e){e.preventDefault();});
 cv.addEventListener('wheel',function(e){
 e.preventDefault();
 const p=eventXY(e);
+/* колесо над физической линейкой — поворот линейки */
+if(state.physRuler.on){
+const wpt=s2w(p.x,p.y);
+if(pointInPhysRuler(wpt.x,wpt.y)){
+const step=e.shiftKey?15:(e.ctrlKey?0.5:2);
+state.physRuler.angle+=(e.deltaY>0?step:-step);
+draw();
+return;
+}
+}
 zoomAt(p.x,p.y,Math.exp(-e.deltaY*0.0016));
 },{passive:false});
 cv.addEventListener('pointerleave',function(){mousePos.on=false;draw();});
@@ -3554,7 +3760,21 @@ if(e.button===1||e.button===2||spaceDown){
 gesture={type:'pan',pt:e.pointerType,sx:pt.x,sy:pt.y,ox:state.view.ox,oy:state.view.oy,moved:false};
 return;
 }
-const w=s2w(pt.x,pt.y), hit=pick(w.x,w.y);
+const w=s2w(pt.x,pt.y);
+/* физическая линейка: рукоять вращения и корпус */
+if(state.physRuler.on&&e.button===0){
+const hw=physRulerHandleWorld();
+const hs=w2s(hw[0],hw[1]);
+if(Math.hypot(hs.x-pt.x,hs.y-pt.y)<=14){
+gesture={type:'rulerRot',pt:e.pointerType};
+return;
+}
+if(pointInPhysRuler(w.x,w.y)){
+gesture={type:'rulerMove',pt:e.pointerType,gx:w.x-state.physRuler.x,gy:w.y-state.physRuler.y};
+return;
+}
+}
+const hit=pick(w.x,w.y);
 if(hit){
 selectPiece(hit.id);
 gesture={type:'drag',pt:e.pointerType,id:hit.id,gx:w.x-hit.x,gy:w.y-hit.y,sx:pt.x,sy:pt.y,moved:false};
@@ -3577,6 +3797,15 @@ const ns=clamp(gesture.scale0*(d/gesture.d0),0.05,120);
 state.view.scale=ns;
 state.view.ox=midC.x-gesture.w0.x*ns;
 state.view.oy=midC.y-gesture.w0.y*ns;
+draw(); return;
+}
+if(gesture&&gesture.type==='rulerMove'){
+state.physRuler.x=w.x-gesture.gx;
+state.physRuler.y=w.y-gesture.gy;
+draw(); return;
+}
+if(gesture&&gesture.type==='rulerRot'){
+state.physRuler.angle=Math.atan2(w.y-state.physRuler.y,w.x-state.physRuler.x)*180/Math.PI;
 draw(); return;
 }
 if(gesture&&gesture.type==='pan'){
@@ -3608,6 +3837,15 @@ draw();
 return;
 }
 if(e.pointerType==='mouse'){
+if(state.physRuler.on){
+const hw=physRulerHandleWorld();
+const hs=w2s(hw[0],hw[1]);
+if(Math.hypot(hs.x-pt.x,hs.y-pt.y)<=14)cv.style.cursor='grab';
+else if(pointInPhysRuler(w.x,w.y))cv.style.cursor='move';
+else cv.style.cursor='crosshair';
+}else{
+cv.style.cursor='crosshair';
+}
 const h=pick(w.x,w.y);
 const nid=h?h.id:null;
 if(nid!==state.hoverId){state.hoverId=nid;}
@@ -3660,6 +3898,7 @@ if(ctrEd){
 if(inInput)return;
 if(e.key==='Escape'){
 e.preventDefault();
+if(ctrEd.chordSel){ctrEd.chordSel=null;cDraw();return;}
 if(ctrEd.ruler&&(ctrEd.rulerDrag||ctrEd.rulerPins.length)){
 ctrEd.rulerDrag=null; ctrEd.rulerPins=[]; cDraw(); return;
 }
@@ -3695,6 +3934,13 @@ if(e.key==='0')fitView();
 if(e.key.toLowerCase()==='f'||e.key.toLowerCase()==='а')fitView();
 if(e.key.toLowerCase()==='w'||e.key.toLowerCase()==='ц')fitFabricWidth();
 if(e.key==='Home'){focusOrigin();return;}
+/* [ ] — поворот физической линейки, если она включена и деталь не выделена */
+if((e.key===']'||e.key==='[')&&state.physRuler.on&&!state.selId){
+const step=e.shiftKey?15:1;
+state.physRuler.angle+=(e.key===']'?step:-step);
+draw();
+return;
+}
 if(e.key.toLowerCase()==='r'||e.key.toLowerCase()==='к'){
 const p=byId(state.selId); if(p){p.rot=(p.rot+90)%360;markDirty();draw();scheduleRepack();}}
 if(e.key===']'||e.key==='['){
