@@ -163,11 +163,12 @@ aside{
 .tbtn input[type=checkbox]{margin:0}
 #fabWrap,#gridWrap{cursor:default}
 #fabWrap input[type=number]{width:58px; padding:4px 6px; font-size:12px}
-#fabWrap select,#gridWrap select{
-  width:auto; background:#0a0d1f; border:1px solid var(--line2); color:var(--txt);
+#fabWrap select,#gridWrap select,#nestPanel select{
+  background:#0a0d1f; border:1px solid var(--line2); color:var(--txt);
   border-radius:6px; padding:3px 5px; font:500 11px var(--font-mono); outline:none; cursor:pointer;
 }
-#fabWrap select:focus,#gridWrap select:focus{border-color:var(--cyan)}
+#fabWrap select,#gridWrap select{width:auto}
+#fabWrap select:focus,#gridWrap select:focus,#nestPanel select:focus{border-color:var(--cyan)}
 #fabHWrap{display:inline-flex; align-items:center; gap:6px}
 .gear{
   background:transparent; border:none; color:var(--dim); cursor:pointer;
@@ -188,8 +189,8 @@ aside{
 .chip.warn{color:#ffe08a; border-color:rgba(255,194,77,.45); box-shadow:0 0 9px rgba(255,194,77,.2)}
 .chip.bad{color:#ff9db1; border-color:rgba(255,77,109,.5); box-shadow:0 0 9px rgba(255,77,109,.25)}
 
-#gridPanel{
-  position:absolute; top:calc(100% + 8px); right:12px; z-index:36; width:248px;
+#gridPanel,#nestPanel{
+  position:absolute; top:calc(100% + 8px); right:12px; z-index:36; width:264px;
   background:rgba(10,12,26,.97); border:1px solid rgba(0,229,255,.4); border-radius:12px;
   box-shadow:0 0 22px rgba(0,229,255,.22), 0 16px 44px rgba(0,0,0,.6);
   padding:12px; display:flex; flex-direction:column; gap:10px; backdrop-filter:blur(8px);
@@ -198,14 +199,11 @@ aside{
 .pop-row{display:flex; align-items:center; justify-content:space-between; gap:10px}
 .pop-row>label{font:600 11px var(--font-ui); color:var(--dim)}
 .pop-row label.chk{display:flex; align-items:center; gap:7px; cursor:pointer; color:var(--txt)}
-.pop-row select{
-  width:112px; background:#0a0d1f; border:1px solid var(--line2); color:var(--txt);
-  border-radius:7px; padding:6px 7px; font:500 12px var(--font-mono); outline:none;
-}
-.pop-row select:focus{border-color:var(--cyan)}
+.pop-row select{width:126px; padding:6px 7px; font-size:12px}
 .pop-row input[type=range]{width:112px; accent-color:var(--cyan)}
 .pop-row input[type=number]{width:72px; padding:5px 7px; font-size:12px}
 .pop-val{font:700 11px var(--font-mono); color:var(--cyan); min-width:36px; text-align:right}
+.pop-note{font:400 10px/1.5 var(--font-ui); color:var(--dim)}
 
 #quick{
   position:absolute; z-index:20; min-width:216px; padding:10px;
@@ -330,7 +328,7 @@ aside{
   .chip{margin-left:0}
   #quick{min-width:186px}
   #fabWrap input[type=number]{width:52px}
-  #gridPanel{right:8px; width:232px}
+  #gridPanel,#nestPanel{right:8px; width:242px}
   #cWrap{height:min(44vh,420px)}
 }
 </style>
@@ -349,8 +347,8 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.6.1</span></div>
-      <div class="desc">Студия швейных выкроек: редактор контуров, свои шаблоны и пресеты, автораскладка с припусками.</div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.9.0</span></div>
+      <div class="desc">Студия швейных выкроек: точный нестинг с произвольными углами поворота, припусками и мультистартом.</div>
     </div>
   </div>
   <div class="head-actions">
@@ -373,7 +371,7 @@ aside{
       <div class="cat-title">Готовые комплекты</div>
       <div class="preset-grid" id="presetsList"></div>
     </div>
-    <div class="side-hint">✎ — редактор контура · «💾 В шаблон» сохранит контур как шаблон · ★ — пресет из деталей на холсте</div>
+    <div class="side-hint">⚡ — раскладка выбранным алгоритмом (⚙ — алгоритм, углы, зазоры) · ✎ — редактор контура</div>
   </aside>
 
   <section id="stage">
@@ -381,12 +379,13 @@ aside{
       <button class="tbtn" id="btnZoomOut" title="Уменьшить (−)">−</button>
       <span class="zoomlbl" id="zoomLbl">100%</span>
       <button class="tbtn" id="btnZoomIn" title="Увеличить (+)">+</button>
-      <button class="tbtn" id="btnFit" title="Вписать ткань и все детали в экран (0)">⤢ Вписать</button>
-      <button class="tbtn" id="btnFitW" title="Вписать всю ширину ткани по горизонтали (W)">⇤ По ширине</button>
+      <button class="tbtn" id="btnFit" title="Вписать всю конфигурацию: ткань по ширине и все детали (0)">⤢ Вписать</button>
+      <button class="tbtn" id="btnFitW" title="Вписать всю ширину ткани и деталей по горизонтали (W)">⇤ По ширине</button>
       <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
       <span class="tsep"></span>
-      <button class="tbtn" id="btnPack" title="Оптимальная автораскладка деталей в области ткани">⚡ Раскладка</button>
-      <label class="tbtn toggle active" id="autoWrap" title="Пересобирать раскладку автоматически при изменении параметров">
+      <button class="tbtn" id="btnPack" title="Выполнить раскладку выбранным алгоритмом">⚡ Раскладка</button>
+      <button class="tbtn" id="btnNestOpts" title="Алгоритм раскладки и параметры">⚙</button>
+      <label class="tbtn toggle active" id="autoWrap" title="Автоматически пересобирать раскладку при изменении параметров">
         <input type="checkbox" id="chkAuto" checked> Авто
       </label>
       <label class="tbtn toggle active" id="snapWrap" title="Привязка деталей к области ткани при перетаскивании">
@@ -444,6 +443,52 @@ aside{
           <label>Шаг привязки, см</label>
           <input type="number" id="gSnapStep" value="0.5" min="0.1" max="10" step="0.1">
         </div>
+      </div>
+
+      <div id="nestPanel" class="hidden">
+        <div class="pop-title">Алгоритм раскладки</div>
+        <div class="pop-row">
+          <label>Алгоритм</label>
+          <select id="nAlgo">
+            <option value="nest-fast">Нестинг (быстрый)</option>
+            <option value="nest-full" selected>Нестинг (точный)</option>
+            <option value="nest-multi">Мультистарт (макс.)</option>
+            <option value="shelf">Полочный (быстрый)</option>
+          </select>
+        </div>
+        <div class="pop-row">
+          <label>Поворот деталей</label>
+          <select id="nRotMode">
+            <option value="ortho" selected>0 / 90 / 180 / 270°</option>
+            <option value="step45">+ 45°</option>
+            <option value="free">Произвольный угол</option>
+          </select>
+        </div>
+        <div class="pop-row hidden" id="rowStep">
+          <label>Шаг угла, °</label>
+          <select id="nAngleStep">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+        <div class="pop-row">
+          <label class="chk"><input type="checkbox" id="nRefine" checked> Уточнение поворотом</label>
+        </div>
+        <div class="pop-row hidden" id="rowVariants">
+          <label>Вариантов укладки</label>
+          <input type="number" id="nVariants" value="3" min="2" max="8" step="1">
+        </div>
+        <div class="pop-row">
+          <label>Зазор деталей, см</label>
+          <input type="number" id="nGap" value="0.5" min="0" max="5" step="0.1">
+        </div>
+        <div class="pop-row">
+          <label>Отступ от ткани, см</label>
+          <input type="number" id="nMargin" value="2" min="0" max="10" step="0.5">
+        </div>
+        <div class="pop-note">Произвольный угол и мультистарт дают минимальный расход ткани, но требуют больше времени на расчёт.</div>
       </div>
     </div>
 
@@ -558,7 +603,7 @@ aside{
   </div>
 </div>
 
-<!-- Ввод имени (шаблон / пресет) -->
+<!-- Ввод имени -->
 <div class="overlay" id="nameOverlay">
   <div class="modal small">
     <div class="m-head"><b id="nameTitle">Название</b><button id="nameClose">✕</button></div>
@@ -916,6 +961,7 @@ const state={
   grid:true,
   fabric:true, fabricMode:'roll', fabricW:150, fabricH:200,
   gridOpts:{minor:'auto', majorEvery:5, alpha:100, axes:true, snap:true, snapStep:0.5},
+  nestOpts:{algo:'nest-full', rotMode:'ortho', angleStep:10, refine:true, variants:3, gap:0.5, margin:2},
   project:{id:null,name:'Новый проект'},
   dirty:false,
 };
@@ -978,63 +1024,381 @@ if(document.fonts&&document.fonts.ready){
   document.fonts.ready.then(function(){setTimeout(onAreaResize,50);});
 }
 
-/* ============================ автораскладка ============================ */
-function autoPackOn(){return $('#chkAuto').checked;}
-function scheduleRepack(){
-  if(!autoPackOn())return;
-  clearTimeout(repackTimer);
-  repackTimer=setTimeout(function(){packAll();fitView();markDirty();},400);
+/* ============================ РАСКЛАДКА ============================
+   Алгоритмы:
+   • nest-fast  — растровый нестинг, один порядок, без уточнений.
+   • nest-full  — 3 порядка укладки + гравитационное уплотнение +
+                  уточнение малыми поворотами.
+   • nest-multi — мультистарт: несколько случайных порядков укладки,
+                  выбирается лучший вариант + уточнение поворотами.
+   • shelf      — полочная укладка (быстрая).
+   Повороты: 0/90/180/270; опционально +45°; произвольный шаг угла. */
+const NEST_CELL=0.5;
+
+function transformPoly(poly,angleDeg,mirror){
+  let pts=poly;
+  if(mirror){
+    let mnx=1e9,mxx=-1e9;
+    for(const q of poly){if(q[0]<mnx)mnx=q[0];if(q[0]>mxx)mxx=q[0];}
+    pts=poly.map(q=>[mnx+mxx-q[0],q[1]]);
+  }
+  const a=((angleDeg%360)+360)%360;
+  if(a===0)return pts.map(q=>[q[0],q[1]]);
+  const rad=a*Math.PI/180, cs=Math.cos(rad), sn=Math.sin(rad);
+  return pts.map(q=>[q[0]*cs-q[1]*sn, q[0]*sn+q[1]*cs]);
 }
-function packAll(){
+function buildMask(poly,seamPlus,angleDeg,mirror){
+  const pts=transformPoly(poly,angleDeg,mirror);
+  let mnx=1e9,mny=1e9,mxx=-1e9,mxy=-1e9;
+  for(const q of pts){
+    if(q[0]<mnx)mnx=q[0]; if(q[0]>mxx)mxx=q[0];
+    if(q[1]<mny)mny=q[1]; if(q[1]>mxy)mxy=q[1];
+  }
+  const cell=NEST_CELL;
+  const w=Math.max(1,Math.ceil((mxx-mnx)/cell));
+  const h=Math.max(1,Math.ceil((mxy-mny)/cell));
+  const r=Math.max(0,Math.ceil((Math.max(0,seamPlus)+0.1)/cell));
+  const gw=w+2*r, gh=h+2*r;
+  const m=new Uint8Array(gw*gh);
+  for(let j=0;j<h;j++){
+    const y=mny+(j+0.5)*cell;
+    const xs=[];
+    for(let i=0;i<pts.length;i++){
+      const a=pts[i],b=pts[(i+1)%pts.length];
+      if((a[1]>y)!==(b[1]>y)){
+        xs.push(a[0]+(y-a[1])*(b[0]-a[0])/(b[1]-a[1]));
+      }
+    }
+    xs.sort((u,v)=>u-v);
+    for(let k=0;k+1<xs.length;k+=2){
+      const i0=Math.max(0,Math.floor((xs[k]-mnx)/cell));
+      const i1=Math.min(w-1,Math.floor((xs[k+1]-mnx)/cell));
+      for(let i=i0;i<=i1;i++)m[(j+r)*gw+(i+r)]=1;
+    }
+  }
+  if(r>0){
+    const dist=new Int16Array(gw*gh).fill(-1);
+    const q=[];
+    for(let i=0;i<m.length;i++)if(m[i]){dist[i]=0;q.push(i);}
+    let head=0;
+    while(head<q.length){
+      const idx=q[head++];
+      const d=dist[idx];
+      if(d>=r)continue;
+      const x=idx%gw;
+      if(x>0&&dist[idx-1]<0){dist[idx-1]=d+1;m[idx-1]=1;q.push(idx-1);}
+      if(x<gw-1&&dist[idx+1]<0){dist[idx+1]=d+1;m[idx+1]=1;q.push(idx+1);}
+      if(idx-gw>=0&&dist[idx-gw]<0){dist[idx-gw]=d+1;m[idx-gw]=1;q.push(idx-gw);}
+      if(idx+gw<m.length&&dist[idx+gw]<0){dist[idx+gw]=d+1;m[idx+gw]=1;q.push(idx+gw);}
+    }
+  }
+  const cells=[];
+  for(let i=0;i<m.length;i++)if(m[i])cells.push(i);
+  let subset=cells;
+  if(cells.length>260){
+    const step=Math.ceil(cells.length/260);
+    subset=cells.filter((v,i)=>i%step===0);
+  }
+  return {m:m,gw:gw,gh:gh,cells:cells,subset:subset,off:r,angle:angleDeg};
+}
+function getMask(it,angle,seamPlus){
+  const key=angle+'|'+seamPlus;
+  if(!it.maskCache[key])it.maskCache[key]=buildMask(it.poly,seamPlus,angle,it.p.mirror);
+  return it.maskCache[key];
+}
+function maskFits(grid,cols,rows,mk,gx,gy,full){
+  if(gx<0||gy<0||gx+mk.gw>cols||gy+mk.gh>rows)return false;
+  const list=full?mk.cells:mk.subset;
+  for(let k=0;k<list.length;k++){
+    const idx=list[k];
+    const lx=idx%mk.gw, ly=(idx/mk.gw)|0;
+    if(grid[(gy+ly)*cols+(gx+lx)])return false;
+  }
+  return true;
+}
+function markMask(grid,cols,mk,gx,gy,on){
+  const v=on?1:0;
+  for(let k=0;k<mk.cells.length;k++){
+    const idx=mk.cells[k];
+    const lx=idx%mk.gw, ly=(idx/mk.gw)|0;
+    grid[(gy+ly)*cols+(gx+lx)]=v;
+  }
+}
+function refineSpotFor(grid,cols,rows,mk,cx,cy,mc){
+  let best=null;
+  const gx0=Math.max(mc,cx-4), gx1=Math.min(cols-mc-mk.gw,cx+4);
+  const gy0=Math.max(mc,cy-4), gy1=Math.min(rows-mc-mk.gh,cy+4);
+  for(let gy=gy0;gy<=gy1;gy++){
+    for(let gx=gx0;gx<=gx1;gx++){
+      if(maskFits(grid,cols,rows,mk,gx,gy,true)){
+        if(!best||gy<best.gy||(gy===best.gy&&gx<best.gx))best={gx:gx,gy:gy,angle:mk.angle};
+      }
+    }
+  }
+  return best;
+}
+/* Поиск позиции для конкретной маски (с ограничением по gy для уточнения) */
+function findSpotForMk(grid,cols,rows,mk,mc,gyCap){
+  const gyMax=(gyCap!=null)?Math.min(rows-mc,gyCap+1):(rows-mc);
+  const gxMax=cols-mc;
+  if(mk.gw>gxMax-mc||mk.gh>gyMax-mc)return null;
+  for(let gy=mc;gy<gyMax;gy+=4){
+    for(let gx=mc;gx<gxMax;gx+=4){
+      if(gx+mk.gw>gxMax||gy+mk.gh>gyMax)continue;
+      if(!maskFits(grid,cols,rows,mk,gx,gy,false))continue;
+      const s=refineSpotFor(grid,cols,rows,mk,gx,gy,mc);
+      if(s)return s;
+    }
+  }
+  for(let gy=mc;gy<gyMax;gy+=2){
+    for(let gx=mc;gx<gxMax;gx+=2){
+      if(gx+mk.gw>gxMax||gy+mk.gh>gyMax)continue;
+      if(maskFits(grid,cols,rows,mk,gx,gy,true))return {gx:gx,gy:gy,angle:mk.angle};
+    }
+  }
+  return null;
+}
+/* Поиск позиции среди набора углов (нижний-левый, ранний выходод) */
+function findSpotAny(grid,cols,rows,it,angles,mc,seamPlusFn){
+  const gyMax=rows-mc,gxMax=cols-mc;
+  for(let gy=mc;gy<gyMax;gy+=4){
+    for(let gx=mc;gx<gxMax;gx+=4){
+      for(const ang of angles){
+        const mk=getMask(it,ang,seamPlusFn(it));
+        if(gx+mk.gw>gxMax||gy+mk.gh>gyMax)continue;
+        if(!maskFits(grid,cols,rows,mk,gx,gy,false))continue;
+        const s=refineSpotFor(grid,cols,rows,mk,gx,gy,mc);
+        if(s)return {spot:s,mk:mk};
+      }
+    }
+  }
+  for(let gy=mc;gy<gyMax;gy+=2){
+    for(let gx=mc;gx<gxMax;gx+=2){
+      for(const ang of angles){
+        const mk=getMask(it,ang,seamPlusFn(it));
+        if(gx+mk.gw>gxMax||gy+mk.gh>gyMax)continue;
+        if(maskFits(grid,cols,rows,mk,gx,gy,true))return {spot:{gx:gx,gy:gy,angle:mk.angle},mk:mk};
+      }
+    }
+  }
+  return null;
+}
+/* Уточнение раскладки малыми поворотами вокруг текущего угла */
+function refineRotations(placed,grid,cols,rows,mc,seamPlusFn){
+  const deltas=[-6,-4,-2,-1,1,2,4,6];
+  for(let pass=0;pass<2;pass++){
+    let improved=false;
+    placed.sort((a,b)=>(b.spot.gy-a.spot.gy)||(b.spot.gx-a.spot.gx));
+    for(const pl of placed){
+      const cur=((pl.mk.angle%360)+360)%360;
+      const cand=[];
+      for(const d of deltas){
+        const a=((cur+d)%360+360)%360;
+        if(!cand.includes(a))cand.push(a);
+      }
+      markMask(grid,cols,pl.mk,pl.spot.gx,pl.spot.gy,0);
+      let best=null;
+      for(const ang of cand){
+        const mk=getMask(pl.it,ang,seamPlusFn(pl.it));
+        const spot=findSpotForMk(grid,cols,rows,mk,mc,pl.spot.gy);
+        if(spot&&(!best||spot.gy<best.spot.gy||(spot.gy===best.spot.gy&&spot.gx<best.spot.gx)))best={spot:spot,mk:mk};
+      }
+      if(best&&(best.spot.gy<pl.spot.gy||(best.spot.gy===pl.spot.gy&&best.spot.gx<pl.spot.gx))){
+        markMask(grid,cols,best.mk,best.spot.gx,best.spot.gy,1);
+        pl.spot=best.spot;pl.mk=best.mk;improved=true;
+      }else{
+        markMask(grid,cols,pl.mk,pl.spot.gx,pl.spot.gy,1);
+      }
+    }
+    if(!improved)break;
+  }
+}
+function runNest(orderItems,cols,rows,angles,gravity,mc,seamPlusFn,refine){
+  const grid=new Uint8Array(cols*rows);
+  const placed=[],fails=[];
+  for(const it of orderItems){
+    const res=findSpotAny(grid,cols,rows,it,angles,mc,seamPlusFn);
+    if(res){
+      markMask(grid,cols,res.mk,res.spot.gx,res.spot.gy,1);
+      placed.push({it:it,spot:res.spot,mk:res.mk});
+    }else{
+      fails.push(it);
+    }
+  }
+  if(gravity&&placed.length){
+    for(let pass=0;pass<2;pass++){
+      placed.sort((a,b)=>(b.spot.gy-a.spot.gy)||(b.spot.gx-a.spot.gx));
+      let moved=false;
+      for(const pl of placed){
+        markMask(grid,cols,pl.mk,pl.spot.gx,pl.spot.gy,0);
+        const res=findSpotAny(grid,cols,rows,pl.it,angles,mc,seamPlusFn);
+        if(res&&(res.spot.gy<pl.spot.gy||(res.spot.gy===pl.spot.gy&&res.spot.gx<pl.spot.gx))){
+          markMask(grid,cols,res.mk,res.spot.gx,res.spot.gy,1);
+          pl.spot=res.spot;pl.mk=res.mk;moved=true;
+        }else{
+          markMask(grid,cols,pl.mk,pl.spot.gx,pl.spot.gy,1);
+        }
+      }
+      if(!moved)break;
+    }
+  }
+  if(refine&&placed.length)refineRotations(placed,grid,cols,rows,mc,seamPlusFn);
+  let maxY=0;
+  for(const pl of placed)maxY=Math.max(maxY,pl.spot.gy+pl.mk.gh);
+  return {placed:placed,fails:fails,maxY:maxY};
+}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function shuffleRnd(arr,rnd){for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));const t=arr[i];arr[i]=arr[j];arr[j]=t;}}
+function angleSetFor(count){
+  const o=state.nestOpts;
+  if(o.rotMode==='ortho')return [0,90,180,270];
+  if(o.rotMode==='step45')return [0,45,90,135,180,225,270,315];
+  let step=clamp(+o.angleStep||10,2,30);
+  if(count>12)step=Math.max(step,10);
+  const arr=[];for(let a=0;a<360;a+=step)arr.push(a);
+  return arr;
+}
+function runPlacement(fast){
   if(!state.pieces.length)return;
-  const margin=2,gap=1;
-  const X0=margin,X1=(state.fabric?state.fabricW:150)-margin;
+  if(state.nestOpts.algo==='shelf'){ doShelf(); return; }
+  nestPieces(fast||state.nestOpts.algo==='nest-fast');
+}
+function nestPieces(fast){
+  if(!state.pieces.length)return;
+  const o=state.nestOpts;
+  const heavy=!fast&&(o.algo==='nest-full'||o.algo==='nest-multi');
+  toast(heavy?'⚡ Точная раскладка (может занять время)…':'⚡ Выполняется раскладка…');
+  setTimeout(function(){
+    try{doNest(fast);}catch(err){toast('Ошибка раскладки: '+err.message,'err');}
+  },30);
+}
+function doNest(fast){
+  const o=state.nestOpts;
+  const cell=NEST_CELL;
+  const fabW=state.fabricW;
+  const cols=Math.max(10,Math.round(fabW/cell));
+  const pieceMode=state.fabric&&state.fabricMode==='piece';
+  const rowsPiece=pieceMode?Math.max(10,Math.round(state.fabricH/cell)):0;
+  const mc=Math.max(0,Math.round(o.margin/cell));
+  const items=state.pieces.map(function(p){
+    rebuildPiece(p);
+    return {p:p, poly:p._poly.map(q=>[q[0],q[1]]), seam:Math.max(0,+p.seam||0),
+            area:Math.max(1,p._bounds.w*p._bounds.h), h:p._bounds.h, w:p._bounds.w, maskCache:{}};
+  });
+  const multi=!fast&&o.algo==='nest-multi';
+  const full=!fast&&(o.algo==='nest-full'||o.algo==='nest-multi');
+  const angles=angleSetFor(items.length);
+  const totalArea=items.reduce((s,it)=>s+it.area,0);
+  const rollRows=clamp(Math.ceil((totalArea*3/Math.max(60,fabW)+400)/cell),400,8000);
+  const mainRows=rowsPiece||rollRows;
+  const seamPlusFn=function(it){return it.seam+Math.max(0,o.gap)/2;};
+  const byArea=items.slice().sort((a,b)=>b.area-a.area);
+  const orders=[];
+  if(fast){
+    orders.push(byArea);
+  }else if(multi){
+    orders.push(byArea);
+    const K=clamp(Math.round(+o.variants||3),2,8)-1;
+    const rnd=mulberry32(987654);
+    for(let k=0;k<K;k++){const arr=byArea.slice();shuffleRnd(arr,rnd);orders.push(arr);}
+  }else{
+    orders.push(byArea,
+      items.slice().sort((a,b)=>b.h-a.h),
+      items.slice().sort((a,b)=>b.w-a.w));
+  }
+  let best=null;
+  for(const order of orders){
+    const main=runNest(order,cols,mainRows,angles,full,mc,seamPlusFn,full&&!!o.refine);
+    let over={placed:[],fails:main.fails,maxY:0};
+    if(main.fails.length){
+      over=runNest(main.fails,cols,Math.min(rollRows,2000),angles,false,mc,seamPlusFn);
+    }
+    const mainLen=main.maxY*cell;
+    const hasOver=over.placed.length>0||over.fails.length>0;
+    const totalLen=hasOver?((pieceMode?state.fabricH:mainLen)+8+over.maxY*cell):mainLen;
+    const metric=(pieceMode?(-main.placed.length*1000000):0)+totalLen;
+    if(!best||metric<best.metric)best={main:main,over:over,metric:metric,totalLen:totalLen};
+  }
+  const cellSz=cell;
+  const mainLen=best.main.maxY*cellSz;
+  const overY0=(pieceMode?state.fabricH:mainLen)+8;
+  for(const pl of best.main.placed){
+    placeAt(pl.it.p,(pl.spot.gx+pl.mk.off)*cellSz,(pl.spot.gy+pl.mk.off)*cellSz,pl.mk.angle);
+  }
+  for(const pl of best.over.placed){
+    placeAt(pl.it.p,(pl.spot.gx+pl.mk.off)*cellSz,overY0+(pl.spot.gy+pl.mk.off)*cellSz,pl.mk.angle);
+  }
+  let fy=overY0+best.over.maxY*cellSz+4;
+  for(const it of best.over.fails){
+    placeAt(it.p,2,fy,0);
+    fy+=it.p._bounds.h+6;
+  }
+  markDirty(); draw(); fitView();
+  const placedN=best.main.placed.length+best.over.placed.length;
+  const algoName={'nest-fast':'Нестинг (быстрый)','nest-full':'Нестинг (точный)','nest-multi':'Мультистарт','shelf':'Полочный'}[o.algo]||'Нестинг';
+  let msg=`⚡ ${algoName}: ${placedN} дет. · длина ≈ ${Math.ceil(best.totalLen/5)*5} см`;
+  if(pieceMode&&best.main.fails.length)msg+=` · вне куска: ${best.main.fails.length}`;
+  toast(msg);
+}
+/* Полочный алгоритм */
+function doShelf(){
+  if(!state.pieces.length)return;
+  toast('⚡ Полочная раскладка…');
+  setTimeout(function(){
+    try{doShelfNow();}catch(err){toast('Ошибка раскладки: '+err.message,'err');}
+  },30);
+}
+function doShelfNow(){
+  const o=state.nestOpts;
+  const margin=Math.max(0,+o.margin||0), gap=Math.max(0,+o.gap||0);
+  const X0=margin, X1=(state.fabric?state.fabricW:150)-margin;
   const pieceMode=state.fabric&&state.fabricMode==='piece';
   const Y1=pieceMode?state.fabricH-margin:Infinity;
   const items=state.pieces.map(function(p){
     rebuildPiece(p);
     const s=Math.max(0,+p.seam||0);
-    return {p:p, seam:s, ew:p._bounds.w+2*s, eh:p._bounds.h+2*s};
+    return {p:p, s:s, ew:p._bounds.w+2*s, eh:p._bounds.h+2*s};
   });
   items.sort((a,b)=>(b.ew*b.eh)-(a.ew*a.eh));
   const overflow=[];
   let x=X0,y=margin,shelfH=0;
   for(const it of items){
-    const cands=[
-      {w:it.ew,h:it.eh,rot:0},
-      {w:it.eh,h:it.ew,rot:90}
-    ].filter(o=>o.w<=X1-X0+0.001).sort((a,b)=>a.h-b.h);
+    const cands=[{w:it.ew,h:it.eh,rot:0},{w:it.eh,h:it.ew,rot:90}]
+      .filter(c=>c.w<=X1-X0+0.001).sort((a,b)=>a.h-b.h);
     let placed=false;
-    for(const o of cands){
+    for(const c of cands){
       let xx=x,yy=y,sh=shelfH;
-      if(xx+o.w>X1+0.001&&xx>X0){yy=y+shelfH+gap;xx=X0;sh=0;}
-      if(yy+o.h>Y1+0.001)continue;
-      placeAt(it.p,xx+it.seam,yy+it.seam,o.rot);
-      x=xx+o.w+gap;y=yy;shelfH=Math.max(sh,o.h);
-      placed=true;break;
+      if(xx+c.w>X1+0.001&&xx>X0){yy=y+shelfH+gap;xx=X0;sh=0;}
+      if(yy+c.h>Y1+0.001)continue;
+      placeAt(it.p,xx+it.s,yy+it.s,c.rot);
+      x=xx+c.w+gap;y=yy;shelfH=Math.max(sh,c.h);placed=true;break;
     }
     if(!placed)overflow.push(it);
   }
-  const overIds=new Set(overflow.map(it=>it.p.id));
   if(overflow.length){
-    let ox=X0, oy=pieceMode?state.fabricH+8:margin, oShelf=0;
+    let ox=X0, oy=(pieceMode?state.fabricH:margin)+8, oS=0;
     for(const it of overflow){
-      const c0={w:it.ew,h:it.eh,rot:0}, c90={w:it.eh,h:it.ew,rot:90};
-      const fitsW=q=>q.w<=X1-X0+0.001;
-      let o=c0;
-      if(!fitsW(c0)&&fitsW(c90))o=c90;
-      else if(fitsW(c0)&&fitsW(c90)&&c90.h<c0.h)o=c90;
-      if(ox+o.w>X1+0.001&&ox>X0){oy+=oShelf+gap;ox=X0;oShelf=0;}
-      placeAt(it.p,ox+it.seam,oy+it.seam,o.rot);
-      ox+=o.w+gap;oShelf=Math.max(oShelf,o.h);
+      const cands=[{w:it.ew,h:it.eh,rot:0},{w:it.eh,h:it.ew,rot:90}]
+        .filter(c=>c.w<=X1-X0+0.001).sort((a,b)=>a.h-b.h);
+      const c=cands[0]||{w:it.ew,h:it.eh,rot:0};
+      if(ox+c.w>X1+0.001&&ox>X0){oy+=oS+gap;ox=X0;oS=0;}
+      placeAt(it.p,ox+it.s,oy+it.s,c.rot);
+      ox+=c.w+gap;oS=Math.max(oS,c.h);
     }
     if(pieceMode)toast(`⚠ Не поместились в кусок: ${overflow.length} дет. — размещены под тканью`,'warn');
   }
-  if(state.fabric) for(const p of state.pieces) if(!overIds.has(p.id)) clampToFabric(p);
-  draw();
+  markDirty(); draw(); fitView();
+  toast('⚡ Полочная раскладка выполнена');
 }
+function scheduleRepack(){
+  if(!autoPackOn())return;
+  clearTimeout(repackTimer);
+  repackTimer=setTimeout(function(){runPlacement(true);},600);
+}
+/* быстрая оценка длины (для 📏) */
 function estimateLength(widthCm){
-  const margin=2,gap=1;
+  const o=state.nestOpts;
+  const margin=Math.max(0,+o.margin||0), gap=Math.max(0,+o.gap||0);
   const X0=margin,X1=Math.max(margin+1,widthCm-margin);
   const items=state.pieces.map(function(p){
     const s=Math.max(0,+p.seam||0);
@@ -1045,11 +1409,11 @@ function estimateLength(widthCm){
   for(const it of items){
     const c0={w:it.w,h:it.h},c90={w:it.h,h:it.w};
     const fitsW=q=>q.w<=X1-X0+0.001;
-    let o=c0;
-    if(!fitsW(c0)&&fitsW(c90))o=c90;
-    else if(fitsW(c0)&&fitsW(c90)&&c90.h<c0.h)o=c90;
-    if(x+o.w>X1+0.001&&x>X0){y+=shelfH+gap;x=X0;shelfH=0;}
-    x+=o.w+gap;shelfH=Math.max(shelfH,o.h);
+    let o2=c0;
+    if(!fitsW(c0)&&fitsW(c90))o2=c90;
+    else if(fitsW(c0)&&fitsW(c90)&&c90.h<c0.h)o2=c90;
+    if(x+o2.w>X1+0.001&&x>X0){y+=shelfH+gap;x=X0;shelfH=0;}
+    x+=o2.w+gap;shelfH=Math.max(shelfH,o2.h);
   }
   return y+shelfH+margin;
 }
@@ -1240,15 +1604,19 @@ function contentBounds(){
 }
 function fitBounds(){
   const b=contentBounds();
-  const fw=state.fabricW;
   let minx,miny,maxx,maxy;
   if(b){minx=b.minx;miny=b.miny;maxx=b.maxx;maxy=b.maxy;}
-  else{minx=0;miny=0;maxx=state.fabric?fw:150;maxy=state.fabric?(state.fabricMode==='piece'?state.fabricH:Math.max(80,fw*0.6)):100;}
+  else{
+    minx=0;miny=0;
+    maxx=state.fabric?state.fabricW:150;
+    maxy=state.fabric?(state.fabricMode==='piece'?state.fabricH:100):100;
+  }
   if(state.fabric){
     minx=Math.min(minx,0);
-    maxx=Math.max(maxx,fw);
+    maxx=Math.max(maxx,state.fabricW);
     miny=Math.min(miny,0);
-    maxy=Math.max(maxy,state.fabricMode==='piece'?state.fabricH:miny+60);
+    if(state.fabricMode==='piece')maxy=Math.max(maxy,state.fabricH);
+    else maxy=Math.max(maxy,miny+60);
   }
   return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
@@ -1258,7 +1626,7 @@ function fitView(){
   const b=fitBounds();
   const bw=Math.max(1,b.maxx-b.minx);
   const bh=Math.max(1,b.maxy-b.miny);
-  const padL=36,padR=36,padT=48,padB=36;
+  const padL=32,padR=32,padT=46,padB=32;
   const availW=Math.max(40,W-padL-padR);
   const availH=Math.max(40,H-padT-padB);
   const s=clamp(Math.min(availW/bw,availH/bh),0.12,80);
@@ -1271,18 +1639,16 @@ function fitView(){
 function fitFabricWidth(){
   ensureSize();
   if(W<80||H<80)return;
+  const b=contentBounds();
   let minx,maxx;
   if(state.fabric){minx=0;maxx=state.fabricW;}
-  else{
-    const b=contentBounds();
-    if(!b){toast('Холст пуст — нечего вписывать','warn');return;}
-    minx=b.minx;maxx=b.maxx;
-  }
-  const padL=30,padR=30,padT=44;
+  else if(b){minx=b.minx;maxx=b.maxx;}
+  else{toast('Холст пуст — нечего вписывать','warn');return;}
+  if(b){minx=Math.min(minx,b.minx);maxx=Math.max(maxx,b.maxx);}
+  const padL=28,padR=28,padT=44;
   const availW=Math.max(40,W-padL-padR);
   const s=clamp(availW/Math.max(1,maxx-minx),0.12,80);
-  const b2=contentBounds();
-  const topY=b2?Math.min(b2.miny,0):0;
+  const topY=b?Math.min(b.miny,0):0;
   state.view.scale=s;
   state.view.ox=padL-minx*s;
   state.view.oy=padT-topY*s;
@@ -1332,7 +1698,7 @@ function makePiece(type,over,name,color,custom){
 }
 function addPieceToCanvas(p){
   state.pieces.push(p);
-  if(autoPackOn()){ packAll(); fitView(); }
+  if(autoPackOn()){ runPlacement(true); }
   else{
     ensureSize();
     const c=s2w(W/2,H/2);
@@ -1511,7 +1877,7 @@ $('#mSeam').addEventListener('input',function(e){const p=byId(editorId);if(!p)re
   p.seam=clamp(v,0,5); markDirty(); draw();
   scheduleRepack();
 });
-$('#mMirror').addEventListener('change',function(e){const p=byId(editorId);if(p){p.mirror=e.target.checked;markDirty();draw();}});
+$('#mMirror').addEventListener('change',function(e){const p=byId(editorId);if(p){p.mirror=e.target.checked;markDirty();draw();scheduleRepack();}});
 $('#mContour').onclick=function(){const p=byId(editorId);if(p)openContourEditor(p);};
 $('#mDup').onclick=function(){const p=byId(editorId);if(p){const np=duplicatePiece(p);editorId=np.id;openEditor(np);}};
 $('#mDel').onclick=function(){if(editorId)removePiece(editorId);};
@@ -1815,7 +2181,7 @@ $('#nameInput').addEventListener('keydown',function(e){
   if(e.key==='Escape'){e.preventDefault();closeNameModal(false);}
 });
 
-/* ============================ шаблоны: панель, экспорт/импорт ============================ */
+/* ============================ шаблоны ============================ */
 function tplBounds(tpl){
   let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
   for(const pt of tpl.pts){
@@ -1862,7 +2228,7 @@ function renameTemplate(id){
 }
 function exportTemplates(){
   if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-  const data={app:'NEONCUT',kind:'templates',version:'1.6.1',exportedAt:Date.now(),templates:userTemplates};
+  const data={app:'NEONCUT',kind:'templates',version:'1.9.0',exportedAt:Date.now(),templates:userTemplates};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -1904,7 +2270,7 @@ async function importTemplatesFile(file){
   }
 }
 
-/* ============================ пресеты: пользовательские ============================ */
+/* ============================ пресеты ============================ */
 function findPreset(id){
   return PRESETS.find(function(x){return x.id===id;})||userPresets.find(function(x){return x.id===id;});
 }
@@ -1936,8 +2302,6 @@ async function deleteUserPreset(id){
   buildPresetsUI();
   toast('🗑 Пресет удалён','warn');
 }
-
-/* ============================ пресеты: добавление ============================ */
 function addPreset(id,opts){
   opts=opts||{};
   const pr=findPreset(id); if(!pr)return;
@@ -1950,22 +2314,24 @@ function addPreset(id,opts){
     return p;
   }).filter(Boolean);
   if(!items.length)return;
+  for(const p of items)state.pieces.push(p);
+  markDirty();
   if(autoPackOn()){
-    for(const p of items)state.pieces.push(p);
-    packAll();
+    runPlacement(false);
   }else{
+    const o=state.nestOpts;
+    const margin=Math.max(0,+o.margin||0), gap=Math.max(0,+o.gap||0);
     const cb=contentBounds();
-    const maxW=(state.fabric?state.fabricW:150)-4, gap=4;
-    let x=2, y=cb?cb.maxy+8:2, rowH=0;
+    const maxW=(state.fabric?state.fabricW:150)-margin;
+    let x=margin, y=cb?cb.maxy+8:margin, rowH=0;
     for(const p of items){
       const s=Math.max(0,+p.seam||0);
       const bw=p._bounds.w+2*s, bh=p._bounds.h+2*s;
-      if(x>2&&x+bw>maxW){x=2;y+=rowH+gap;rowH=0;}
+      if(x>margin&&x+bw>maxW){x=margin;y+=rowH+gap;rowH=0;}
       placeAt(p,x+s,y+s,0); x+=bw+gap; rowH=Math.max(rowH,bh);
-      state.pieces.push(p);
     }
+    fitView();
   }
-  markDirty(); fitView();
   if(!opts.silent)toast(`${pr.icon||'★'} ${pr.name}: добавлено ${items.length} дет.`);
   closeSide();
 }
@@ -2162,6 +2528,7 @@ function projectData(){
     name:(state.project.name||'Без названия').trim()||'Без названия',
     updatedAt:Date.now(),
     gridOpts:Object.assign({},state.gridOpts),
+    nestOpts:Object.assign({},state.nestOpts),
     fabric:{on:state.fabric,mode:state.fabricMode,w:state.fabricW,h:state.fabricH},
     pieces:state.pieces.map(serializePiece)};
 }
@@ -2172,6 +2539,35 @@ function syncFabricUI(){
   const fw=$('#fabW'); if(fw)fw.value=String(state.fabricW);
   const fh=$('#fabH'); if(fh)fh.value=String(state.fabricH);
   const hw=$('#fabHWrap'); if(hw)hw.classList.toggle('hidden',state.fabricMode!=='piece');
+}
+function updateNestPanelRows(){
+  const o=state.nestOpts;
+  $('#rowStep').classList.toggle('hidden',o.rotMode!=='free');
+  $('#rowVariants').classList.toggle('hidden',o.algo!=='nest-multi');
+}
+function syncNestUI(){
+  const o=state.nestOpts;
+  const a=$('#nAlgo'); if(a)a.value=o.algo;
+  const r=$('#nRotMode'); if(r)r.value=o.rotMode;
+  const st=$('#nAngleStep'); if(st)st.value=String(o.angleStep);
+  const rf=$('#nRefine'); if(rf)rf.checked=!!o.refine;
+  const vr=$('#nVariants'); if(vr)vr.value=String(o.variants);
+  const g=$('#nGap'); if(g)g.value=String(o.gap);
+  const m=$('#nMargin'); if(m)m.value=String(o.margin);
+  updateNestPanelRows();
+}
+function applyNestOpts(o){
+  if(!o||typeof o!=='object')return;
+  const n=state.nestOpts;
+  if(o.algo==='nest-full'||o.algo==='nest-fast'||o.algo==='nest-multi'||o.algo==='shelf')n.algo=o.algo;
+  if(o.rotMode==='ortho'||o.rotMode==='step45'||o.rotMode==='free')n.rotMode=o.rotMode;
+  else if(o.allow45===true)n.rotMode='step45';
+  if(isFinite(+o.angleStep))n.angleStep=clamp(Math.round(+o.angleStep),2,30);
+  if(typeof o.refine==='boolean')n.refine=o.refine;
+  if(isFinite(+o.variants))n.variants=clamp(Math.round(+o.variants),2,8);
+  if(isFinite(+o.gap))n.gap=clamp(+o.gap,0,5);
+  if(isFinite(+o.margin))n.margin=clamp(+o.margin,0,10);
+  syncNestUI();
 }
 function applyGridOpts(o){
   if(!o||typeof o!=='object')return;
@@ -2245,6 +2641,7 @@ function loadProject(data){
     state.pieces.push(p);
   }
   applyGridOpts(data.gridOpts);
+  applyNestOpts(data.nestOpts);
   if(data.fabric){
     state.fabric=!!data.fabric.on;
     state.fabricMode=data.fabric.mode==='piece'?'piece':'roll';
@@ -2273,7 +2670,7 @@ function newProject(){
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.6.1'},projectData()),null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.9.0'},projectData()),null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -2298,12 +2695,11 @@ $('#btn100').onclick=function(){
 };
 $('#btnPack').onclick=function(){
   if(!state.pieces.length){toast('Холст пуст — нечего раскладывать','warn');return;}
-  packAll(); fitView(); markDirty();
-  toast('⚡ Автораскладка выполнена (с учётом припусков)');
+  runPlacement(false);
 };
 $('#chkAuto').addEventListener('change',function(e){
   $('#autoWrap').classList.toggle('active',e.target.checked);
-  if(e.target.checked&&state.pieces.length){packAll();fitView();markDirty();toast('⚡ Автораскладка включена');}
+  if(e.target.checked&&state.pieces.length)runPlacement(true);
 });
 $('#chkSnap').addEventListener('change',function(e){
   $('#snapWrap').classList.toggle('active',e.target.checked);
@@ -2321,17 +2717,25 @@ $('#gStep').addEventListener('change',function(e){
   state.gridOpts.minor=e.target.value==='auto'?'auto':parseFloat(e.target.value);
   draw();
 });
+function closeAllPanels(){
+  $('#gridPanel').classList.add('hidden');
+  $('#nestPanel').classList.add('hidden');
+}
 $('#btnGridOpts').addEventListener('click',function(e){
   e.stopPropagation();
-  $('#gridPanel').classList.toggle('hidden');
+  const wasHidden=$('#gridPanel').classList.contains('hidden');
+  closeAllPanels();
+  if(wasHidden)$('#gridPanel').classList.remove('hidden');
+});
+$('#btnNestOpts').addEventListener('click',function(e){
+  e.stopPropagation();
+  const wasHidden=$('#nestPanel').classList.contains('hidden');
+  closeAllPanels();
+  if(wasHidden)$('#nestPanel').classList.remove('hidden');
 });
 document.addEventListener('click',function(e){
-  const panel=$('#gridPanel');
-  if(panel&&!panel.classList.contains('hidden')
-     && !e.target.closest('#gridPanel')
-     && !e.target.closest('#btnGridOpts')){
-    panel.classList.add('hidden');
-  }
+  if(!e.target.closest('#gridPanel')&&!e.target.closest('#btnGridOpts'))$('#gridPanel').classList.add('hidden');
+  if(!e.target.closest('#nestPanel')&&!e.target.closest('#btnNestOpts'))$('#nestPanel').classList.add('hidden');
 });
 $('#gMajor').addEventListener('change',function(e){
   state.gridOpts.majorEvery=parseInt(e.target.value,10)||5;
@@ -2347,6 +2751,38 @@ $('#gSnap').addEventListener('change',function(e){state.gridOpts.snap=e.target.c
 $('#gSnapStep').addEventListener('input',function(e){
   const v=parseFloat(e.target.value);
   if(isFinite(v))state.gridOpts.snapStep=clamp(v,0.1,10);
+});
+
+/* параметры раскладки */
+$('#nAlgo').addEventListener('change',function(e){
+  state.nestOpts.algo=e.target.value;
+  updateNestPanelRows();
+  if(state.pieces.length)runPlacement(false);
+});
+$('#nRotMode').addEventListener('change',function(e){
+  state.nestOpts.rotMode=e.target.value;
+  updateNestPanelRows();
+  if(state.pieces.length&&state.nestOpts.algo!=='shelf')runPlacement(false);
+});
+$('#nAngleStep').addEventListener('change',function(e){
+  const v=parseInt(e.target.value,10);
+  if(isFinite(v)){state.nestOpts.angleStep=clamp(v,2,30);scheduleRepack();}
+});
+$('#nRefine').addEventListener('change',function(e){
+  state.nestOpts.refine=e.target.checked;
+  if(state.pieces.length&&state.nestOpts.algo!=='shelf'&&state.nestOpts.algo!=='nest-fast')scheduleRepack();
+});
+$('#nVariants').addEventListener('input',function(e){
+  const v=parseInt(e.target.value,10);
+  if(isFinite(v))state.nestOpts.variants=clamp(v,2,8);
+});
+$('#nGap').addEventListener('input',function(e){
+  const v=parseFloat(e.target.value);
+  if(isFinite(v)){state.nestOpts.gap=clamp(v,0,5);scheduleRepack();}
+});
+$('#nMargin').addEventListener('input',function(e){
+  const v=parseFloat(e.target.value);
+  if(isFinite(v)){state.nestOpts.margin=clamp(v,0,10);scheduleRepack();}
 });
 
 $('#fabChk').addEventListener('change',function(e){
@@ -2533,6 +2969,7 @@ window.addEventListener('keydown',function(e){
     if(editorId)closeEditor(false);
     else if(projOv.classList.contains('open'))projOv.classList.remove('open');
     else if(!$('#gridPanel').classList.contains('hidden'))$('#gridPanel').classList.add('hidden');
+    else if(!$('#nestPanel').classList.contains('hidden'))$('#nestPanel').classList.add('hidden');
     else deselect();
     return;
   }
@@ -2560,6 +2997,7 @@ window.addEventListener('keyup',function(e){if(e.code==='Space')spaceDown=false;
   try{
     buildLibrary(); buildPresetsUI();
     applyGridOpts(state.gridOpts);
+    syncNestUI();
     syncFabricUI();
     ensureSize(); draw();
     const ok=await IDB.open();
@@ -2574,7 +3012,6 @@ window.addEventListener('keyup',function(e){if(e.code==='Space')spaceDown=false;
     }
     addPreset('tshirt',{silent:true});
     state.dirty=false; updateStorageChip();
-    fitView();
     setTimeout(onAreaResize,300);
   }catch(err){
     toast('Ошибка инициализации: '+err.message,'err');
