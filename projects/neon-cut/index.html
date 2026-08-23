@@ -354,8 +354,8 @@ header{padding:8px 10px; gap:8px}
 </g>
 </svg>
 <div>
-<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.16.0</span></div>
-<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов включая дизайнерские коллекции, точный нестинг и автосохранение настроек.</div>
+<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.17.0</span></div>
+<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, линейка в редакторе контура, точный нестинг и автосохранение настроек.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -377,7 +377,7 @@ header{padding:8px 10px; gap:8px}
 <div class="cat-title">Готовые комплекты</div>
 <div class="preset-grid" id="presetsList"></div>
 </div>
-<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · настройки сохраняются автоматически</div>
+<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура (📏 линейка) · настройки сохраняются автоматически</div>
 </aside>
 <section id="stage">
 <div id="toolbar">
@@ -619,11 +619,13 @@ header{padding:8px 10px; gap:8px}
 <button class="tbtn" id="cUndo" title="Отменить (Ctrl+Z)">↶ Отменить</button>
 <button class="tbtn" id="cDelPt" title="Удалить выбранную точку (Del)">⌫ Точку</button>
 <button class="tbtn" id="cReset" title="Вернуть параметрическую форму">↺ Сбросить форму</button>
+<button class="tbtn toggle" id="cRuler" title="Линейка (R): перетащите, чтобы измерить расстояние и угол. ПКМ — убрать последнее измерение, Esc — очистить">📏 Линейка</button>
+<button class="tbtn" id="cRulerClear" title="Очистить все измерения линейки">🧹 Замеры</button>
 <button class="tbtn" id="cSaveTpl" title="Сохранить контур как пользовательский шаблон детали">💾 В шаблон</button>
 <span class="c-status" id="cStatus"></span>
 </div>
 <div id="cWrap"><canvas id="cCv"></canvas></div>
-<div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида</div>
+<div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del — удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · 📏 линейка (R) — измерение расстояний и углов</div>
 </div>
 <div class="m-foot">
 <span class="spacer"></span>
@@ -2332,10 +2334,90 @@ function currentPts(p){
 if(p.custom&&p.custom.length>=3)return p.custom.map(pt=>[pt[0],pt[1]]);
 return cmdsToPoly(p._cmds).map(pt=>[pt[0],pt[1]]);
 }
+/* ---------- ЛИНЕЙКА (инструмент измерения в редакторе контура) ---------- */
+function setRulerTool(on){
+if(!ctrEd)return;
+ctrEd.ruler=on;
+const b=$('#cRuler'); if(b)b.classList.toggle('active',on);
+if(!on){ctrEd.rulerDrag=null;}
+cCvEl.style.cursor=on?'crosshair':(ctrEd.hover>=0?'grab':'crosshair');
+cDraw();
+}
+function clearRuler(){
+if(!ctrEd)return;
+ctrEd.rulerPins=[]; ctrEd.rulerDrag=null;
+cDraw();
+}
+function roundRectPath(g,x,y,w,h,r){
+g.beginPath();
+g.moveTo(x+r,y);
+g.arcTo(x+w,y,x+w,y+h,r);
+g.arcTo(x+w,y+h,x,y+h,r);
+g.arcTo(x,y+h,x,y,r);
+g.arcTo(x,y,x+w,y,r);
+g.closePath();
+}
+function rulerAngle(m){
+let ang=Math.atan2(-(m.by-m.ay),m.bx-m.ax)*180/Math.PI;
+ang=((ang%360)+360)%360;
+if(ang>180)ang=360-ang;
+return ang;
+}
+function drawRulerOverlay(){
+if(!ctrEd)return;
+const items=ctrEd.rulerPins.slice();
+if(ctrEd.rulerDrag)items.push(ctrEd.rulerDrag);
+for(let i=0;i<items.length;i++){
+const m=items[i];
+const live=(m===ctrEd.rulerDrag);
+const a=cW2S(m.ax,m.ay), b=cW2S(m.bx,m.by);
+const dist=Math.hypot(m.bx-m.ax,m.by-m.ay);
+const ang=rulerAngle(m);
+const col=live?'#00e5ff':'#ffc24d';
+cCtx.save();
+cCtx.strokeStyle=col; cCtx.lineWidth=1.5;
+cCtx.setLineDash([6,5]);
+cCtx.shadowColor=col; cCtx.shadowBlur=8;
+cCtx.beginPath(); cCtx.moveTo(a.x,a.y); cCtx.lineTo(b.x,b.y); cCtx.stroke();
+cCtx.setLineDash([]);
+[a,b].forEach(function(pt){
+cCtx.beginPath(); cCtx.arc(pt.x,pt.y,4.5,0,Math.PI*2);
+cCtx.fillStyle='#0b0d1f'; cCtx.fill();
+cCtx.lineWidth=1.6; cCtx.strokeStyle=col; cCtx.stroke();
+});
+const len=Math.hypot(b.x-a.x,b.y-a.y);
+if(len>18){
+const nx=-(b.y-a.y)/len, ny=(b.x-a.x)/len;
+cCtx.beginPath();
+cCtx.moveTo(a.x-nx*7,a.y-ny*7); cCtx.lineTo(a.x+nx*7,a.y+ny*7);
+cCtx.moveTo(b.x-nx*7,b.y-ny*7); cCtx.lineTo(b.x+nx*7,b.y+ny*7);
+cCtx.stroke();
+}
+const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+const txt=`${fmt(dist)} см · ${ang.toFixed(1)}°`;
+cCtx.font='600 11px "JetBrains Mono",monospace';
+const tw=cCtx.measureText(txt).width;
+const pad=6, bw=tw+pad*2, bh=18;
+let lx=mx-bw/2, ly=my-bh-10;
+if(ly<4)ly=my+10;
+if(lx<4)lx=4;
+if(lx+bw>cW-4)lx=cW-4-bw;
+cCtx.shadowBlur=0;
+cCtx.fillStyle='rgba(5,6,14,.88)';
+cCtx.strokeStyle=col; cCtx.lineWidth=1;
+roundRectPath(cCtx,lx,ly,bw,bh,5); cCtx.fill(); cCtx.stroke();
+cCtx.fillStyle=col; cCtx.textAlign='center'; cCtx.textBaseline='middle';
+cCtx.fillText(txt,lx+bw/2,ly+bh/2+0.5);
+cCtx.restore();
+}
+}
+/* ---------- редактор контура: основные функции ---------- */
 function openContourEditor(p){
 rebuildPiece(p);
 ctrEd={pieceId:p.id, pts:currentPts(p), undo:[], view:{scale:3,ox:0,oy:0},
-drag:-1, sel:-1, hover:-1, pan:null};
+drag:-1, sel:-1, hover:-1, pan:null,
+ruler:false, rulerDrag:null, rulerPins:[]};
+const rb=$('#cRuler'); if(rb)rb.classList.remove('active');
 $('#cTitle').textContent='Редактор контура · '+p.name;
 contourOverlay.classList.add('open');
 cResize();
@@ -2455,8 +2537,15 @@ cCtx.lineWidth=1.7;
 cCtx.strokeStyle=active?'#ff3df0':(i===ctrEd.hover?'#ffffff':'#00e5ff');
 cCtx.stroke();
 });
+drawRulerOverlay();
 const bb=cPtsBounds();
-const hoverTxt=ctrEd.hoverW?` · ${ctrEd.hoverW}`:'';
+let hoverTxt=ctrEd.hoverW?` · ${ctrEd.hoverW}`:'';
+if(ctrEd.rulerDrag){
+const rd=Math.hypot(ctrEd.rulerDrag.bx-ctrEd.rulerDrag.ax,ctrEd.rulerDrag.by-ctrEd.rulerDrag.ay);
+hoverTxt+=` · 📏 ${fmt(rd)} см`;
+}else if(ctrEd.ruler){
+hoverTxt+=` · 📏 режим линейки`;
+}
 $('#cStatus').textContent=`точек: ${ctrEd.pts.length} · ${fmt(bb.w)}×${fmt(bb.h)} см${hoverTxt}`;
 }
 function cPickPoint(sx,sy){
@@ -2493,6 +2582,21 @@ cCvEl.addEventListener('pointerdown',function(e){
 if(!ctrEd)return;
 cCvEl.setPointerCapture(e.pointerId);
 const pt=cRel(e);
+/* режим линейки: перетаскивание создаёт измерение, ПКМ убирает последнее */
+if(ctrEd.ruler){
+if(e.button===2){
+if(ctrEd.rulerPins.length)ctrEd.rulerPins.pop();
+ctrEd.rulerDrag=null;
+cDraw();
+return;
+}
+if(e.button===0){
+const w0=cS2W(pt.x,pt.y);
+ctrEd.rulerDrag={ax:w0.x,ay:w0.y,bx:w0.x,by:w0.y};
+cDraw();
+}
+return;
+}
 if(e.button===2){
 const i=cPickPoint(pt.x,pt.y);
 if(i>=0)cDeletePoint(i);
@@ -2520,6 +2624,15 @@ if(!ctrEd)return;
 const pt=cRel(e);
 const w=cS2W(pt.x,pt.y);
 ctrEd.hoverW=`X:${w.x.toFixed(1)} Y:${w.y.toFixed(1)}`;
+if(ctrEd.ruler){
+if(ctrEd.rulerDrag){
+ctrEd.rulerDrag.bx=w.x; ctrEd.rulerDrag.by=w.y;
+cDraw(); return;
+}
+cCvEl.style.cursor='crosshair';
+cDraw();
+return;
+}
 if(ctrEd.drag>=0){
 ctrEd.pts[ctrEd.drag]=[Math.round(w.x*10)/10,Math.round(w.y*10)/10];
 cDraw();
@@ -2539,6 +2652,16 @@ cDraw();
 function cEndPointer(e){
 if(!ctrEd)return;
 try{cCvEl.releasePointerCapture(e.pointerId);}catch(err){}
+if(ctrEd.ruler){
+const m=ctrEd.rulerDrag;
+ctrEd.rulerDrag=null;
+if(m&&Math.hypot(m.bx-m.ax,m.by-m.ay)>0.05){
+ctrEd.rulerPins.push(m);
+if(ctrEd.rulerPins.length>8)ctrEd.rulerPins.shift();
+}
+cDraw();
+return;
+}
 ctrEd.drag=-1; ctrEd.pan=null;
 cDraw();
 }
@@ -2562,6 +2685,8 @@ $('#cUndo').onclick=function(){cUndoFn();};
 $('#cDelPt').onclick=function(){if(ctrEd&&ctrEd.sel>=0)cDeletePoint(ctrEd.sel);};
 $('#cReset').onclick=function(){cResetShape();};
 $('#cSaveTpl').onclick=function(){cSaveTemplate();};
+$('#cRuler').onclick=function(){ if(ctrEd)setRulerTool(!ctrEd.ruler); };
+$('#cRulerClear').onclick=function(){ clearRuler(); };
 contourOverlay.addEventListener('click',function(e){if(e.target===contourOverlay)closeContour(false);});
 $('#cFullscreen').onclick=function(){
 const fs=cModal.classList.toggle('fullscreen');
@@ -2663,7 +2788,7 @@ buildLibrary();
 }
 function exportTemplates(){
 if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-const data={app:'NEONCUT',kind:'templates',version:'1.16.0',exportedAt:Date.now(),templates:userTemplates};
+const data={app:'NEONCUT',kind:'templates',version:'1.17.0',exportedAt:Date.now(),templates:userTemplates};
 const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
 const a=document.createElement('a');
 a.href=URL.createObjectURL(blob);
@@ -3215,7 +3340,7 @@ fitView(); updateStorageChip(); toast('✦ Новый проект');
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.16.0'},projectData()),null,2)],{type:'application/json'});
+const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.17.0'},projectData()),null,2)],{type:'application/json'});
 const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
 a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
 setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -3533,8 +3658,16 @@ return;
 if(e.code==='Space'&&!inInput&&!ctrEd){spaceDown=true;e.preventDefault();}
 if(ctrEd){
 if(inInput)return;
-if(e.key==='Escape'){e.preventDefault();closeContour(false);return;}
+if(e.key==='Escape'){
+e.preventDefault();
+if(ctrEd.ruler&&(ctrEd.rulerDrag||ctrEd.rulerPins.length)){
+ctrEd.rulerDrag=null; ctrEd.rulerPins=[]; cDraw(); return;
+}
+if(ctrEd.ruler){ setRulerTool(false); return; }
+closeContour(false); return;
+}
 if(e.key==='Enter'){e.preventDefault();closeContour(true);return;}
+if(!e.ctrlKey&&!e.metaKey&&(e.key.toLowerCase()==='r'||e.key==='к')){e.preventDefault();setRulerTool(!ctrEd.ruler);return;}
 if((e.key==='Delete'||e.key==='Backspace')&&ctrEd.sel>=0){e.preventDefault();cDeletePoint(ctrEd.sel);return;}
 if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();cUndoFn();return;}
 if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveProject(true);return;}
