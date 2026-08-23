@@ -163,12 +163,12 @@ aside{
 .tbtn input[type=checkbox]{margin:0}
 #fabWrap,#gridWrap{cursor:default}
 #fabWrap input[type=number]{width:58px; padding:4px 6px; font-size:12px}
-#fabWrap select,#gridWrap select,#nestPanel select{
+#fabWrap select,#gridWrap select,#nestPanel select,#viewPanel select{
   background:#0a0d1f; border:1px solid var(--line2); color:var(--txt);
   border-radius:6px; padding:3px 5px; font:500 11px var(--font-mono); outline:none; cursor:pointer;
 }
 #fabWrap select,#gridWrap select{width:auto}
-#fabWrap select:focus,#gridWrap select:focus,#nestPanel select:focus{border-color:var(--cyan)}
+#fabWrap select:focus,#gridWrap select:focus,#nestPanel select:focus,#viewPanel select:focus{border-color:var(--cyan)}
 #fabHWrap{display:inline-flex; align-items:center; gap:6px}
 .gear{
   background:transparent; border:none; color:var(--dim); cursor:pointer;
@@ -189,7 +189,7 @@ aside{
 .chip.warn{color:#ffe08a; border-color:rgba(255,194,77,.45); box-shadow:0 0 9px rgba(255,194,77,.2)}
 .chip.bad{color:#ff9db1; border-color:rgba(255,77,109,.5); box-shadow:0 0 9px rgba(255,77,109,.25)}
 
-#gridPanel,#nestPanel{
+#gridPanel,#nestPanel,#viewPanel{
   position:absolute; top:calc(100% + 8px); right:12px; z-index:36; width:264px;
   background:rgba(10,12,26,.97); border:1px solid rgba(0,229,255,.4); border-radius:12px;
   box-shadow:0 0 22px rgba(0,229,255,.22), 0 16px 44px rgba(0,0,0,.6);
@@ -328,7 +328,7 @@ aside{
   .chip{margin-left:0}
   #quick{min-width:186px}
   #fabWrap input[type=number]{width:52px}
-  #gridPanel,#nestPanel{right:8px; width:242px}
+  #gridPanel,#nestPanel,#viewPanel{right:8px; width:242px}
   #cWrap{height:min(44vh,420px)}
 }
 </style>
@@ -347,8 +347,8 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.9.1</span></div>
-      <div class="desc">Студия швейных выкроек: точный нестинг с произвольными углами поворота, припусками и мультистартом.</div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.10.1</span></div>
+      <div class="desc">Студия швейных выкроек: точный нестинг, стили визуализации ткани и деталей, привязка к началу ткани (0,0).</div>
     </div>
   </div>
   <div class="head-actions">
@@ -371,7 +371,7 @@ aside{
       <div class="cat-title">Готовые комплекты</div>
       <div class="preset-grid" id="presetsList"></div>
     </div>
-    <div class="side-hint">⚡ — раскладка выбранным алгоритмом (⚙ — алгоритм, углы, зазоры) · ✎ — редактор контура</div>
+    <div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура</div>
   </aside>
 
   <section id="stage">
@@ -379,12 +379,14 @@ aside{
       <button class="tbtn" id="btnZoomOut" title="Уменьшить (−)">−</button>
       <span class="zoomlbl" id="zoomLbl">100%</span>
       <button class="tbtn" id="btnZoomIn" title="Увеличить (+)">+</button>
-      <button class="tbtn" id="btnFit" title="Вписать всю конфигурацию: ткань по ширине и все детали (0)">⤢ Вписать</button>
-      <button class="tbtn" id="btnFitW" title="Вписать всю ширину ткани и деталей по горизонтали (W)">⇤ По ширине</button>
+      <button class="tbtn" id="btnFit" title="Вписать ткань и все детали в экран (F / 0)">⤢ Вписать</button>
+      <button class="tbtn" id="btnFitW" title="Вписать всю ширину ткани по горизонтали (W)">⇤ По ширине</button>
+      <button class="tbtn" id="btnOrigin" title="Показать начало ткани (0,0) (Home)">⌖ 0,0</button>
       <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
       <span class="tsep"></span>
       <button class="tbtn" id="btnPack" title="Выполнить раскладку выбранным алгоритмом">⚡ Раскладка</button>
       <button class="tbtn" id="btnNestOpts" title="Алгоритм раскладки и параметры">⚙</button>
+      <button class="tbtn" id="btnViewOpts" title="Визуализация ткани и деталей">🎨</button>
       <label class="tbtn toggle active" id="autoWrap" title="Автоматически пересобирать раскладку при изменении параметров">
         <input type="checkbox" id="chkAuto" checked> Авто
       </label>
@@ -489,6 +491,35 @@ aside{
           <input type="number" id="nMargin" value="2" min="0" max="10" step="0.5">
         </div>
         <div class="pop-note">Произвольный угол и мультистарт дают минимальный расход ткани, но требуют больше времени на расчёт.</div>
+      </div>
+
+      <div id="viewPanel" class="hidden">
+        <div class="pop-title">Визуализация</div>
+        <div class="pop-row">
+          <label>Стиль деталей</label>
+          <select id="vPieceStyle">
+            <option value="neon" selected>Неон</option>
+            <option value="outline">Контур</option>
+            <option value="paper">Бумага</option>
+          </select>
+        </div>
+        <div class="pop-row">
+          <label>Текстура ткани</label>
+          <select id="vFabricStyle">
+            <option value="weave" selected>Переплетение</option>
+            <option value="dots">Точки</option>
+            <option value="grid">Клетка</option>
+            <option value="none">Нет</option>
+          </select>
+        </div>
+        <div class="pop-row">
+          <label class="chk"><input type="checkbox" id="vNames" checked> Названия</label>
+          <label class="chk"><input type="checkbox" id="vDims" checked> Размеры</label>
+        </div>
+        <div class="pop-row">
+          <label class="chk"><input type="checkbox" id="vGrain" checked> Долевая</label>
+          <label class="chk"><input type="checkbox" id="vSeam" checked> Припуски</label>
+        </div>
       </div>
     </div>
 
@@ -962,6 +993,8 @@ const state={
   fabric:true, fabricMode:'roll', fabricW:150, fabricH:200,
   gridOpts:{minor:'auto', majorEvery:5, alpha:100, axes:true, snap:true, snapStep:0.5},
   nestOpts:{algo:'nest-full', rotMode:'ortho', angleStep:10, refine:true, variants:3, gap:0.5, margin:2},
+  pieceStyle:'neon', fabricStyle:'weave',
+  show:{names:true,dims:true,grain:true,seam:true},
   project:{id:null,name:'Новый проект'},
   dirty:false,
 };
@@ -1017,25 +1050,16 @@ function onAreaResize(){
 new ResizeObserver(onAreaResize).observe(wrap);
 window.addEventListener('resize',function(){
   onAreaResize();
-  if(ctrEd){cResize();cDraw();}
+  if(ctrEd){cResize();cFit();}
 });
 window.addEventListener('orientationchange',onAreaResize);
 if(document.fonts&&document.fonts.ready){
   document.fonts.ready.then(function(){setTimeout(onAreaResize,50);});
 }
 
-/* ============================ РАСКЛАДКА ============================
-   Алгоритмы:
-   • nest-fast  — растровый нестинг, один порядок, без уточнений.
-   • nest-full  — 3 порядка укладки + гравитационное уплотнение +
-                  уточнение малыми поворотами.
-   • nest-multi — мультистарт: несколько случайных порядков укладки,
-                  выбирается лучший вариант + уточнение поворотами.
-   • shelf      — полочная укладка (быстрая).
-   Повороты: 0/90/180/270; опционально +45°; произвольный шаг угла. */
+/* ============================ РАСКЛАДКА ============================ */
 const NEST_CELL=0.5;
 
-/* включена ли автоматическая пересборка раскладки */
 function autoPackOn(){
   const el=$('#chkAuto');
   return !!(el&&el.checked);
@@ -1343,7 +1367,6 @@ function doNest(fast){
   if(pieceMode&&best.main.fails.length)msg+=` · вне куска: ${best.main.fails.length}`;
   toast(msg);
 }
-/* Полочный алгоритм */
 function doShelf(){
   if(!state.pieces.length)return;
   toast('⚡ Полочная раскладка…');
@@ -1398,7 +1421,6 @@ function scheduleRepack(){
   clearTimeout(repackTimer);
   repackTimer=setTimeout(function(){runPlacement(true);},600);
 }
-/* быстрая оценка длины (для 📏) */
 function estimateLength(widthCm){
   const o=state.nestOpts;
   const margin=Math.max(0,+o.margin||0), gap=Math.max(0,+o.gap||0);
@@ -1419,6 +1441,45 @@ function estimateLength(widthCm){
     x+=o2.w+gap;shelfH=Math.max(shelfH,o2.h);
   }
   return y+shelfH+margin;
+}
+
+/* ============================ текстуры ткани ============================ */
+let weavePat=null,dotsPat=null,gridPat=null;
+function makePattern(drawFn,size){
+  const c=document.createElement('canvas'); c.width=size;c.height=size;
+  drawFn(c.getContext('2d'),size);
+  return ctx.createPattern(c,'repeat');
+}
+function getWeave(){
+  if(!weavePat){
+    weavePat=makePattern(function(g,s){
+      g.strokeStyle='rgba(139,92,255,0.12)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(0,s); g.lineTo(s,0); g.stroke();
+      g.strokeStyle='rgba(139,92,255,0.05)';
+      g.beginPath(); g.moveTo(-2,2); g.lineTo(2,-2); g.stroke();
+      g.beginPath(); g.moveTo(s-2,s+2); g.lineTo(s+2,s-2); g.stroke();
+    },8);
+  }
+  return weavePat;
+}
+function getDots(){
+  if(!dotsPat){
+    dotsPat=makePattern(function(g,s){
+      g.fillStyle='rgba(139,92,255,0.20)';
+      g.beginPath(); g.arc(2,2,0.9,0,Math.PI*2); g.fill();
+    },7);
+  }
+  return dotsPat;
+}
+function getGridPat(){
+  if(!gridPat){
+    gridPat=makePattern(function(g,s){
+      g.strokeStyle='rgba(139,92,255,0.10)'; g.lineWidth=1;
+      g.beginPath(); g.moveTo(0,s-0.5); g.lineTo(s,s-0.5); g.stroke();
+      g.beginPath(); g.moveTo(s-0.5,0); g.lineTo(s-0.5,s); g.stroke();
+    },10);
+  }
+  return gridPat;
 }
 
 /* ============================ рисование ============================ */
@@ -1487,37 +1548,43 @@ function drawGrid(){
     const o=w2s(0,0);
     ctx.strokeStyle=axisCol;ctx.lineWidth=1.4;
     ctx.beginPath();ctx.moveTo(o.x-7,o.y);ctx.lineTo(o.x+7,o.y);ctx.moveTo(o.x,o.y-7);ctx.lineTo(o.x,o.y+7);ctx.stroke();
+    ctx.fillStyle='rgba(0,229,255,.75)';
+    ctx.font='600 10px "JetBrains Mono",monospace';ctx.textAlign='left';
+    ctx.fillText('0,0',o.x+8,o.y+14);
   }
 }
 function drawFabric(){
   if(!state.fabric)return;
   const x0=w2s(0,0).x, x1=w2s(state.fabricW,0).x;
-  ctx.font='600 11px "JetBrains Mono",monospace';ctx.textAlign='center';
-  if(state.fabricMode==='piece'){
-    const y0=w2s(0,0).y, y1=w2s(0,state.fabricH).y;
-    ctx.fillStyle='rgba(139,92,255,.07)';
-    ctx.fillRect(x0,y0,x1-x0,y1-y0);
-    ctx.save();
-    ctx.strokeStyle='rgba(139,92,255,.65)';ctx.lineWidth=1.4;ctx.setLineDash([9,7]);
-    ctx.strokeRect(x0,y0,x1-x0,y1-y0);
-    ctx.restore();
-    ctx.fillStyle='rgba(190,160,255,.9)';
-    ctx.fillText(`ткань (кусок) · ${fmt(state.fabricW)}×${fmt(state.fabricH)} см`,(x0+x1)/2,y0+16);
-  }else{
-    ctx.fillStyle='rgba(139,92,255,.05)';
-    ctx.fillRect(x0,0,x1-x0,H);
-    ctx.save();
-    ctx.strokeStyle='rgba(139,92,255,.55)';ctx.lineWidth=1.2;ctx.setLineDash([9,7]);
-    ctx.beginPath();ctx.moveTo(x0,0);ctx.lineTo(x0,H);ctx.moveTo(x1,0);ctx.lineTo(x1,H);ctx.stroke();
-    ctx.restore();
-    ctx.fillStyle='rgba(180,150,255,.85)';
-    ctx.fillText(`ткань (рулон) · ${fmt(state.fabricW)} см`,(x0+x1)/2,18);
+  const isPiece=state.fabricMode==='piece';
+  const y0=isPiece?w2s(0,0).y:0;
+  const y1=isPiece?w2s(0,state.fabricH).y:H;
+  ctx.fillStyle='rgba(139,92,255,.05)';
+  ctx.fillRect(x0,y0,x1-x0,y1-y0);
+  const style=state.fabricStyle;
+  if(style&&style!=='none'){
+    const pat=style==='weave'?getWeave():(style==='dots'?getDots():getGridPat());
+    if(pat){ctx.fillStyle=pat;ctx.fillRect(x0,y0,x1-x0,y1-y0);}
   }
+  ctx.save();
+  ctx.strokeStyle='rgba(139,92,255,.6)';ctx.lineWidth=1.3;ctx.setLineDash([9,7]);
+  if(isPiece){
+    ctx.strokeRect(x0,y0,x1-x0,y1-y0);
+  }else{
+    ctx.beginPath();ctx.moveTo(x0,0);ctx.lineTo(x0,H);ctx.moveTo(x1,0);ctx.lineTo(x1,H);ctx.stroke();
+  }
+  ctx.restore();
+  ctx.fillStyle='rgba(190,160,255,.9)';
+  ctx.font='600 11px "JetBrains Mono",monospace';ctx.textAlign='center';
+  const label=isPiece?`ткань (кусок) · ${fmt(state.fabricW)}×${fmt(state.fabricH)} см`
+                     :`ткань (рулон) · ${fmt(state.fabricW)} см`;
+  ctx.fillText(label,(x0+x1)/2,Math.max(14,y0+16));
 }
 function drawPiece(p){
   const b=p._bounds, rad=p.rot*Math.PI/180, sv=state.view.scale;
   const s=w2s(p.x+b.w/2, p.y+b.h/2);
   const sel=p.id===state.selId, hov=p.id===state.hoverId;
+  const style=state.pieceStyle;
   ctx.save();
   ctx.translate(s.x,s.y);
   ctx.scale(sv,sv);
@@ -1525,43 +1592,75 @@ function drawPiece(p){
   if(p.mirror)ctx.scale(-1,1);
   ctx.translate(-(b.minx+b.w/2),-(b.miny+b.h/2));
   ctx.lineJoin='round'; ctx.lineCap='round';
-  if(p.seam>0){
+  if(state.show.seam&&p.seam>0){
     ctx.lineWidth=p.seam*2;
-    ctx.strokeStyle='rgba(255,255,255,.07)'; ctx.stroke(p._path);
+    ctx.strokeStyle=style==='paper'?'rgba(120,130,170,.16)':'rgba(255,255,255,.07)';
+    ctx.stroke(p._path);
   }
-  ctx.shadowColor=p.color;
-  ctx.shadowBlur=sel?20:hov?15:9;
-  ctx.fillStyle=hexA(p.color,0.10); ctx.fill(p._path);
-  ctx.lineWidth=(sel?2.2:1.6)/sv;
-  ctx.strokeStyle=p.color; ctx.stroke(p._path);
-  ctx.shadowBlur=0;
-  if(p.seam>0){
-    ctx.setLineDash([4.2/sv,4.2/sv]);
-    ctx.lineWidth=0.8/sv;
-    ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.stroke(p._path);
-    ctx.setLineDash([]);
+  if(style==='neon'){
+    ctx.shadowColor=p.color; ctx.shadowBlur=sel?20:hov?15:9;
+    ctx.fillStyle=hexA(p.color,0.10); ctx.fill(p._path);
+    ctx.lineWidth=(sel?2.2:1.6)/sv; ctx.strokeStyle=p.color; ctx.stroke(p._path);
+    ctx.shadowBlur=0;
+    if(state.show.seam&&p.seam>0){
+      ctx.setLineDash([4.2/sv,4.2/sv]);
+      ctx.lineWidth=0.8/sv;
+      ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.stroke(p._path);
+      ctx.setLineDash([]);
+    }
+  }else if(style==='outline'){
+    ctx.fillStyle='rgba(235,240,255,.04)'; ctx.fill(p._path);
+    ctx.lineWidth=(sel?2.2:1.4)/sv;
+    ctx.strokeStyle=sel?'#ff3df0':'#e8ecff';
+    ctx.stroke(p._path);
+    if(state.show.seam&&p.seam>0){
+      ctx.setLineDash([4.2/sv,4.2/sv]);
+      ctx.lineWidth=0.8/sv;
+      ctx.strokeStyle='rgba(235,240,255,.4)'; ctx.stroke(p._path);
+      ctx.setLineDash([]);
+    }
+  }else{
+    ctx.fillStyle=hexA(p.color,0.20); ctx.fill(p._path);
+    ctx.lineWidth=(sel?2.4:1.8)/sv;
+    ctx.strokeStyle=sel?'#ff3df0':'rgba(235,240,255,.92)';
+    ctx.stroke(p._path);
   }
-  ctx.strokeStyle='rgba(255,255,255,.26)'; ctx.lineWidth=1/sv;
-  const gx=b.minx+b.w/2, gy1=b.miny+b.h*0.24, gy2=b.miny+b.h*0.76, a=6/sv;
-  ctx.beginPath();ctx.moveTo(gx,gy1);ctx.lineTo(gx,gy2);
-  ctx.moveTo(gx-a,gy1+a*1.6);ctx.lineTo(gx,gy1);ctx.lineTo(gx+a,gy1+a*1.6);
-  ctx.moveTo(gx-a,gy2-a*1.6);ctx.lineTo(gx,gy2);ctx.lineTo(gx+a,gy2-a*1.6);
-  ctx.stroke();
+  if(state.show.grain){
+    const ghPx=b.h*sv;
+    if(ghPx>26){
+      const gy1=b.miny+b.h*0.24, gy2=b.miny+b.h*0.76;
+      const glen=Math.max(0.001,gy2-gy1);
+      const a=clamp(glen*0.12,0.6,4);
+      const lw=clamp(b.h*0.012,0.12,0.5);
+      ctx.strokeStyle=style==='paper'?'rgba(40,50,85,.55)':'rgba(255,255,255,.28)';
+      ctx.lineWidth=lw;
+      const gx=b.minx+b.w/2;
+      ctx.beginPath();ctx.moveTo(gx,gy1);ctx.lineTo(gx,gy2);
+      ctx.moveTo(gx-a,gy1+a*1.6);ctx.lineTo(gx,gy1);ctx.lineTo(gx+a,gy1+a*1.6);
+      ctx.moveTo(gx-a,gy2-a*1.6);ctx.lineTo(gx,gy2);ctx.lineTo(gx+a,gy2-a*1.6);
+      ctx.stroke();
+    }
+  }
   ctx.restore();
 }
 function drawLabel(p){
+  if(!state.show.names&&!state.show.dims)return;
   const b=p._bounds, s=w2s(p.x+b.w/2,p.y+b.h/2);
   if(b.w*state.view.scale<52||b.h*state.view.scale<38)return;
   ctx.textAlign='center';
-  ctx.fillStyle=p.color;
-  ctx.font='600 11.5px "Inter",sans-serif';
   ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=5;
-  ctx.fillText(p.name+(p.custom?' ✎':''),s.x,s.y-3);
+  if(state.show.names){
+    ctx.fillStyle=p.color;
+    ctx.font='600 11.5px "Inter",sans-serif';
+    ctx.fillText(p.name+(p.custom?' ✎':''),s.x,s.y-3);
+  }
+  if(state.show.dims){
+    ctx.fillStyle='rgba(200,210,255,.6)';
+    ctx.font='10px "JetBrains Mono",monospace';
+    const seamTxt=(state.show.seam&&p.seam>0?` · припуск ${fmt(p.seam)}`:'');
+    ctx.fillText(`${fmt(b.w)}×${fmt(b.h)} см${seamTxt}`,s.x,s.y+(state.show.names?11:3));
+  }
   ctx.shadowBlur=0;
-  ctx.fillStyle='rgba(200,210,255,.6)';
-  ctx.font='10px "JetBrains Mono",monospace';
-  const seamTxt=(p.seam>0?` · припуск ${fmt(p.seam)}`:'');
-  ctx.fillText(`${fmt(b.w)}×${fmt(b.h)} см${seamTxt}`,s.x,s.y+11);
 }
 function drawWarning(p){
   const pts=pieceCorners(p).map(c=>w2s(c[0],c[1]));
@@ -1587,11 +1686,44 @@ function drawSelection(){
   ctx.restore();
 }
 
-/* ============================ вид ============================ */
+/* ============================ вид / вписывание ============================
+   Единый механизм подбора вида:
+   • вычисляется целевая область (ткань + все детали),
+   • масштаб = минимум из отношений доступной области к целевой,
+   • целевая область выравнивается по ЛЕВОМУ ВЕРХНЕМУ углу рабочей зоны
+     (точка (0,0) оказывается в левом верхнем углу с отступом),
+   • после установки вида выполняется проверка, что область видима.     */
+function computeFit(view,rect,cw,ch,opts){
+  const padL=opts.padL!=null?opts.padL:40;
+  const padR=opts.padR!=null?opts.padR:40;
+  const padT=opts.padT!=null?opts.padT:40;
+  const padB=opts.padB!=null?opts.padB:40;
+  const bw=Math.max(0.001,rect.maxx-rect.minx);
+  const bh=Math.max(0.001,rect.maxy-rect.miny);
+  const availW=Math.max(20,cw-padL-padR);
+  const availH=Math.max(20,ch-padT-padB);
+  const s=clamp(Math.min(availW/bw,availH/bh),opts.minS!=null?opts.minS:0.05,opts.maxS!=null?opts.maxS:120);
+  let ox,oy;
+  if(opts.align==='center'){
+    ox=padL+(availW-bw*s)/2-rect.minx*s;
+    oy=padT+(availH-bh*s)/2-rect.miny*s;
+  }else{
+    /* привязка левого верхнего угла области (точка 0,0) к левому верхнему
+       углу рабочей области с отступами */
+    ox=padL-rect.minx*s;
+    oy=padT-rect.miny*s;
+  }
+  view.scale=s; view.ox=ox; view.oy=oy;
+  /* страховка: если из-за ограничения масштаба область не помещается,
+     гарантируем видимость левого верхнего угла */
+  const tlx=rect.minx*s+ox, tly=rect.miny*s+oy;
+  if(tlx<4)view.ox+=4-tlx;
+  if(tly<4)view.oy+=4-tly;
+}
 function zoomAt(px,py,f){
   fitMode='free';
   const v=state.view, w=s2w(px,py);
-  v.scale=clamp(v.scale*f,0.12,80);
+  v.scale=clamp(v.scale*f,0.05,120);
   v.ox=px-w.x*v.scale; v.oy=py-w.y*v.scale;
   draw();
 }
@@ -1623,39 +1755,47 @@ function fitBounds(){
   }
   return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
-function fitView(){
+function fitView(retry){
   ensureSize();
-  if(W<80||H<80)return;
-  const b=fitBounds();
-  const bw=Math.max(1,b.maxx-b.minx);
-  const bh=Math.max(1,b.maxy-b.miny);
-  const padL=32,padR=32,padT=46,padB=32;
-  const availW=Math.max(40,W-padL-padR);
-  const availH=Math.max(40,H-padT-padB);
-  const s=clamp(Math.min(availW/bw,availH/bh),0.12,80);
-  state.view.scale=s;
-  state.view.ox=padL+(availW-bw*s)/2-b.minx*s;
-  state.view.oy=padT+(availH-bh*s)/2-b.miny*s;
+  if(W<80||H<80){
+    if((retry||0)<10)requestAnimationFrame(function(){fitView((retry||0)+1);});
+    return;
+  }
+  const rect=fitBounds();
+  computeFit(state.view,rect,W,H,{padL:44,padR:44,padT:56,padB:44,align:'tl',minS:0.05,maxS:120});
   fitMode='fit';
   draw();
 }
-function fitFabricWidth(){
+function fitFabricWidth(retry){
   ensureSize();
-  if(W<80||H<80)return;
+  if(W<80||H<80){
+    if((retry||0)<10)requestAnimationFrame(function(){fitFabricWidth((retry||0)+1);});
+    return;
+  }
   const b=contentBounds();
   let minx,maxx;
   if(state.fabric){minx=0;maxx=state.fabricW;}
   else if(b){minx=b.minx;maxx=b.maxx;}
   else{toast('Холст пуст — нечего вписывать','warn');return;}
   if(b){minx=Math.min(minx,b.minx);maxx=Math.max(maxx,b.maxx);}
+  const topY=b?Math.min(b.miny,0):0;
   const padL=28,padR=28,padT=44;
   const availW=Math.max(40,W-padL-padR);
-  const s=clamp(availW/Math.max(1,maxx-minx),0.12,80);
-  const topY=b?Math.min(b.miny,0):0;
+  const s=clamp(availW/Math.max(1,maxx-minx),0.05,120);
   state.view.scale=s;
   state.view.ox=padL-minx*s;
   state.view.oy=padT-topY*s;
+  const tlx=minx*s+state.view.ox, tly=topY*s+state.view.oy;
+  if(tlx<4)state.view.ox+=4-tlx;
+  if(tly<4)state.view.oy+=4-tly;
   fitMode='fitW';
+  draw();
+}
+function focusOrigin(){
+  ensureSize();
+  state.view.ox=44;
+  state.view.oy=56;
+  fitMode='free';
   draw();
 }
 
@@ -1898,9 +2038,12 @@ let cW=0,cH=0,cdpr=1;
 
 function cResize(){
   const r=cWrapEl.getBoundingClientRect();
-  cW=Math.max(60,r.width); cH=Math.max(60,r.height);
-  cdpr=window.devicePixelRatio||1;
-  cCvEl.width=Math.round(cW*cdpr); cCvEl.height=Math.round(cH*cdpr);
+  const nw=Math.max(60,r.width), nh=Math.max(60,r.height);
+  const nd=window.devicePixelRatio||1;
+  if(Math.abs(nw-cW)>0.5||Math.abs(nh-cH)>0.5||nd!==cdpr){
+    cW=nw; cH=nh; cdpr=nd;
+    cCvEl.width=Math.round(cW*cdpr); cCvEl.height=Math.round(cH*cdpr);
+  }
 }
 function cS2W(sx,sy){return {x:(sx-ctrEd.view.ox)/ctrEd.view.scale, y:(sy-ctrEd.view.oy)/ctrEd.view.scale};}
 function cW2S(wx,wy){return {x:wx*ctrEd.view.scale+ctrEd.view.ox, y:wy*ctrEd.view.scale+ctrEd.view.oy};}
@@ -1916,15 +2059,19 @@ function cPtsBounds(){
   }
   return {minx:minx,miny:miny,maxx:maxx,maxy:maxy,w:maxx-minx,h:maxy-miny};
 }
-function cFit(){
+/* Вписывание контура: размер окна редактора перечитывается, контур с
+   мировыми полями выравнивается по левому верхнему углу окна. */
+function cFit(retry){
   if(!ctrEd)return;
+  cResize();
+  if(cW<60||cH<60){
+    if((retry||0)<10)requestAnimationFrame(function(){cFit((retry||0)+1);});
+    return;
+  }
   const bb=cPtsBounds();
-  const pad=Math.max(4,Math.max(bb.w,bb.h)*0.12);
-  const bw=Math.max(1,bb.w+pad*2), bh=Math.max(1,bb.h+pad*2);
-  const s=clamp(Math.min(cW/bw,cH/bh),0.2,160);
-  ctrEd.view.scale=s;
-  ctrEd.view.ox=(cW-bb.w*s)/2-bb.minx*s;
-  ctrEd.view.oy=(cH-bb.h*s)/2-bb.miny*s;
+  const padCm=Math.max(3,Math.max(bb.w,bb.h)*0.08);
+  const rect={minx:bb.minx-padCm,miny:bb.miny-padCm,maxx:bb.maxx+padCm,maxy:bb.maxy+padCm};
+  computeFit(ctrEd.view,rect,cW,cH,{padL:16,padR:16,padT:16,padB:16,align:'tl',minS:0.2,maxS:200});
   cDraw();
 }
 function currentPts(p){
@@ -2146,7 +2293,7 @@ cCvEl.addEventListener('wheel',function(e){
   if(!ctrEd)return;
   const pt=cRel(e);
   const w=cS2W(pt.x,pt.y);
-  ctrEd.view.scale=clamp(ctrEd.view.scale*Math.exp(-e.deltaY*0.0016),0.2,160);
+  ctrEd.view.scale=clamp(ctrEd.view.scale*Math.exp(-e.deltaY*0.0016),0.2,200);
   ctrEd.view.ox=pt.x-w.x*ctrEd.view.scale;
   ctrEd.view.oy=pt.y-w.y*ctrEd.view.scale;
   cDraw();
@@ -2231,7 +2378,7 @@ function renameTemplate(id){
 }
 function exportTemplates(){
   if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-  const data={app:'NEONCUT',kind:'templates',version:'1.9.1',exportedAt:Date.now(),templates:userTemplates};
+  const data={app:'NEONCUT',kind:'templates',version:'1.10.1',exportedAt:Date.now(),templates:userTemplates};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -2533,6 +2680,7 @@ function projectData(){
     gridOpts:Object.assign({},state.gridOpts),
     nestOpts:Object.assign({},state.nestOpts),
     fabric:{on:state.fabric,mode:state.fabricMode,w:state.fabricW,h:state.fabricH},
+    view:{pieceStyle:state.pieceStyle,fabricStyle:state.fabricStyle,show:Object.assign({},state.show)},
     pieces:state.pieces.map(serializePiece)};
 }
 function syncFabricUI(){
@@ -2542,6 +2690,26 @@ function syncFabricUI(){
   const fw=$('#fabW'); if(fw)fw.value=String(state.fabricW);
   const fh=$('#fabH'); if(fh)fh.value=String(state.fabricH);
   const hw=$('#fabHWrap'); if(hw)hw.classList.toggle('hidden',state.fabricMode!=='piece');
+}
+function syncViewUI(){
+  const ps=$('#vPieceStyle'); if(ps)ps.value=state.pieceStyle;
+  const fs=$('#vFabricStyle'); if(fs)fs.value=state.fabricStyle;
+  const vn=$('#vNames'); if(vn)vn.checked=!!state.show.names;
+  const vd=$('#vDims'); if(vd)vd.checked=!!state.show.dims;
+  const vg=$('#vGrain'); if(vg)vg.checked=!!state.show.grain;
+  const vs=$('#vSeam'); if(vs)vs.checked=!!state.show.seam;
+}
+function applyViewOpts(o){
+  if(!o||typeof o!=='object')return;
+  if(o.pieceStyle==='neon'||o.pieceStyle==='outline'||o.pieceStyle==='paper')state.pieceStyle=o.pieceStyle;
+  if(o.fabricStyle==='weave'||o.fabricStyle==='dots'||o.fabricStyle==='grid'||o.fabricStyle==='none')state.fabricStyle=o.fabricStyle;
+  if(o.show&&typeof o.show==='object'){
+    if(typeof o.show.names==='boolean')state.show.names=o.show.names;
+    if(typeof o.show.dims==='boolean')state.show.dims=o.show.dims;
+    if(typeof o.show.grain==='boolean')state.show.grain=o.show.grain;
+    if(typeof o.show.seam==='boolean')state.show.seam=o.show.seam;
+  }
+  syncViewUI();
 }
 function updateNestPanelRows(){
   const o=state.nestOpts;
@@ -2645,6 +2813,7 @@ function loadProject(data){
   }
   applyGridOpts(data.gridOpts);
   applyNestOpts(data.nestOpts);
+  applyViewOpts(data.view);
   if(data.fabric){
     state.fabric=!!data.fabric.on;
     state.fabricMode=data.fabric.mode==='piece'?'piece':'roll';
@@ -2673,7 +2842,7 @@ function newProject(){
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.9.1'},projectData()),null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.10.1'},projectData()),null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -2687,8 +2856,9 @@ window.addEventListener('beforeunload',function(){
 /* ============================ тулбар ============================ */
 $('#btnZoomIn').onclick=function(){ensureSize();zoomAt(W/2,H/2,1.3);};
 $('#btnZoomOut').onclick=function(){ensureSize();zoomAt(W/2,H/2,1/1.3);};
-$('#btnFit').onclick=fitView;
-$('#btnFitW').onclick=fitFabricWidth;
+$('#btnFit').onclick=function(){fitView();};
+$('#btnFitW').onclick=function(){fitFabricWidth();};
+$('#btnOrigin').onclick=focusOrigin;
 $('#btn100').onclick=function(){
   fitMode='free'; ensureSize();
   const c=s2w(W/2,H/2);
@@ -2723,6 +2893,7 @@ $('#gStep').addEventListener('change',function(e){
 function closeAllPanels(){
   $('#gridPanel').classList.add('hidden');
   $('#nestPanel').classList.add('hidden');
+  $('#viewPanel').classList.add('hidden');
 }
 $('#btnGridOpts').addEventListener('click',function(e){
   e.stopPropagation();
@@ -2736,9 +2907,16 @@ $('#btnNestOpts').addEventListener('click',function(e){
   closeAllPanels();
   if(wasHidden)$('#nestPanel').classList.remove('hidden');
 });
+$('#btnViewOpts').addEventListener('click',function(e){
+  e.stopPropagation();
+  const wasHidden=$('#viewPanel').classList.contains('hidden');
+  closeAllPanels();
+  if(wasHidden)$('#viewPanel').classList.remove('hidden');
+});
 document.addEventListener('click',function(e){
   if(!e.target.closest('#gridPanel')&&!e.target.closest('#btnGridOpts'))$('#gridPanel').classList.add('hidden');
   if(!e.target.closest('#nestPanel')&&!e.target.closest('#btnNestOpts'))$('#nestPanel').classList.add('hidden');
+  if(!e.target.closest('#viewPanel')&&!e.target.closest('#btnViewOpts'))$('#viewPanel').classList.add('hidden');
 });
 $('#gMajor').addEventListener('change',function(e){
   state.gridOpts.majorEvery=parseInt(e.target.value,10)||5;
@@ -2787,6 +2965,14 @@ $('#nMargin').addEventListener('input',function(e){
   const v=parseFloat(e.target.value);
   if(isFinite(v)){state.nestOpts.margin=clamp(v,0,10);scheduleRepack();}
 });
+
+/* визуализация */
+$('#vPieceStyle').addEventListener('change',function(e){state.pieceStyle=e.target.value;markDirty();draw();});
+$('#vFabricStyle').addEventListener('change',function(e){state.fabricStyle=e.target.value;markDirty();draw();});
+$('#vNames').addEventListener('change',function(e){state.show.names=e.target.checked;markDirty();draw();});
+$('#vDims').addEventListener('change',function(e){state.show.dims=e.target.checked;markDirty();draw();});
+$('#vGrain').addEventListener('change',function(e){state.show.grain=e.target.checked;markDirty();draw();});
+$('#vSeam').addEventListener('change',function(e){state.show.seam=e.target.checked;markDirty();draw();});
 
 $('#fabChk').addEventListener('change',function(e){
   state.fabric=e.target.checked;
@@ -2871,7 +3057,7 @@ cv.addEventListener('pointermove',function(e){
     const arr=[...pointers.values()];
     const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y)||1;
     const midC=clientToCanvas((arr[0].x+arr[1].x)/2,(arr[0].y+arr[1].y)/2);
-    const ns=clamp(gesture.scale0*(d/gesture.d0),0.12,80);
+    const ns=clamp(gesture.scale0*(d/gesture.d0),0.05,120);
     state.view.scale=ns;
     state.view.ox=midC.x-gesture.w0.x*ns;
     state.view.oy=midC.y-gesture.w0.y*ns;
@@ -2973,6 +3159,7 @@ window.addEventListener('keydown',function(e){
     else if(projOv.classList.contains('open'))projOv.classList.remove('open');
     else if(!$('#gridPanel').classList.contains('hidden'))$('#gridPanel').classList.add('hidden');
     else if(!$('#nestPanel').classList.contains('hidden'))$('#nestPanel').classList.add('hidden');
+    else if(!$('#viewPanel').classList.contains('hidden'))$('#viewPanel').classList.add('hidden');
     else deselect();
     return;
   }
@@ -2982,7 +3169,9 @@ window.addEventListener('keydown',function(e){
   if(e.key==='+'||e.key==='=')zoomAt(W/2,H/2,1.25);
   if(e.key==='-')zoomAt(W/2,H/2,0.8);
   if(e.key==='0')fitView();
+  if(e.key.toLowerCase()==='f'||e.key.toLowerCase()==='а')fitView();
   if(e.key.toLowerCase()==='w'||e.key.toLowerCase()==='ц')fitFabricWidth();
+  if(e.key==='Home'){focusOrigin();return;}
   if(e.key.toLowerCase()==='r'||e.key.toLowerCase()==='к'){
     const p=byId(state.selId); if(p){p.rot=(p.rot+90)%360;markDirty();draw();scheduleRepack();}}
   if(e.key===']'||e.key==='['){
@@ -3002,6 +3191,7 @@ window.addEventListener('keyup',function(e){if(e.code==='Space')spaceDown=false;
     applyGridOpts(state.gridOpts);
     syncNestUI();
     syncFabricUI();
+    syncViewUI();
     ensureSize(); draw();
     const ok=await IDB.open();
     IDB.ok=ok;
