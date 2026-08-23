@@ -131,6 +131,7 @@ aside{
 
 #stage{flex:1; display:flex; flex-direction:column; min-width:0; position:relative}
 #toolbar{
+  position:relative;
   display:flex; align-items:center; gap:6px; padding:8px 12px; flex-wrap:wrap;
   border-bottom:1px solid var(--line); background:rgba(9,11,24,.8);
 }
@@ -159,6 +160,26 @@ aside{
 .chip.ok{color:#7dffca; border-color:rgba(57,255,160,.45); box-shadow:0 0 9px rgba(57,255,160,.2)}
 .chip.warn{color:#ffe08a; border-color:rgba(255,194,77,.45); box-shadow:0 0 9px rgba(255,194,77,.2)}
 .chip.bad{color:#ff9db1; border-color:rgba(255,77,109,.5); box-shadow:0 0 9px rgba(255,77,109,.25)}
+
+/* панель настроек сетки */
+#gridPanel{
+  position:absolute; top:calc(100% + 8px); right:12px; z-index:36; width:248px;
+  background:rgba(10,12,26,.97); border:1px solid rgba(0,229,255,.4); border-radius:12px;
+  box-shadow:0 0 22px rgba(0,229,255,.22), 0 16px 44px rgba(0,0,0,.6);
+  padding:12px; display:flex; flex-direction:column; gap:10px; backdrop-filter:blur(8px);
+}
+.pop-title{font:700 11px var(--font-ui); letter-spacing:1.5px; text-transform:uppercase; color:var(--cyan); text-shadow:0 0 8px rgba(0,229,255,.5)}
+.pop-row{display:flex; align-items:center; justify-content:space-between; gap:10px}
+.pop-row>label{font:600 11px var(--font-ui); color:var(--dim)}
+.pop-row label.chk{display:flex; align-items:center; gap:7px; cursor:pointer; color:var(--txt)}
+.pop-row select{
+  width:112px; background:#0a0d1f; border:1px solid var(--line2); color:var(--txt);
+  border-radius:7px; padding:6px 7px; font:500 12px var(--font-mono); outline:none;
+}
+.pop-row select:focus{border-color:var(--cyan)}
+.pop-row input[type=range]{width:112px; accent-color:var(--cyan)}
+.pop-row input[type=number]{width:72px; padding:5px 7px; font-size:12px}
+.pop-val{font:700 11px var(--font-mono); color:var(--cyan); min-width:36px; text-align:right}
 
 #quick{
   position:absolute; z-index:20; min-width:216px; padding:10px;
@@ -258,6 +279,7 @@ aside{
   .chip{margin-left:0}
   #quick{min-width:186px}
   #fabWrap input[type=number]{width:52px}
+  #gridPanel{right:8px; width:232px}
 }
 </style>
 </head>
@@ -275,7 +297,7 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.2.3</span></div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.3.0</span></div>
       <div class="desc">Студия швейных выкроек: детали, размеры и оптимальная автораскладка в области ткани.</div>
     </div>
   </div>
@@ -307,18 +329,20 @@ aside{
       <button class="tbtn" id="btnZoomOut" title="Уменьшить (−)">−</button>
       <span class="zoomlbl" id="zoomLbl">100%</span>
       <button class="tbtn" id="btnZoomIn" title="Увеличить (+)">+</button>
-      <button class="tbtn" id="btnFit" title="Автомасштаб: вписать ткань и детали (0)">⤢ Вписать</button>
+      <button class="tbtn" id="btnFit" title="Вписать ткань и все детали в экран (0)">⤢ Вписать</button>
+      <button class="tbtn" id="btnFitW" title="Вписать всю ширину ткани по горизонтали (W)">⇤ По ширине</button>
       <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
       <span class="tsep"></span>
       <button class="tbtn" id="btnPack" title="Оптимальная автораскладка деталей в области ткани">⚡ Раскладка</button>
       <label class="tbtn toggle active" id="autoWrap" title="Пересобирать раскладку автоматически при изменении параметров">
         <input type="checkbox" id="chkAuto" checked> Авто
       </label>
-      <label class="tbtn toggle active" id="snapWrap" title="Привязка деталей к области ткани и сетке 0.5 см при перетаскивании">
+      <label class="tbtn toggle active" id="snapWrap" title="Привязка деталей к области ткани при перетаскивании">
         <input type="checkbox" id="chkSnap" checked> К ткани
       </label>
       <span class="tsep"></span>
-      <button class="tbtn toggle active" id="btnGrid" title="Сетка"># Сетка</button>
+      <button class="tbtn toggle active" id="btnGrid" title="Показать/скрыть сетку"># Сетка</button>
+      <button class="tbtn" id="btnGridOpts" title="Параметры сетки">⚙</button>
       <div class="tbtn toggle active" id="fabWrap" title="Область ткани для раскроя">
         <label><input type="checkbox" id="fabChk" checked> Ткань</label>
         <input type="number" id="fabW" value="150" min="60" max="400" step="5" title="Ширина ткани, см">
@@ -326,6 +350,45 @@ aside{
       </div>
       <span class="tsep"></span>
       <button class="tbtn danger-t" id="btnClear" title="Очистить холст">✕ Очистить</button>
+
+      <!-- Панель настроек сетки -->
+      <div id="gridPanel" class="hidden">
+        <div class="pop-title">Параметры сетки</div>
+        <div class="pop-row">
+          <label>Шаг, см</label>
+          <select id="gStep">
+            <option value="auto" selected>Авто</option>
+            <option value="0.5">0.5</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+        <div class="pop-row">
+          <label>Жирная линия каждые</label>
+          <select id="gMajor">
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="pop-row">
+          <label>Яркость</label>
+          <input type="range" id="gAlpha" min="20" max="100" value="100">
+          <span class="pop-val" id="gAlphaVal">100%</span>
+        </div>
+        <div class="pop-row">
+          <label class="chk"><input type="checkbox" id="gAxes" checked> Оси (0,0)</label>
+          <label class="chk"><input type="checkbox" id="gSnap" checked> Привязка</label>
+        </div>
+        <div class="pop-row">
+          <label>Шаг привязки, см</label>
+          <input type="number" id="gSnapStep" value="0.5" min="0.1" max="10" step="0.1">
+        </div>
+      </div>
     </div>
 
     <div id="canvasWrap">
@@ -421,14 +484,13 @@ aside{
 <script>
 'use strict';
 /* =====================================================================
-   МОДЕЛЬ КООРДИНАТ — единая для рендера, выбора и жестов:
+   МОДЕЛЬ КООРДИНАТ:
    • МИР — сантиметры ткани, ось Y вниз, (0,0) — левая кромка ткани.
    • ХОЛСТ — внутренние CSS-пиксели области W×H.
    • СОБЫТИЕ → ХОЛСТ: через актуальный rect с нормирующим коэффициентом.
    • ХОЛСТ ⇄ МИР:  world=(canvas-offset)/scale;  canvas=world*scale+offset.
-   • «Вписать» всегда пересчитывает фактический размер холста, использует
-     ЭКРАННЫЕ поля и объединяет: кромки ткани (0..fabricW, от y=0) и
-     габариты всех деталей (с учётом поворота/зеркала).
+   • «Вписать» — вся область ткани+деталей; «По ширине» — вся ширина ткани
+     по горизонтали при сохранении текущей вертикальной прокрутки/верха.
    ===================================================================== */
 
 const $=s=>document.querySelector(s);
@@ -715,6 +777,7 @@ const state={
   pieces:[], selId:null, hoverId:null,
   view:{scale:BASE,ox:80,oy:60},
   grid:true, fabric:true, fabricW:150,
+  gridOpts:{minor:'auto', majorEvery:5, alpha:100, axes:true, snap:true, snapStep:0.5},
   project:{id:null,name:'Новый проект'},
   dirty:false,
 };
@@ -744,7 +807,6 @@ function w2s(wx,wy){
   return {x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy};
 }
 
-/* Актуализация размеров холста из живого layout (вызывается и во Вписать) */
 function syncCanvasSize(){
   const r=wrap.getBoundingClientRect();
   const nw=Math.max(50,r.width), nh=Math.max(50,r.height);
@@ -816,26 +878,46 @@ function drawCursor(){
   ctx.stroke();
   ctx.restore();
 }
+/* Сетка с настраиваемым шагом, жирностью, яркостью и осями */
 function drawGrid(){
   if(!state.grid)return;
-  const v=state.view;
-  const steps=[1,2,5,10,20,50,100,200];
-  const minor=steps.find(s=>s*v.scale>=13)||200;
+  const g=state.gridOpts, v=state.view, k=clamp((g.alpha??100)/100,0,1);
+  let minor;
+  if(g.minor==='auto'){
+    const steps=[1,2,5,10,20,50,100,200];
+    minor=steps.find(s=>s*v.scale>=13)||200;
+  }else{
+    minor=Math.max(0.1,+g.minor||1);
+  }
+  const mj=Math.max(2,parseInt(g.majorEvery)||5);
+  const showMinor=minor*v.scale>=4; // не рисуем слишком частые линии
   const wl=(-v.ox)/v.scale, wr=(W-v.ox)/v.scale, wt=(-v.oy)/v.scale, wb=(H-v.oy)/v.scale;
+  const i0=Math.floor(wl/minor), i1=Math.ceil(wr/minor);
+  const j0=Math.floor(wt/minor), j1=Math.ceil(wb/minor);
+  if(i1-i0>4000||j1-j0>4000)return; // защита от перегрузки
   ctx.lineWidth=1;
-  for(let i=Math.floor(wl/minor);i*minor<=wr;i++){
-    const x=i*minor,sx=x*v.scale+v.ox;
-    ctx.strokeStyle=x===0?'rgba(0,229,255,.38)':(i%5===0)?'rgba(0,229,255,.12)':'rgba(110,130,255,.055)';
+  const minorCol=`rgba(110,130,255,${(0.075*k).toFixed(3)})`;
+  const majorCol=`rgba(0,229,255,${(0.14*k).toFixed(3)})`;
+  const axisCol=`rgba(0,229,255,${(0.42*k).toFixed(3)})`;
+  for(let i=i0;i<=i1;i++){
+    const isMajor=((i%mj)+mj)%mj===0;
+    if(!isMajor&&!showMinor)continue;
+    const x=i*minor, sx=x*v.scale+v.ox;
+    ctx.strokeStyle=(g.axes&&x===0)?axisCol:(isMajor?majorCol:minorCol);
     ctx.beginPath();ctx.moveTo(sx,0);ctx.lineTo(sx,H);ctx.stroke();
   }
-  for(let j=Math.floor(wt/minor);j*minor<=wb;j++){
-    const y=j*minor,sy=y*v.scale+v.oy;
-    ctx.strokeStyle=y===0?'rgba(0,229,255,.38)':(j%5===0)?'rgba(0,229,255,.12)':'rgba(110,130,255,.055)';
+  for(let j=j0;j<=j1;j++){
+    const isMajor=((j%mj)+mj)%mj===0;
+    if(!isMajor&&!showMinor)continue;
+    const y=j*minor, sy=y*v.scale+v.oy;
+    ctx.strokeStyle=(g.axes&&y===0)?axisCol:(isMajor?majorCol:minorCol);
     ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(W,sy);ctx.stroke();
   }
-  const o=w2s(0,0);
-  ctx.strokeStyle='rgba(0,229,255,.6)';ctx.lineWidth=1.4;
-  ctx.beginPath();ctx.moveTo(o.x-7,o.y);ctx.lineTo(o.x+7,o.y);ctx.moveTo(o.x,o.y-7);ctx.lineTo(o.x,o.y+7);ctx.stroke();
+  if(g.axes){
+    const o=w2s(0,0);
+    ctx.strokeStyle=axisCol;ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.moveTo(o.x-7,o.y);ctx.lineTo(o.x+7,o.y);ctx.moveTo(o.x,o.y-7);ctx.lineTo(o.x,o.y+7);ctx.stroke();
+  }
 }
 function drawFabric(){
   if(!state.fabric)return;
@@ -929,7 +1011,6 @@ function zoomAt(px,py,f){
   v.ox=px-w.x*v.scale; v.oy=py-w.y*v.scale;
   draw();
 }
-/* Габариты всех деталей (мировые, с поворотом/зеркалом) */
 function contentBounds(){
   if(!state.pieces.length)return null;
   let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
@@ -940,8 +1021,6 @@ function contentBounds(){
   }
   return {minx,miny,maxx,maxy};
 }
-/* Область для «Вписать»: объединяет кромки ткани (0..fabricW, от y=0)
-   и фактические границы размещённых деталей */
 function fitBounds(){
   const b=contentBounds();
   const fw=state.fabricW;
@@ -954,25 +1033,43 @@ function fitBounds(){
     miny=Math.min(miny===Infinity?0:miny,0);
     maxy=Math.max(maxy===-Infinity?0:maxy,miny+60);
   }
-  if(minx===Infinity){ // нет ни деталей, ни ткани
-    minx=0;miny=0;maxx=150;maxy=100;
-  }
+  if(minx===Infinity){minx=0;miny=0;maxx=150;maxy=100;}
   return {minx,miny,maxx,maxy};
 }
-/* ИСПРАВЛЕНО: «Вписать» сначала актуализирует фактический размер холста,
-   затем центрирует объединённую область ткани+деталей с ЭКРАННЫМИ полями */
+/* Вписать всю область (ткань+детали) в экран */
 function fitView(){
   syncCanvasSize();
   const b=fitBounds();
   const bw=Math.max(1,b.maxx-b.minx);
   const bh=Math.max(1,b.maxy-b.miny);
-  const padL=36,padR=36,padT=48,padB=36; // экранные пиксели
+  const padL=36,padR=36,padT=48,padB=36;
   const availW=Math.max(40,W-padL-padR);
   const availH=Math.max(40,H-padT-padB);
   const s=clamp(Math.min(availW/bw,availH/bh),0.12,80);
   state.view.scale=s;
   state.view.ox=padL+(availW-bw*s)/2-b.minx*s;
   state.view.oy=padT+(availH-bh*s)/2-b.miny*s;
+  draw();
+}
+/* НОВОЕ: вписать ВСЮ ШИРИНУ ткани по горизонтали; верх — начало раскроя */
+function fitFabricWidth(){
+  syncCanvasSize();
+  const padL=30,padR=30,padT=44;
+  const availW=Math.max(40,W-padL-padR);
+  let minx,maxx;
+  if(state.fabric){minx=0;maxx=state.fabricW;}
+  else{
+    const b=contentBounds();
+    if(!b){toast('Холст пуст — нечего вписывать','warn');return;}
+    minx=b.minx;maxx=b.maxx;
+  }
+  const bw=Math.max(1,maxx-minx);
+  const s=clamp(availW/bw,0.12,80);
+  const b2=contentBounds();
+  const topY=b2?Math.min(b2.miny,0):0;
+  state.view.scale=s;
+  state.view.ox=padL-minx*s;
+  state.view.oy=padT-topY*s;
   draw();
 }
 
@@ -1296,7 +1393,27 @@ const serializePiece=p=>({id:p.id,type:p.type,name:p.name,x:p.x,y:p.y,rot:p.rot,
 function projectData(){
   return {id:state.project.id||uid(),
     name:(state.project.name||'Без названия').trim()||'Без названия',
-    updatedAt:Date.now(), pieces:state.pieces.map(serializePiece)};
+    updatedAt:Date.now(),
+    gridOpts:{...state.gridOpts},
+    pieces:state.pieces.map(serializePiece)};
+}
+function applyGridOpts(o){
+  if(!o||typeof o!=='object')return;
+  const g=state.gridOpts;
+  if(o.minor==='auto'||isFinite(+o.minor)) g.minor=o.minor==='auto'?'auto':+o.minor;
+  if(isFinite(+o.majorEvery)) g.majorEvery=clamp(+o.majorEvery,2,10);
+  if(isFinite(+o.alpha)) g.alpha=clamp(+o.alpha,20,100);
+  if(typeof o.axes==='boolean') g.axes=o.axes;
+  if(typeof o.snap==='boolean') g.snap=o.snap;
+  if(isFinite(+o.snapStep)) g.snapStep=clamp(+o.snapStep,0.1,10);
+  // синхронизация контролов панели
+  $('#gStep').value=g.minor==='auto'?'auto':String(g.minor);
+  $('#gMajor').value=String(g.majorEvery);
+  $('#gAlpha').value=String(g.alpha);
+  $('#gAlphaVal').textContent=g.alpha+'%';
+  $('#gAxes').checked=g.axes;
+  $('#gSnap').checked=g.snap;
+  $('#gSnapStep').value=String(g.snapStep);
 }
 async function saveProject(manual){
   if(!IDB.ok){if(manual)toast('Сохранение недоступно: IndexedDB отключён','warn');updateStorageChip();return;}
@@ -1350,6 +1467,7 @@ function loadProject(data){
     p.mirror=!!d.mirror; p.seam=+d.seam||0;
     state.pieces.push(p);
   }
+  applyGridOpts(data.gridOpts);
   state.selId=null; $('#quick').classList.add('hidden');
   state.dirty=false; lastSavedAt=new Date(data.updatedAt||Date.now());
   projOv.classList.remove('open');
@@ -1371,7 +1489,7 @@ function newProject(){
 $('#btnNew').onclick=()=>{ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=()=>saveProject(true);
 $('#btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.2.3',...projectData()},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.3.0',...projectData()},null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -1386,6 +1504,7 @@ window.addEventListener('beforeunload',()=>{
 $('#btnZoomIn').onclick=()=>zoomAt(W/2,H/2,1.3);
 $('#btnZoomOut').onclick=()=>zoomAt(W/2,H/2,1/1.3);
 $('#btnFit').onclick=fitView;
+$('#btnFitW').onclick=fitFabricWidth;
 $('#btn100').onclick=()=>{syncCanvasSize();const c=s2w(W/2,H/2);state.view.scale=BASE;
   state.view.ox=W/2-c.x*BASE;state.view.oy=H/2-c.y*BASE;draw();};
 $('#btnPack').onclick=()=>{
@@ -1400,7 +1519,6 @@ $('#chkAuto').addEventListener('change',e=>{
 $('#chkSnap').addEventListener('change',e=>{
   $('#snapWrap').classList.toggle('active',e.target.checked);
 });
-$('#btnGrid').onclick=e=>{state.grid=!state.grid;e.currentTarget.classList.toggle('active',state.grid);draw();};
 $('#fabChk').addEventListener('change',e=>{
   state.fabric=e.target.checked;
   $('#fabWrap').classList.toggle('active',state.fabric);
@@ -1413,6 +1531,44 @@ $('#fabW').addEventListener('input',e=>{
 $('#btnClear').onclick=()=>{ if(!state.pieces.length)return;
   if(!confirm('Очистить холст? Все детали будут удалены.'))return;
   state.pieces=[]; deselect(); markDirty(); draw(); };
+
+/* ---- сетка: вкл/выкл и панель параметров ---- */
+$('#btnGrid').onclick=e=>{
+  state.grid=!state.grid;
+  e.currentTarget.classList.toggle('active',state.grid);
+  draw();
+};
+$('#btnGridOpts').addEventListener('click',e=>{
+  e.stopPropagation();
+  $('#gridPanel').classList.toggle('hidden');
+});
+document.addEventListener('click',e=>{
+  const panel=$('#gridPanel');
+  if(!panel.classList.contains('hidden')
+     && !e.target.closest('#gridPanel')
+     && !e.target.closest('#btnGridOpts')){
+    panel.classList.add('hidden');
+  }
+});
+$('#gStep').addEventListener('change',e=>{
+  state.gridOpts.minor=e.target.value==='auto'?'auto':parseFloat(e.target.value);
+  draw();
+});
+$('#gMajor').addEventListener('change',e=>{
+  state.gridOpts.majorEvery=parseInt(e.target.value,10)||5;
+  draw();
+});
+$('#gAlpha').addEventListener('input',e=>{
+  state.gridOpts.alpha=clamp(parseInt(e.target.value,10)||100,20,100);
+  $('#gAlphaVal').textContent=state.gridOpts.alpha+'%';
+  draw();
+});
+$('#gAxes').addEventListener('change',e=>{state.gridOpts.axes=e.target.checked;draw();});
+$('#gSnap').addEventListener('change',e=>{state.gridOpts.snap=e.target.checked;});
+$('#gSnapStep').addEventListener('input',e=>{
+  const v=parseFloat(e.target.value);
+  if(isFinite(v))state.gridOpts.snapStep=clamp(v,0.1,10);
+});
 
 /* ============================ указатель ============================ */
 const pointers=new Map(); let gesture=null, spaceDown=false;
@@ -1479,7 +1635,12 @@ cv.addEventListener('pointermove',e=>{
       if(gesture.moved){
         p.x=w.x-gesture.gx; p.y=w.y-gesture.gy;
         if($('#chkSnap').checked){
-          p.x=Math.round(p.x*2)/2; p.y=Math.round(p.y*2)/2;
+          const g=state.gridOpts;
+          if(g.snap){
+            const st=Math.max(0.05,+g.snapStep||0.5);
+            p.x=Math.round(p.x/st)*st;
+            p.y=Math.round(p.y/st)*st;
+          }
           clampToFabric(p);
         }
         draw();
@@ -1525,6 +1686,7 @@ window.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     if(editorId)closeEditor();
     else if(projOv.classList.contains('open'))projOv.classList.remove('open');
+    else if(!$('#gridPanel').classList.contains('hidden'))$('#gridPanel').classList.add('hidden');
     else deselect();
     return;
   }
@@ -1532,6 +1694,7 @@ window.addEventListener('keydown',e=>{
   if(e.key==='+'||e.key==='=')zoomAt(W/2,H/2,1.25);
   if(e.key==='-')zoomAt(W/2,H/2,0.8);
   if(e.key==='0')fitView();
+  if(e.key.toLowerCase()==='w'||e.key.toLowerCase()==='ц')fitFabricWidth();
   if(e.key.toLowerCase()==='r'||e.key.toLowerCase()==='к'){
     const p=byId(state.selId); if(p){p.rot=(p.rot+90)%360;markDirty();draw();scheduleRepack();}}
   if(e.key===']'||e.key==='['){
@@ -1555,6 +1718,7 @@ function toast(msg,kind='info'){
 /* ============================ старт ============================ */
 (async function init(){
   buildLibrary(); buildPresetsUI();
+  applyGridOpts(state.gridOpts);
   resize();
   const ok=await IDB.open();
   IDB.ok=ok;
