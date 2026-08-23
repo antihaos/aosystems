@@ -275,7 +275,7 @@ aside{
       </g>
     </svg>
     <div>
-      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.2.2</span></div>
+      <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.2.3</span></div>
       <div class="desc">Студия швейных выкроек: детали, размеры и оптимальная автораскладка в области ткани.</div>
     </div>
   </div>
@@ -307,7 +307,7 @@ aside{
       <button class="tbtn" id="btnZoomOut" title="Уменьшить (−)">−</button>
       <span class="zoomlbl" id="zoomLbl">100%</span>
       <button class="tbtn" id="btnZoomIn" title="Увеличить (+)">+</button>
-      <button class="tbtn" id="btnFit" title="Автомасштаб: вписать всё (0)">⤢ Вписать</button>
+      <button class="tbtn" id="btnFit" title="Автомасштаб: вписать ткань и детали (0)">⤢ Вписать</button>
       <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
       <span class="tsep"></span>
       <button class="tbtn" id="btnPack" title="Оптимальная автораскладка деталей в области ткани">⚡ Раскладка</button>
@@ -422,25 +422,13 @@ aside{
 'use strict';
 /* =====================================================================
    МОДЕЛЬ КООРДИНАТ — единая для рендера, выбора и жестов:
-
-   1) МИР  — сантиметры ткани. Ось Y вниз. (0,0) — левая кромка ткани.
-   2) ХОЛСТ (внутренние координаты) — CSS-пиксели области W×H.
-   3) СОБЫТИЕ → ХОЛСТ: клиентские координаты курсора переводятся через
-      актуальный rect холста с нормирующим коэффициентом:
-        canvasX = (clientX - rect.left) * (W / rect.width)
-      Это гарантирует корректность даже если фактический CSS-размер
-      канваса отличается от внутренней модели (дробные пиксели, зум
-      браузера, рассинхронизация после ресайза).
-   4) ХОЛСТ ⇄ МИР:
-        world  = (canvas - offset) / scale      (s2w)
-        canvas = world * scale + offset         (w2s)
-   5) Деталь: якорь (p.x, p.y) — левый-верхний угол НЕповёрнутого
-      габаритного бокса; центр C = (p.x + b.w/2, p.y + b.h/2).
-      Прямое преобразование (локальные → мир):
-        world = T(C) · R(rot) · M(mirror) · T(-localCenter) · local
-      Выбор детали использует ОБРАТНОЕ преобразование (мир → локальные):
-        d = world - C;  d = rotate(d, -rot);  d.x = mirror ? -d.x : d.x;
-        local = d + localCenter;  затем тест точки в локальном полигоне.
+   • МИР — сантиметры ткани, ось Y вниз, (0,0) — левая кромка ткани.
+   • ХОЛСТ — внутренние CSS-пиксели области W×H.
+   • СОБЫТИЕ → ХОЛСТ: через актуальный rect с нормирующим коэффициентом.
+   • ХОЛСТ ⇄ МИР:  world=(canvas-offset)/scale;  canvas=world*scale+offset.
+   • «Вписать» всегда пересчитывает фактический размер холста, использует
+     ЭКРАННЫЕ поля и объединяет: кромки ткани (0..fabricW, от y=0) и
+     габариты всех деталей (с учётом поворота/зеркала).
    ===================================================================== */
 
 const $=s=>document.querySelector(s);
@@ -480,7 +468,7 @@ function pocketBuild(p){const w=p.w,h=p.h,r=Math.min(3,w*0.25,h*0.25);
     ['L',0.6+r,h],['Q',0.6,h,0.6,h-r],['Z']];}
 function yokeBuild(p){const w=p.w,h=p.h,c=p.curve;
   return [['M',0,c],['Q',w/2,0,w,c],['L',w,h],['Q',w/2,h-c*1.6,0,h],['Z']];}
-function gussetBuild(p){return [['M',p.w/2,0],['L',p.w,p.h/2],['L',p.w/2,p.h],['L',0,p.h/2],['Z']];}
+function gussetBuild(p){return[['M',p.w/2,0],['L',p.w,p.h/2],['L',p.w/2,p.h],['L',0,p.h/2],['Z']];}
 function pantsBuild(p){
   const W=p.hip,R=p.rise,L=p.length,c=p.crotch,hw=Math.min(p.hem,W);
   const xc=(W+c)/2+1;
@@ -735,13 +723,11 @@ let editorId=null, saving=false, lastSavedAt=null, storageFailedNoted=false, sav
 const cv=$('#cv'), ctx=cv.getContext('2d');
 const wrap=$('#canvasWrap');
 let W=0,H=0,dpr=1;
-const mousePos={x:0,y:0,on:false}; // курсор во внутренних координатах холста
+const mousePos={x:0,y:0,on:false};
 
 const byId=id=>state.pieces.find(p=>p.id===id)||null;
 
-/* -------- пересчёт координат (см. модель в шапке файла) -------- */
-/* клиентские пиксели события → внутренние координаты холста,
-   с нормировкой на фактический CSS-размер канваса */
+/* -------- пересчёт координат -------- */
 function clientToCanvas(cx,cy){
   const r=cv.getBoundingClientRect();
   const kx=r.width>0?W/r.width:1;
@@ -758,13 +744,17 @@ function w2s(wx,wy){
   return {x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy};
 }
 
-function resize(){
+/* Актуализация размеров холста из живого layout (вызывается и во Вписать) */
+function syncCanvasSize(){
   const r=wrap.getBoundingClientRect();
-  W=Math.max(50,r.width); H=Math.max(50,r.height);
-  dpr=window.devicePixelRatio||1;
-  cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
-  draw();
+  const nw=Math.max(50,r.width), nh=Math.max(50,r.height);
+  const nd=window.devicePixelRatio||1;
+  if(nw!==W||nh!==H||nd!==dpr){
+    W=nw; H=nh; dpr=nd;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+  }
 }
+function resize(){ syncCanvasSize(); draw(); }
 new ResizeObserver(resize).observe(wrap);
 window.addEventListener('resize',resize);
 
@@ -799,7 +789,6 @@ function packAll(){
 
 /* ============================ рисование ============================ */
 function draw(){
-  // защита от смены devicePixelRatio (монитор/зум браузера)
   const nd=window.devicePixelRatio||1;
   if(nd!==dpr){resize();return;}
   ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -861,7 +850,6 @@ function drawFabric(){
   ctx.font='600 11px "JetBrains Mono",monospace';ctx.textAlign='center';
   ctx.fillText(`ткань · ${fmt(state.fabricW)} см`,(x0+x1)/2,18);
 }
-/* Рендер детали: экран = T(w2s(C)) · S(scale) · R · M · T(-localCenter) */
 function drawPiece(p){
   const b=p._bounds, rad=p.rot*Math.PI/180, sv=state.view.scale;
   const s=w2s(p.x+b.w/2, p.y+b.h/2);
@@ -941,40 +929,54 @@ function zoomAt(px,py,f){
   v.ox=px-w.x*v.scale; v.oy=py-w.y*v.scale;
   draw();
 }
+/* Габариты всех деталей (мировые, с поворотом/зеркалом) */
 function contentBounds(){
   if(!state.pieces.length)return null;
   let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
-  for(const p of state.pieces)for(const c of pieceCorners(p)){
-    if(c[0]<minx)minx=c[0];if(c[0]>maxx)maxx=c[0];
-    if(c[1]<miny)miny=c[1];if(c[1]>maxy)maxy=c[1];
+  for(const p of state.pieces){
+    const bb=pieceAABB(p);
+    if(bb.minx<minx)minx=bb.minx; if(bb.maxx>maxx)maxx=bb.maxx;
+    if(bb.miny<miny)miny=bb.miny; if(bb.maxy>maxy)maxy=bb.maxy;
   }
   return {minx,miny,maxx,maxy};
 }
+/* Область для «Вписать»: объединяет кромки ткани (0..fabricW, от y=0)
+   и фактические границы размещённых деталей */
 function fitBounds(){
   const b=contentBounds();
+  const fw=state.fabricW;
   let minx,miny,maxx,maxy;
   if(b){minx=b.minx;miny=b.miny;maxx=b.maxx;maxy=b.maxy;}
-  else{minx=0;miny=0;maxx=state.fabric?state.fabricW:150;maxy=120;}
+  else{minx=Infinity;miny=Infinity;maxx=-Infinity;maxy=-Infinity;}
   if(state.fabric){
-    minx=Math.min(minx,0);
-    maxx=Math.max(maxx,state.fabricW);
-    miny=Math.min(miny,0);
+    minx=Math.min(minx===Infinity?0:minx,0);
+    maxx=Math.max(maxx===-Infinity?fw:maxx,fw);
+    miny=Math.min(miny===Infinity?0:miny,0);
+    maxy=Math.max(maxy===-Infinity?0:maxy,miny+60);
+  }
+  if(minx===Infinity){ // нет ни деталей, ни ткани
+    minx=0;miny=0;maxx=150;maxy=100;
   }
   return {minx,miny,maxx,maxy};
 }
+/* ИСПРАВЛЕНО: «Вписать» сначала актуализирует фактический размер холста,
+   затем центрирует объединённую область ткани+деталей с ЭКРАННЫМИ полями */
 function fitView(){
+  syncCanvasSize();
   const b=fitBounds();
-  const padT=26,padS=16;
-  const bw=Math.max(10,b.maxx-b.minx), bh=Math.max(10,b.maxy-b.miny);
-  const s=clamp(Math.min(W/(bw+padS*2),H/(bh+padT+padS)),0.12,80);
+  const bw=Math.max(1,b.maxx-b.minx);
+  const bh=Math.max(1,b.maxy-b.miny);
+  const padL=36,padR=36,padT=48,padB=36; // экранные пиксели
+  const availW=Math.max(40,W-padL-padR);
+  const availH=Math.max(40,H-padT-padB);
+  const s=clamp(Math.min(availW/bw,availH/bh),0.12,80);
   state.view.scale=s;
-  state.view.ox=(W-bw*s)/2-b.minx*s;
-  state.view.oy=(H-bh*s)/2-b.miny*s+8;
+  state.view.ox=padL+(availW-bw*s)/2-b.minx*s;
+  state.view.oy=padT+(availH-bh*s)/2-b.miny*s;
   draw();
 }
 
 /* ============================ выбор / hit-test ============================ */
-/* мир → локальные координаты детали (обратное преобразование рендера) */
 function worldToLocal(p,wx,wy){
   const b=p._bounds, cx=p.x+b.w/2, cy=p.y+b.h/2;
   const dx=wx-cx, dy=wy-cy;
@@ -1364,13 +1366,12 @@ function newProject(){
   state.dirty=false; lastSavedAt=null;
   edOv.classList.remove('open'); projOv.classList.remove('open');
   $('#quick').classList.add('hidden');
-  state.view={scale:BASE,ox:W*0.25,oy:H*0.2};
-  draw(); updateStorageChip(); toast('✦ Новый проект');
+  fitView(); updateStorageChip(); toast('✦ Новый проект');
 }
 $('#btnNew').onclick=()=>{ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=()=>saveProject(true);
 $('#btnExport').onclick=()=>{
-  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.2.2',...projectData()},null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify({app:'NEONCUT',version:'1.2.3',...projectData()},null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
   a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
@@ -1385,7 +1386,7 @@ window.addEventListener('beforeunload',()=>{
 $('#btnZoomIn').onclick=()=>zoomAt(W/2,H/2,1.3);
 $('#btnZoomOut').onclick=()=>zoomAt(W/2,H/2,1/1.3);
 $('#btnFit').onclick=fitView;
-$('#btn100').onclick=()=>{const c=s2w(W/2,H/2);state.view.scale=BASE;
+$('#btn100').onclick=()=>{syncCanvasSize();const c=s2w(W/2,H/2);state.view.scale=BASE;
   state.view.ox=W/2-c.x*BASE;state.view.oy=H/2-c.y*BASE;draw();};
 $('#btnPack').onclick=()=>{
   if(!state.pieces.length){toast('Холст пуст — нечего раскладывать','warn');return;}
