@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>NEONFORGE — студийный аудио-энхансер</title>
-<meta name="description" content="Локальная студийная обработка аудио и видео: 21 модуль — улучшение качества (экспандер, эксайтер, мастеринг) и искажения (дисторшн, биткрашер, ринг-модулятор, фейзер), экспорт WAV / MP3 / OGG и ремукс видео.">
+<meta name="description" content="Локальная студийная обработка аудио и видео: 21 модуль, параллельные цепочки, улучшение качества и искажения, экспорт WAV / MP3 / OGG и ремукс видео.">
 
 <!-- Шрифты (fontsource CDN) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5/index.css">
@@ -197,7 +197,7 @@ tailwind.config = {
       </div>
       <div>
         <div class="font-bold text-lg leading-none tracking-wide">NEON<span class="text-neon-cyan">FORGE</span></div>
-        <div class="text-[10px] uppercase tracking-[0.3em] text-slate-500 mt-0.5">studio enhancer · patch engine · video</div>
+        <div class="text-[10px] uppercase tracking-[0.3em] text-slate-500 mt-0.5">studio enhancer · parallel routing · video</div>
       </div>
     </div>
     <div class="flex items-center gap-3">
@@ -205,7 +205,7 @@ tailwind.config = {
         <span id="state-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
         <span id="ctx-state" class="font-mono text-xs text-slate-400">ожидание</span>
       </div>
-      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v3.9</div>
+      <div class="rounded-full border border-neon-violet/40 bg-neon-violet/10 px-3 py-1.5 font-mono text-xs text-neon-violet shadow-[0_0_16px_rgba(139,92,246,.25)]">SPEC&nbsp;v4.0</div>
     </div>
   </div>
 </header>
@@ -222,9 +222,9 @@ tailwind.config = {
         Студийный звук —<br>даже <span class="bg-gradient-to-r from-neon-cyan via-neon-violet to-neon-magenta bg-clip-text text-transparent">для вашего видео</span>
       </h1>
       <p class="mt-6 text-slate-400 text-lg max-w-xl mx-auto">
-        21 модуль обработки: от кристальной чистоты и мастеринга до дисторшна, биткрашера и ринг-модуляции.
-        Собирайте цепь на холсте, применяйте пресеты, экспортируйте в WAV, MP3, OGG
-        или сохраняйте видео с новым звуком без перекодирования картинки.
+        21 модуль обработки и параллельные цепочки: ведите несколько кабелей от одного выхода,
+        стройте дабл-тракты и параллельную компрессию. Пресеты, экспорт в WAV, MP3, OGG
+        и ремукс видео без перекодирования картинки.
       </p>
 
       <div id="drop" class="mt-12 cursor-pointer rounded-3xl border-2 border-dashed border-white/15 bg-ink-900/60 p-10 md:p-14 transition hover:border-neon-cyan/60 hover:bg-neon-cyan/[0.03]">
@@ -245,10 +245,10 @@ tailwind.config = {
 
       <div class="mt-10 flex flex-wrap justify-center gap-2">
         <span class="chip pointer-events-none">🎬 Видео-режим</span>
+        <span class="chip pointer-events-none">🔀 Параллельные цепи</span>
         <span class="chip pointer-events-none">🔗 21 модуль обработки</span>
         <span class="chip pointer-events-none">✨ Улучшение качества</span>
         <span class="chip pointer-events-none">🔥 Искажения и эффекты</span>
-        <span class="chip pointer-events-none">🧩 Палитра и конструктор</span>
         <span class="chip pointer-events-none">💾 WAV / MP3 / OGG / видео</span>
       </div>
     </div>
@@ -310,7 +310,7 @@ tailwind.config = {
           <div id="chain-line" class="font-mono text-[11px] text-neon-cyan/80 mt-1.5 truncate">Сигнал: —</div>
         </div>
         <div class="flex items-center gap-2">
-          <span id="patch-warn" class="hidden rounded-full border border-neon-magenta/50 bg-neon-magenta/10 px-3 py-1 font-mono text-[11px] text-neon-magenta shadow-[0_0_14px_rgba(255,46,210,.25)]">⚠ цепь разомкнута — играет последняя рабочая</span>
+          <span id="patch-warn" class="hidden rounded-full border border-neon-magenta/50 bg-neon-magenta/10 px-3 py-1 font-mono text-[11px] text-neon-magenta shadow-[0_0_14px_rgba(255,46,210,.25)]">⚠ цепь не доходит до выхода — играет последняя рабочая</span>
           <button id="btn-patch-reset" class="btn-ghost !py-1.5 !px-3 text-xs">⟲ Сброс цепи</button>
         </div>
       </div>
@@ -345,10 +345,11 @@ tailwind.config = {
 
       <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[10px] text-slate-600">
         <span>◦ панель слева — добавить модуль</span>
+        <span>◦ от одного выхода — сколько угодно кабелей (параллельные ветви)</span>
+        <span>◦ ветви суммируются на входе следующего модуля</span>
         <span>◦ × на узле / Del — удалить</span>
         <span>◦ колесо / пинч — масштаб</span>
         <span>◦ тяните фон — обзор</span>
-        <span>◦ тяните от ● к ● — кабель</span>
         <span>◦ клик по узлу — параметры</span>
         <span>◦ двойной клик — вкл/выкл</span>
       </div>
@@ -415,6 +416,12 @@ tailwind.config = {
         <button class="chip" data-preset="Космический дрейф">🛸 Космический дрейф</button>
         <button class="chip" data-preset="Аналоговый хоррор">📼 Аналоговый хоррор</button>
         <button class="chip" data-preset="Стадионный рок">🎸 Стадионный рок</button>
+      </div>
+
+      <div class="preset-h">🔀 Параллельные цепочки</div>
+      <div class="flex flex-wrap gap-2 mt-2">
+        <button class="chip" data-preset="Параллельный компрессор">🗜 Параллельный компрессор</button>
+        <button class="chip" data-preset="Двойной тракт">🔀 Двойной тракт</button>
       </div>
 
       <div class="mt-3 font-mono text-[10px] text-slate-600">Пресет собирает готовую цепь модулей — параметры каждого можно менять кликом по узлу.</div>
@@ -555,7 +562,7 @@ tailwind.config = {
 <script>
 /* ============================================================
    NEONFORGE — студийный аудио/видео энхансер (SPA, один файл)
-   21 модуль: качество + искажения
+   21 модуль · параллельные цепочки (DAG-маршрутизация)
    ============================================================ */
 'use strict';
 
@@ -801,11 +808,11 @@ const MODULE_TYPES = {
       {label:'Интенсивность',path:'drive',min:0,max:100,step:1,fmt:fmtPct},
       {label:'Подмешивание',path:'mix',min:0,max:100,step:1,fmt:fmtPct}],
     hint:'Генерирует гармоники в верхней полосе — воздух, блеск и детальность.' },
-  gain:{ title:'Уровень', acc:'#00F0FF',
+  gain:{ title:'Уровень / миксер', acc:'#00F0FF',
     defaults:{on:true,db:0},
     status:p=>fmtDb(p.db),
     ctrls:[{label:'Усиление',path:'db',min:-24,max:24,step:0.5,fmt:fmtDb}],
-    hint:'Трим громкости для гейн-стейджинга между модулями.' },
+    hint:'Трим громкости. Несколько входящих кабелей суммируются — удобная точка сведения параллельных ветвей.' },
   width:{ title:'Стерео-расширение', acc:'#00F0FF',
     defaults:{on:true,amount:110},
     status:p=>fmtPct(p.amount),
@@ -890,7 +897,7 @@ const PALETTE_GROUPS=[
 ];
 const MAX_NODES=18;
 
-const DEFAULT_SPEC=[['gate',{}],['hp',{}],['eq',{}],['de',{}],['comp',{}],['rv',{}],['width',{}],['lim',{}]];
+const DEFAULT_SPEC={chain:[['gate',{}],['hp',{}],['eq',{}],['de',{}],['comp',{}],['rv',{}],['width',{}],['lim',{}]]};
 
 /* ---------- пресеты ---------- */
 const PRESETS = {
@@ -1063,7 +1070,27 @@ const PRESETS = {
    ['eq',{lf:100,lg:1,mf:900,mg:-1.5,mq:1.0,hf:6000,hg:2}],
    ['comp',{threshold:-16,ratio:3.5,attack:15,release:250,knee:10}],
    ['delay',{time:300,feedback:30,mix:18}],
-   ['rv',{mix:18,decay:1.8}],['lim',{threshold:-1}],['gain',{db:1}]]}
+   ['rv',{mix:18,decay:1.8}],['lim',{threshold:-1}],['gain',{db:1}]]},
+ /* параллельные цепочки */
+ 'Параллельный компрессор':{graph:{
+   nodes:[
+     ['comp',{threshold:-28,ratio:6,attack:3,release:120,knee:4}],
+     ['eq',{lf:110,lg:0,mf:2500,mg:1.5,mq:1.0,hf:9000,hg:1}],
+     ['gain',{db:-2}],
+     ['lim',{threshold:-1.5}]
+   ],
+   edges:[['src',0],[0,1],[1,2],['src',2],[2,3],[3,'dst']]
+ }},
+ 'Двойной тракт':{graph:{
+   nodes:[
+     ['sat',{drive:35,mix:100}],
+     ['width',{amount:130}],
+     ['gain',{db:-2}],
+     ['rv',{mix:12,decay:1.6}],
+     ['lim',{threshold:-1.5}]
+   ],
+   edges:[['src',0],['src',1],[0,2],[1,2],[2,3],[3,4],[4,'dst']]
+ }}
 };
 
 function clearPreset(){document.querySelectorAll('.chip[data-preset]').forEach(c=>c.classList.remove('active'));}
@@ -1077,7 +1104,7 @@ const NODE_EDGE = {
   dst:{title:'Выход',acc:'#FF2ED2'}
 };
 const patch = { nodes:[], edges:[], selected:null, selEdge:null, drag:null, hoverPort:null };
-let patchReady=false, lastOrder=[], nodeSeq=0;
+let patchReady=false, lastGraph=null, nodeSeq=0;
 
 const cam = { ox:0, oy:0, scale:1 };
 const CAM_MIN=0.3, CAM_MAX=3;
@@ -1117,15 +1144,32 @@ function fitToView(){
 }
 
 function buildChainFromSpec(spec){
-  const mods=(spec||[]).map(([t,ov])=>{
-    const pr=deepAssign(cloneJSON(MODULE_TYPES[t].defaults),ov||{});
-    pr.on=true;
-    return {id:'n'+(++nodeSeq),type:t,x:0,y:0,params:pr};
-  });
-  patch.nodes=[{id:'src',type:'src',x:16,y:130},...mods,{id:'dst',type:'dst',x:0,y:0}];
-  patch.edges=[];
-  const seq=['src',...mods.map(m=>m.id),'dst'];
-  for(let i=0;i<seq.length-1;i++)patch.edges.push({from:seq[i],to:seq[i+1]});
+  spec=spec||{};
+  if(spec.graph){
+    const ns=spec.graph.nodes.map(([t,ov])=>{
+      const pr=deepAssign(cloneJSON(MODULE_TYPES[t].defaults),ov||{});
+      pr.on=true;
+      return {id:'n'+(++nodeSeq),type:t,x:0,y:0,params:pr};
+    });
+    patch.nodes=[{id:'src',type:'src',x:16,y:130},...ns,{id:'dst',type:'dst',x:0,y:0}];
+    patch.edges=[];
+    spec.graph.edges.forEach(([a,b])=>{
+      const from=a==='src'?'src':(ns[a]?ns[a].id:null);
+      const to=b==='dst'?'dst':(ns[b]?ns[b].id:null);
+      if(from&&to)patch.edges.push({from,to});
+    });
+  }else{
+    const list=spec.chain||[];
+    const mods=list.map(([t,ov])=>{
+      const pr=deepAssign(cloneJSON(MODULE_TYPES[t].defaults),ov||{});
+      pr.on=true;
+      return {id:'n'+(++nodeSeq),type:t,x:0,y:0,params:pr};
+    });
+    patch.nodes=[{id:'src',type:'src',x:16,y:130},...mods,{id:'dst',type:'dst',x:0,y:0}];
+    patch.edges=[];
+    const seq=['src',...mods.map(m=>m.id),'dst'];
+    for(let i=0;i<seq.length-1;i++)patch.edges.push({from:seq[i],to:seq[i+1]});
+  }
   patch.selected=null; patch.selEdge=null; patch.drag=null;
   layoutCurrentChain();
   if(patchReady&&patchW()>0)fitToView();
@@ -1167,28 +1211,97 @@ function deleteNode(id){
   onEdgesChanged();
 }
 
-function computePath(){
-  const out=new Map();
-  patch.edges.forEach(e=>out.set(e.from,e.to));
-  const path=['src']; let cur='src';
-  while(out.has(cur)){ cur=out.get(cur); path.push(cur); if(path.length>40)break; }
-  return {path, complete:cur==='dst'};
-}
-function updateChainLine(){
-  const {path,complete}=computePath();
-  const names=path.map(id=>{const nd=nodeById(id);return nd?titleOf(nd):'?';});
-  const el=$('chain-line');
-  if(complete){
-    el.textContent='Сигнал: '+names.join(' → ');
-    el.className='font-mono text-[11px] text-neon-cyan/80 mt-1.5 truncate';
-  }else{
-    el.textContent='Обрыв после: '+names.join(' → ')+' … звучит последняя рабочая цепь';
-    el.className='font-mono text-[11px] text-neon-magenta/90 mt-1.5 truncate';
+/* ---------- анализ графа: активная DAG-цепь от входа к выходу ---------- */
+function computeActiveGraph(){
+  const outAdj=new Map(), inAdj=new Map();
+  patch.nodes.forEach(n=>{outAdj.set(n.id,[]);inAdj.set(n.id,[]);});
+  patch.edges.forEach(e=>{
+    if(outAdj.has(e.from)&&inAdj.has(e.to)){
+      outAdj.get(e.from).push(e.to);
+      inAdj.get(e.to).push(e.from);
+    }
+  });
+  const fwd=new Set(['src']);
+  const q=['src'];
+  while(q.length){
+    const c=q.shift();
+    for(const nx of outAdj.get(c)||[]){ if(!fwd.has(nx)){fwd.add(nx);q.push(nx);} }
   }
-  $('patch-warn').classList.toggle('hidden',complete);
+  const bwd=new Set(['dst']);
+  const q2=['dst'];
+  while(q2.length){
+    const c=q2.shift();
+    for(const pv of inAdj.get(c)||[]){ if(!bwd.has(pv)){bwd.add(pv);q2.push(pv);} }
+  }
+  const complete=fwd.has('dst');
+  const activeSet=new Set([...fwd].filter(id=>bwd.has(id)));
+  const activeEdges=patch.edges.filter(e=>activeSet.has(e.from)&&activeSet.has(e.to));
+  // топологический порядок (Кан)
+  const indeg=new Map();
+  activeSet.forEach(id=>indeg.set(id,0));
+  activeEdges.forEach(e=>indeg.set(e.to,(indeg.get(e.to)||0)+1));
+  const queue=[...activeSet].filter(id=>indeg.get(id)===0);
+  const order=[];
+  const deg=new Map(indeg);
+  while(queue.length){
+    const c=queue.shift();
+    order.push(c);
+    for(const e of activeEdges){
+      if(e.from===c){
+        const d=deg.get(e.to)-1;
+        deg.set(e.to,d);
+        if(d===0)queue.push(e.to);
+      }
+    }
+  }
+  return {complete, activeSet, activeEdges, order};
+}
+function resolveAudioGraph(){
+  const g=computeActiveGraph();
+  if(g.complete)return {order:g.order, edges:g.activeEdges};
+  if(lastGraph){
+    const ids=lastGraph.order.filter(id=>id==='src'||id==='dst'||nodeById(id));
+    const idSet=new Set(ids);
+    const edges=lastGraph.edges.filter(e=>idSet.has(e.from)&&idSet.has(e.to));
+    return {order:ids, edges};
+  }
+  return {order:['src','dst'], edges:[{from:'src',to:'dst'}]};
+}
+function createsCycle(from,to){
+  const adj=new Map();
+  patch.edges.forEach(e=>{ if(!adj.has(e.from))adj.set(e.from,[]); adj.get(e.from).push(e.to); });
+  const stack=[to]; const seen=new Set([to]);
+  while(stack.length){
+    const c=stack.pop();
+    if(c===from)return true;
+    for(const nx of adj.get(c)||[]){ if(!seen.has(nx)){seen.add(nx);stack.push(nx);} }
+  }
+  return false;
+}
+
+function updateChainLine(){
+  const g=computeActiveGraph();
+  const el=$('chain-line');
+  if(g.complete){
+    const mods=[...g.activeSet].filter(id=>isModule(nodeById(id))).length;
+    const branches=g.activeEdges.filter(e=>e.from==='src').length;
+    el.textContent=`Активно: ${mods} мод. · связей: ${g.activeEdges.length} · ветвей от входа: ${branches}${branches>1?' · параллельная обработка':''}`;
+    el.className='font-mono text-[11px] text-neon-cyan/80 mt-1.5 truncate';
+    $('patch-warn').classList.add('hidden');
+  }else{
+    el.textContent='Цепь не доходит до выхода — звучит последняя рабочая конфигурация';
+    el.className='font-mono text-[11px] text-neon-magenta/90 mt-1.5 truncate';
+    $('patch-warn').classList.remove('hidden');
+  }
 }
 function connectNodes(from,to){
-  patch.edges=patch.edges.filter(ed=>ed.from!==from&&ed.to!==to);
+  if(from===to)return;
+  if(patch.edges.some(e=>e.from===from&&e.to===to)){
+    toast('Такое соединение уже есть','err'); return;
+  }
+  if(createsCycle(from,to)){
+    toast('Нельзя: соединение создаёт цикл','err'); return;
+  }
   patch.edges.push({from,to});
   patch.selEdge={from,to};
   onEdgesChanged();
@@ -1660,6 +1773,13 @@ function disposeBlocks(blocks){
     B.nodes.forEach(n=>{try{n.disconnect();}catch(e){}});
   }
 }
+function wireGraph(blocks,edges,inNode,outNode){
+  edges.forEach(e=>{
+    const A=e.from==='src'?inNode:(blocks[e.from]?blocks[e.from].output:null);
+    const B=e.to==='dst'?outNode:(blocks[e.to]?blocks[e.to].input:null);
+    if(A&&B){ try{A.connect(B);}catch(err){} }
+  });
+}
 
 /* ============================================================
    АУДИО-ДВИЖОК
@@ -1668,31 +1788,24 @@ let live=null, specBuf=null, mBufL=null, mBufR=null, holdL=-90, holdR=-90;
 
 function rebuildLiveChain(){
   if(!live)return;
-  const {path,complete}=computePath();
-  let order;
-  if(complete){ order=path.filter(id=>id!=='src'&&id!=='dst'); lastOrder=order.slice(); }
-  else order=lastOrder.filter(id=>isModule(nodeById(id)));
-  live.order=order;
+  const g=computeActiveGraph();
+  if(g.complete){
+    lastGraph={order:[...g.order], edges:g.activeEdges.map(e=>({from:e.from,to:e.to}))};
+  }
+  const res=resolveAudioGraph();
+  live.order=res.order;
   disposeBlocks(live.blocks);
   live.blocks={};
   try{live.inGain.disconnect();}catch(e){}
-  if(order.length===0){
+  const moduleIds=res.order.filter(id=>isModule(nodeById(id)));
+  if(!res.edges.length||!moduleIds.length&&!res.edges.length){
     live.inGain.connect(live.makeup);
   }else{
-    order.forEach(id=>{
-      const nd=nodeById(id);
-      if(nd)live.blocks[id]=createBlockFor(nd,live.ctx,live.gateOK);
-    });
-    let prev=live.inGain;
-    order.forEach(id=>{
-      const B=live.blocks[id];
-      if(!B)return;
-      prev.connect(B.input); prev=B.output;
-    });
-    prev.connect(live.makeup);
+    moduleIds.forEach(id=>{ live.blocks[id]=createBlockFor(nodeById(id),live.ctx,live.gateOK); });
+    wireGraph(live.blocks,res.edges,live.inGain,live.makeup);
   }
   applyLiveParams(true);
-  try{console.info('[NEONFORGE] активная цепь:',order.map(id=>{const nd=nodeById(id);return nd?nd.type:id;}));}catch(e){}
+  try{console.info('[NEONFORGE] активная цепь:',moduleIds.map(id=>nodeById(id).type),'рёбер:',res.edges.length);}catch(e){}
 }
 function applyLiveParams(smooth){
   if(!live)return;
@@ -2199,21 +2312,24 @@ function drawEdge(g,ed,active,time){
     g.setLineDash([]);
   }
 }
-function drawNode(g,nd){
+function drawNode(g,nd,dimmed){
   const isMod=isModule(nd);
   const meta=isMod?MODULE_TYPES[nd.type]:NODE_EDGE[nd.type];
   const enabled=isMod?!!nd.params.on:true;
   const acc=meta.acc, sel=patch.selected===nd.id;
   g.save();
+  if(dimmed)g.globalAlpha=0.38;
   g.beginPath(); roundRectPath(g,nd.x,nd.y,NODE_W,NODE_H,12);
   g.fillStyle='rgba(10,14,24,.95)'; g.fill();
   g.lineWidth=1.5;
-  if(enabled){ g.shadowColor=acc; g.shadowBlur=14; g.strokeStyle=acc; }
+  if(enabled&&!dimmed){ g.shadowColor=acc; g.shadowBlur=14; g.strokeStyle=acc; }
   else { g.shadowBlur=0; g.strokeStyle='rgba(148,163,184,.3)'; }
   g.stroke(); g.shadowBlur=0;
   if(sel){
+    g.globalAlpha=1;
     g.beginPath(); roundRectPath(g,nd.x-3.5,nd.y-3.5,NODE_W+7,NODE_H+7,15);
     g.strokeStyle='rgba(255,255,255,.7)'; g.setLineDash([5,4]); g.lineWidth=1; g.stroke(); g.setLineDash([]);
+    if(dimmed)g.globalAlpha=0.38;
   }
   g.fillStyle=enabled?'#E2E8F0':'#64748B';
   g.font='700 12px "Space Grotesk", sans-serif'; g.textAlign='left';
@@ -2226,7 +2342,7 @@ function drawNode(g,nd){
   g.fillText(st,nd.x+12,nd.y+42,NODE_W-34);
   g.beginPath(); g.arc(nd.x+NODE_W-13,nd.y+14,3.2,0,7);
   g.fillStyle=enabled?acc:'rgba(100,116,139,.5)';
-  if(enabled){g.shadowColor=acc;g.shadowBlur=8;}
+  if(enabled&&!dimmed){g.shadowColor=acc;g.shadowBlur=8;}
   g.fill(); g.shadowBlur=0;
   if(nd.type!=='src')drawPort(g,nd.x,nd.y+NODE_H/2,acc);
   if(nd.type!=='dst')drawPort(g,nd.x+NODE_W,nd.y+NODE_H/2,acc);
@@ -2251,11 +2367,10 @@ function drawPatchFrame(){
   for(let x=sx;x<wx1;x+=step)
     for(let y=sy;y<wy1;y+=step)
       g.fillRect(x,y,ds,ds);
-  const {path}=computePath();
-  const activeSet=new Set();
-  for(let i=0;i<path.length-1;i++)activeSet.add(path[i]+'>'+path[i+1]);
+  const ag=computeActiveGraph();
+  const activeKeys=new Set(ag.activeEdges.map(e=>e.from+'>'+e.to));
   const time=performance.now()/1000;
-  patch.edges.forEach(ed=>drawEdge(g,ed,activeSet.has(ed.from+'>'+ed.to),time));
+  patch.edges.forEach(ed=>drawEdge(g,ed,ag.complete&&activeKeys.has(ed.from+'>'+ed.to),time));
   if(patch.drag&&patch.drag.kind==='edge'&&patch.drag.from){
     const a=nodeById(patch.drag.from);
     if(a){
@@ -2275,7 +2390,10 @@ function drawPatchFrame(){
       });
     }
   }
-  patch.nodes.forEach(nd=>drawNode(g,nd));
+  patch.nodes.forEach(nd=>{
+    const dim=ag.complete&&!ag.activeSet.has(nd.id);
+    drawNode(g,nd,dim);
+  });
   g.restore();
   if(patch.selected){
     const nd=nodeById(patch.selected);
@@ -2334,9 +2452,15 @@ function initPatchEvents(){
     if(port){
       if(port.kind==='out'){ const wp=s2w(sp); patch.drag={kind:'edge',from:port.nodeId,x:wp.x,y:wp.y}; }
       else{
-        const ei=patch.edges.findIndex(ed=>ed.to===port.nodeId);
-        if(ei>=0){ const ed=patch.edges.splice(ei,1)[0]; onEdgesChanged();
-          const wp=s2w(sp); patch.drag={kind:'edge',from:ed.from,x:wp.x,y:wp.y}; }
+        // отсоединяем последний входящий кабель и перетаскиваем его
+        let idx=-1;
+        for(let i=patch.edges.length-1;i>=0;i--){ if(patch.edges[i].to===port.nodeId){ idx=i; break; } }
+        if(idx>=0){
+          const ed=patch.edges.splice(idx,1)[0];
+          onEdgesChanged();
+          const wp=s2w(sp);
+          patch.drag={kind:'edge',from:ed.from,x:wp.x,y:wp.y};
+        }
       }
       return;
     }
@@ -2482,7 +2606,7 @@ function frame(){
 function applyPresetByName(name){
   const p=PRESETS[name]; if(!p)return;
   if(modalNode)closeModal();
-  buildChainFromSpec(p.chain||[]);
+  buildChainFromSpec(p);
   clearPreset();
   const chip=document.querySelector(`.chip[data-preset="${name}"]`);
   if(chip)chip.classList.add('active');
@@ -2564,21 +2688,17 @@ async function renderOffline(){
   const off=new OfflineAudioContext(buf.numberOfChannels,buf.length,buf.sampleRate);
   let gOK=false;
   try{ await off.audioWorklet.addModule(GATE_URL); gOK=true; }catch(e){ gOK=false; }
-  const {path,complete}=computePath();
-  const order=complete
-    ? path.filter(id=>id!=='src'&&id!=='dst')
-    : lastOrder.filter(id=>isModule(nodeById(id)));
+  const res=resolveAudioGraph();
+  const moduleIds=res.order.filter(id=>isModule(nodeById(id)));
   const oIn=off.createGain(); oIn.gain.value=db2lin(params.inGain.db);
   const oMk=off.createGain(); oMk.gain.value=db2lin(params.makeup.db);
-  if(order.length===0){
+  if(!res.edges.length||!moduleIds.length&&!res.edges.length){
     oIn.connect(oMk);
   }else{
     const blocks={};
-    order.forEach(id=>{ const nd=nodeById(id); if(nd)blocks[id]=createBlockFor(nd,off,gOK); });
-    let prev=oIn;
-    order.forEach(id=>{ const B=blocks[id]; if(!B)return; prev.connect(B.input); prev=B.output; });
-    prev.connect(oMk);
-    order.forEach(id=>{ const nd=nodeById(id); if(nd&&blocks[id])applyBlockFor(off,blocks[id],nd,false); });
+    moduleIds.forEach(id=>{ blocks[id]=createBlockFor(nodeById(id),off,gOK); });
+    wireGraph(blocks,res.edges,oIn,oMk);
+    moduleIds.forEach(id=>applyBlockFor(off,blocks[id],nodeById(id),false));
   }
   oMk.connect(off.destination);
   const src=off.createBufferSource(); src.buffer=buf;
