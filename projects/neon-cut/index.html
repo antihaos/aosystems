@@ -354,8 +354,8 @@ header{padding:8px 10px; gap:8px}
 </g>
 </svg>
 <div>
-<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.18.0</span></div>
-<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, инструмент «Измерение», физическая линейка на холсте и автосохранение настроек.</div>
+<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.19.0</span></div>
+<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, инструмент «Измерение», физическая линейка с настройками (двойной клик) и автосохранение.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -377,7 +377,7 @@ header{padding:8px 10px; gap:8px}
 <div class="cat-title">Готовые комплекты</div>
 <div class="preset-grid" id="presetsList"></div>
 </div>
-<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · 📐 — физическая линейка</div>
+<div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани (0,0)<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · 📐 — линейка (двойной клик — параметры)</div>
 </aside>
 <section id="stage">
 <div id="toolbar">
@@ -388,7 +388,7 @@ header{padding:8px 10px; gap:8px}
 <button class="tbtn" id="btnFitW" title="Показать точно по границам ширины ткани (W)">⇤ По ширине</button>
 <button class="tbtn" id="btnOrigin" title="Показать начало ткани (0,0) (Home)">⌖ 0,0</button>
 <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
-<button class="tbtn toggle" id="btnPhysRuler" title="Физическая линейка: перетаскивайте за корпус, вращайте колесом мыши или за рукоять ◈ справа. Показывает длину участка детали вдоль измерительного края.">📐 Линейка</button>
+<button class="tbtn toggle" id="btnPhysRuler" title="Физическая линейка: перетаскивайте за корпус, вращайте колесом мыши или за рукоять ◈ справа. Двойной клик по линейке — настройка длины, угла и положения.">📐 Линейка</button>
 <span class="tsep"></span>
 <button class="tbtn" id="btnPack" title="Выполнить раскладку выбранным алгоритмом">⚡ Раскладка</button>
 <button class="tbtn" id="btnNestOpts" title="Алгоритм раскладки и параметры">⚙</button>
@@ -634,6 +634,42 @@ header{padding:8px 10px; gap:8px}
 <button class="btn primary" id="cApply">✓ Применить контур</button>
 </div>
 <div class="modal-resize" id="cResizeHandle" title="Потяните, чтобы изменить размер окна"></div>
+</div>
+</div>
+<!-- Настройки физической линейки -->
+<div class="overlay" id="rulerOverlay">
+<div class="modal small">
+<div class="m-head"><b>📐 Параметры линейки</b><button id="rulerClose" title="Закрыть">✕</button></div>
+<div class="m-body">
+<div class="m-grid">
+<div class="m-field"><label>Длина, см</label><input type="number" id="rLen" min="10" max="300" step="1"></div>
+<div class="m-field"><label>Ширина, см</label><input type="number" id="rWidth" min="2" max="20" step="0.5"></div>
+<div class="m-field"><label>Угол поворота, °</label><input type="number" id="rAngle" min="-360" max="360" step="0.5"></div>
+<div class="m-field"><label>X, см</label><input type="number" id="rX" step="0.5"></div>
+<div class="m-field"><label>Y, см</label><input type="number" id="rY" step="0.5"></div>
+<div class="m-field"><label>Цена деления</label><select id="rTickMode" style="background:#0a0d1f;border:1px solid var(--line2);color:var(--txt);border-radius:8px;padding:8px 9px;font:500 13px var(--font-mono);width:100%;outline:none;">
+<option value="1" selected>1 см</option>
+<option value="5">5 см</option>
+</select></div>
+</div>
+<div class="m-row" style="margin-top:4px">
+<label>Быстрые углы</label>
+<div class="rot-line">
+<button class="tbtn" data-rang="0">0°</button>
+<button class="tbtn" data-rang="15">15°</button>
+<button class="tbtn" data-rang="30">30°</button>
+<button class="tbtn" data-rang="45">45°</button>
+<button class="tbtn" data-rang="60">60°</button>
+<button class="tbtn" data-rang="90">90°</button>
+</div>
+</div>
+</div>
+<div class="m-foot">
+<button class="btn" id="rReset" title="Положение 0,0 и угол 0°">↺ Сброс положения</button>
+<button class="btn" id="rOff" title="Скрыть линейку с холста">Отключить</button>
+<span class="spacer"></span>
+<button class="btn primary" id="rOk">Готово</button>
+</div>
 </div>
 </div>
 <!-- Ввод имени -->
@@ -1247,7 +1283,7 @@ gridOpts:{minor:'auto', majorEvery:5, alpha:100, axes:true, snap:true, snapStep:
 nestOpts:{algo:'nest-full', rotMode:'ortho', angleStep:10, refine:true, variants:3, gap:0.5, margin:2},
 pieceStyle:'neon', fabricStyle:'weave',
 show:{names:true,dims:true,grain:true,seam:true},
-physRuler:{on:false,x:25,y:20,angle:0,len:50,w:5},
+physRuler:{on:false,x:25,y:20,angle:0,len:50,w:5,tick:1},
 project:{id:null,name:'Новый проект'},
 dirty:false,
 };
@@ -2008,6 +2044,7 @@ const r=state.physRuler; if(!r||!r.on)return;
 const s=state.view.scale;
 const c=w2s(r.x,r.y);
 const L=r.len*s, Wd=r.w*s;
+const tick=Math.max(1,+r.tick||1);
 ctx.save();
 ctx.translate(c.x,c.y);
 ctx.rotate(r.angle*Math.PI/180);
@@ -2027,6 +2064,8 @@ ctx.textAlign='center'; ctx.textBaseline='alphabetic';
 for(let i=0;i<=r.len;i++){
 const x=-L/2+i*s;
 const major=(i%5===0);
+const showTick=(tick===1)||major;
+if(!showTick)continue;
 const h=major?Wd*0.42:Wd*0.22;
 ctx.beginPath();ctx.moveTo(x,Wd/2);ctx.lineTo(x,Wd/2-h);ctx.stroke();
 if(major&&i>0&&(L/r.len)>=8)ctx.fillText(String(i),x,Wd/2-h-3);
@@ -2082,6 +2121,59 @@ ctx.restore();
 }
 }
 }
+/* ---------- настройки физической линейки (двойной клик) ---------- */
+const rulerOv=$('#rulerOverlay');
+function syncRulerForm(){
+const r=state.physRuler;
+$('#rLen').value=Math.round(r.len*10)/10;
+$('#rWidth').value=Math.round(r.w*10)/10;
+$('#rAngle').value=Math.round(r.angle*10)/10;
+$('#rX').value=Math.round(r.x*10)/10;
+$('#rY').value=Math.round(r.y*10)/10;
+$('#rTickMode').value=(+r.tick===5)?'5':'1';
+}
+function openRulerSettings(){
+syncRulerForm();
+rulerOv.classList.add('open');
+}
+function closeRulerSettings(){
+rulerOv.classList.remove('open');
+}
+function applyRulerInputs(){
+const r=state.physRuler;
+const len=parseFloat($('#rLen').value); if(isFinite(len))r.len=clamp(len,10,300);
+const w=parseFloat($('#rWidth').value); if(isFinite(w))r.w=clamp(w,2,20);
+const a=parseFloat($('#rAngle').value); if(isFinite(a))r.angle=a;
+const x=parseFloat($('#rX').value); if(isFinite(x))r.x=x;
+const y=parseFloat($('#rY').value); if(isFinite(y))r.y=y;
+r.tick=($('#rTickMode').value==='5')?5:1;
+draw(); scheduleUISave();
+}
+['#rLen','#rWidth','#rAngle','#rX','#rY'].forEach(function(id){
+$(id).addEventListener('input',applyRulerInputs);
+});
+$('#rTickMode').addEventListener('change',applyRulerInputs);
+document.querySelectorAll('[data-rang]').forEach(function(b){
+b.onclick=function(){ $('#rAngle').value=b.dataset.rang; applyRulerInputs(); };
+});
+$('#rReset').onclick=function(){
+const r=state.physRuler; r.x=0; r.y=0; r.angle=0;
+syncRulerForm(); draw(); scheduleUISave();
+};
+$('#rOff').onclick=function(){
+state.physRuler.on=false;
+$('#btnPhysRuler').classList.remove('active');
+closeRulerSettings(); draw(); scheduleUISave();
+};
+$('#rOk').onclick=closeRulerSettings;
+$('#rulerClose').onclick=closeRulerSettings;
+rulerOv.addEventListener('click',function(e){if(e.target===rulerOv)closeRulerSettings();});
+cv.addEventListener('dblclick',function(e){
+if(!state.physRuler.on)return;
+const pt=eventXY(e);
+const w=s2w(pt.x,pt.y);
+if(pointInPhysRuler(w.x,w.y)){openRulerSettings();}
+});
 /* ============================ вид / вписывание ============================ */
 function computeFit(view,rect,cw,ch,opts){
 const padL=opts.padL!=null?opts.padL:40;
@@ -2965,7 +3057,7 @@ buildLibrary();
 }
 function exportTemplates(){
 if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-const data={app:'NEONCUT',kind:'templates',version:'1.18.0',exportedAt:Date.now(),templates:userTemplates};
+const data={app:'NEONCUT',kind:'templates',version:'1.19.0',exportedAt:Date.now(),templates:userTemplates};
 const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
 const a=document.createElement('a');
 a.href=URL.createObjectURL(blob);
@@ -3362,7 +3454,7 @@ nestOpts:Object.assign({},state.nestOpts),
 fabric:{on:state.fabric,mode:state.fabricMode,w:state.fabricW,h:state.fabricH},
 view:{pieceStyle:state.pieceStyle,fabricStyle:state.fabricStyle,show:Object.assign({},state.show)},
 physRuler:{on:state.physRuler.on,x:state.physRuler.x,y:state.physRuler.y,
-angle:state.physRuler.angle,len:state.physRuler.len,w:state.physRuler.w},
+angle:state.physRuler.angle,len:state.physRuler.len,w:state.physRuler.w,tick:state.physRuler.tick||1},
 activeTab:$('#tabPresets').classList.contains('active')?'presets':'parts',
 savedAt:Date.now()
 };
@@ -3401,6 +3493,7 @@ if(isFinite(+prl.y))r.y=+prl.y;
 if(isFinite(+prl.angle))r.angle=+prl.angle;
 if(isFinite(+prl.len))r.len=clamp(+prl.len,10,300);
 if(isFinite(+prl.w))r.w=clamp(+prl.w,2,20);
+if(isFinite(+prl.tick))r.tick=(+prl.tick===5)?5:1;
 const b=$('#btnPhysRuler'); if(b)b.classList.toggle('active',r.on);
 }
 if(pr.activeTab==='presets'){$('#tabPresets').click();}
@@ -3524,13 +3617,14 @@ state.pieces=[]; state.selId=null; editorId=null;
 state.project={id:null,name:'Новый проект'}; $('#projName').value='Новый проект';
 state.dirty=false; lastSavedAt=null;
 edOv.classList.remove('open'); projOv.classList.remove('open');
+rulerOv.classList.remove('open');
 $('#quick').classList.add('hidden');
 fitView(); updateStorageChip(); toast('✦ Новый проект');
 }
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.18.0'},projectData()),null,2)],{type:'application/json'});
+const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.19.0'},projectData()),null,2)],{type:'application/json'});
 const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
 a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
 setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -3572,7 +3666,7 @@ draw();
 $('#btnPhysRuler').onclick=function(){
 state.physRuler.on=!state.physRuler.on;
 $('#btnPhysRuler').classList.toggle('active',state.physRuler.on);
-if(state.physRuler.on)toast('📐 Линейка: перетаскивайте за корпус · колесо мыши над линейкой — поворот (Shift — крупнее) · рукоять ◈ справа — вращение');
+if(state.physRuler.on)toast('📐 Линейка: перетаскивайте за корпус · колесо — поворот · двойной клик — параметры линейки');
 scheduleUISave(); draw();
 };
 $('#btnPack').onclick=function(){
@@ -3891,6 +3985,11 @@ if(!inInput){
 if(e.key==='Escape')closeNameModal(false);
 else if(e.key==='Enter')closeNameModal(true);
 }
+return;
+}
+if($('#rulerOverlay').classList.contains('open')){
+if(e.key==='Escape'){e.preventDefault();closeRulerSettings();return;}
+if(inInput)return;
 return;
 }
 if(e.code==='Space'&&!inInput&&!ctrEd){spaceDown=true;e.preventDefault();}
