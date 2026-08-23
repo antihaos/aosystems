@@ -232,7 +232,6 @@ transform:translateY(10px) scale(.97); transition:.22s;
 .modal.small{width:min(380px,92vw)}
 .overlay.open .modal{transform:none}
 .modal.resizing{transition:none}
-/* редактор контура: растягиваемое и полноэкранное окно */
 #contourOverlay .modal{display:flex; flex-direction:column; position:relative;}
 #contourOverlay .m-body{flex:1; min-height:0;}
 #contourOverlay #cWrap{height:auto; flex:1; min-height:200px;}
@@ -355,8 +354,8 @@ header{padding:8px 10px; gap:8px}
 </g>
 </svg>
 <div>
-<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.13.0</span></div>
-<div class="desc">Студия швейных выкроек: точный нестинг, стили визуализации, привязка к началу ткани (0,0), корректная видимая область холста с учётом панелей инструментов и автосохранение настроек.</div>
+<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.14.0</span></div>
+<div class="desc">Студия швейных выкроек: точный нестинг, стили визуализации, привязка к началу ткани (0,0), корректное автопозиционирование «Вписать» / «По ширине» и автосохранение настроек.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -385,8 +384,8 @@ header{padding:8px 10px; gap:8px}
 <button class="tbtn" id="btnZoomOut" title="Уменьшить (−)">−</button>
 <span class="zoomlbl" id="zoomLbl">100%</span>
 <button class="tbtn" id="btnZoomIn" title="Увеличить (+)">+</button>
-<button class="tbtn" id="btnFit" title="Вписать ткань и все детали в экран (F / 0)">⤢ Вписать</button>
-<button class="tbtn" id="btnFitW" title="Вписать всю ширину ткани по горизонтали (W)">⇤ По ширине</button>
+<button class="tbtn" id="btnFit" title="Вписать все детали целиком вместе с тканью (F / 0)">⤢ Вписать</button>
+<button class="tbtn" id="btnFitW" title="Показать точно по границам ширины ткани (W)">⇤ По ширине</button>
 <button class="tbtn" id="btnOrigin" title="Показать начало ткани (0,0) (Home)">⌖ 0,0</button>
 <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
 <span class="tsep"></span>
@@ -1014,11 +1013,7 @@ return {x:(sx-state.view.ox)/sc, y:(sy-state.view.oy)/sc};
 function w2s(wx,wy){
 return {x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy};
 }
-/* ============================ видимая область холста ============================
-   Часть высоты сцены занята панелью инструментов (сверху) и строкой состояния (снизу).
-   Видимая область холста = сцена минус эти панели; дополнительно резервируем место
-   под открытыми всплывающими панелями тулбара, чтобы вписанный контент и точка (0,0)
-   не оказывались под ними. */
+/* ============================ видимая область холста ============================ */
 function toolbarPopReserve(){
 let extra=0;
 ['#gridPanel','#nestPanel','#viewPanel'].forEach(function(id){
@@ -1035,10 +1030,8 @@ const stageEl=$('#stage'), tb=$('#toolbar'), sb=$('#statusbar');
 if(stageEl&&tb&&sb){
 const sr=stageEl.getBoundingClientRect();
 w=Math.max(50,sr.width);
-/* вычитаем высоту панели инструментов и строки состояния */
 h=Math.max(50,sr.height-tb.offsetHeight-sb.offsetHeight);
 }
-/* сверка с фактическим контейнером холста */
 const wr=wrap.getBoundingClientRect();
 if(wr.width>10&&wr.height>10){
 w=Math.min(w,wr.width);
@@ -1072,7 +1065,6 @@ draw();
 }catch(err){ toast('Ошибка ресайза: '+err.message,'err'); }
 }
 new ResizeObserver(onAreaResize).observe(wrap);
-/* панель инструментов может переноситься на несколько строк — следим и за ней */
 new ResizeObserver(function(){
 if(state.pieces.length)refitIfAuto(); else onAreaResize();
 }).observe($('#toolbar'));
@@ -1739,6 +1731,7 @@ v.scale=clamp(v.scale*f,0.05,120);
 v.ox=px-w.x*v.scale; v.oy=py-w.y*v.scale;
 draw();
 }
+/* габариты ВСЕХ размещённых деталей целиком (с припусками на швы) */
 function contentBounds(){
 if(!state.pieces.length)return null;
 let minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;
@@ -1749,6 +1742,7 @@ if(bb.miny<miny)miny=bb.miny; if(bb.maxy>maxy)maxy=bb.maxy;
 }
 return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
+/* общая рамка для «Вписать»: ткань + все детали целиком */
 function fitBounds(){
 const b=contentBounds();
 let minx,miny,maxx,maxy;
@@ -1767,9 +1761,9 @@ else maxy=Math.max(maxy,miny+60);
 }
 return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
-/* вписывание выполняется в ФАКТИЧЕСКУЮ видимую область холста (без тулбара и статус-бара);
-   верхний отступ дополнительно увеличиваетсся на высоту открытых панелей тулбара,
-   чтобы точка (0,0) и содержимое не прятались под ними */
+/* «Вписать»: автоматический масштаб и автопозиционирование так, чтобы
+   ВСЕ размещённые на ткани детали были видны ЦЕЛИКОМ (вместе с тканью);
+   содержимое центрируется в фактической видимой области холста */
 function fitView(retry){
 ensureSize();
 if(W<80||H<80){
@@ -1778,40 +1772,44 @@ return;
 }
 const rect=fitBounds();
 const topReserve=toolbarPopReserve();
-computeFit(state.view,rect,W,H,{padL:44,padR:44,padT:40+topReserve,padB:56,align:'tl',minS:0.05,maxS:120});
+computeFit(state.view,rect,W,H,{padL:44,padR:44,padT:40+topReserve,padB:56,align:'center',minS:0.05,maxS:120});
 fitMode='fit';
 draw();
 }
+/* «По ширине»: масштаб и позиция подбираются строго по границам (ширине) ткани;
+   детали, выступающие за ширину ткани, в расчёт масштаба не берутся */
 function fitFabricWidth(retry){
 ensureSize();
 if(W<80||H<80){
 if((retry||0)<10)requestAnimationFrame(function(){fitFabricWidth((retry||0)+1);});
 return;
 }
-const b=contentBounds();
 let minx,maxx;
-if(state.fabric){minx=0;maxx=state.fabricW;}
-else if(b){minx=b.minx;maxx=b.maxx;}
-else{toast('Холст пуст — нечего вписывать','warn');return;}
-if(b){minx=Math.min(minx,b.minx);maxx=Math.max(maxx,b.maxx);}
-const topY=b?Math.min(b.miny,0):0;
+if(state.fabric){
+minx=0;
+maxx=state.fabricW;
+}else{
+const b0=contentBounds();
+if(!b0){toast('Холст пуст — нечего вписывать','warn');return;}
+minx=b0.minx;maxx=b0.maxx;
+toast('Ткань отключена — вписываю по границам деталей','warn');
+}
 const padL=28,padR=28;
 const padT=32+toolbarPopReserve();
 const availW=Math.max(40,W-padL-padR);
 const s=clamp(availW/Math.max(1,maxx-minx),0.05,120);
+const b=contentBounds();
+const topY=b?Math.min(b.miny,0):0;
 state.view.scale=s;
 state.view.ox=padL-minx*s;
 state.view.oy=padT-topY*s;
-const tlx=minx*s+state.view.ox, tly=topY*s+state.view.oy;
-if(tlx<4)state.view.ox+=4-tlx;
+const tly=topY*s+state.view.oy;
 if(tly<4)state.view.oy+=4-tly;
 fitMode='fitW';
 draw();
 }
 function focusOrigin(){
 ensureSize();
-/* точка (0,0) размещается с отступом от левого/верхнего края видимой области
-   и со смещением вниз, если открыты панели тулбара */
 state.view.ox=44;
 state.view.oy=48+toolbarPopReserve();
 fitMode='free';
@@ -2424,7 +2422,7 @@ buildLibrary();
 }
 function exportTemplates(){
 if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-const data={app:'NEONCUT',kind:'templates',version:'1.13.0',exportedAt:Date.now(),templates:userTemplates};
+const data={app:'NEONCUT',kind:'templates',version:'1.14.0',exportedAt:Date.now(),templates:userTemplates};
 const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
 const a=document.createElement('a');
 a.href=URL.createObjectURL(blob);
@@ -2979,7 +2977,7 @@ fitView(); updateStorageChip(); toast('✦ Новый проект');
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.13.0'},projectData()),null,2)],{type:'application/json'});
+const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.14.0'},projectData()),null,2)],{type:'application/json'});
 const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
 a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
 setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -3357,7 +3355,6 @@ userTemplates.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
 userPresets.sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);});
 buildLibrary(); buildPresetsUI();
 }
-/* восстановление сохранённых настроек интерфейса до первой раскладки */
 await loadUIPrefs();
 draw();
 addPreset('tshirt',{silent:true});
