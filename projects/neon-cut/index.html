@@ -141,7 +141,7 @@ box-shadow:0 0 18px rgba(0,229,255,.45); align-items:center; justify-content:cen
 #sideDim.show{opacity:1; pointer-events:auto}
 #stage{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; position:relative}
 #toolbar{
-position:relative;
+position:relative; flex:none;
 display:flex; align-items:center; gap:6px; padding:8px 12px; flex-wrap:wrap;
 border-bottom:1px solid var(--line); background:rgba(9,11,24,.8);
 }
@@ -174,6 +174,7 @@ font-size:13px; padding:2px 4px; border-radius:6px; line-height:1;
 #canvasWrap{flex:1; position:relative; overflow:hidden; background:transparent; min-height:0}
 #cv{position:absolute; inset:0; touch-action:none; cursor:crosshair}
 #statusbar{
+flex:none;
 display:flex; gap:16px; align-items:center; padding:6px 14px; flex-wrap:wrap;
 border-top:1px solid var(--line); background:rgba(9,11,24,.88);
 font:500 11px var(--font-mono); color:var(--dim);
@@ -354,8 +355,8 @@ header{padding:8px 10px; gap:8px}
 </g>
 </svg>
 <div>
-<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.12.0</span></div>
-<div class="desc">Студия швейных выкроек: точный нестинг, стили визуализации, привязка к началу ткани (0,0) и автосохранение всех настроек интерфейса.</div>
+<div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.13.0</span></div>
+<div class="desc">Студия швейных выкроек: точный нестинг, стили визуализации, привязка к началу ткани (0,0), корректная видимая область холста с учётом панелей инструментов и автосохранение настроек.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -544,7 +545,8 @@ header{padding:8px 10px; gap:8px}
 <span id="stZoom">масштаб: —</span>
 <span id="stCoords">X: — · Y: —</span>
 <span id="stCount">деталей: 0</span>
-<span id="uiChip" class="chip ok" title="Автосохранение настроек интерфейса">⚙ настройки: —</span>
+<span id="stArea" title="Фактическая видимая область холста (без панелей инструментов)">область: —</span>
+<span id="uiChip" class="chip ok" title="Автосохранение настроек интерфейса · двойной клик — сбросить настройки к стандартным">⚙ настройки: —</span>
 <span id="storageChip" class="chip warn">● инициализация…</span>
 </div>
 </section>
@@ -1012,9 +1014,41 @@ return {x:(sx-state.view.ox)/sc, y:(sy-state.view.oy)/sc};
 function w2s(wx,wy){
 return {x:wx*state.view.scale+state.view.ox, y:wy*state.view.scale+state.view.oy};
 }
+/* ============================ видимая область холста ============================
+   Часть высоты сцены занята панелью инструментов (сверху) и строкой состояния (снизу).
+   Видимая область холста = сцена минус эти панели; дополнительно резервируем место
+   под открытыми всплывающими панелями тулбара, чтобы вписанный контент и точка (0,0)
+   не оказывались под ними. */
+function toolbarPopReserve(){
+let extra=0;
+['#gridPanel','#nestPanel','#viewPanel'].forEach(function(id){
+const el=$(id);
+if(el&&!el.classList.contains('hidden')){
+extra=Math.max(extra,(el.offsetHeight||0)+20);
+}
+});
+return extra;
+}
+function getVisibleArea(){
+let w=50,h=50;
+const stageEl=$('#stage'), tb=$('#toolbar'), sb=$('#statusbar');
+if(stageEl&&tb&&sb){
+const sr=stageEl.getBoundingClientRect();
+w=Math.max(50,sr.width);
+/* вычитаем высоту панели инструментов и строки состояния */
+h=Math.max(50,sr.height-tb.offsetHeight-sb.offsetHeight);
+}
+/* сверка с фактическим контейнером холста */
+const wr=wrap.getBoundingClientRect();
+if(wr.width>10&&wr.height>10){
+w=Math.min(w,wr.width);
+h=Math.min(h,wr.height);
+}
+return {w:w,h:h};
+}
 function ensureSize(){
-const r=wrap.getBoundingClientRect();
-const nw=Math.max(50,r.width), nh=Math.max(50,r.height);
+const va=getVisibleArea();
+const nw=va.w, nh=va.h;
 const nd=window.devicePixelRatio||1;
 if(Math.abs(nw-W)>0.5||Math.abs(nh-H)>0.5||nd!==dpr){
 W=nw; H=nh; dpr=nd;
@@ -1022,6 +1056,10 @@ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
 return true;
 }
 return false;
+}
+function refitIfAuto(){
+if(fitMode==='fit')fitView();
+else if(fitMode==='fitW')fitFabricWidth();
 }
 function onAreaResize(){
 try{
@@ -1034,6 +1072,10 @@ draw();
 }catch(err){ toast('Ошибка ресайза: '+err.message,'err'); }
 }
 new ResizeObserver(onAreaResize).observe(wrap);
+/* панель инструментов может переноситься на несколько строк — следим и за ней */
+new ResizeObserver(function(){
+if(state.pieces.length)refitIfAuto(); else onAreaResize();
+}).observe($('#toolbar'));
 window.addEventListener('resize',function(){
 onAreaResize();
 });
@@ -1476,6 +1518,7 @@ drawCursor();
 const eh=$('#emptyHint'); if(eh)eh.classList.toggle('hidden',state.pieces.length>0);
 const zl=$('#zoomLbl'); if(zl)zl.textContent=Math.round(state.view.scale/BASE*100)+'%';
 const sz=$('#stZoom'); if(sz)sz.textContent=`масштаб: ${Math.round(state.view.scale/BASE*100)}% · 1 см = ${state.view.scale.toFixed(1)} px`;
+const sa=$('#stArea'); if(sa)sa.textContent=`область: ${Math.round(W)}×${Math.round(H)} px`;
 let outN=0; if(state.fabric) for(const p of state.pieces) if(outOfFabric(p)) outN++;
 const sc=$('#stCount'); if(sc)sc.textContent='деталей: '+state.pieces.length+(state.fabric?' · вне ткани: '+outN:'');
 positionQuick();
@@ -1724,6 +1767,9 @@ else maxy=Math.max(maxy,miny+60);
 }
 return {minx:minx,miny:miny,maxx:maxx,maxy:maxy};
 }
+/* вписывание выполняется в ФАКТИЧЕСКУЮ видимую область холста (без тулбара и статус-бара);
+   верхний отступ дополнительно увеличиваетсся на высоту открытых панелей тулбара,
+   чтобы точка (0,0) и содержимое не прятались под ними */
 function fitView(retry){
 ensureSize();
 if(W<80||H<80){
@@ -1731,7 +1777,8 @@ if((retry||0)<10)requestAnimationFrame(function(){fitView((retry||0)+1);});
 return;
 }
 const rect=fitBounds();
-computeFit(state.view,rect,W,H,{padL:44,padR:44,padT:56,padB:44,align:'tl',minS:0.05,maxS:120});
+const topReserve=toolbarPopReserve();
+computeFit(state.view,rect,W,H,{padL:44,padR:44,padT:40+topReserve,padB:56,align:'tl',minS:0.05,maxS:120});
 fitMode='fit';
 draw();
 }
@@ -1748,7 +1795,8 @@ else if(b){minx=b.minx;maxx=b.maxx;}
 else{toast('Холст пуст — нечего вписывать','warn');return;}
 if(b){minx=Math.min(minx,b.minx);maxx=Math.max(maxx,b.maxx);}
 const topY=b?Math.min(b.miny,0):0;
-const padL=28,padR=28,padT=44;
+const padL=28,padR=28;
+const padT=32+toolbarPopReserve();
 const availW=Math.max(40,W-padL-padR);
 const s=clamp(availW/Math.max(1,maxx-minx),0.05,120);
 state.view.scale=s;
@@ -1762,8 +1810,10 @@ draw();
 }
 function focusOrigin(){
 ensureSize();
+/* точка (0,0) размещается с отступом от левого/верхнего края видимой области
+   и со смещением вниз, если открыты панели тулбара */
 state.view.ox=44;
-state.view.oy=56;
+state.view.oy=48+toolbarPopReserve();
 fitMode='free';
 draw();
 }
@@ -2011,8 +2061,6 @@ return true;
 }
 return false;
 }
-/* холст редактора автоматически пересчитывается при изменении размера окна
-(ручное растягивание, полный экран, изменение размера окна браузера) */
 new ResizeObserver(function(){ if(ctrEd){cResize();cDraw();} }).observe(cWrapEl);
 function cS2W(sx,sy){return {x:(sx-ctrEd.view.ox)/ctrEd.view.scale, y:(sy-ctrEd.view.oy)/ctrEd.view.scale};}
 function cW2S(wx,wy){return {x:wx*ctrEd.view.scale+ctrEd.view.ox, y:wy*ctrEd.view.scale+ctrEd.view.oy};}
@@ -2053,7 +2101,6 @@ $('#cTitle').textContent='Редактор контура · '+p.name;
 contourOverlay.classList.add('open');
 cResize();
 cFit();
-/* повторная подгонка после завершения анимации открытия окна */
 setTimeout(function(){ if(ctrEd){cResize();cFit();} },240);
 }
 function closeContour(apply){
@@ -2277,15 +2324,12 @@ $('#cDelPt').onclick=function(){if(ctrEd&&ctrEd.sel>=0)cDeletePoint(ctrEd.sel);}
 $('#cReset').onclick=function(){cResetShape();};
 $('#cSaveTpl').onclick=function(){cSaveTemplate();};
 contourOverlay.addEventListener('click',function(e){if(e.target===contourOverlay)closeContour(false);});
-/* полный экран редактора контура */
 $('#cFullscreen').onclick=function(){
 const fs=cModal.classList.toggle('fullscreen');
 $('#cFullscreen').textContent=fs?'🗗':'⛶';
 $('#cFullscreen').title=fs?'Вернуть размер окна':'Развернуть на весь экран';
-/* пересчёт холста после смены режима */
 setTimeout(function(){ if(ctrEd){cResize();cDraw();} },30);
 };
-/* растягивание окна редактора контура за уголок */
 (function(){
 const handle=$('#cResizeHandle');
 let rs=null;
@@ -2380,7 +2424,7 @@ buildLibrary();
 }
 function exportTemplates(){
 if(!userTemplates.length){toast('Нет шаблонов для экспорта','warn');return;}
-const data={app:'NEONCUT',kind:'templates',version:'1.12.0',exportedAt:Date.now(),templates:userTemplates};
+const data={app:'NEONCUT',kind:'templates',version:'1.13.0',exportedAt:Date.now(),templates:userTemplates};
 const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
 const a=document.createElement('a');
 a.href=URL.createObjectURL(blob);
@@ -2818,11 +2862,10 @@ el.className='chip ok';el.textContent='⚙ настройки: автосохр�
 async function saveUIPrefsNow(){
 clearTimeout(uiSaveTimer);
 const data=collectUIPrefs();
-/* localStorage — мгновенная синхронная копия (работает даже без IndexedDB) */
 try{localStorage.setItem(LS_UI_KEY,JSON.stringify(data));}catch(e){}
 if(IDB.ok){
 uiSaving=true;updateUIChip();
-try{await IDB.putSetting(UI_PREFS_KEY,data);}catch(e){/* тихая деградация: остаётся localStorage */}
+try{await IDB.putSetting(UI_PREFS_KEY,data);}catch(e){}
 uiSaving=false;
 }
 lastUISavedAt=new Date();
@@ -2850,18 +2893,15 @@ if(parsed&&typeof parsed==='object')data=parsed;
 if(data){applyUIPrefs(data);lastUISavedAt=new Date(data.savedAt||Date.now());}
 updateUIChip();
 }
-/* глобальные слушатели: любое изменение контролов интерфейса ставит настройки в очередь сохранения */
 document.addEventListener('input',function(e){
 if(e.target&&e.target.id&&UI_CONTROL_IDS.has(e.target.id))scheduleUISave();
 });
 document.addEventListener('change',function(e){
 if(e.target&&e.target.id&&UI_CONTROL_IDS.has(e.target.id))scheduleUISave();
 });
-/* кнопка сброса настроек интерфейса к значениям по умолчанию (по двойному клику на чипе) */
 (function(){
 const chip=$('#uiChip'); if(!chip)return;
 chip.style.cursor='pointer';
-chip.title='Автосохранение настроек интерфейса · двойной клик — сбросить настройки к стандартным';
 chip.addEventListener('dblclick',function(){
 if(!confirm('Сбросить все настройки интерфейса к значениям по умолчанию?'))return;
 try{localStorage.removeItem(LS_UI_KEY);}catch(e){}
@@ -2939,7 +2979,7 @@ fitView(); updateStorageChip(); toast('✦ Новый проект');
 $('#btnNew').onclick=function(){ if(state.dirty&&!confirm('Несохранённые изменения будут потеряны. Продолжить?'))return; newProject(); };
 $('#btnSave').onclick=function(){saveProject(true);};
 $('#btnExport').onclick=function(){
-const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.12.0'},projectData()),null,2)],{type:'application/json'});
+const blob=new Blob([JSON.stringify(Object.assign({app:'NEONCUT',version:'1.13.0'},projectData()),null,2)],{type:'application/json'});
 const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
 a.download=(state.project.name||'project')+'.neoncut.json'; a.click();
 setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
@@ -2947,7 +2987,6 @@ toast('⇩ Проект экспортирован в JSON');
 };
 $('#projName').addEventListener('input',function(e){state.project.name=e.target.value;markDirty();});
 window.addEventListener('beforeunload',function(){
-/* финальное сохранение настроек интерфейса (синхронная часть — в localStorage) */
 try{localStorage.setItem(LS_UI_KEY,JSON.stringify(collectUIPrefs()));}catch(e){}
 if(IDB.ok){try{IDB.putSetting(UI_PREFS_KEY,collectUIPrefs());}catch(e){}}
 if(state.dirty&&IDB.ok){try{IDB.save(projectData());}catch(e){}}
@@ -3007,28 +3046,38 @@ $('#gridPanel').classList.add('hidden');
 $('#nestPanel').classList.add('hidden');
 $('#viewPanel').classList.add('hidden');
 }
+function anyPanelOpen(){
+return !$('#gridPanel').classList.contains('hidden')||
+!$('#nestPanel').classList.contains('hidden')||
+!$('#viewPanel').classList.contains('hidden');
+}
 $('#btnGridOpts').addEventListener('click',function(e){
 e.stopPropagation();
 const wasHidden=$('#gridPanel').classList.contains('hidden');
 closeAllPanels();
 if(wasHidden)$('#gridPanel').classList.remove('hidden');
+refitIfAuto();
 });
 $('#btnNestOpts').addEventListener('click',function(e){
 e.stopPropagation();
 const wasHidden=$('#nestPanel').classList.contains('hidden');
 closeAllPanels();
 if(wasHidden)$('#nestPanel').classList.remove('hidden');
+refitIfAuto();
 });
 $('#btnViewOpts').addEventListener('click',function(e){
 e.stopPropagation();
 const wasHidden=$('#viewPanel').classList.contains('hidden');
 closeAllPanels();
 if(wasHidden)$('#viewPanel').classList.remove('hidden');
+refitIfAuto();
 });
 document.addEventListener('click',function(e){
+const wasOpen=anyPanelOpen();
 if(!e.target.closest('#gridPanel')&&!e.target.closest('#btnGridOpts'))$('#gridPanel').classList.add('hidden');
 if(!e.target.closest('#nestPanel')&&!e.target.closest('#btnNestOpts'))$('#nestPanel').classList.add('hidden');
 if(!e.target.closest('#viewPanel')&&!e.target.closest('#btnViewOpts'))$('#viewPanel').classList.add('hidden');
+if(wasOpen&&!anyPanelOpen())refitIfAuto();
 });
 $('#gMajor').addEventListener('change',function(e){
 state.gridOpts.majorEvery=parseInt(e.target.value,10)||5;
@@ -3262,9 +3311,9 @@ const p=byId(state.selId); if(p){e.preventDefault();duplicatePiece(p);} return;}
 if(e.key==='Escape'){
 if(editorId)closeEditor(false);
 else if(projOv.classList.contains('open'))projOv.classList.remove('open');
-else if(!$('#gridPanel').classList.contains('hidden'))$('#gridPanel').classList.add('hidden');
-else if(!$('#nestPanel').classList.contains('hidden'))$('#nestPanel').classList.add('hidden');
-else if(!$('#viewPanel').classList.contains('hidden'))$('#viewPanel').classList.add('hidden');
+else if(!$('#gridPanel').classList.contains('hidden')){$('#gridPanel').classList.add('hidden');refitIfAuto();}
+else if(!$('#nestPanel').classList.contains('hidden')){$('#nestPanel').classList.add('hidden');refitIfAuto();}
+else if(!$('#viewPanel').classList.contains('hidden')){$('#viewPanel').classList.add('hidden');refitIfAuto();}
 else deselect();
 return;
 }
