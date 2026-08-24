@@ -32,7 +32,8 @@ href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10
 * {
 box-sizing: border-box;
 margin: 0;
-padding: 0
+padding: 0;
+-webkit-tap-highlight-color: transparent
 }
 html,
 body {
@@ -50,6 +51,12 @@ display: flex;
 flex-direction: column;
 user-select: none;
 touch-action: manipulation;
+}
+button,
+select,
+.swatch,
+.mini-btn {
+touch-action: manipulation
 }
 .hidden {
 display: none !important
@@ -472,7 +479,6 @@ letter-spacing: 0
 .tbtn input[type=checkbox] {
 margin: 0
 }
-/* ---------- split-кнопка «Вписать» + меню вариантов отображения ---------- */
 #fitWrap {
 display: inline-flex;
 border: 1px solid var(--line2);
@@ -566,7 +572,8 @@ font-size: 12px
 #fabWrap select,
 #gridWrap select,
 #nestPanel select,
-#viewPanel select {
+#viewPanel select,
+#gridPanel select {
 background: #0a0d1f;
 border: 1px solid var(--line2);
 color: var(--txt);
@@ -583,7 +590,8 @@ width: auto
 #fabWrap select:focus,
 #gridWrap select:focus,
 #nestPanel select:focus,
-#viewPanel select:focus {
+#viewPanel select:focus,
+#gridPanel select:focus {
 border-color: var(--cyan)
 }
 #fabHWrap {
@@ -643,6 +651,9 @@ background: rgba(9, 11, 24, .88);
 font: 500 11px var(--font-mono);
 color: var(--dim);
 }
+#stBounds {
+color: #9ef7ff
+}
 .chip {
 margin-left: auto;
 padding: 3px 11px;
@@ -674,7 +685,7 @@ position: absolute;
 top: calc(100% + 8px);
 right: 12px;
 z-index: 36;
-width: 264px;
+width: 284px;
 background: rgba(10, 12, 26, .97);
 border: 1px solid rgba(0, 229, 255, .4);
 border-radius: 12px;
@@ -684,6 +695,8 @@ display: flex;
 flex-direction: column;
 gap: 10px;
 backdrop-filter: blur(8px);
+max-height: 78vh;
+overflow-y: auto;
 }
 .pop-title {
 font: 700 11px var(--font-ui);
@@ -691,6 +704,16 @@ letter-spacing: 1.5px;
 text-transform: uppercase;
 color: var(--cyan);
 text-shadow: 0 0 8px rgba(0, 229, 255, .5)
+}
+.pop-subtitle {
+font: 700 10px var(--font-ui);
+letter-spacing: 1.2px;
+text-transform: uppercase;
+color: var(--vio);
+margin-top: 4px;
+text-shadow: 0 0 6px rgba(139, 92, 255, .45);
+border-top: 1px dashed var(--line2);
+padding-top: 8px;
 }
 .pop-row {
 display: flex;
@@ -1236,7 +1259,7 @@ width: 52px
 #viewPanel,
 #fitPanel {
 right: 8px;
-width: 242px
+width: 262px
 }
 }
 </style>
@@ -1260,8 +1283,9 @@ width: 242px
 </svg>
 <div>
 <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.21.0</span></div>
-<div class="desc">Студия швейных выкроек: 39 типов деталей, 15 пресетов, корректный расчёт области
-и позиционирования для всех вариантов отображения (fit) после раскладки.</div>
+<div class="desc">Студия швейных выкроек: полный набор вариантов отображения (всё / детали /
+выбранная / ткань / ширина / высота) с точным расчётом масштаба и центрированием области в
+видимой зоне.</div>
 </div>
 </div>
 <div class="head-actions">
@@ -1287,8 +1311,8 @@ width: 242px
 </div>
 <div class="side-hint">⚡ — раскладка · 🎨 — стиль ткани и деталей · ⌖ — к началу ткани
 (0,0)<br>⤢ — отображение: F всё · A детали · S выбранная · T ткань · W ширина · H
-высота<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · 📐 — линейка (двойной клик —
-параметры)</div>
+высота<br>⚙ — алгоритм, углы, зазоры · ✎ — редактор контура · 📐 — линейка (двойной клик /
+двойное касание — параметры)</div>
 </aside>
 <section id="stage">
 <div id="toolbar">
@@ -1296,14 +1320,15 @@ width: 242px
 <span class="zoomlbl" id="zoomLbl">100%</span>
 <button class="tbtn" id="btnZoomIn" title="Увеличить (+)">+</button>
 <div id="fitWrap">
-<button id="btnFitMenu" title="Показать всё: ткань и детали целиком (F / 0)">⤢ Вписать</button>
-<button id="btnFitDrop"
-title="Все варианты отображения: всё / детали / выбранная / ткань / по ширине / по высоте">▾</button>
+<button id="btnFitMenu" title="Показать всё: ткань и детали целиком (F / 0). Повторный клик
+применяет текущий режим отображения">⤢ Вписать</button>
+<button id="btnFitDrop" title="Все варианты отображения: всё / детали / выбранная / ткань / по
+ширине / по высоте">▾</button>
 </div>
 <button class="tbtn" id="btnOrigin" title="Показать начало ткани (0,0) (Home)">⌖ 0,0</button>
 <button class="tbtn" id="btn100" title="Масштаб 100%">1:1</button>
 <button class="tbtn toggle" id="btnPhysRuler"
-title="Физическая линейка: перетаскивайте за корпус, вращайте колесом мыши или за рукоять ◈ справа. Двойной клик по линейке — настройка длины, угла и положения.">📐
+title="Физическая линейка: перетаскивайте за корпус, вращайте колесом мыши или за рукоять ◈ справа. Двойной клик (на тачскрине — двойное касание) — настройка длины, угла и положения.">📐
 Линейка</button>
 <span class="tsep"></span>
 <button class="tbtn" id="btnPack" title="Выполнить раскладку выбранным алгоритмом">⚡ Раскладка</button>
@@ -1329,7 +1354,7 @@ title="Привязка деталей к области ткани при пе�
 <option value="10">10</option>
 <option value="20">20</option>
 </select>
-<button class="gear" id="btnGridOpts" title="Расширенные параметры сетки">⚙</button>
+<button class="gear" id="btnGridOpts" title="Расширенные параметры сетки и масштаб">⚙</button>
 </div>
 <div class="tbtn toggle active" id="fabWrap" title="Область ткани для раскроя">
 <label><input type="checkbox" id="fabChk" checked> Ткань</label>
@@ -1347,7 +1372,25 @@ title="Рекомендуемая длина ткани при заданной 
 <span class="tsep"></span>
 <button class="tbtn danger-t" id="btnClear" title="Очистить холст">✕ Очистить</button>
 <div id="gridPanel" class="hidden">
-<div class="pop-title">Расширенные параметры сетки</div>
+<div class="pop-title">Масштаб и сетка</div>
+<div class="pop-subtitle">Коэффициент масштаба</div>
+<div class="pop-row">
+<label>Пикселей на 1 см</label>
+<input type="number" id="gPxCm" value="6" min="1" max="40" step="0.5" title="Базовый коэффициент перехода: сколько экранных пикселей соответствует 1 см в мировых координатах при масштабе 100%">
+</div>
+<div class="pop-row">
+<label>DPR (плотность)</label>
+<select id="gDpr" title="Авто — devicePixelRatio экрана; фиксированные значения задают множитель вручную">
+<option value="auto" selected>Авто (экран)</option>
+<option value="1">×1</option>
+<option value="1.5">×1.5</option>
+<option value="2">×2</option>
+<option value="2.5">×2.5</option>
+<option value="3">×3</option>
+</select>
+</div>
+<div class="pop-note">Коэффициент определяет, сколько экранных пикселей занимает 1 см при масштабе 100%. DPR задаёт плотность буфера холста и базовый масштаб: «Авто» — значение экрана, фиксированный множитель — вручную. «Вписать» рассчитывается по видимой области, буфер создаётся с учётом DPR.</div>
+<div class="pop-subtitle">Шаг сетки</div>
 <div class="pop-row">
 <label>Жирная линия каждые</label>
 <select id="gMajor">
@@ -1369,6 +1412,46 @@ title="Рекомендуемая длина ткани при заданной 
 <div class="pop-row">
 <label>Шаг привязки, см</label>
 <input type="number" id="gSnapStep" value="0.5" min="0.1" max="10" step="0.1">
+</div>
+<div class="pop-subtitle">Подписи делений</div>
+<div class="pop-row">
+<label class="chk"><input type="checkbox" id="gLabels" checked> Показывать подписи</label>
+</div>
+<div class="pop-row">
+<label>Подписывать каждые</label>
+<select id="gLabelStep">
+<option value="auto" selected>Авто (жирная)</option>
+<option value="1">1 шаг</option>
+<option value="2">2 шага</option>
+<option value="5">5 шагов</option>
+<option value="10">10 шагов</option>
+</select>
+</div>
+<div class="pop-row">
+<label>Размер шрифта</label>
+<input type="range" id="gLabelSize" min="7" max="16" value="10">
+<span class="pop-val" id="gLabelSizeVal">10</span>
+</div>
+<div class="pop-row">
+<label>Яркость подписей</label>
+<input type="range" id="gLabelAlpha" min="20" max="100" value="75">
+<span class="pop-val" id="gLabelAlphaVal">75%</span>
+</div>
+<div class="pop-row">
+<label>Положение</label>
+<select id="gLabelPos">
+<option value="axis" selected>На осях</option>
+<option value="corner">В углу ячейки</option>
+<option value="both">Оси + углы</option>
+</select>
+</div>
+<div class="pop-row">
+<label>Формат</label>
+<select id="gLabelFmt">
+<option value="int" selected>Целые (5, 10)</option>
+<option value="dec1">1 знак (5.0, 10.5)</option>
+<option value="unit">Со значением (5 см)</option>
+</select>
 </div>
 </div>
 <div id="nestPanel" class="hidden">
@@ -1461,8 +1544,8 @@ class="fi-lbl">Выбранную деталь</span><kbd>S</kbd></button>
 высоте ткани (кусок)</span><kbd>H</kbd></button>
 <button class="fit-item" data-fit="origin"><span class="fi-ico">⌖</span><span class="fi-lbl">К
 началу ткани (0,0)</span><kbd>Home</kbd></button>
-<div class="pop-note">Область рассчитывается по точным границам деталей (включая кривые и
-припуски) и применяется после завершения раскладки.</div>
+<div class="pop-note">Масштаб рассчитывается по точным границам (bounds), область центрируется в
+видимой зоне холста.</div>
 </div>
 </div>
 <div id="canvasWrap">
@@ -1486,8 +1569,10 @@ class="fi-lbl">Выбранную деталь</span><kbd>S</kbd></button>
 <span id="stZoom">масштаб: —</span>
 <span id="stCoords">X: — · Y: —</span>
 <span id="stCount">деталей: 0</span>
-<span id="stArea" title="Фактическая видимая область холста (без панелей инструментов)">область:
+<span id="stArea" title="Видимая область холста и размер буфера с учётом DPR">область:
 —</span>
+<span id="stBounds" title="Размер области контента (bounds) в экранных пикселях">bounds: —</span>
+<span id="stScaleInfo" title="Текущий коэффициент: пикселей на 1 см">px/см: —</span>
 <span id="uiChip" class="chip ok"
 title="Автосохранение настроек интерфейса · двойной клик — сбросить настройки к стандартным">⚙
 настройки: —</span>
@@ -1680,7 +1765,19 @@ const fmt = v => { const r = Math.round(v * 10) / 10; return Number.isInteger(r)
 function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; }
 const PALETTE = ['#00e5ff', '#39ffa0', '#8b5cff', '#ff3df0', '#ffc24d', '#4d8bff', '#ff5c5c', '#e8ecff'];
 const CC = { cyan: '#00e5ff', grn: '#39ffa0', vio: '#8b5cff', mag: '#ff3df0', amb: '#ffc24d' };
-const BASE = 3;
+/* Эффективный DPR: 'auto' — devicePixelRatio экрана, иначе фиксированный множитель из настроек.
+Используется для буфера холста, базового масштаба и редактора контура. */
+function effDpr() {
+if (state.dprMode == null || state.dprMode === 'auto') return window.devicePixelRatio || 1;
+const m = +state.dprMode;
+return (isFinite(m) && m > 0) ? m : (window.devicePixelRatio || 1);
+}
+/* Базовый масштаб берётся из state.pxPerCm с учётом эффективного DPR.
+Функция baseScale() возвращает итоговый коэффициент перехода "мировые см → логические экранные пиксели". */
+function baseScale() {
+const px = Math.max(0.5, +state.pxPerCm || 6);
+return px * effDpr();
+}
 /* ============================ генераторы контуров (базовые) ============================ */
 function rectBuild(p) { return [['M', 0, 0], ['L', p.w, 0], ['L', p.w, p.h], ['L', 0, p.h], ['Z']]; }
 function bodiceBuild(p) {
@@ -2275,31 +2372,17 @@ else if (c[0] === 'Z') { cx = sx; cy = sy; }
 }
 return pts;
 }
-/*
-* Точные границы контура.
-* ВАЖНО для корректного fit: для квадратичных кривых Безье экстремумы
-* вычисляются аналитически (t = (p0 - c) / (p0 - 2c + p1)), а не только
-* по семплам — иначе область могла занижаться и деталь «обрезалась» при вписывании.
-*/
 function cmdsBounds(cmds) {
 let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9, cx = 0, cy = 0, sx = 0, sy = 0;
 const add = (x, y) => { if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; };
-const bez = (p0, pc, p1, t) => (1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * pc + t * t * p1;
 for (const c of cmds) {
 if (c[0] === 'M') { cx = c[1]; cy = c[2]; sx = cx; sy = cy; add(cx, cy); }
 else if (c[0] === 'L') { cx = c[1]; cy = c[2]; add(cx, cy); }
 else if (c[0] === 'Q') {
-const x0 = cx, y0 = cy, qx = c[1], qy = c[2], x1 = c[3], y1 = c[4];
-add(x0, y0); add(x1, y1);
-const dx = x0 - 2 * qx + x1;
-if (Math.abs(dx) > 1e-9) {
-const tx = (x0 - qx) / dx;
-if (tx > 0 && tx < 1) add(bez(x0, qx, x1, tx), bez(y0, qy, y1, tx));
-}
-const dy = y0 - 2 * qy + y1;
-if (Math.abs(dy) > 1e-9) {
-const ty = (y0 - qy) / dy;
-if (ty > 0 && ty < 1) add(bez(x0, qx, x1, ty), bez(y0, qy, y1, ty));
+const x0 = cx, y0 = cy, cx1 = c[1], cy1 = c[2], x1 = c[3], y1 = c[4];
+for (let i = 1; i <= 8; i++) {
+const t = i / 8, mt = 1 - t;
+add(mt * mt * x0 + 2 * mt * t * cx1 + t * t * x1, mt * mt * y0 + 2 * mt * t * cy1 + t * t * y1);
 }
 cx = x1; cy = y1;
 }
@@ -2357,7 +2440,6 @@ minx: bb.minx - s, miny: bb.miny - s, maxx: bb.maxx + s, maxy: bb.maxy + s,
 w: bb.w + 2 * s, h: bb.h + 2 * s
 };
 }
-/* контур детали в мировых координатах (для измерений физической линейкой) */
 function worldPoly(p) {
 const b = p._bounds, cx = p.x + b.w / 2, cy = p.y + b.h / 2;
 const rad = p.rot * Math.PI / 180, cs = Math.cos(rad), sn = Math.sin(rad);
@@ -2400,10 +2482,15 @@ return false;
 /* ============================ состояние ============================ */
 const state = {
 pieces: [], selId: null, hoverId: null,
-view: { scale: BASE, ox: 80, oy: 60 },
+view: { scale: 6, ox: 80, oy: 60 },
 grid: true,
 fabric: true, fabricMode: 'roll', fabricW: 150, fabricH: 200,
-gridOpts: { minor: 'auto', majorEvery: 5, alpha: 100, axes: true, snap: true, snapStep: 0.5 },
+/* Параметры масштаба: коэффициент перехода мировые см → экранные пиксели.
+dprMode: 'auto' — devicePixelRatio экрана, либо фиксированный множитель ('1','1.5','2','2.5','3'). */
+pxPerCm: 6,
+dprMode: 'auto',
+gridOpts: { minor: 'auto', majorEvery: 5, alpha: 100, axes: true, snap: true, snapStep: 0.5,
+showLabels: true, labelStep: 'auto', labelSize: 10, labelAlpha: 75, labelPos: 'axis', labelFmt: 'int' },
 nestOpts: { algo: 'nest-full', rotMode: 'ortho', angleStep: 10, refine: true, variants: 3, gap: 0.5, margin: 2 },
 pieceStyle: 'neon', fabricStyle: 'weave',
 show: { names: true, dims: true, grain: true, seam: true },
@@ -2414,13 +2501,6 @@ dirty: false,
 let editorId = null, saving = false, lastSavedAt = null, storageFailedNoted = false, saveTimer = null, repackTimer = null;
 /* fitMode: 'free' | 'fit' | 'pieces' | 'selected' | 'fabric' | 'fabW' | 'fabH' */
 let fitMode = 'fit';
-/*
-* nestingBusy — раскладка выполняется прямо сейчас (позиции деталей ещё не финализированы);
-* pendingFit  — вариант отображения, запрошенный во время раскладки: будет применён
-*               сразу после её завершения в finishPlacement(), когда bounds определимы.
-*/
-let nestingBusy = false;
-let pendingFit = null;
 const FIT_MODES = { fit: 1, pieces: 1, selected: 1, fabric: 1, fabW: 1, fabH: 1 };
 const FIT_SHORT = {
 fit: '⤢ Вписать',
@@ -2430,6 +2510,16 @@ fabric: '▭ Вся ткань',
 fabW: '⇤ По ширине',
 fabH: '⇕ По высоте'
 };
+const FIT_LABELS = {
+fit: '⤢ Вписано',
+pieces: '◈ Все детали',
+selected: '◉ Выбранная деталь',
+fabric: '▭ Вся ткань',
+fabW: '⇤ По ширине',
+fabH: '⇕ По высоте'
+};
+/* отложенный fit: применяется после завершения раскладки */
+let pendingFit = null;
 let ctrEd = null;
 let userTemplates = [];
 let userPresets = [];
@@ -2446,11 +2536,16 @@ return { x: (cx - r.left) * kx, y: (cy - r.top) * ky };
 }
 function eventXY(e) { return clientToCanvas(e.clientX, e.clientY); }
 function s2w(sx, sy) {
-const sc = state.view.scale || BASE;
+const sc = state.view.scale || baseScale();
 return { x: (sx - state.view.ox) / sc, y: (sy - state.view.oy) / sc };
 }
 function w2s(wx, wy) {
 return { x: wx * state.view.scale + state.view.ox, y: wy * state.view.scale + state.view.oy };
+}
+function worldRectToScreen(rect) {
+const a = w2s(rect.minx, rect.miny);
+const b = w2s(rect.maxx, rect.maxy);
+return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) };
 }
 /* ============================ видимая область холста ============================ */
 function toolbarPopReserve() {
@@ -2463,6 +2558,10 @@ extra = Math.max(extra, (el.offsetHeight || 0) + 20);
 });
 return extra;
 }
+/* Видимая область холста в логических (CSS) пикселях.
+Расчёты «Вписать» выполняются по этой области; буфер канваса создаётся
+с учётом эффективного DPR в ensureSize(), поэтому масштаб при fit корректен
+на экранах с любой плотностью пикселей. */
 function getVisibleArea() {
 let w = 50, h = 50;
 const stageEl = $('#stage'), tb = $('#toolbar'), sb = $('#statusbar');
@@ -2476,15 +2575,16 @@ if (wr.width > 10 && wr.height > 10) {
 w = Math.min(w, wr.width);
 h = Math.min(h, wr.height);
 }
-return { w: w, h: h };
+return { w: w, h: h, dpr: effDpr() };
 }
 function ensureSize() {
 const va = getVisibleArea();
 const nw = va.w, nh = va.h;
-const nd = window.devicePixelRatio || 1;
-if (Math.abs(nw - W) > 0.5 || Math.abs(nh - H) > 0.5 || nd !== dpr) {
+const nd = va.dpr;
+if (Math.abs(nw - W) > 0.5 || Math.abs(nh - H) > 0.5 || Math.abs(nd - dpr) > 0.001) {
 W = nw; H = nh; dpr = nd;
-cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+cv.width = Math.max(1, Math.round(W * dpr));
+cv.height = Math.max(1, Math.round(H * dpr));
 return true;
 }
 return false;
@@ -2740,7 +2840,6 @@ return arr;
 }
 function runPlacement(fast) {
 if (!state.pieces.length) return;
-nestingBusy = true;
 if (state.nestOpts.algo === 'shelf') { doShelf(); return; }
 nestPieces(fast || state.nestOpts.algo === 'nest-fast');
 }
@@ -2750,10 +2849,7 @@ const o = state.nestOpts;
 const heavy = !fast && (o.algo === 'nest-full' || o.algo === 'nest-multi');
 toast(heavy ? '⚡ Точная раскладка (может занять время)…' : '⚡ Выполняется раскладка…');
 setTimeout(function () {
-try { doNest(fast); } catch (err) {
-nestingBusy = false; pendingFit = null;
-toast('Ошибка раскладки: ' + err.message, 'err'); draw();
-}
+try { doNest(fast); } catch (err) { pendingFit = null; toast('Ошибка раскладки: ' + err.message, 'err'); }
 }, 30);
 }
 function doNest(fast) {
@@ -2819,20 +2915,25 @@ for (const it of best.over.fails) {
 placeAt(it.p, 2, fy, 0);
 fy += it.p._bounds.h + 6;
 }
+markDirty(); draw();
+if (pendingFit) {
+const m = pendingFit; pendingFit = null;
+const r = applyFit(m);
+if (r) reportFitResult(FIT_LABELS[m] || '⤢ Вписано', r);
+} else {
+fitView();
+}
 const placedN = best.main.placed.length + best.over.placed.length;
 const algoName = { 'nest-fast': 'Нестинг (быстрый)', 'nest-full': 'Нестинг (точный)', 'nest-multi': 'Мультистарт', 'shelf': 'Полочный' }[o.algo] || 'Нестинг';
 let msg = `⚡ ${algoName}: ${placedN} дет. · длина ≈ ${Math.ceil(best.totalLen / 5) * 5} см`;
 if (pieceMode && best.main.fails.length) msg += ` · вне куска: ${best.main.fails.length}`;
-finishPlacement(msg);
+toast(msg);
 }
 function doShelf() {
 if (!state.pieces.length) return;
 toast('⚡ Полочная раскладка…');
 setTimeout(function () {
-try { doShelfNow(); } catch (err) {
-nestingBusy = false; pendingFit = null;
-toast('Ошибка раскладки: ' + err.message, 'err'); draw();
-}
+try { doShelfNow(); } catch (err) { pendingFit = null; toast('Ошибка раскладки: ' + err.message, 'err'); }
 }, 30);
 }
 function doShelfNow() {
@@ -2874,19 +2975,15 @@ ox += c.w + gap; oS = Math.max(oS, c.h);
 }
 if (pieceMode) toast(`⚠ Не поместились в кусок: ${overflow.length} дет. — размещены под тканью`, 'warn');
 }
-finishPlacement('⚡ Полочная раскладка выполнена');
-}
-/* завершение раскладки: позиции финализированы → применяем запрошенный либо дефолтный вид */
-function finishPlacement(msg) {
-nestingBusy = false;
-markDirty();
+markDirty(); draw();
 if (pendingFit) {
 const m = pendingFit; pendingFit = null;
-applyFit(m);
+const r = applyFit(m);
+if (r) reportFitResult(FIT_LABELS[m] || '⤢ Вписано', r);
 } else {
-applyFit('fit');
+fitView();
 }
-if (msg) toast(msg);
+toast('⚡ Полочная раскладка выполнена');
 }
 function scheduleRepack() {
 if (!autoPackOn()) return;
@@ -2965,9 +3062,44 @@ drawSelection();
 drawPhysRuler();
 drawCursor();
 const eh = $('#emptyHint'); if (eh) eh.classList.toggle('hidden', state.pieces.length > 0);
-const zl = $('#zoomLbl'); if (zl) zl.textContent = Math.round(state.view.scale / BASE * 100) + '%';
-const sz = $('#stZoom'); if (sz) sz.textContent = `масштаб: ${Math.round(state.view.scale / BASE * 100)}% · 1 см = ${state.view.scale.toFixed(1)} px`;
-const sa = $('#stArea'); if (sa) sa.textContent = `область: ${Math.round(W)}×${Math.round(H)} px`;
+const zl = $('#zoomLbl'); if (zl) zl.textContent = Math.round(state.view.scale / baseScale() * 100) + '%';
+const sz = $('#stZoom');
+if (sz) {
+const pct = Math.round(state.view.scale / baseScale() * 100);
+const ppcm = state.view.scale.toFixed(1);
+sz.textContent = `масштаб: ${pct}% · 1 см = ${ppcm} px`;
+}
+const sa = $('#stArea');
+if (sa) {
+sa.textContent = `область: ${Math.round(W)}×${Math.round(H)} px · буфер ${Math.round(W * dpr)}×${Math.round(H * dpr)} @${dpr}x`;
+sa.title = `Видимая область: ${Math.round(W)}×${Math.round(H)} логических px
+Буфер канваса: ${Math.round(W * dpr)}×${Math.round(H * dpr)} физических px (DPR=${dpr}, режим «${state.dprMode}»)
+Расчёт «Вписать» выполняется по видимой области.`;
+}
+const sbEl = $('#stBounds');
+if (sbEl) {
+let rb = null;
+if (state.pieces.length) rb = fitBounds();
+else if (state.fabric) rb = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricMode === 'piece' ? state.fabricH : 100 };
+if (rb) {
+const scr = worldRectToScreen(rb);
+sbEl.textContent = `bounds: ${Math.round(scr.w)}×${Math.round(scr.h)} px`;
+sbEl.title = `Область контента на экране: ${Math.round(scr.w)}×${Math.round(scr.h)} px · мир: ${fmt(rb.maxx - rb.minx)}×${fmt(rb.maxy - rb.miny)} см`;
+} else {
+sbEl.textContent = 'bounds: —';
+sbEl.title = 'Холст пуст — нет деталей, ткань отключена';
+}
+}
+const ssi = $('#stScaleInfo');
+if (ssi) {
+const ppcm = state.view.scale.toFixed(2);
+const base = baseScale().toFixed(2);
+ssi.textContent = `px/см: ${ppcm} (база ${base})`;
+ssi.title = `Текущий коэффициент: ${ppcm} пикселей на 1 см
+Базовый коэффициент (100%): ${base} px/см
+pxPerCm=${state.pxPerCm}, DPR=${effDpr()} (режим «${state.dprMode}»)
+Формула: view.scale = baseScale × (zoom%)`;
+}
 let outN = 0; if (state.fabric) for (const p of state.pieces) if (outOfFabric(p)) outN++;
 const sc = $('#stCount'); if (sc) sc.textContent = 'деталей: ' + state.pieces.length + (state.fabric ? ' · вне ткани: ' + outN : '');
 updateFitMenuState();
@@ -2982,6 +3114,33 @@ ctx.moveTo(mousePos.x - 9, mousePos.y); ctx.lineTo(mousePos.x + 9, mousePos.y);
 ctx.moveTo(mousePos.x, mousePos.y - 9); ctx.lineTo(mousePos.x, mousePos.y + 9);
 ctx.stroke();
 ctx.restore();
+}
+function formatGridLabel(value) {
+const f = state.gridOpts.labelFmt || 'int';
+const v = Math.round(value * 100) / 100;
+if (f === 'unit') {
+const s = Number.isInteger(v) ? String(v) : v.toFixed(1);
+return s + ' см';
+}
+if (f === 'dec1') return v.toFixed(1);
+return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+function drawGridLabel(text, x, y, align, baseline, alpha) {
+const fs = Math.max(7, Math.min(18, +state.gridOpts.labelSize || 10));
+ctx.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
+ctx.textAlign = align || 'left';
+ctx.textBaseline = baseline || 'top';
+const tw = ctx.measureText(text).width;
+const pad = 3;
+let bx = x, by = y;
+if (align === 'center') bx = x - tw / 2;
+else if (align === 'right') bx = x - tw;
+if (baseline === 'bottom') by = y - fs;
+else if (baseline === 'middle') by = y - fs / 2;
+ctx.fillStyle = `rgba(5,6,14,${(0.75 * alpha).toFixed(3)})`;
+ctx.fillRect(bx - pad, by - pad, tw + pad * 2, fs + pad * 2);
+ctx.fillStyle = `rgba(125,249,255,${alpha.toFixed(3)})`;
+ctx.fillText(text, x, y);
 }
 function drawGrid() {
 if (!state.grid) return;
@@ -3013,6 +3172,8 @@ ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, H); ctx.stroke();
 for (let j = j0; j <= j1; j++) {
 const isMajor = ((j % mj) + mj) % mj === 0;
 if (!isMajor && !showMinor) continue;
+/* ИСПРАВЛЕНО: было sy = y * v.oy — горизонтальные линии рисовались неверно.
+Правильно: мировая координата × масштаб + смещение. */
 const y = j * minor, sy = y * v.scale + v.oy;
 ctx.strokeStyle = (g.axes && y === 0) ? axisCol : (isMajor ? majorCol : minorCol);
 ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke();
@@ -3021,9 +3182,63 @@ if (g.axes) {
 const o = w2s(0, 0);
 ctx.strokeStyle = axisCol; ctx.lineWidth = 1.4;
 ctx.beginPath(); ctx.moveTo(o.x - 7, o.y); ctx.lineTo(o.x + 7, o.y); ctx.moveTo(o.x, o.y - 7); ctx.lineTo(o.x, o.y + 7); ctx.stroke();
-ctx.fillStyle = 'rgba(0,229,255,.75)';
-ctx.font = '600 10px "JetBrains Mono",monospace'; ctx.textAlign = 'left';
-ctx.fillText('0,0', o.x + 8, o.y + 14);
+}
+if (g.showLabels) {
+const la = clamp((g.labelAlpha != null ? g.labelAlpha : 75) / 100, 0.1, 1);
+const pos = g.labelPos || 'axis';
+const stepMode = g.labelStep || 'auto';
+let labelMinor = minor;
+if (stepMode === 'auto') labelMinor = minor * mj;
+else {
+const mult = parseInt(stepMode, 10) || 1;
+labelMinor = minor * Math.max(1, mult);
+}
+const li0 = Math.floor(wl / labelMinor), li1 = Math.ceil(wr / labelMinor);
+const lj0 = Math.floor(wt / labelMinor), lj1 = Math.ceil(wb / labelMinor);
+const maxLabels = 60;
+const xCount = li1 - li0 + 1, yCount = lj1 - lj0 + 1;
+const skipX = Math.max(1, Math.ceil(xCount / maxLabels));
+const skipY = Math.max(1, Math.ceil(yCount / maxLabels));
+const o = w2s(0, 0);
+const fs = Math.max(7, Math.min(18, +g.labelSize || 10));
+if (pos === 'axis' || pos === 'both') {
+const yLine = (pos === 'axis' && g.axes) ? o.y : 14;
+const yLbl = yLine + 4;
+for (let i = li0; i <= li1; i += skipX) {
+const x = i * labelMinor;
+if (Math.abs(x) < 1e-9 && g.axes) continue;
+const sx = x * v.scale + v.ox;
+if (sx < 4 || sx > W - 4) continue;
+drawGridLabel(formatGridLabel(x), sx, yLbl, 'center', 'top', la);
+}
+}
+if (pos === 'axis' || pos === 'both') {
+const xLine = (pos === 'axis' && g.axes) ? o.x : 8;
+const align = (pos === 'axis' && g.axes) ? 'right' : 'left';
+const xLbl = xLine + (align === 'right' ? -6 : 6);
+for (let j = lj0; j <= lj1; j += skipY) {
+const y = j * labelMinor;
+if (Math.abs(y) < 1e-9 && g.axes) continue;
+const sy = y * v.scale + v.oy;
+if (sy < 4 || sy > H - 4) continue;
+drawGridLabel(formatGridLabel(y), xLbl, sy, align, 'middle', la);
+}
+}
+if (pos === 'corner' || pos === 'both') {
+for (let i = li0; i <= li1; i += skipX) {
+for (let j = lj0; j <= lj1; j += skipY) {
+const x = i * labelMinor, y = j * labelMinor;
+if (Math.abs(x) < 1e-9 && Math.abs(y) < 1e-9 && g.axes) continue;
+const sx = x * v.scale + v.ox, sy = y * v.scale + v.oy;
+if (sx < 4 || sx > W - 4 || sy < 4 || sy > H - 4) continue;
+if (Math.abs(x) > 1e-9) drawGridLabel(formatGridLabel(x), sx + 3, sy + 3, 'left', 'top', la * 0.7);
+if (Math.abs(y) > 1e-9) drawGridLabel(formatGridLabel(y), sx + 3, sy + fs + 6, 'left', 'top', la * 0.7);
+}
+}
+}
+if (g.axes && (pos === 'axis' || pos === 'both')) {
+drawGridLabel('0,0', o.x + 8, o.y + 14, 'left', 'top', la);
+}
 }
 }
 function drawFabric() {
@@ -3229,7 +3444,6 @@ const h = major ? Wd * 0.42 : Wd * 0.22;
 ctx.beginPath(); ctx.moveTo(x, Wd / 2); ctx.lineTo(x, Wd / 2 - h); ctx.stroke();
 if (major && i > 0 && (L / r.len) >= 8) ctx.fillText(String(i), x, Wd / 2 - h - 3);
 }
-/* рукоять вращения */
 ctx.strokeStyle = 'rgba(255,194,77,.6)';
 ctx.beginPath(); ctx.moveTo(L / 2, 0); ctx.lineTo(L / 2 + 12, 0); ctx.stroke();
 ctx.beginPath(); ctx.arc(L / 2 + 12, 0, 5, 0, Math.PI * 2);
@@ -3280,7 +3494,7 @@ ctx.restore();
 }
 }
 }
-/* ---------- настройки физической линейки (двойной клик) ---------- */
+/* ---------- настройки физической линейки ---------- */
 const rulerOv = $('#rulerOverlay');
 function syncRulerForm() {
 const r = state.physRuler;
@@ -3334,20 +3548,119 @@ const w = s2w(pt.x, pt.y);
 if (pointInPhysRuler(w.x, w.y)) { openRulerSettings(); }
 });
 /* ============================ вид / вписывание ============================ */
-/*
-* Система отображения (fit).
-* Математика: мировые координаты (см) → экранные (px):  sx = wx * s + ox.
-* Прямоугольник области вписывается в контент-зону
-* (W − padL − padR) × (H − padT − padB) с центрированием:
-*   s  = min(availW / bw, availH / bh)
-*   ox = padL + (availW − bw·s)/2 − rect.minx·s
-*   oy = padT + (availH − bh·s)/2 − rect.miny·s
-* Границы берутся ТОЛЬКО после пересборки геометрии (rebuildPiece) и после
-* завершения раскладки — иначе позиции и bounds ещё не определены.
-*/
+function fitRectIntoView(rect, pads, maxS) {
+const bw = Math.max(0.001, rect.maxx - rect.minx);
+const bh = Math.max(0.001, rect.maxy - rect.miny);
+const availW = Math.max(10, W - pads.l - pads.r);
+const availH = Math.max(10, H - pads.t - pads.b);
+const s = clamp(Math.min(availW / bw, availH / bh), 0.02, maxS || 60);
+state.view.scale = s;
+state.view.ox = pads.l + availW / 2 - (rect.minx + bw / 2) * s;
+state.view.oy = pads.t + availH / 2 - (rect.miny + bh / 2) * s;
+}
+function correctFitOverflow(rect) {
+let scr = worldRectToScreen(rect);
+const maxW = W - 8, maxH = H - 8;
+if (scr.w > maxW || scr.h > maxH) {
+const k = Math.min(maxW / Math.max(0.001, scr.w), maxH / Math.max(0.001, scr.h));
+const cx = W / 2, cy = H / 2;
+const wc = s2w(cx, cy);
+state.view.scale = Math.max(0.01, state.view.scale * k);
+state.view.ox = cx - wc.x * state.view.scale;
+state.view.oy = cy - wc.y * state.view.scale;
+scr = worldRectToScreen(rect);
+}
+if (scr.w <= W - 8) {
+if (scr.x < 2) state.view.ox += 2 - scr.x;
+else if (scr.x + scr.w > W - 2) state.view.ox -= (scr.x + scr.w) - (W - 2);
+}
+if (scr.h <= H - 8) {
+if (scr.y < 2) state.view.oy += 2 - scr.y;
+else if (scr.y + scr.h > H - 2) state.view.oy -= (scr.y + scr.h) - (H - 2);
+}
+}
+function applyFit(mode, retry) {
+if (mode === 'origin') { focusOrigin(); return null; }
+if (!FIT_MODES[mode]) mode = 'fit';
+ensureSize();
+if (W < 80 || H < 80) {
+if ((retry || 0) < 10) requestAnimationFrame(function () { applyFit(mode, (retry || 0) + 1); });
+return null;
+}
+for (const p of state.pieces) rebuildPiece(p);
+const topReserve = toolbarPopReserve();
+if (mode === 'fabW' || (mode === 'fabric' && state.fabric && state.fabricMode !== 'piece')) {
+let minx, maxx;
+if (state.fabric) { minx = 0; maxx = state.fabricW; }
+else {
+const b0 = contentBounds();
+if (!b0) { toast('Холст пуст — нечего вписывать', 'warn'); return null; }
+minx = b0.minx; maxx = b0.maxx;
+toast('Ткань отключена — вписываю по границам деталей', 'warn');
+}
+const padL = 28, padR = 28, padT = 30 + topReserve;
+const availW = Math.max(10, W - padL - padR);
+const bw = Math.max(0.001, maxx - minx);
+const s = clamp(availW / bw, 0.02, 120);
+const b = contentBounds();
+const topY = b ? Math.min(b.miny, 0) : 0;
+state.view.scale = s;
+state.view.ox = padL + availW / 2 - (minx + bw / 2) * s;
+state.view.oy = padT - topY * s;
+fitMode = (mode === 'fabric') ? 'fabric' : 'fabW';
+draw();
+return { minx: minx, miny: topY, maxx: maxx, maxy: topY + Math.max(b ? (b.maxy - topY) : 60, 1) };
+}
+if (mode === 'fabH') {
+if (!state.fabric || state.fabricMode !== 'piece') {
+toast('Высота ткани определена только в режиме «Кусок»', 'warn');
+return null;
+}
+const padT = 30 + topReserve, padB = 40, padL = 36, padR = 36;
+const availH = Math.max(10, H - padT - padB);
+const availW = Math.max(10, W - padL - padR);
+const s = clamp(availH / Math.max(0.001, state.fabricH), 0.02, 120);
+state.view.scale = s;
+state.view.ox = padL + availW / 2 - (state.fabricW / 2) * s;
+state.view.oy = padT + availH / 2 - (state.fabricH / 2) * s;
+fitMode = 'fabH';
+draw();
+return { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricH };
+}
+const pads = { l: 40, r: 40, t: 36 + topReserve, b: 48 };
+let rect = null, maxS = 60;
+if (mode === 'fit') {
+rect = fitBounds();
+} else if (mode === 'pieces') {
+const b = contentBounds();
+if (!b) { toast('Холст пуст — нет деталей для отображения', 'warn'); return null; }
+const padCm = Math.max(1, Math.max(b.maxx - b.minx, b.maxy - b.miny) * 0.03);
+rect = { minx: b.minx - padCm, miny: b.miny - padCm, maxx: b.maxx + padCm, maxy: b.maxy + padCm };
+pads.l = 32; pads.r = 32; pads.t = 28 + topReserve; pads.b = 40;
+} else if (mode === 'selected') {
+const p = byId(state.selId);
+if (!p) { toast('Нет выбранной детали — показываю всё', 'warn'); return applyFit('fit'); }
+const bb = pieceEffAABB(p);
+const padCm = Math.max(1.5, Math.max(bb.w, bb.h) * 0.08);
+rect = { minx: bb.minx - padCm, miny: bb.miny - padCm, maxx: bb.maxx + padCm, maxy: bb.maxy + padCm };
+pads.l = 56; pads.r = 56; pads.t = 44 + topReserve; pads.b = 52;
+maxS = 24;
+} else if (mode === 'fabric') {
+if (!state.fabric) { toast('Ткань отключена — включите её на панели инструментов', 'warn'); return null; }
+rect = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricH };
+pads.l = 32; pads.r = 32; pads.t = 28 + topReserve; pads.b = 40;
+}
+if (!rect) return null;
+fitRectIntoView(rect, pads, maxS);
+correctFitOverflow(rect);
+fitMode = mode;
+draw();
+return rect;
+}
+function fitView() { return applyFit('fit'); }
+function fitFabricWidth() { return applyFit('fabW'); }
 function requestFit(mode) {
 if (mode === 'origin') { focusOrigin(); return; }
-/* если автораскладка запланирована — сначала выполняем её, чтобы bounds были актуальными */
 if (repackTimer) {
 clearTimeout(repackTimer); repackTimer = null;
 if (autoPackOn() && state.pieces.length) {
@@ -3356,137 +3669,14 @@ runPlacement(true);
 return;
 }
 }
-/* раскладка в процессе — вид применится сразу после неё */
-if (nestingBusy) {
-const had = pendingFit;
-pendingFit = mode;
-if (!had) toast('⏳ Вид будет применён после завершения раскладки');
-return;
+const r = applyFit(mode);
+if (r) reportFitResult(FIT_LABELS[mode] || '⤢ Вписано', r);
 }
-applyFit(mode);
+function reportFitResult(label, rect) {
+const scr = worldRectToScreen(rect);
+const pct = Math.round(state.view.scale / baseScale() * 100);
+toast(`${label}: ${Math.round(scr.w)}×${Math.round(scr.h)} px · мир ${fmt(rect.maxx - rect.minx)}×${fmt(rect.maxy - rect.miny)} см · масштаб ${pct}%`);
 }
-/* вписывание прямоугольника (см) в текущую видимую область с центрированием */
-function fitRectIntoView(rect, pads, maxS) {
-const bw = Math.max(0.001, rect.maxx - rect.minx);
-const bh = Math.max(0.001, rect.maxy - rect.miny);
-const availW = Math.max(10, W - pads.l - pads.r);
-const availH = Math.max(10, H - pads.t - pads.b);
-const s = clamp(Math.min(availW / bw, availH / bh), 0.02, maxS || 40);
-state.view.scale = s / 2;
-state.view.ox = pads.l + (availW - bw * s) / 2 - rect.minx * s;
-state.view.oy = pads.t + (availH - bh * s) / 2 - rect.miny * s;
-}
-function contentBounds() {
-if (!state.pieces.length) return null;
-let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
-for (const p of state.pieces) {
-const bb = pieceEffAABB(p);
-if (bb.minx < minx) minx = bb.minx; if (bb.maxx > maxx) maxx = bb.maxx;
-if (bb.miny < miny) miny = bb.miny; if (bb.maxy > maxy) maxy = bb.maxy;
-}
-return { minx: minx, miny: miny, maxx: maxx, maxy: maxy };
-}
-function fitBounds() {
-const b = contentBounds();
-let minx, miny, maxx, maxy;
-if (b) { minx = b.minx; miny = b.miny; maxx = b.maxx; maxy = b.maxy; }
-else {
-minx = 0; miny = 0;
-maxx = state.fabric ? state.fabricW : 150;
-maxy = state.fabric ? (state.fabricMode === 'piece' ? state.fabricH : 100) : 100;
-}
-if (state.fabric) {
-minx = Math.min(minx, 0);
-maxx = Math.max(maxx, state.fabricW);
-miny = Math.min(miny, 0);
-if (state.fabricMode === 'piece') maxy = Math.max(maxy, state.fabricH);
-else maxy = Math.max(maxy, miny + 60);
-}
-return { minx: minx, miny: miny, maxx: maxx, maxy: maxy };
-}
-/* точное вписывание по ширине (без изменения fitMode) */
-function fitFabricWidthCore() {
-let minx, maxx;
-if (state.fabric) { minx = 0; maxx = state.fabricW; }
-else {
-const b0 = contentBounds();
-if (!b0) { toast('Холст пуст — нечего вписывать', 'warn'); return false; }
-minx = b0.minx; maxx = b0.maxx;
-}
-const padL = 28, padR = 28;
-const padT = 32 + toolbarPopReserve();
-const availW = Math.max(40, W - padL - padR);
-const s = clamp(availW / Math.max(1, maxx - minx), 0.02, 120);
-const b = contentBounds();
-const topY = b ? Math.min(b.miny, 0) : 0;
-state.view.scale = s;
-state.view.ox = padL - minx * s;
-state.view.oy = padT - topY * s;
-return true;
-}
-/* универсальная реализация всех вариантов отображения */
-function applyFit(mode, retry) {
-if (mode === 'origin') { focusOrigin(); return; }
-if (!FIT_MODES[mode]) mode = 'fit';
-ensureSize();
-if (W < 80 || H < 80) {
-if ((retry || 0) < 10) requestAnimationFrame(function () { applyFit(mode, (retry || 0) + 1); });
-return;
-}
-/* актуальные границы: пересобираем геометрию всех деталей */
-for (const p of state.pieces) rebuildPiece(p);
-const topReserve = toolbarPopReserve();
-const pads = { l: 44, r: 44, t: 40 + topReserve, b: 56 };
-let rect = null, maxS = 40;
-if (mode === 'fit') {
-rect = fitBounds();
-} else if (mode === 'pieces') {
-const b = contentBounds();
-if (!b) { toast('Холст пуст — нет деталей для отображения', 'warn'); return; }
-const padCm = Math.max(1, Math.max(b.maxx - b.minx, b.maxy - b.miny) * 0.025);
-rect = { minx: b.minx - padCm, miny: b.miny - padCm, maxx: b.maxx + padCm, maxy: b.maxy + padCm };
-pads.l = 36; pads.r = 36; pads.t = 32 + topReserve; pads.b = 48;
-} else if (mode === 'selected') {
-const p = byId(state.selId);
-if (!p) { toast('Нет выбранной детали — показываю всё', 'warn'); applyFit('fit'); return; }
-const bb = pieceEffAABB(p);
-const padCm = Math.max(1.5, Math.max(bb.w, bb.h) * 0.08);
-rect = { minx: bb.minx - padCm, miny: bb.miny - padCm, maxx: bb.maxx + padCm, maxy: bb.maxy + padCm };
-pads.l = 60; pads.r = 60; pads.t = 46 + topReserve; pads.b = 56;
-maxS = 24;
-} else if (mode === 'fabric') {
-if (!state.fabric) { toast('Ткань отключена — включите её на панели инструментов', 'warn'); return; }
-if (state.fabricMode !== 'piece') {
-/* рулон не ограничен по высоте — показываем по ширине */
-if (fitFabricWidthCore()) { fitMode = 'fabric'; draw(); }
-return;
-}
-rect = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricH };
-pads.l = 36; pads.r = 36; pads.t = 32 + topReserve; pads.b = 48;
-} else if (mode === 'fabW') {
-if (!state.fabric) toast('Ткань отключена — вписываю по границам деталей', 'warn');
-if (fitFabricWidthCore()) { fitMode = 'fabW'; draw(); }
-return;
-} else if (mode === 'fabH') {
-if (!state.fabric || state.fabricMode !== 'piece') {
-toast('Высота ткани определена только в режиме «Кусок»', 'warn');
-return;
-}
-const pT = 32 + topReserve, pB = 48;
-const availH = Math.max(20, H - pT - pB);
-const s = clamp(availH / Math.max(1, state.fabricH), 0.02, 120);
-state.view.scale = s;
-state.view.ox = W / 2 - (state.fabricW / 2) * s;
-state.view.oy = pT;
-fitMode = 'fabH'; draw();
-return;
-}
-fitRectIntoView(rect, pads, maxS);
-fitMode = mode;
-draw();
-}
-function fitView() { applyFit('fit'); }
-function fitFabricWidth() { applyFit('fabW'); }
 function focusOrigin() {
 ensureSize();
 state.view.ox = 44;
@@ -3494,7 +3684,6 @@ state.view.oy = 48 + toolbarPopReserve();
 fitMode = 'free';
 draw();
 }
-/* состояние меню отображения: активный пункт, доступность, подпись кнопки */
 function updateFitMenuState() {
 const panel = $('#fitPanel');
 if (panel && !panel.classList.contains('hidden')) {
@@ -3504,13 +3693,11 @@ b.classList.toggle('active', fitMode === m);
 if (m === 'selected') b.disabled = !byId(state.selId);
 else if (m === 'fabH') b.disabled = !(state.fabric && state.fabricMode === 'piece');
 else if (m === 'fabric') b.disabled = !state.fabric;
-else if (m === 'fabW') b.disabled = !state.fabric && !state.pieces.length;
 });
 }
 const main = $('#btnFitMenu');
 if (main) main.textContent = FIT_SHORT[fitMode] || '⤢ Вписать';
 }
-/* используется редактором контура */
 function computeFit(view, rect, cw, ch, opts) {
 const padL = opts.padL != null ? opts.padL : 40;
 const padR = opts.padR != null ? opts.padR : 40;
@@ -3540,6 +3727,34 @@ const v = state.view, w = s2w(px, py);
 v.scale = clamp(v.scale * f, 0.05, 120);
 v.ox = px - w.x * v.scale; v.oy = py - w.y * v.scale;
 draw();
+}
+function contentBounds() {
+if (!state.pieces.length) return null;
+let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+for (const p of state.pieces) {
+const bb = pieceEffAABB(p);
+if (bb.minx < minx) minx = bb.minx; if (bb.maxx > maxx) maxx = bb.maxx;
+if (bb.miny < miny) miny = bb.miny; if (bb.maxy > maxy) maxy = bb.maxy;
+}
+return { minx: minx, miny: miny, maxx: maxx, maxy: maxy };
+}
+function fitBounds() {
+const b = contentBounds();
+let minx, miny, maxx, maxy;
+if (b) { minx = b.minx; miny = b.miny; maxx = b.maxx; maxy = b.maxy; }
+else {
+minx = 0; miny = 0;
+maxx = state.fabric ? state.fabricW : 150;
+maxy = state.fabric ? (state.fabricMode === 'piece' ? state.fabricH : 100) : 100;
+}
+if (state.fabric) {
+minx = Math.min(minx, 0);
+maxx = Math.max(maxx, state.fabricW);
+miny = Math.min(miny, 0);
+if (state.fabricMode === 'piece') maxy = Math.max(maxy, state.fabricH);
+else maxy = Math.max(maxy, miny + 60);
+}
+return { minx: minx, miny: miny, maxx: maxx, maxy: maxy };
 }
 /* ============================ выбор ============================ */
 function worldToLocal(p, wx, wy) {
@@ -3571,7 +3786,6 @@ return best;
 function selectPiece(id) {
 state.selId = id;
 buildQuickPanel(byId(id));
-/* режим «показать выбранную деталь» следует за выделением */
 if (fitMode === 'selected') applyFit('selected'); else draw();
 }
 function deselect() {
@@ -3793,10 +4007,10 @@ let cW = 0, cH = 0, cdpr = 1;
 function cResize() {
 const r = cWrapEl.getBoundingClientRect();
 const nw = Math.max(60, r.width), nh = Math.max(60, r.height);
-const nd = window.devicePixelRatio || 1;
-if (Math.abs(nw - cW) > 0.5 || Math.abs(nh - cH) > 0.5 || nd !== cdpr) {
+const nd = effDpr();
+if (Math.abs(nw - cW) > 0.5 || Math.abs(nh - cH) > 0.5 || Math.abs(nd - cdpr) > 0.001) {
 cW = nw; cH = nh; cdpr = nd;
-cCvEl.width = Math.round(cW * cdpr); cCvEl.height = Math.round(cH * cdpr);
+cCvEl.width = Math.max(1, Math.round(cW * cdpr)); cCvEl.height = Math.max(1, Math.round(cH * cdpr));
 return true;
 }
 return false;
@@ -3833,7 +4047,6 @@ function currentPts(p) {
 if (p.custom && p.custom.length >= 3) return p.custom.map(pt => [pt[0], pt[1]]);
 return cmdsToPoly(p._cmds).map(pt => [pt[0], pt[1]]);
 }
-/* ---------- инструмент «Измерение» в редакторе контура ---------- */
 function setRulerTool(on) {
 if (!ctrEd) return;
 ctrEd.ruler = on;
@@ -3901,7 +4114,6 @@ cCtx.fillText(txt, lx + bw / 2, ly + bh / 2 + 0.5);
 cCtx.restore();
 }
 }
-/* ---------- клик по хорде: размер и параметры ---------- */
 function cPickChord(sx, sy) {
 const best = cPickSegment(sx, sy);
 if (!best) return null;
@@ -3945,7 +4157,6 @@ cCtx.fillStyle = 'rgba(200,210,255,.8)';
 cCtx.fillText(l2, lx + bw / 2, ly + 24);
 cCtx.restore();
 }
-/* ---------- редактор контура: основные функции ---------- */
 function openContourEditor(p) {
 rebuildPiece(p);
 ctrEd = {
@@ -4128,7 +4339,6 @@ cDraw();
 return;
 }
 if (e.button === 0) {
-/* клик по хорде — показать её размер и параметры */
 const chord = cPickChord(pt.x, pt.y);
 if (chord) {
 ctrEd.chordSel = chord;
@@ -4718,6 +4928,12 @@ if (isFinite(+o.alpha)) g.alpha = clamp(+o.alpha, 20, 100);
 if (typeof o.axes === 'boolean') g.axes = o.axes;
 if (typeof o.snap === 'boolean') g.snap = o.snap;
 if (isFinite(+o.snapStep)) g.snapStep = clamp(+o.snapStep, 0.1, 10);
+if (typeof o.showLabels === 'boolean') g.showLabels = o.showLabels;
+if (o.labelStep === 'auto' || isFinite(+o.labelStep)) g.labelStep = o.labelStep === 'auto' ? 'auto' : String(+o.labelStep);
+if (isFinite(+o.labelSize)) g.labelSize = clamp(+o.labelSize, 7, 18);
+if (isFinite(+o.labelAlpha)) g.labelAlpha = clamp(+o.labelAlpha, 20, 100);
+if (o.labelPos === 'axis' || o.labelPos === 'corner' || o.labelPos === 'both') g.labelPos = o.labelPos;
+if (o.labelFmt === 'int' || o.labelFmt === 'dec1' || o.labelFmt === 'unit') g.labelFmt = o.labelFmt;
 const s = $('#gStep'); if (s) s.value = g.minor === 'auto' ? 'auto' : String(g.minor);
 const mj = $('#gMajor'); if (mj) mj.value = String(g.majorEvery);
 const ga = $('#gAlpha'); if (ga) ga.value = String(g.alpha);
@@ -4725,12 +4941,36 @@ const gv = $('#gAlphaVal'); if (gv) gv.textContent = g.alpha + '%';
 const gx = $('#gAxes'); if (gx) gx.checked = g.axes;
 const gs = $('#gSnap'); if (gs) gs.checked = g.snap;
 const gt = $('#gSnapStep'); if (gt) gt.value = String(g.snapStep);
+const gl = $('#gLabels'); if (gl) gl.checked = !!g.showLabels;
+const gls = $('#gLabelStep'); if (gls) gls.value = g.labelStep;
+const glsz = $('#gLabelSize'); if (glsz) glsz.value = String(g.labelSize);
+const glsv = $('#gLabelSizeVal'); if (glsv) glsv.textContent = String(g.labelSize);
+const gla = $('#gLabelAlpha'); if (gla) gla.value = String(g.labelAlpha);
+const glav = $('#gLabelAlphaVal'); if (glav) glav.textContent = g.labelAlpha + '%';
+const glp = $('#gLabelPos'); if (glp) glp.value = g.labelPos;
+const glf = $('#gLabelFmt'); if (glf) glf.value = g.labelFmt;
+}
+/* ============================ Синхронизация параметров масштаба (pxPerCm / DPR) ============================ */
+function syncScaleUI() {
+const px = $('#gPxCm'); if (px) px.value = String(state.pxPerCm);
+const dp = $('#gDpr'); if (dp) dp.value = String(state.dprMode);
+}
+/* Применение сохранённого параметра DPR (с поддержкой старого поля useDpr) */
+function applyDprSetting(pr) {
+if (pr.dprMode != null) {
+const v = String(pr.dprMode);
+state.dprMode = (v === 'auto' || (isFinite(+v) && +v > 0)) ? v : 'auto';
+} else if (pr.useDpr === false) {
+state.dprMode = '1';
+}
 }
 /* ============================ АВТОСОХРАНЕНИЕ НАСТРОЕК ИНТЕРФЕЙСА ============================ */
 const UI_PREFS_KEY = 'ui';
 const LS_UI_KEY = 'neoncut-ui-prefs-v1';
 const UI_CONTROL_IDS = new Set([
 'chkAuto', 'chkSnap', 'gridChk', 'gStep', 'gMajor', 'gAlpha', 'gAxes', 'gSnap', 'gSnapStep',
+'gPxCm', 'gDpr',
+'gLabels', 'gLabelStep', 'gLabelSize', 'gLabelAlpha', 'gLabelPos', 'gLabelFmt',
 'nAlgo', 'nRotMode', 'nAngleStep', 'nRefine', 'nVariants', 'nGap', 'nMargin',
 'vPieceStyle', 'vFabricStyle', 'vNames', 'vDims', 'vGrain', 'vSeam',
 'fabChk', 'fabMode', 'fabW', 'fabH'
@@ -4750,6 +4990,9 @@ physRuler: {
 on: state.physRuler.on, x: state.physRuler.x, y: state.physRuler.y,
 angle: state.physRuler.angle, len: state.physRuler.len, w: state.physRuler.w, tick: state.physRuler.tick || 1
 },
+pxPerCm: state.pxPerCm,
+dprMode: state.dprMode,
+useDpr: state.dprMode !== '1',
 activeTab: $('#tabPresets').classList.contains('active') ? 'presets' : 'parts',
 savedAt: Date.now()
 };
@@ -4791,6 +5034,9 @@ if (isFinite(+prl.w)) r.w = clamp(+prl.w, 2, 20);
 if (isFinite(+prl.tick)) r.tick = (+prl.tick === 5) ? 5 : 1;
 const b = $('#btnPhysRuler'); if (b) b.classList.toggle('active', r.on);
 }
+if (isFinite(+pr.pxPerCm)) state.pxPerCm = clamp(+pr.pxPerCm, 1, 40);
+applyDprSetting(pr);
+syncScaleUI();
 if (pr.activeTab === 'presets') { $('#tabPresets').click(); }
 else { $('#tabParts').click(); }
 }
@@ -4901,6 +5147,9 @@ state.fabricW = clamp(+data.fabric.w || 150, 30, 400);
 state.fabricH = clamp(+data.fabric.h || 200, 30, 1000);
 syncFabricUI();
 }
+if (data.pxPerCm != null && isFinite(+data.pxPerCm)) state.pxPerCm = clamp(+data.pxPerCm, 1, 40);
+applyDprSetting(data);
+syncScaleUI();
 state.selId = null; $('#quick').classList.add('hidden');
 state.dirty = false; lastSavedAt = new Date(data.updatedAt || Date.now());
 projOv.classList.remove('open');
@@ -4923,7 +5172,7 @@ fitView(); updateStorageChip(); toast('✦ Новый проект');
 $('#btnNew').onclick = function () { if (state.dirty && !confirm('Несохранённые изменения будут потеряны. Продолжить?')) return; newProject(); };
 $('#btnSave').onclick = function () { saveProject(true); };
 $('#btnExport').onclick = function () {
-const blob = new Blob([JSON.stringify(Object.assign({ app: 'NEONCUT', version: '1.21.0' }, projectData()), null, 2)], { type: 'application/json' });
+const blob = new Blob([JSON.stringify(Object.assign({ app: 'NEONCUT', version: '1.21.0' }, projectData(), { pxPerCm: state.pxPerCm, dprMode: state.dprMode, useDpr: state.dprMode !== '1' }), null, 2)], { type: 'application/json' });
 const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
 a.download = (state.project.name || 'project') + '.neoncut.json'; a.click();
 setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
@@ -4952,8 +5201,9 @@ saveTimer = setTimeout(function () { saveProject(false); }, 1200);
 /* ============================ тулбар ============================ */
 $('#btnZoomIn').onclick = function () { ensureSize(); zoomAt(W / 2, H / 2, 1.3); };
 $('#btnZoomOut').onclick = function () { ensureSize(); zoomAt(W / 2, H / 2, 1 / 1.3); };
-/* ---------- меню вариантов отображения ---------- */
-$('#btnFitMenu').onclick = function () { requestFit('fit'); };
+$('#btnFitMenu').onclick = function () {
+requestFit(FIT_MODES[fitMode] ? fitMode : 'fit');
+};
 $('#btnFitDrop').addEventListener('click', function (e) {
 e.stopPropagation();
 const wasHidden = $('#fitPanel').classList.contains('hidden');
@@ -4967,23 +5217,21 @@ refitIfAuto();
 document.querySelectorAll('#fitPanel .fit-item').forEach(function (b) {
 b.addEventListener('click', function () {
 $('#fitPanel').classList.add('hidden');
-const m = b.dataset.fit;
-if (m === 'origin') { focusOrigin(); return; }
-requestFit(m);
+requestFit(b.dataset.fit);
 });
 });
 $('#btnOrigin').onclick = focusOrigin;
 $('#btn100').onclick = function () {
 fitMode = 'free'; ensureSize();
 const c = s2w(W / 2, H / 2);
-state.view.scale = BASE;
-state.view.ox = W / 2 - c.x * BASE; state.view.oy = H / 2 - c.y * BASE;
+state.view.scale = baseScale();
+state.view.ox = W / 2 - c.x * state.view.scale; state.view.oy = H / 2 - c.y * state.view.scale;
 draw();
 };
 $('#btnPhysRuler').onclick = function () {
 state.physRuler.on = !state.physRuler.on;
 $('#btnPhysRuler').classList.toggle('active', state.physRuler.on);
-if (state.physRuler.on) toast('📐 Линейка: перетаскивайте за корпус · колесо — поворот · двойной клик — параметры линейки');
+if (state.physRuler.on) toast('📐 Линейка: перетаскивайте за корпус · колесо — поворот · двойной клик / двойное касание — параметры');
 scheduleUISave(); draw();
 };
 $('#btnPack').onclick = function () {
@@ -5067,6 +5315,53 @@ $('#gSnapStep').addEventListener('input', function (e) {
 const v = parseFloat(e.target.value);
 if (isFinite(v)) state.gridOpts.snapStep = clamp(v, 0.1, 10);
 });
+$('#gPxCm').addEventListener('input', function (e) {
+const v = parseFloat(e.target.value);
+if (isFinite(v)) {
+const oldBase = baseScale();
+state.pxPerCm = clamp(v, 1, 40);
+const newBase = baseScale();
+if (oldBase > 0 && state.view.scale > 0) {
+state.view.scale = state.view.scale * (newBase / oldBase);
+}
+draw();
+}
+});
+$('#gDpr').addEventListener('change', function (e) {
+const oldBase = baseScale();
+const v = e.target.value;
+state.dprMode = (v === 'auto' || (isFinite(+v) && +v > 0)) ? v : 'auto';
+const newBase = baseScale();
+if (oldBase > 0 && state.view.scale > 0) {
+state.view.scale = state.view.scale * (newBase / oldBase);
+}
+ensureSize();
+draw();
+if (FIT_MODES[fitMode]) applyFit(fitMode);
+toast(`DPR: ${state.dprMode === 'auto' ? 'авто (' + (window.devicePixelRatio || 1) + ')' : '×' + state.dprMode}`);
+});
+$('#gLabels').addEventListener('change', function (e) {
+state.gridOpts.showLabels = e.target.checked; draw();
+});
+$('#gLabelStep').addEventListener('change', function (e) {
+state.gridOpts.labelStep = e.target.value; draw();
+});
+$('#gLabelSize').addEventListener('input', function (e) {
+state.gridOpts.labelSize = clamp(parseInt(e.target.value, 10) || 10, 7, 18);
+$('#gLabelSizeVal').textContent = String(state.gridOpts.labelSize);
+draw();
+});
+$('#gLabelAlpha').addEventListener('input', function (e) {
+state.gridOpts.labelAlpha = clamp(parseInt(e.target.value, 10) || 75, 20, 100);
+$('#gLabelAlphaVal').textContent = state.gridOpts.labelAlpha + '%';
+draw();
+});
+$('#gLabelPos').addEventListener('change', function (e) {
+state.gridOpts.labelPos = e.target.value; draw();
+});
+$('#gLabelFmt').addEventListener('change', function (e) {
+state.gridOpts.labelFmt = e.target.value; draw();
+});
 $('#nAlgo').addEventListener('change', function (e) {
 state.nestOpts.algo = e.target.value;
 updateNestPanelRows();
@@ -5141,11 +5436,11 @@ toast(`📏 Рекомендуемая длина при ширине ${fmt(stat
 const pointers = new Map(); let gesture = null, spaceDown = false;
 const tapSlop = function (pt) { return pt === 'touch' ? 14 : 8; };
 let lastTap = { id: null, t: 0 };
+let lastTouchTap = { x: 0, y: 0, t: 0 };
 cv.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 cv.addEventListener('wheel', function (e) {
 e.preventDefault();
 const p = eventXY(e);
-/* колесо над физической линейкой — поворот линейки */
 if (state.physRuler.on) {
 const wpt = s2w(p.x, p.y);
 if (pointInPhysRuler(wpt.x, wpt.y)) {
@@ -5179,16 +5474,25 @@ gesture = { type: 'pan', pt: e.pointerType, sx: pt.x, sy: pt.y, ox: state.view.o
 return;
 }
 const w = s2w(pt.x, pt.y);
-/* физическая линейка: рукоять вращения и корпус */
+if (e.pointerType === 'touch') {
+const nowT = performance.now();
+if (nowT - lastTouchTap.t < 400 && Math.hypot(pt.x - lastTouchTap.x, pt.y - lastTouchTap.y) < 30) {
+lastTouchTap = { x: 0, y: 0, t: 0 };
+if (state.physRuler.on && pointInPhysRuler(w.x, w.y)) {
+openRulerSettings();
+return;
+}
+}
+}
 if (state.physRuler.on && e.button === 0) {
 const hw = physRulerHandleWorld();
 const hs = w2s(hw[0], hw[1]);
 if (Math.hypot(hs.x - pt.x, hs.y - pt.y) <= 14) {
-gesture = { type: 'rulerRot', pt: e.pointerType };
+gesture = { type: 'rulerRot', pt: e.pointerType, sx: pt.x, sy: pt.y, moved: false };
 return;
 }
 if (pointInPhysRuler(w.x, w.y)) {
-gesture = { type: 'rulerMove', pt: e.pointerType, gx: w.x - state.physRuler.x, gy: w.y - state.physRuler.y };
+gesture = { type: 'rulerMove', pt: e.pointerType, gx: w.x - state.physRuler.x, gy: w.y - state.physRuler.y, sx: pt.x, sy: pt.y, moved: false };
 return;
 }
 }
@@ -5218,11 +5522,13 @@ state.view.oy = midC.y - gesture.w0.y * ns;
 draw(); return;
 }
 if (gesture && gesture.type === 'rulerMove') {
+if (!gesture.moved && Math.hypot(pt.x - gesture.sx, pt.y - gesture.sy) > tapSlop(gesture.pt)) gesture.moved = true;
 state.physRuler.x = w.x - gesture.gx;
 state.physRuler.y = w.y - gesture.gy;
 draw(); return;
 }
 if (gesture && gesture.type === 'rulerRot') {
+if (!gesture.moved && Math.hypot(pt.x - gesture.sx, pt.y - gesture.sy) > tapSlop(gesture.pt)) gesture.moved = true;
 state.physRuler.angle = Math.atan2(w.y - state.physRuler.y, w.x - state.physRuler.x) * 180 / Math.PI;
 draw(); return;
 }
@@ -5296,8 +5602,13 @@ selectPiece(p.id);
 }
 }
 if (gesture.type === 'drag' && gesture.moved) markDirty();
+if (e.pointerType === 'touch' && !gesture.moved && (gesture.type === 'pan' || gesture.type === 'drag' || gesture.type === 'rulerMove')) {
+const ptUp = eventXY(e);
+lastTouchTap = { x: ptUp.x, y: ptUp.y, t: performance.now() };
+}
 }
 gesture = null;
+if (e.pointerType === 'touch') { mousePos.on = false; draw(); }
 }
 cv.addEventListener('pointerup', endPointer);
 cv.addEventListener('pointercancel', endPointer);
@@ -5355,7 +5666,6 @@ if (modalOpen) return;
 if (e.key === 'Delete' || e.key === 'Backspace') { if (state.selId) removePiece(state.selId); return; }
 if (e.key === '+' || e.key === '=') zoomAt(W / 2, H / 2, 1.25);
 if (e.key === '-') zoomAt(W / 2, H / 2, 0.8);
-/* варианты отображения (запрос учитывает состояние раскладки) */
 if (e.key === '0') { requestFit('fit'); return; }
 if (e.key.toLowerCase() === 'f' || e.key.toLowerCase() === 'а') { requestFit('fit'); return; }
 if (e.key.toLowerCase() === 'a' || e.key.toLowerCase() === 'ф') { requestFit('pieces'); return; }
@@ -5364,7 +5674,6 @@ if (e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'е') { requestFit('f
 if (e.key.toLowerCase() === 'w' || e.key.toLowerCase() === 'ц') { requestFit('fabW'); return; }
 if (e.key.toLowerCase() === 'h' || e.key.toLowerCase() === 'р') { requestFit('fabH'); return; }
 if (e.key === 'Home') { focusOrigin(); return; }
-/* [ ] — поворот физической линейки, если она включена и деталь не выделена */
 if ((e.key === ']' || e.key === '[') && state.physRuler.on && !state.selId) {
 const step = e.shiftKey ? 15 : 1;
 state.physRuler.angle += (e.key === ']' ? step : -step);
@@ -5391,6 +5700,7 @@ applyGridOpts(state.gridOpts);
 syncNestUI();
 syncFabricUI();
 syncViewUI();
+syncScaleUI();
 updateUIChip();
 updateFitMenuState();
 ensureSize(); draw();
@@ -5405,6 +5715,7 @@ userPresets.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0
 buildLibrary(); buildPresetsUI();
 }
 await loadUIPrefs();
+state.view.scale = baseScale();
 draw();
 addPreset('tshirt', { silent: true });
 state.dirty = false; updateStorageChip();
