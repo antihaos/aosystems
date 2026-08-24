@@ -1512,7 +1512,7 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.1</span></div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.2</span></div>
                 <div class="desc">Студия швейных выкроек: полный набор вариантов отображения (всё / детали /
                     выбранная / ткань / ширина / высота) с точным расчётом масштаба и центрированием области в
                     видимой зоне.</div>
@@ -2811,7 +2811,7 @@
         }
         function eventXY(e) { return clientToCanvas(e.clientX, e.clientY); }
         function s2w(sx, sy) {
-            const sc = state.view.scale || baseScale();
+            const sc = state.view.scale || state.pxPerCm;
             return { x: (sx - state.view.ox) / sc, y: (sy - state.view.oy) / sc };
         }
         function w2s(wx, wy) {
