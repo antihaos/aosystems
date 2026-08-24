@@ -1512,7 +1512,7 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.0</span></div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.1</span></div>
                 <div class="desc">Студия швейных выкроек: полный набор вариантов отображения (всё / детали /
                     выбранная / ткань / ширина / высота) с точным расчётом масштаба и центрированием области в
                     видимой зоне.</div>
@@ -3337,7 +3337,7 @@
             drawPhysRuler();
             drawCursor();
             const eh = $('#emptyHint'); if (eh) eh.classList.toggle('hidden', state.pieces.length > 0);
-            const zl = $('#zoomLbl'); if (zl) zl.textContent = Math.round(state.view.scale / baseScale() * 100) + '%';
+            const zl = $('#zoomLbl'); if (zl) zl.textContent = Math.round(state.view.scale / state.pxPerCm * 100) + '%';
             /* ---------- статусбар ---------- */
             const sz = $('#stZoom');
             if (sz) {
@@ -5891,13 +5891,9 @@
             }
         });
         $('#gDpr').addEventListener('change', function (e) {
-            const oldBase = baseScale();
             const v = e.target.value;
             state.dprMode = (v === 'auto' || (isFinite(+v) && +v > 0)) ? v : 'auto';
-            const newBase = baseScale();
-            if (oldBase > 0 && state.view.scale > 0) {
-                state.view.scale = state.view.scale * (newBase / oldBase);
-            }
+            // пересоздаём буфер с новым DPR
             ensureSize();
             draw();
             if (FIT_MODES[fitMode]) applyFit(fitMode);
