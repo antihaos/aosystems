@@ -763,10 +763,6 @@
             flex: none;
         }
 
-        #stBounds {
-            color: #9ef7ff
-        }
-
         .chip {
             margin-left: auto;
             padding: 3px 11px;
@@ -1225,11 +1221,48 @@
             box-shadow: 0 0 10px rgba(255, 194, 77, .4)
         }
 
+        /* ---------- переработанный тулбар редактора контура ---------- */
         .c-bar {
             display: flex;
             gap: 6px;
             align-items: center;
             flex-wrap: wrap
+        }
+
+        .c-group {
+            display: flex;
+            gap: 3px;
+            align-items: center;
+            background: rgba(13, 16, 34, .72);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 3px;
+        }
+
+        .c-group .tbtn {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+            white-space: nowrap;
+        }
+
+        .c-group .tbtn:hover {
+            border-color: transparent;
+            background: rgba(0, 229, 255, .09);
+            box-shadow: none;
+        }
+
+        .c-group .tbtn.toggle.active {
+            background: rgba(0, 229, 255, .10);
+        }
+
+        .c-undo-n {
+            font: 700 9px var(--font-mono);
+            color: #041018;
+            background: linear-gradient(90deg, var(--cyan), #7df9ff);
+            border-radius: 8px;
+            padding: 1px 5px;
+            box-shadow: 0 0 6px rgba(0, 229, 255, .5);
         }
 
         .c-status {
@@ -1490,6 +1523,10 @@
                 right: 8px;
                 width: 262px
             }
+
+            .c-group .tbtn {
+                padding: 10px 10px
+            }
         }
     </style>
 </head>
@@ -1512,7 +1549,7 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.4</span></div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.23.0</span></div>
                 <div class="desc">Студия швейных выкроек: собери свою выкройку на холсте</div>
             </div>
         </div>
@@ -1891,22 +1928,34 @@
             </div>
             <div class="m-body">
                 <div class="c-bar">
-                    <button class="tbtn" id="cFit" title="Вписать контур в окно">⤢ Вписать</button>
-                    <button class="tbtn" id="cUndo" title="Отменить (Ctrl+Z)">↶ Отменить</button>
-                    <button class="tbtn" id="cDelPt" title="Удалить выбранную точку (Del)">⌫ Точку</button>
-                    <button class="tbtn" id="cReset" title="Вернуть параметрическую форму">↺ Сбросить форму</button>
-                    <button class="tbtn toggle" id="cRuler"
-                        title="Измерение (R): перетащите — расстояние и угол; клик по хорде — её размер, угол и Δx/Δy. ПКМ — убрать последний замер, Esc — очистить">📏
-                        Измерение</button>
-                    <button class="tbtn" id="cRulerClear" title="Очистить все замеры">🧹 Замеры</button>
-                    <button class="tbtn" id="cSaveTpl" title="Сохранить контур как пользовательский шаблон детали">💾 В
-                        шаблон</button>
+                    <div class="c-group" role="group" title="Вид">
+                        <button class="tbtn" id="cFit" title="Вписать контур по центру окна">⤢ Вписать</button>
+                        <button class="tbtn toggle active" id="cRulers"
+                            title="Линейки по краям окна: координаты в см">📐</button>
+                    </div>
+                    <div class="c-group" role="group" title="Правка">
+                        <button class="tbtn" id="cUndo" title="Отменить (Ctrl+Z)">↶<span class="c-undo-n hidden"
+                                id="cUndoN">0</span></button>
+                        <button class="tbtn" id="cDelPt" title="Удалить выбранную точку (Del)">⌫ Точку</button>
+                        <button class="tbtn" id="cReset" title="Вернуть параметрическую форму">↺ Форма</button>
+                    </div>
+                    <div class="c-group" role="group" title="Измерения">
+                        <button class="tbtn toggle" id="cRuler"
+                            title="Измерение (R): перетащите — расстояние и угол; клик по хорде — её размер, угол и Δx/Δy. ПКМ — убрать последний замер, Esc — очистить">📏
+                            Измерение</button>
+                        <button class="tbtn" id="cRulerClear" title="Очистить все замеры">🧹</button>
+                    </div>
+                    <div class="c-group" role="group" title="Сохранение">
+                        <button class="tbtn" id="cSaveTpl"
+                            title="Сохранить контур как пользовательский шаблон детали">💾 В шаблон</button>
+                    </div>
                     <span class="c-status" id="cStatus"></span>
                 </div>
                 <div id="cWrap"><canvas id="cCv"></canvas></div>
                 <div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del —
-                    удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · 📏 Измерение (R): перетащите для
-                    замера или кликните по хорде, чтобы увидеть её размер, угол и Δx/Δy</div>
+                    удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · 📐 линейки показывают координаты в
+                    см · 📏 Измерение (R): перетащите для замера или кликните по хорде, чтобы увидеть её размер, угол
+                    и Δx/Δy</div>
             </div>
             <div class="m-foot">
                 <span class="spacer"></span>
@@ -2048,9 +2097,7 @@
             const px = Math.max(0.5, +state.pxPerCm || 6);
             return px * effDpr();
         }
-        /* ИСПРАВЛЕНО: масштаб в процентах всегда считается от базового коэффициента (с учётом DPR).
-        Раньше делили на state.pxPerCm, из-за чего при DPR>1 проценты и режим 1:1 были рассинхронизированы
-        с фактическим масштабом, и «Вписать» визуально работал некорректно. */
+        /* Масштаб в процентах всегда считается от базового коэффициента (с учётом DPR) */
         function zoomPercent() {
             const b = baseScale();
             return b > 0 ? Math.round(state.view.scale / b * 100) : 100;
@@ -3342,7 +3389,7 @@
             drawPhysRuler();
             drawCursor();
             const eh = $('#emptyHint'); if (eh) eh.classList.toggle('hidden', state.pieces.length > 0);
-            /* ИСПРАВЛЕНО: процент масштаба считается от базового коэффициента (с учётом DPR) */
+            /* процент масштаба считается от базового коэффициента (с учётом DPR) */
             const zl = $('#zoomLbl'); if (zl) zl.textContent = zoomPercent() + '%';
             /* ---------- статусбар ---------- */
             const sz = $('#stZoom');
@@ -3465,8 +3512,6 @@
             for (let j = j0; j <= j1; j++) {
                 const isMajor = ((j % mj) + mj) % mj === 0;
                 if (!isMajor && !showMinor) continue;
-                /* ИСПРАВЛЕНО: было sy = y * v.oy — горизонтальные линии рисовались неверно.
-                Правильно: мировая координата × масштаб + смещение. */
                 const y = j * minor, sy = y * v.scale + v.oy;
                 ctx.strokeStyle = (g.axes && y === 0) ? axisCol : (isMajor ? majorCol : minorCol);
                 ctx.beginPath(); ctx.moveTo(0, sy); ctx.lineTo(W, sy); ctx.stroke();
@@ -3968,7 +4013,7 @@
         }
         function reportFitResult(label, rect) {
             const scr = worldRectToScreen(rect);
-            /* ИСПРАВЛЕНО: процент от базового коэффициента (с учётом DPR) */
+            /* процент от базового коэффициента (с учётом DPR) */
             const pct = zoomPercent();
             toast(`${label}: ${Math.round(scr.w)}×${Math.round(scr.h)} px · мир ${fmt(rect.maxx - rect.minx)}×${fmt(rect.maxy - rect.miny)} см · масштаб ${pct}%`);
         }
@@ -4325,6 +4370,7 @@
             }
             return { minx: minx, miny: miny, maxx: maxx, maxy: maxy, w: maxx - minx, h: maxy - miny };
         }
+        /* Вписать контур: деталь центрируется в окне редактора (align: 'center') */
         function cFit(retry) {
             if (!ctrEd) return;
             cResize();
@@ -4335,7 +4381,7 @@
             const bb = cPtsBounds();
             const padCm = Math.max(3, Math.max(bb.w, bb.h) * 0.08);
             const rect = { minx: bb.minx - padCm, miny: bb.miny - padCm, maxx: bb.maxx + padCm, maxy: bb.maxy + padCm };
-            computeFit(ctrEd.view, rect, cW, cH, { padL: 16, padR: 16, padT: 16, padB: 16, align: 'tl', minS: 0.2, maxS: 200 });
+            computeFit(ctrEd.view, rect, cW, cH, { padL: 34, padR: 16, padT: 26, padB: 16, align: 'center', minS: 0.2, maxS: 200 });
             cDraw();
         }
         function currentPts(p) {
@@ -4360,6 +4406,94 @@
             ang = ((ang % 360) + 360) % 360;
             if (ang > 180) ang = 360 - ang;
             return ang;
+        }
+        /* ---------- линейки по краям окна редактора (координаты в см) ---------- */
+        function fmtRuler(v) {
+            const r = Math.round(v * 10) / 10;
+            return Number.isInteger(r) ? String(r) : r.toFixed(1);
+        }
+        function cDrawRulers() {
+            if (!ctrEd || !ctrEd.rulers) return;
+            const v = ctrEd.view;
+            const TH = 20, LW = 30;
+            /* фон линеек */
+            cCtx.fillStyle = 'rgba(6,8,18,.92)';
+            cCtx.fillRect(0, 0, cW, TH);
+            cCtx.fillRect(0, 0, LW, cH);
+            cCtx.fillStyle = 'rgba(6,8,18,.97)';
+            cCtx.fillRect(0, 0, LW, TH);
+            cCtx.strokeStyle = 'rgba(0,229,255,.30)';
+            cCtx.lineWidth = 1;
+            cCtx.strokeRect(0.5, 0.5, LW - 1, TH - 1);
+            /* подбор шага подписей: не реже 46px между крупными делениями */
+            const steps = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+            const step = steps.find(function (s) { return s * v.scale >= 46; }) || 1000;
+            const minor = step / 5;
+            cCtx.font = '600 8.5px "JetBrains Mono",monospace';
+            /* верхняя линейка (ось X) */
+            const wl = (-v.ox) / v.scale, wr = (cW - v.ox) / v.scale;
+            const i0 = Math.floor(wl / minor), i1 = Math.ceil(wr / minor);
+            if (i1 - i0 <= 3000) {
+                for (let i = i0; i <= i1; i++) {
+                    const xw = i * minor;
+                    const sx = xw * v.scale + v.ox;
+                    if (sx < LW || sx > cW) continue;
+                    const isMajor = Math.abs(xw / step - Math.round(xw / step)) < 1e-6;
+                    cCtx.strokeStyle = isMajor ? 'rgba(0,229,255,.65)' : 'rgba(110,130,255,.38)';
+                    cCtx.lineWidth = 1;
+                    cCtx.beginPath();
+                    cCtx.moveTo(sx, TH);
+                    cCtx.lineTo(sx, TH - (isMajor ? 9 : 5));
+                    cCtx.stroke();
+                    if (isMajor) {
+                        cCtx.fillStyle = Math.abs(xw) < 1e-9 ? '#39ffa0' : 'rgba(158,247,255,.85)';
+                        cCtx.textAlign = 'left'; cCtx.textBaseline = 'top';
+                        cCtx.fillText(fmtRuler(xw), sx + 3, 4);
+                    }
+                }
+            }
+            /* левая линейка (ось Y) */
+            const wt = (-v.oy) / v.scale, wb = (cH - v.oy) / v.scale;
+            const j0 = Math.floor(wt / minor), j1 = Math.ceil(wb / minor);
+            if (j1 - j0 <= 3000) {
+                for (let j = j0; j <= j1; j++) {
+                    const yw = j * minor;
+                    const sy = yw * v.scale + v.oy;
+                    if (sy < TH || sy > cH) continue;
+                    const isMajor = Math.abs(yw / step - Math.round(yw / step)) < 1e-6;
+                    cCtx.strokeStyle = isMajor ? 'rgba(0,229,255,.65)' : 'rgba(110,130,255,.38)';
+                    cCtx.lineWidth = 1;
+                    cCtx.beginPath();
+                    cCtx.moveTo(LW, sy);
+                    cCtx.lineTo(LW - (isMajor ? 9 : 5), sy);
+                    cCtx.stroke();
+                    if (isMajor) {
+                        cCtx.save();
+                        cCtx.translate(LW - 11, sy + 3);
+                        cCtx.rotate(-Math.PI / 2);
+                        cCtx.textAlign = 'right'; cCtx.textBaseline = 'top';
+                        cCtx.fillStyle = Math.abs(yw) < 1e-9 ? '#39ffa0' : 'rgba(158,247,255,.85)';
+                        cCtx.fillText(fmtRuler(yw), 0, 0);
+                        cCtx.restore();
+                    }
+                }
+            }
+            /* маркеры курсора на линейках + значения координат */
+            if (ctrEd.cursor && ctrEd.cursor.on) {
+                const cx = ctrEd.cursor.x, cy = ctrEd.cursor.y;
+                cCtx.strokeStyle = '#ff3df0';
+                cCtx.lineWidth = 1.2;
+                cCtx.beginPath();
+                cCtx.moveTo(cx, 1); cCtx.lineTo(cx, TH - 1);
+                cCtx.moveTo(1, cy); cCtx.lineTo(LW - 1, cy);
+                cCtx.stroke();
+                const wpt = cS2W(cx, cy);
+                cCtx.font = '700 9px "JetBrains Mono",monospace';
+                cCtx.fillStyle = '#ff9df4';
+                cCtx.textAlign = 'left'; cCtx.textBaseline = 'top';
+                cCtx.fillText(fmtRuler(wpt.x), Math.min(cx + 4, cW - 34), 5);
+                cCtx.fillText(fmtRuler(wpt.y), LW + 4, clamp(cy - 5, TH + 2, cH - 13));
+            }
         }
         function drawRulerOverlay() {
             if (!ctrEd) return;
@@ -4457,9 +4591,11 @@
             ctrEd = {
                 pieceId: p.id, pts: currentPts(p), undo: [], view: { scale: 3, ox: 0, oy: 0 },
                 drag: -1, sel: -1, hover: -1, pan: null,
-                ruler: false, rulerDrag: null, rulerPins: [], chordSel: null
+                ruler: false, rulerDrag: null, rulerPins: [], chordSel: null,
+                rulers: true, cursor: { x: 0, y: 0, on: false }
             };
             const rb = $('#cRuler'); if (rb) rb.classList.remove('active');
+            const ru = $('#cRulers'); if (ru) ru.classList.add('active');
             $('#cTitle').textContent = 'Редактор контура · ' + p.name;
             contourOverlay.classList.add('open');
             cResize();
@@ -4582,6 +4718,13 @@
             });
             drawRulerOverlay();
             drawChordSel();
+            cDrawRulers();
+            /* бейдж количества отмен */
+            const un = $('#cUndoN');
+            if (un) {
+                un.textContent = String(ctrEd.undo.length);
+                un.classList.toggle('hidden', ctrEd.undo.length === 0);
+            }
             const bb = cPtsBounds();
             let hoverTxt = ctrEd.hoverW ? ` · ${ctrEd.hoverW}` : '';
             if (ctrEd.rulerDrag) {
@@ -4622,6 +4765,9 @@
             return best;
         }
         cCvEl.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+        cCvEl.addEventListener('pointerleave', function () {
+            if (ctrEd) { ctrEd.cursor.on = false; cDraw(); }
+        });
         cCvEl.addEventListener('pointerdown', function (e) {
             if (!ctrEd) return;
             cCvEl.setPointerCapture(e.pointerId);
@@ -4674,6 +4820,7 @@
             if (!ctrEd) return;
             const pt = cRel(e);
             const w = cS2W(pt.x, pt.y);
+            ctrEd.cursor.x = pt.x; ctrEd.cursor.y = pt.y; ctrEd.cursor.on = true;
             ctrEd.hoverW = `X:${w.x.toFixed(1)} Y:${w.y.toFixed(1)}`;
             if (ctrEd.ruler) {
                 if (ctrEd.rulerDrag) {
@@ -4703,6 +4850,7 @@
         function cEndPointer(e) {
             if (!ctrEd) return;
             try { cCvEl.releasePointerCapture(e.pointerId); } catch (err) { }
+            if (e.pointerType === 'touch') ctrEd.cursor.on = false;
             if (ctrEd.ruler) {
                 const m = ctrEd.rulerDrag;
                 ctrEd.rulerDrag = null;
@@ -4738,6 +4886,13 @@
         $('#cSaveTpl').onclick = function () { cSaveTemplate(); };
         $('#cRuler').onclick = function () { if (ctrEd) setRulerTool(!ctrEd.ruler); };
         $('#cRulerClear').onclick = function () { clearRuler(); };
+        /* переключатель линеек по краям окна редактора */
+        $('#cRulers').onclick = function () {
+            if (!ctrEd) return;
+            ctrEd.rulers = !ctrEd.rulers;
+            $('#cRulers').classList.toggle('active', ctrEd.rulers);
+            cDraw();
+        };
         contourOverlay.addEventListener('click', function (e) { if (e.target === contourOverlay) closeContour(false); });
         $('#cFullscreen').onclick = function () {
             const fs = cModal.classList.toggle('fullscreen');
@@ -5725,8 +5880,7 @@
             if (data.pxPerCm != null && isFinite(+data.pxPerCm)) state.pxPerCm = clamp(+data.pxPerCm, 1, 40);
             applyDprSetting(data);
             syncScaleUI();
-            /* ИСПРАВЛЕНО: при открытии проекта текущий масштаб пересчитывается от базового
-            коэффициента с учётом DPR, чтобы последующий fitView() был согласован с 100% */
+            /* текущий масштаб пересчитывается от базового коэффициента (с учётом DPR) */
             state.view.scale = baseScale();
             state.selId = null; $('#quick').classList.add('hidden');
             state.dirty = false; lastSavedAt = new Date(data.updatedAt || Date.now());
@@ -5796,7 +5950,7 @@
         $('#btn100').onclick = function () {
             fitMode = 'free'; ensureSize();
             const c = s2w(W / 2, H / 2);
-            /* ИСПРАВЛЕНО: 100% = базовый коэффициент (с учётом DPR), а не «сырой» pxPerCm */
+            /* 100% = базовый коэффициент (с учётом DPR) */
             state.view.scale = baseScale();
             state.view.ox = W / 2 - c.x * state.view.scale; state.view.oy = H / 2 - c.y * state.view.scale;
             draw();
@@ -5896,10 +6050,8 @@
                 state.pxPerCm = clamp(v, 1, 40);
                 const newBase = baseScale();
                 if (fitMode !== 'free') {
-                    // Если активен режим вписывания — переприменяем его
                     applyFit(fitMode);
                 } else {
-                    // Свободный режим — корректируем масштаб, чтобы сохранить зум
                     if (oldBase > 0 && state.view.scale > 0) {
                         state.view.scale = state.view.scale * (newBase / oldBase);
                     }
@@ -5910,9 +6062,7 @@
         $('#gDpr').addEventListener('change', function (e) {
             const v = e.target.value;
             state.dprMode = (v === 'auto' || (isFinite(+v) && +v > 0)) ? v : 'auto';
-            /* ИСПРАВЛЕНО: при смене DPR буфер пересоздаётся, а затем принудительно
-            переприменяется активный режим отображения (включая 'origin').
-            Раньше для режимов 'free'/'origin' вид мог остаться рассинхронизированным. */
+            /* пересоздаём буфер с новым DPR и переприменяем активный режим отображения */
             const changed = ensureSize();
             if (FIT_MODES[fitMode]) {
                 applyFit(fitMode);
@@ -6300,8 +6450,7 @@
                     buildLibrary(); buildPresetsUI();
                 }
                 await loadUIPrefs();
-                /* ИСПРАВЛЕНО: стартовый масштаб = базовый коэффициент (с учётом DPR),
-                иначе при DPR>1 стартовый вид и последующий «Вписать» были рассинхронизированы */
+                /* стартовый масштаб = базовый коэффициент (с учётом DPR) */
                 state.view.scale = baseScale();
                 draw();
                 addPreset('tshirt', { silent: true });
