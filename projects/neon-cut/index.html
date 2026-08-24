@@ -3341,7 +3341,7 @@
             /* ---------- статусбар ---------- */
             const sz = $('#stZoom');
             if (sz) {
-                const pct = Math.round(state.view.scale / baseScale() * 100);
+                const pct = Math.round(state.view.scale / state.pxPerCm * 100);
                 const ppcm = state.view.scale.toFixed(1);
                 sz.textContent = `Масштаб: ${pct}% · 1 см = ${ppcm} px`;
                 sz.title = `Масштаб относительно базового коэффициента: ${pct}%
@@ -3962,7 +3962,7 @@
         }
         function reportFitResult(label, rect) {
             const scr = worldRectToScreen(rect);
-            const pct = Math.round(state.view.scale / baseScale() * 100);
+            const pct = Math.round(state.view.scale / state.pxPerCm * 100);
             toast(`${label}: ${Math.round(scr.w)}×${Math.round(scr.h)} px · мир ${fmt(rect.maxx - rect.minx)}×${fmt(rect.maxy - rect.miny)} см · масштаб ${pct}%`);
         }
         function focusOrigin() {
