@@ -1512,7 +1512,7 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.3</span></div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.4</span></div>
                 <div class="desc">Студия швейных выкроек: собери свою выкройку на холсте</div>
             </div>
         </div>
@@ -2047,6 +2047,13 @@
         function baseScale() {
             const px = Math.max(0.5, +state.pxPerCm || 6);
             return px * effDpr();
+        }
+        /* ИСПРАВЛЕНО: масштаб в процентах всегда считается от базового коэффициента (с учётом DPR).
+        Раньше делили на state.pxPerCm, из-за чего при DPR>1 проценты и режим 1:1 были рассинхронизированы
+        с фактическим масштабом, и «Вписать» визуально работал некорректно. */
+        function zoomPercent() {
+            const b = baseScale();
+            return b > 0 ? Math.round(state.view.scale / b * 100) : 100;
         }
         /* ============================ генераторы контуров (базовые) ============================ */
         function rectBuild(p) { return [['M', 0, 0], ['L', p.w, 0], ['L', p.w, p.h], ['L', 0, p.h], ['Z']]; }
@@ -2809,7 +2816,7 @@
         }
         function eventXY(e) { return clientToCanvas(e.clientX, e.clientY); }
         function s2w(sx, sy) {
-            const sc = state.view.scale || state.pxPerCm;
+            const sc = state.view.scale || baseScale();
             return { x: (sx - state.view.ox) / sc, y: (sy - state.view.oy) / sc };
         }
         function w2s(wx, wy) {
@@ -3335,11 +3342,12 @@
             drawPhysRuler();
             drawCursor();
             const eh = $('#emptyHint'); if (eh) eh.classList.toggle('hidden', state.pieces.length > 0);
-            const zl = $('#zoomLbl'); if (zl) zl.textContent = Math.round(state.view.scale / state.pxPerCm * 100) + '%';
+            /* ИСПРАВЛЕНО: процент масштаба считается от базового коэффициента (с учётом DPR) */
+            const zl = $('#zoomLbl'); if (zl) zl.textContent = zoomPercent() + '%';
             /* ---------- статусбар ---------- */
             const sz = $('#stZoom');
             if (sz) {
-                const pct = Math.round(state.view.scale / state.pxPerCm * 100);
+                const pct = zoomPercent();
                 const ppcm = state.view.scale.toFixed(1);
                 sz.textContent = `Масштаб: ${pct}% · 1 см = ${ppcm} px`;
                 sz.title = `Масштаб относительно базового коэффициента: ${pct}%
@@ -3960,7 +3968,8 @@
         }
         function reportFitResult(label, rect) {
             const scr = worldRectToScreen(rect);
-            const pct = Math.round(state.view.scale / state.pxPerCm * 100);
+            /* ИСПРАВЛЕНО: процент от базового коэффициента (с учётом DPR) */
+            const pct = zoomPercent();
             toast(`${label}: ${Math.round(scr.w)}×${Math.round(scr.h)} px · мир ${fmt(rect.maxx - rect.minx)}×${fmt(rect.maxy - rect.miny)} см · масштаб ${pct}%`);
         }
         function focusOrigin() {
@@ -4010,7 +4019,7 @@
         function zoomAt(px, py, f) {
             fitMode = 'free';
             const v = state.view, w = s2w(px, py);
-            v.scale = clamp(v.scale * f, 0.05, 120);
+            v.scale = clamp(v.scale * f, 0.05, 240);
             v.ox = px - w.x * v.scale; v.oy = py - w.y * v.scale;
             draw();
         }
@@ -5716,6 +5725,9 @@
             if (data.pxPerCm != null && isFinite(+data.pxPerCm)) state.pxPerCm = clamp(+data.pxPerCm, 1, 40);
             applyDprSetting(data);
             syncScaleUI();
+            /* ИСПРАВЛЕНО: при открытии проекта текущий масштаб пересчитывается от базового
+            коэффициента с учётом DPR, чтобы последующий fitView() был согласован с 100% */
+            state.view.scale = baseScale();
             state.selId = null; $('#quick').classList.add('hidden');
             state.dirty = false; lastSavedAt = new Date(data.updatedAt || Date.now());
             projOv.classList.remove('open');
@@ -5784,7 +5796,8 @@
         $('#btn100').onclick = function () {
             fitMode = 'free'; ensureSize();
             const c = s2w(W / 2, H / 2);
-            state.view.scale = state.pxPerCm;
+            /* ИСПРАВЛЕНО: 100% = базовый коэффициент (с учётом DPR), а не «сырой» pxPerCm */
+            state.view.scale = baseScale();
             state.view.ox = W / 2 - c.x * state.view.scale; state.view.oy = H / 2 - c.y * state.view.scale;
             draw();
         };
@@ -5897,10 +5910,18 @@
         $('#gDpr').addEventListener('change', function (e) {
             const v = e.target.value;
             state.dprMode = (v === 'auto' || (isFinite(+v) && +v > 0)) ? v : 'auto';
-            // пересоздаём буфер с новым DPR
-            ensureSize();
-            draw();
-            if (FIT_MODES[fitMode]) applyFit(fitMode);
+            /* ИСПРАВЛЕНО: при смене DPR буфер пересоздаётся, а затем принудительно
+            переприменяется активный режим отображения (включая 'origin').
+            Раньше для режимов 'free'/'origin' вид мог остаться рассинхронизированным. */
+            const changed = ensureSize();
+            if (FIT_MODES[fitMode]) {
+                applyFit(fitMode);
+            } else if (fitMode === 'origin') {
+                focusOrigin();
+            } else if (!changed) {
+                draw();
+            }
+            scheduleUISave();
             toast(`DPR: ${state.dprMode === 'auto' ? 'авто (' + (window.devicePixelRatio || 1) + ')' : '×' + state.dprMode}`);
         });
         $('#gLabels').addEventListener('change', function (e) {
@@ -6078,7 +6099,7 @@
                 const arr = [...pointers.values()];
                 const d = Math.hypot(arr[0].x - arr[1].x, arr[0].y - arr[1].y) || 1;
                 const midC = clientToCanvas((arr[0].x + arr[1].x) / 2, (arr[0].y + arr[1].y) / 2);
-                const ns = clamp(gesture.scale0 * (d / gesture.d0), 0.05, 120);
+                const ns = clamp(gesture.scale0 * (d / gesture.d0), 0.05, 240);
                 state.view.scale = ns;
                 state.view.ox = midC.x - gesture.w0.x * ns;
                 state.view.oy = midC.y - gesture.w0.y * ns;
@@ -6279,7 +6300,9 @@
                     buildLibrary(); buildPresetsUI();
                 }
                 await loadUIPrefs();
-                state.view.scale = state.pxPerCm;
+                /* ИСПРАВЛЕНО: стартовый масштаб = базовый коэффициент (с учётом DPR),
+                иначе при DPR>1 стартовый вид и последующий «Вписать» были рассинхронизированы */
+                state.view.scale = baseScale();
                 draw();
                 addPreset('tshirt', { silent: true });
                 state.dirty = false; updateStorageChip();
