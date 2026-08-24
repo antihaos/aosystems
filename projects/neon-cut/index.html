@@ -1512,10 +1512,8 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.2</span></div>
-                <div class="desc">Студия швейных выкроек: полный набор вариантов отображения (всё / детали /
-                    выбранная / ткань / ширина / высота) с точным расчётом масштаба и центрированием области в
-                    видимой зоне.</div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.22.3</span></div>
+                <div class="desc">Студия швейных выкроек: собери свою выкройку на холсте</div>
             </div>
         </div>
         <div class="head-actions">
@@ -5884,10 +5882,16 @@
                 const oldBase = baseScale();
                 state.pxPerCm = clamp(v, 1, 40);
                 const newBase = baseScale();
-                if (oldBase > 0 && state.view.scale > 0) {
-                    state.view.scale = state.view.scale * (newBase / oldBase);
+                if (fitMode !== 'free') {
+                    // Если активен режим вписывания — переприменяем его
+                    applyFit(fitMode);
+                } else {
+                    // Свободный режим — корректируем масштаб, чтобы сохранить зум
+                    if (oldBase > 0 && state.view.scale > 0) {
+                        state.view.scale = state.view.scale * (newBase / oldBase);
+                    }
+                    draw();
                 }
-                draw();
             }
         });
         $('#gDpr').addEventListener('change', function (e) {
