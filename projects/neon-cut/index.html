@@ -5786,7 +5786,7 @@
         $('#btn100').onclick = function () {
             fitMode = 'free'; ensureSize();
             const c = s2w(W / 2, H / 2);
-            state.view.scale = baseScale();
+            state.view.scale = state.pxPerCm;
             state.view.ox = W / 2 - c.x * state.view.scale; state.view.oy = H / 2 - c.y * state.view.scale;
             draw();
         };
@@ -6279,8 +6279,7 @@
                     buildLibrary(); buildPresetsUI();
                 }
                 await loadUIPrefs();
-                /* Начальный масштаб = базовому коэффициенту (100%) */
-                state.view.scale = baseScale();
+                state.view.scale = state.pxPerCm;
                 draw();
                 addPreset('tshirt', { silent: true });
                 state.dirty = false; updateStorageChip();
