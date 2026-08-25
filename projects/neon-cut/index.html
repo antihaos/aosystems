@@ -1805,7 +1805,13 @@
             background: #2f3866
         }
 
-        /* ---------- ПЕЧАТЬ: скрытие UI при печати, показ только #printSheet ---------- */
+        /* ---------- ПЕЧАТЬ: #printSheet — технический контейнер ----------
+Скрыт на экране, чтобы канвасы страниц не участвовали в раскладке
+и не ломали интерфейс приложения. Видим только в момент печати. */
+        #printSheet {
+            display: none;
+        }
+
         @media print {
 
             html,
@@ -1815,8 +1821,10 @@
                 padding: 0 !important;
                 overflow: visible !important;
                 height: auto !important;
+                display: block !important;
             }
 
+            /* Печатаем только содержимое #printSheet, весь UI скрываем */
             body>*:not(#printSheet) {
                 display: none !important;
             }
@@ -1824,10 +1832,7 @@
             #printSheet {
                 display: block !important;
                 position: static !important;
-                width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: #fff !important;
+                width: auto !important;
             }
 
             #printSheet canvas {
@@ -2008,7 +2013,7 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.24.4</span></div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.24.5</span></div>
                 <div class="desc">Студия швейных выкроек: собери свою выкройку на холсте</div>
             </div>
         </div>
@@ -2531,6 +2536,7 @@
                 <b>🖨 Печатная версия выкройки — лекала</b>
                 <span class="pr-head-summary" id="prHeadSummary"></span>
                 <button class="fs-btn" id="prFullscreen" title="Развернуть на весь экран">⛶</button>
+                <!-- <button class="btn primary pr-go" id="prGo" title="Открыть системный диалог печати">🖨 Печать…</button> -->
                 <button class="pr-head-print pr-go" id="prGoHead" title="Открыть системный диалог печати (Ctrl+P)">
                     <span>🖨</span><span>Печать</span>
                 </button>
@@ -2659,7 +2665,7 @@
             </div>
         </div>
     </div>
-    <!-- Контейнер печати: сюда переносятся канвасы страниц на время window.print() -->
+    <!-- Контейнер печати: скрыт на экране; клоны канвасов страниц помещаются сюда только на время window.print() -->
     <div id="printSheet"></div>
     <script>
         'use strict';
@@ -6315,6 +6321,14 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         let printCanvases = [];
         let printSheetInfo = null;
         let prTimer = null;
+        let printCleanupTimer = null, printFallbackTimer = null;
+        /*
+        * Сборка печатных листов.
+        * - совместно: точная упаковка деталей на листах (карта занятости 1 мм, поиск «дырок»,
+        *   варианты 0°/90° — выбирается позиция с минимальным y);
+        * - раздельно: каждая деталь с нового листа;
+        * - деталь крупнее листа разбивается на сетку листов с нахлёстом и метками совмещения.
+        */
         function buildPrintSheets(SW, SH, infos, opts) {
             const margin = opts.margin, gap = opts.gap, ov = opts.ov;
             const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
@@ -6631,12 +6645,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             }
             printCanvases.forEach((c, i) => {
                 const fig = document.createElement('div'); fig.className = 'pr-fig';
-                const th = document.createElement('div'); th.className = 'pr-thumb';
-                // Клонируем canvas, чтобы превью и печать использовали независимые элементы
-                const clone = document.createElement('canvas');
-                clone.width = c.width; clone.height = c.height;
-                clone.getContext('2d').drawImage(c, 0, 0);
-                th.appendChild(clone);
+                const th = document.createElement('div'); th.className = 'pr-thumb'; th.appendChild(c);
                 const cap = document.createElement('div'); cap.className = 'pr-cap';
                 cap.textContent = (printSheetInfo && printSheetInfo.captions && printSheetInfo.captions[i]) || ('Лист ' + (i + 1));
                 cap.title = cap.textContent;
@@ -6711,6 +6720,30 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         }
         function closePrintModal() {
             $('#printOverlay').classList.remove('open');
+            /* страховка: печатный контейнер должен быть пуст, интерфейс перерисован */
+            cleanupPrintDom();
+        }
+        /*
+        * Восстановление интерфейса после печати:
+        * - снимает служебный класс .printing;
+        * - полностью очищает #printSheet (удаляет клоны канвасов страниц);
+        * - сбрасывает динамический @page;
+        * - пересчитывает размер и перерисовывает основной холст, quick-панель.
+        * Функция идемпотентна — безопасно вызывать несколько раз.
+        */
+        function cleanupPrintDom() {
+            document.body.classList.remove('printing');
+            const holder = $('#printSheet');
+            if (holder) holder.innerHTML = '';
+            const ps = $('#printStyle');
+            if (ps) ps.textContent = '';
+            requestAnimationFrame(function () {
+                try {
+                    ensureSize();
+                    draw();
+                    positionQuick();
+                } catch (err) { /* ignore */ }
+            });
         }
         function doPrint() {
             if (prTimer) { clearTimeout(prTimer); prTimer = null; buildPreview(); }
@@ -6723,23 +6756,44 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 document.body.appendChild(holder);
             }
             holder.innerHTML = '';
-            // Клонируем canvas для печати — превью остаётся нетронутым,
-            // на печать уходят те же самые страницы, что в области предпросмотра
-            printCanvases.forEach(c => {
+            /*
+            * Важно: для печати создаются КЛОНЫ канвасов страниц.
+            * Оригиналы остаются в предпросмотре — интерфейс и превью не теряют
+            * свои элементы, а после печати клоны просто удаляются из #printSheet.
+            */
+            printCanvases.forEach(function (c) {
                 const clone = document.createElement('canvas');
                 clone.width = c.width;
                 clone.height = c.height;
                 clone.getContext('2d').drawImage(c, 0, 0);
                 clone.style.width = info.SW + 'mm';
                 clone.style.height = info.SH + 'mm';
-                clone.style.display = 'block';
                 holder.appendChild(clone);
             });
             const ps = $('#printStyle');
             if (ps) ps.textContent = `@page{size:${info.SW}mm ${info.SH}mm;margin:0}`;
+            document.body.classList.add('printing');
+            /* единая функция очистки: после диалога печати не должно остаться следов */
+            let done = false;
+            const cleanup = function () {
+                if (done) return;
+                done = true;
+                window.removeEventListener('afterprint', cleanup);
+                if (printCleanupTimer) { clearTimeout(printCleanupTimer); printCleanupTimer = null; }
+                if (printFallbackTimer) { clearTimeout(printFallbackTimer); printFallbackTimer = null; }
+                cleanupPrintDom();
+            };
+            window.addEventListener('afterprint', cleanup);
+            /* страховка на случай, если браузер не отправит afterprint */
+            printFallbackTimer = setTimeout(cleanup, 30000);
             toast(`🖨 Печать: ${printCanvases.length} лист(ов) · ${info.paperName} · ${info.scaleLabel} · ${info.separate ? 'раздельно' : 'совместно'}`);
-            // Небольшая задержка, чтобы браузер успел применить @page и стили
-            setTimeout(function () { window.print(); }, 80);
+            window.print();
+            /*
+            * В десктопных браузерах window.print() блокирующий: код ниже выполнится
+            * сразу после закрытия диалога печати. В неблокирующих (мобильных)
+            * очистку гарантированно выполнит afterprint.
+            */
+            printCleanupTimer = setTimeout(cleanup, 150);
         }
         /* обработчики печати */
         $('#btnPrint').onclick = openPrintModal;
@@ -6748,9 +6802,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         $('#prAll').onclick = function () { state.pieces.forEach(p => printSel.add(p.id)); buildPrintPieceList(); schedulePreview(); };
         $('#prNone').onclick = function () { printSel.clear(); buildPrintPieceList(); schedulePreview(); };
         $('#prPreviewBtn').onclick = function () { buildPreview(); };
-        // Обе кнопки печати (в заголовке и в секции Итог) вызывают одну функцию
         $('#prGo').onclick = doPrint;
-        $('#prGoHead').onclick = doPrint;
         $('#prFullscreen').onclick = function () {
             const m = $('#printModal');
             const fs = m.classList.toggle('fullscreen');
