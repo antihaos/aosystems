@@ -816,10 +816,12 @@
             font-size: 12px;
         }
 
+        /* панель настроек статусбара: живёт в #stage, чтобы не обрезаться
+скролл-контейнером статусбара; позиция по вертикали задаётся из JS */
         #statusPanel {
             position: absolute;
-            bottom: calc(100% + 8px);
             right: 12px;
+            bottom: 44px;
             z-index: 42;
             width: 256px;
             background: rgba(10, 12, 26, .97);
@@ -1739,7 +1741,7 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.24.0</span></div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.24.2</span></div>
                 <div class="desc">Студия швейных выкроек: собери свою выкройку на холсте</div>
             </div>
         </div>
@@ -1828,7 +1830,7 @@
                         title="Рекомендуемая длина ткани при заданной ширине">📏</button>
                 </div>
                 <span class="tsep"></span>
-                <button class="tbtn" id="btnPrint" title="Печатная версия выкройки: лекала на бумаге (Ctrl+P)">🖨
+                <button class="tbtn" id="btnPrint" title="Печатная версия выкройки — лекала на бумаге (Ctrl+P)">🖨
                     Печать</button>
                 <button class="tbtn danger-t" id="btnClear" title="Очистить холст">✕ Очистить</button>
                 <div id="gridPanel" class="hidden">
@@ -2051,24 +2053,26 @@
                     Инициализация…</span>
                 <button class="gear st-gear" id="btnStatusOpts"
                     title="Настройки статусбара: какие элементы показывать">⚙</button>
-                <div id="statusPanel" class="hidden">
-                    <div class="pop-title">Элементы статусбара</div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="sbCoords" checked> Координаты
-                            курсора</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="sbCount" checked> Количество
-                            деталей</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="sbZoom" checked> Масштаб и
-                            пикс/см</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="sbArea"> Видимая область и
-                            буфер</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="sbBounds"> Область
-                            контента</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="sbUiChip" checked> Чип
-                            настроек</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="sbStorageChip" checked> Чип
-                            хранилища</label></div>
-                    <div class="pop-note">Настройки сохраняются автоматически вместе с остальным интерфейсом.</div>
+            </div>
+            <!-- Панель настроек статусбара: размещена в #stage (вне скролл-контейнера статусбара),
+позиция над статусбаром задаётся из JS -->
+            <div id="statusPanel" class="hidden">
+                <div class="pop-title">Элементы статусбара</div>
+                <div class="pop-row"><label class="chk"><input type="checkbox" id="sbCoords" checked> Координаты
+                        курсора</label></div>
+                <div class="pop-row"><label class="chk"><input type="checkbox" id="sbCount" checked> Количество
+                        деталей</label></div>
+                <div class="pop-row"><label class="chk"><input type="checkbox" id="sbZoom" checked> Масштаб и
+                        пикс/см</label></div>
+                <div class="pop-row"><label class="chk"><input type="checkbox" id="sbArea"> Видимая область и
+                        буфер</label></div>
+                <div class="pop-row"><label class="chk"><input type="checkbox" id="sbBounds"> Область контента</label>
                 </div>
+                <div class="pop-row"><label class="chk"><input type="checkbox" id="sbUiChip" checked> Чип
+                        настроек</label></div>
+                <div class="pop-row"><label class="chk"><input type="checkbox" id="sbStorageChip" checked> Чип
+                        хранилища</label></div>
+                <div class="pop-note">Настройки сохраняются автоматически вместе с остальным интерфейсом.</div>
             </div>
         </section>
     </main>
@@ -2307,6 +2311,11 @@
                             <option value="fit">Вписать в лист</option>
                         </select>
                     </div>
+                    <div class="pr-sec-title">Размещение</div>
+                    <div class="pop-row"><label class="chk"><input type="checkbox" id="prSeparate"> Каждая деталь с
+                            нового листа</label></div>
+                    <div class="print-note">Если выключено — несколько деталей компактно размещаются на одном листе
+                        (полочная упаковка). Крупные детали в любом случае разбиваются на листы с нахлёстом.</div>
                     <div class="pr-sec-title">Разметка</div>
                     <div class="pop-row"><label class="chk"><input type="checkbox" id="prMarks" checked> Метки
                             совмещения листов</label></div>
@@ -2343,6 +2352,8 @@
             </div>
         </div>
     </div>
+    <!-- Контейнер печати: сюда переносятся канвасы страниц на время window.print() -->
+    <div id="printSheet"></div>
     <script>
         'use strict';
         function $(s) { return document.querySelector(s); }
@@ -2370,18 +2381,15 @@
         function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; }
         const PALETTE = ['#00e5ff', '#39ffa0', '#8b5cff', '#ff3df0', '#ffc24d', '#4d8bff', '#ff5c5c', '#e8ecff'];
         const CC = { cyan: '#00e5ff', grn: '#39ffa0', vio: '#8b5cff', mag: '#ff3df0', amb: '#ffc24d' };
-        /* Эффективный DPR: 'auto' — devicePixelRatio экрана, иначе фиксированный множитель из настроек. */
         function effDpr() {
             if (state.dprMode == null || state.dprMode === 'auto') return window.devicePixelRatio || 1;
             const m = +state.dprMode;
             return (isFinite(m) && m > 0) ? m : (window.devicePixelRatio || 1);
         }
-        /* Базовый масштаб: коэффициент перехода "мировые см → логические экранные пиксели". */
         function baseScale() {
             const px = Math.max(0.5, +state.pxPerCm || 6);
             return px * effDpr();
         }
-        /* Масштаб в процентах всегда считается от базового коэффициента (с учётом DPR) */
         function zoomPercent() {
             const b = baseScale();
             return b > 0 ? Math.round(state.view.scale / b * 100) : 100;
@@ -3048,7 +3056,6 @@
                 w: bb.w + 2 * s, h: bb.h + 2 * s
             };
         }
-        /* контур детали в мировых координатах (для измерений физической линейкой) */
         function worldPoly(p) {
             const b = p._bounds, cx = p.x + b.w / 2, cy = p.y + b.h / 2;
             const rad = p.rot * Math.PI / 180, cs = Math.cos(rad), sn = Math.sin(rad);
@@ -3088,8 +3095,15 @@
             if (state.fabricMode === 'piece' && (bb.miny < -0.01 || bb.maxy > state.fabricH + 0.01)) return true;
             return false;
         }
-        /* Смещение полигона наружу на d (см) — для печати припусков на швы.
-        Учитывает направление обхода, чтобы смещение всегда было внешним. */
+        /* Локальные точки контура для печати (с учётом зеркальности), нормализованные к (0,0) */
+        function printLocalPts(p) {
+            let pts = p._poly.map(q => [q[0], q[1]]);
+            if (p.mirror) { const b = p._bounds; pts = pts.map(q => [b.minx + b.maxx - q[0], q[1]]); }
+            let mnx = 1e9, mny = 1e9;
+            pts.forEach(q => { if (q[0] < mnx) mnx = q[0]; if (q[1] < mny) mny = q[1]; });
+            return pts.map(q => [q[0] - mnx, q[1] - mny]);
+        }
+        /* Смещение полигона наружу на d (см) — припуски на швы */
         function offsetPolyline(pts, d) {
             let A = 0;
             for (let i = 0; i < pts.length; i++) {
@@ -3129,14 +3143,12 @@
             pieceStyle: 'neon', fabricStyle: 'weave',
             show: { names: true, dims: true, grain: true, seam: true },
             physRuler: { on: false, x: 25, y: 20, angle: 0, len: 50, w: 5, tick: 1 },
-            /* Видимость элементов статусбара (настраивается через ⚙ в статусбаре) */
             statusOpts: { coords: true, count: true, zoom: true, area: false, bounds: false, uiChip: true, storageChip: true },
             project: { id: null, name: 'Новый проект' },
             dirty: false,
         };
         const STATUS_KEYS = ['coords', 'count', 'zoom', 'area', 'bounds', 'uiChip', 'storageChip'];
         let editorId = null, saving = false, lastSavedAt = null, storageFailedNoted = false, saveTimer = null, repackTimer = null;
-        /* fitMode: 'free' | 'fit' | 'pieces' | 'selected' | 'fabric' | 'fabW' | 'fabH' */
         let fitMode = 'fit';
         const FIT_MODES = { fit: 1, pieces: 1, selected: 1, fabric: 1, fabW: 1, fabH: 1 };
         const FIT_SHORT = {
@@ -3155,7 +3167,6 @@
             fabW: '⇤ По ширине',
             fabH: '⇕ По высоте'
         };
-        /* отложенный fit: применяется после завершения раскладки */
         let pendingFit = null;
         let ctrEd = null;
         let userTemplates = [];
@@ -3175,7 +3186,7 @@
             letter: { name: 'Letter', w: 216, h: 279 },
             legal: { name: 'Legal', w: 216, h: 356 }
         };
-        let printOpts = { format: 'a4', orient: 'auto', scale: '1', margin: 10, marks: true, seam: true, labels: true, calib: true };
+        let printOpts = { format: 'a4', orient: 'auto', scale: '1', margin: 10, separate: false, marks: true, seam: true, labels: true, calib: true };
         let printSel = new Set();
         let printCanvases = [];
         let printSheetInfo = null;
@@ -3216,6 +3227,18 @@
             $('#stSep2').classList.toggle('hidden', !(g2 && g3));
             const map = { sbCoords: 'coords', sbCount: 'count', sbZoom: 'zoom', sbArea: 'area', sbBounds: 'bounds', sbUiChip: 'uiChip', sbStorageChip: 'storageChip' };
             for (const id in map) { const el = $('#' + id); if (el) el.checked = !!o[map[id]]; }
+        }
+        /* Панель настроек статусбара: позиционируется над статусбаром внутри #stage,
+        чтобы не обрезаться скролл-контейнером (overflow-x) статусбара */
+        function toggleStatusPanel() {
+            const panel = $('#statusPanel');
+            if (!panel) return;
+            const willOpen = panel.classList.contains('hidden');
+            if (willOpen) {
+                const sb = $('#statusbar');
+                if (sb) panel.style.bottom = (sb.offsetHeight + 8) + 'px';
+            }
+            panel.classList.toggle('hidden');
         }
         /* ============================ видимая область холста ============================ */
         function toolbarPopReserve() {
@@ -3729,7 +3752,7 @@
             drawCursor();
             const eh = $('#emptyHint'); if (eh) eh.classList.toggle('hidden', state.pieces.length > 0);
             const zl = $('#zoomLbl'); if (zl) zl.textContent = zoomPercent() + '%';
-            /* ---------- статусбар: единый блок масштаба, без дублей ---------- */
+            /* ---------- статусбар ---------- */
             const sbO = state.statusOpts;
             if (sbO.zoom) {
                 const sz = $('#stZoom');
@@ -3747,7 +3770,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 if (sa) {
                     sa.innerHTML = `<span class="st-l">Область</span> ${Math.round(W)}×${Math.round(H)} px · буфер ${Math.round(W * dpr)}×${Math.round(H * dpr)} @${dpr}x`;
                     sa.title = `Видимая область: ${Math.round(W)}×${Math.round(H)} логических px
-Буфер канваса: ${Math.round(W * dpr)}×${Math.round(H * dpr)} физических px (DPR=${dpr})`;
+Буфер канваса: ${Math.round(W * dpr)}×${Math.round(H * dpr)} физических px (DPR=${dpr}, режим «${state.dprMode}»)`;
                 }
             }
             if (sbO.bounds) {
@@ -4165,7 +4188,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 }
             }
         }
-        /* ---------- настройки физической линейки ---------- */
         const rulerOv = $('#rulerOverlay');
         function syncRulerForm() {
             const r = state.physRuler;
@@ -4759,7 +4781,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             const step = steps.find(function (s) { return s * v.scale >= 46; }) || 1000;
             const minor = step / 5;
             cCtx.font = '600 8.5px "JetBrains Mono",monospace';
-            /* верхняя линейка (ось X) */
             const wl = (-v.ox) / v.scale, wr = (cW - v.ox) / v.scale;
             const i0 = Math.floor(wl / minor), i1 = Math.ceil(wr / minor);
             if (i1 - i0 <= 3000) {
@@ -4781,7 +4802,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                     }
                 }
             }
-            /* левая линейка (ось Y) */
             const wt = (-v.oy) / v.scale, wb = (cH - v.oy) / v.scale;
             const j0 = Math.floor(wt / minor), j1 = Math.ceil(wb / minor);
             if (j1 - j0 <= 3000) {
@@ -4807,7 +4827,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                     }
                 }
             }
-            /* маркеры курсора на линейках + значения координат */
             if (ctrEd.cursor && ctrEd.cursor.on) {
                 const cx = ctrEd.cursor.x, cy = ctrEd.cursor.y;
                 cCtx.strokeStyle = '#ff3df0';
@@ -5253,23 +5272,27 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             handle.addEventListener('pointercancel', endRs);
         })();
         /* ============================ ПЕЧАТЬ: реализация ============================ */
-        function printLocalPts(p) {
-            let pts = p._poly.map(q => [q[0], q[1]]);
-            if (p.mirror) { const b = p._bounds; pts = pts.map(q => [b.minx + b.maxx - q[0], q[1]]); }
-            let mnx = 1e9, mny = 1e9;
-            pts.forEach(q => { if (q[0] < mnx) mnx = q[0]; if (q[1] < mny) mny = q[1]; });
-            return pts.map(q => [q[0] - mnx, q[1] - mny]);
-        }
-        /* Рендер всех печатных страниц: возвращает { pages, SW, SH, paperName, orient, pieceCount, totalPages, truncated } */
+        /*
+         * Размещение деталей на печатных листах.
+         * - Режим «совместно» (prSeparate=false): полочная упаковка — на одном листе
+         *   размещается несколько деталей, пока они помещаются.
+         * - Режим «раздельно» (prSeparate=true): каждая деталь начинается с нового листа.
+         * - Деталь, которая не помещается на лист целиком, в любом случае разбивается
+         *   на сетку листов с нахлёстом (метки совмещения).
+         * - Масштаб «вписать в лист» всегда печатает деталь на отдельном листе.
+         */
         function renderPrintPages() {
             const pages = [];
             const sel = state.pieces.filter(p => printSel.has(p.id));
             const paper = PAPER_FORMATS[printOpts.format] || PAPER_FORMATS.a4;
             const margin = clamp(+printOpts.margin || 0, 0, 30);
-            const ov = 10; // нахлёст соседних листов, мм
-            const pxPerMm = 150 / 25.4; // разрешение печати ~150 dpi
+            const ov = 10;      // нахлёст соседних листов при разбиении крупной детали, мм
+            const gapMM = 5;    // зазор между деталями на одном листе, мм
+            const pxPerMm = 150 / 25.4;
             const mm = v => v * pxPerMm;
             const dimsFor = o => o === 'landscape' ? { SW: paper.h, SH: paper.w } : { SW: paper.w, SH: paper.h };
+            const combined = !printOpts.separate && printOpts.scale !== 'fit';
+
             function planFor(p, SW, SH) {
                 const b = p._bounds;
                 const wcm = Math.max(0.01, b.w), hcm = Math.max(0.01, b.h);
@@ -5283,150 +5306,255 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                     k = 10 / den;
                     scaleLabel = '1:' + den;
                 }
-                const wmm = wcm * k, hmm = hcm * k;
-                let cols = 1, rows = 1;
-                if (printOpts.scale !== 'fit') {
-                    const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
-                    if (wmm > usableW) cols = Math.max(1, Math.ceil((wmm - ov) / advX));
-                    if (hmm > usableH) rows = Math.max(1, Math.ceil((hmm - ov) / advY));
-                }
-                return { k: k, scaleLabel: scaleLabel, cols: cols, rows: rows, count: cols * rows, usableW: usableW, usableH: usableH };
+                return { k: k, scaleLabel: scaleLabel, wmm: wcm * k, hmm: hcm * k, usableW: usableW, usableH: usableH };
             }
+
             sel.forEach(rebuildPiece);
+
+            /* подготовка элементов: локальный контур, припуски */
+            const items = sel.map(p => {
+                const pts = printLocalPts(p);
+                const seamPts = (printOpts.seam && p.seam > 0) ? offsetPolyline(pts, p.seam) : null;
+                return { p: p, pts: pts, seamPts: seamPts, plan: null };
+            });
+
+            /* сборка листов для заданного размера листа */
+            function buildSheets(SW, SH) {
+                const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
+                const sheets = [];
+                const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
+                const mkSheet = () => ({ x: 0, y: 0, rowH: 0, items: [] });
+                /* разбиение детали на сетку листов */
+                function pushTiled(it, plan) {
+                    const cols = Math.max(1, Math.ceil((plan.wmm - ov) / advX));
+                    const rows = Math.max(1, Math.ceil((plan.hmm - ov) / advY));
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            sheets.push({ items: [{ it: it, x: 0, y: 0, plan: plan, tile: { col: c, row: r, cols: cols, rows: rows } }] });
+                        }
+                    }
+                }
+                if (!combined) {
+                    /* раздельно / вписать: каждая деталь — свои листы */
+                    for (const it of items) {
+                        const plan = planFor(it.p, SW, SH);
+                        it.plan = plan;
+                        if (plan.wmm <= usableW && plan.hmm <= usableH) {
+                            sheets.push({ items: [{ it: it, x: 0, y: 0, plan: plan }] });
+                        } else {
+                            pushTiled(it, plan);
+                        }
+                    }
+                    return sheets;
+                }
+                /* совместно: полочная упаковка (сортировка по высоте для плотности) */
+                const order = items.slice().sort((a, b) => b.p._bounds.h - a.p._bounds.h);
+                let sheet = mkSheet(); sheets.push(sheet);
+                for (const it of order) {
+                    const plan = planFor(it.p, SW, SH);
+                    it.plan = plan;
+                    if (plan.wmm > usableW || plan.hmm > usableH) { pushTiled(it, plan); continue; }
+                    const w = plan.wmm + gapMM, h = plan.hmm + gapMM;
+                    let pos = null;
+                    if (sheet.x + plan.wmm <= usableW + 1e-6) {
+                        pos = { x: sheet.x, y: sheet.y };
+                        sheet.x += w; sheet.rowH = Math.max(sheet.rowH, h);
+                    } else {
+                        const ny = sheet.y + sheet.rowH + gapMM;
+                        if (ny + plan.hmm <= usableH + 1e-6) {
+                            pos = { x: 0, y: ny };
+                            sheet.y = ny; sheet.x = w; sheet.rowH = h;
+                        }
+                    }
+                    if (!pos) {
+                        sheet = mkSheet(); sheets.push(sheet);
+                        pos = { x: 0, y: 0 };
+                        sheet.x = w; sheet.rowH = h;
+                    }
+                    sheet.items.push({ it: it, x: pos.x, y: pos.y, plan: plan });
+                }
+                return sheets;
+            }
+
+            /* выбор ориентации «авто»: меньше листов */
             let orient = printOpts.orient;
+            let sheetsArr;
             if (orient === 'auto') {
-                let cp = 0, cl = 0;
-                const d1 = dimsFor('portrait'), d2 = dimsFor('landscape');
-                sel.forEach(p => { cp += planFor(p, d1.SW, d1.SH).count; cl += planFor(p, d2.SW, d2.SH).count; });
-                orient = cl < cp ? 'landscape' : 'portrait';
+                const dP = dimsFor('portrait'), dL = dimsFor('landscape');
+                const sP = buildSheets(dP.SW, dP.SH);
+                const sL = buildSheets(dL.SW, dL.SH);
+                if (sL.length < sP.length) { orient = 'landscape'; sheetsArr = sL; }
+                else { orient = 'portrait'; sheetsArr = sP; }
+            } else {
+                const d = dimsFor(orient);
+                sheetsArr = buildSheets(d.SW, d.SH);
             }
             const dims = dimsFor(orient);
             const SW = dims.SW, SH = dims.SH;
             const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
-            const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
             const Wpx = Math.round(SW * pxPerMm), Hpx = Math.round(SH * pxPerMm);
-            const plans = sel.map(p => ({ p: p, plan: planFor(p, SW, SH) }));
-            const totalPages = plans.reduce((s, x) => s + x.plan.count, 0);
+            const totalPages = sheetsArr.length;
             const CAP = 120;
-            let pageNum = 0;
+            const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
+
+            /* крестик совмещения */
             function drawCrossAt(g, x, y) {
                 g.beginPath();
                 g.moveTo(x - mm(3), y); g.lineTo(x + mm(3), y);
                 g.moveTo(x, y - mm(3)); g.lineTo(x, y + mm(3));
                 g.stroke();
             }
-            for (const pl of plans) {
-                const p = pl.p, plan = pl.plan;
-                const pts = printLocalPts(p);
-                const seamPts = (printOpts.seam && p.seam > 0) ? offsetPolyline(pts, p.seam) : null;
-                for (let row = 0; row < plan.rows; row++) {
-                    for (let col = 0; col < plan.cols; col++) {
-                        if (pageNum >= CAP) break;
-                        pageNum++;
-                        const c = document.createElement('canvas');
-                        c.width = Wpx; c.height = Hpx;
-                        const g = c.getContext('2d');
-                        g.fillStyle = '#fff'; g.fillRect(0, 0, Wpx, Hpx);
-                        const x0 = col * advX, y0 = row * advY;
-                        const X = mx => mm(margin - x0 + mx);
-                        const Y = my => mm(margin - y0 + my);
-                        const k = plan.k;
-                        // припуск на шов (пунктир снаружи контура)
-                        if (seamPts) {
-                            g.strokeStyle = '#8a8f9c'; g.lineWidth = mm(0.3); g.setLineDash([mm(3), mm(2)]);
-                            g.beginPath();
-                            seamPts.forEach((q, i) => { const x = X(q[0] * k), y = Y(q[1] * k); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
-                            g.closePath(); g.stroke(); g.setLineDash([]);
-                        }
-                        // основной контур лекала
-                        g.strokeStyle = '#14161c'; g.lineWidth = mm(0.55); g.lineJoin = 'round';
-                        g.beginPath();
-                        pts.forEach((q, i) => { const x = X(q[0] * k), y = Y(q[1] * k); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
-                        g.closePath(); g.stroke();
-                        // долевая нить
-                        if (printOpts.labels) {
-                            const b = p._bounds;
-                            if (b.h * k > 15) {
-                                const gx = b.w / 2, gy1 = b.h * 0.25, gy2 = b.h * 0.75;
-                                const xg = X(gx * k), y1 = Y(gy1 * k), y2 = Y(gy2 * k);
-                                const ah = mm(2.5);
-                                g.strokeStyle = '#565b68'; g.lineWidth = mm(0.3);
-                                g.beginPath();
-                                g.moveTo(xg, y1); g.lineTo(xg, y2);
-                                g.moveTo(xg - ah, y1 + ah * 1.6); g.lineTo(xg, y1); g.lineTo(xg + ah, y1 + ah * 1.6);
-                                g.moveTo(xg - ah, y2 - ah * 1.6); g.lineTo(xg, y2); g.lineTo(xg + ah, y2 - ah * 1.6);
-                                g.stroke();
-                            }
-                        }
-                        // рамка печатной области листа
-                        g.strokeStyle = '#c9ced8'; g.lineWidth = mm(0.2);
-                        g.strokeRect(mm(margin), mm(margin), mm(usableW), mm(usableH));
-                        // метки совмещения листов
-                        if (printOpts.marks) {
-                            g.strokeStyle = '#9aa0ad'; g.lineWidth = mm(0.2); g.setLineDash([mm(2), mm(2)]);
-                            if (col > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin), mm(margin + usableH)); g.stroke(); }
-                            if (col < plan.cols - 1) { g.beginPath(); g.moveTo(mm(margin + usableW), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
-                            if (row > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin)); g.stroke(); }
-                            if (row < plan.rows - 1) { g.beginPath(); g.moveTo(mm(margin), mm(margin + usableH)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
-                            g.setLineDash([]);
-                            g.strokeStyle = '#2b2f38'; g.lineWidth = mm(0.35);
-                            const off = ov / 2;
-                            const cx0 = clamp(margin - off, 1, SW - 1), cx1 = clamp(margin + usableW + off, 1, SW - 1);
-                            const cy0 = clamp(margin - off, 1, SH - 1), cy1 = clamp(margin + usableH + off, 1, SH - 1);
-                            if (col > 0) for (let t = 0; t <= usableH + 1; t += 60) drawCrossAt(g, mm(cx0), mm(margin + Math.min(t, usableH)));
-                            if (col < plan.cols - 1) for (let t = 0; t <= usableH + 1; t += 60) drawCrossAt(g, mm(cx1), mm(margin + Math.min(t, usableH)));
-                            if (row > 0) for (let t = 0; t <= usableW + 1; t += 60) drawCrossAt(g, mm(margin + Math.min(t, usableW)), mm(cy0));
-                            if (row < plan.rows - 1) for (let t = 0; t <= usableW + 1; t += 60) drawCrossAt(g, mm(margin + Math.min(t, usableW)), mm(cy1));
-                            if (col > 0 && row > 0) drawCrossAt(g, mm(cx0), mm(cy0));
-                            if (col < plan.cols - 1 && row > 0) drawCrossAt(g, mm(cx1), mm(cy0));
-                            if (col > 0 && row < plan.rows - 1) drawCrossAt(g, mm(cx0), mm(cy1));
-                            if (col < plan.cols - 1 && row < plan.rows - 1) drawCrossAt(g, mm(cx1), mm(cy1));
-                        }
-                        // подписи и нумерация
-                        if (printOpts.labels) {
-                            const fs = mm(4);
-                            g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
-                            g.textAlign = 'left'; g.textBaseline = 'top';
-                            const l1 = p.name + (p.custom ? ' ✎' : '');
-                            const l2 = `Лист ${pageNum}/${totalPages} · ${paper.name} · ${plan.scaleLabel}`;
-                            const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(4);
-                            g.fillStyle = 'rgba(255,255,255,.92)';
-                            g.fillRect(mm(margin + 2), mm(margin + 2), bw, fs * 2 + mm(4));
-                            g.fillStyle = '#14161c';
-                            g.fillText(l1, mm(margin + 4), mm(margin + 4));
-                            g.fillText(l2, mm(margin + 4), mm(margin + 4) + fs + mm(1));
-                            const dTxt = `${fmt(p._bounds.w)}×${fmt(p._bounds.h)} см` + (seamPts ? ` · припуск ${fmt(p.seam)} см` : '');
-                            g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
-                            const dw = g.measureText(dTxt).width;
-                            g.fillStyle = 'rgba(255,255,255,.92)';
-                            g.fillRect(mm(margin + usableW) - dw - mm(4), mm(margin + usableH) - mm(6), dw + mm(3), mm(5));
-                            g.fillStyle = '#3a3f4a';
-                            g.fillText(dTxt, mm(margin + usableW) - dw - mm(2.5), mm(margin + usableH) - mm(5.5));
-                        }
-                        // калибровочный квадрат 10×10 см на первом листе детали
-                        if (printOpts.calib && col === 0 && row === 0 && usableW >= 120 && usableH >= 120) {
-                            const cs = 100;
-                            const csx = margin + usableW - cs - 5, csy = margin + usableH - cs - 5;
-                            g.strokeStyle = '#14161c'; g.lineWidth = mm(0.4);
-                            g.strokeRect(mm(csx), mm(csy), mm(cs), mm(cs));
-                            g.lineWidth = mm(0.2);
-                            g.beginPath();
-                            g.moveTo(mm(csx + cs / 2), mm(csy)); g.lineTo(mm(csx + cs / 2), mm(csy + cs));
-                            g.moveTo(mm(csx), mm(csy + cs / 2)); g.lineTo(mm(csx + cs), mm(csy + cs / 2));
-                            g.stroke();
-                            g.fillStyle = '#14161c'; g.font = '600 ' + mm(3.4) + 'px "JetBrains Mono",monospace';
-                            g.textAlign = 'center'; g.textBaseline = 'middle';
-                            g.fillText('проверка масштаба — 10 см', mm(csx + cs / 2), mm(csy + cs / 2));
-                            g.textAlign = 'left'; g.textBaseline = 'top';
-                        }
-                        pages.push(c);
-                    }
-                }
+            /* метки совмещения для листа-тайла крупной детали */
+            function drawTileMarks(g, tile) {
+                const col = tile.col, row = tile.row;
+                g.strokeStyle = '#9aa0ad'; g.lineWidth = mm(0.2); g.setLineDash([mm(2), mm(2)]);
+                if (col > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin), mm(margin + usableH)); g.stroke(); }
+                if (col < tile.cols - 1) { g.beginPath(); g.moveTo(mm(margin + usableW), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
+                if (row > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin)); g.stroke(); }
+                if (row < tile.rows - 1) { g.beginPath(); g.moveTo(mm(margin), mm(margin + usableH)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
+                g.setLineDash([]);
+                if (!printOpts.marks) return;
+                g.strokeStyle = '#2b2f38'; g.lineWidth = mm(0.35);
+                const off = ov / 2;
+                const cx0 = clamp(margin - off, 1, SW - 1), cx1 = clamp(margin + usableW + off, 1, SW - 1);
+                const cy0 = clamp(margin - off, 1, SH - 1), cy1 = clamp(margin + usableH + off, 1, SH - 1);
+                if (col > 0) for (let t = 0; t <= usableH + 1; t += 60) drawCrossAt(g, mm(cx0), mm(margin + Math.min(t, usableH)));
+                if (col < tile.cols - 1) for (let t = 0; t <= usableH + 1; t += 60) drawCrossAt(g, mm(cx1), mm(margin + Math.min(t, usableH)));
+                if (row > 0) for (let t = 0; t <= usableW + 1; t += 60) drawCrossAt(g, mm(margin + Math.min(t, usableW)), mm(cy0));
+                if (row < tile.rows - 1) for (let t = 0; t <= usableW + 1; t += 60) drawCrossAt(g, mm(margin + Math.min(t, usableW)), mm(cy1));
+                if (col > 0 && row > 0) drawCrossAt(g, mm(cx0), mm(cy0));
+                if (col < tile.cols - 1 && row > 0) drawCrossAt(g, mm(cx1), mm(cy0));
+                if (col > 0 && row < tile.rows - 1) drawCrossAt(g, mm(cx0), mm(cy1));
+                if (col < tile.cols - 1 && row < tile.rows - 1) drawCrossAt(g, mm(cx1), mm(cy1));
             }
+            /* компактная бирка детали (совместный режим) */
+            function drawPieceTag(g, X, Y, it) {
+                const fs = mm(3.4);
+                g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
+                g.textAlign = 'left'; g.textBaseline = 'top';
+                const l1 = it.p.name + (it.p.custom ? ' ✎' : '');
+                const l2 = `${fmt(it.p._bounds.w)}×${fmt(it.p._bounds.h)} см` + (it.seamPts ? ` +${fmt(it.p.seam)}` : '');
+                const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(3);
+                const bx = X(0) + mm(1.5), by = Y(0) + mm(1.5);
+                g.fillStyle = 'rgba(255,255,255,.9)';
+                g.fillRect(bx, by, bw, fs * 2 + mm(3));
+                g.fillStyle = '#14161c';
+                g.fillText(l1, bx + mm(1), by + mm(1));
+                g.fillText(l2, bx + mm(1), by + mm(1) + fs + mm(1));
+            }
+            /* полная шапка (раздельный режим / тайлы) */
+            function drawSheetHeader(g, X, Y, it, plan, pageNum) {
+                const fs = mm(4);
+                g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
+                g.textAlign = 'left'; g.textBaseline = 'top';
+                const l1 = it.p.name + (it.p.custom ? ' ✎' : '');
+                const l2 = `Лист ${pageNum}/${totalPages} · ${paper.name} · ${plan.scaleLabel}`;
+                const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(4);
+                g.fillStyle = 'rgba(255,255,255,.92)';
+                g.fillRect(X(0) + mm(1), Y(0) + mm(1), bw, fs * 2 + mm(4));
+                g.fillStyle = '#14161c';
+                g.fillText(l1, X(0) + mm(3), Y(0) + mm(3));
+                g.fillText(l2, X(0) + mm(3), Y(0) + mm(3) + fs + mm(1));
+            }
+            /* габариты в правом нижнем углу детали */
+            function drawDimsFooter(g, X, Y, it, plan) {
+                const dTxt = `${fmt(it.p._bounds.w)}×${fmt(it.p._bounds.h)} см` + (it.seamPts ? ` · припуск ${fmt(it.p.seam)} см` : '');
+                g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
+                const dw = g.measureText(dTxt).width;
+                const rx = X(plan.wmm), ry = Y(plan.hmm);
+                g.fillStyle = 'rgba(255,255,255,.92)';
+                g.fillRect(rx - dw - mm(4), ry - mm(6), dw + mm(3), mm(5));
+                g.fillStyle = '#3a3f4a';
+                g.fillText(dTxt, rx - dw - mm(2.5), ry - mm(5.5));
+            }
+
+            sheetsArr.forEach(function (sheet, si) {
+                if (si >= CAP) return;
+                const c = document.createElement('canvas');
+                c.width = Wpx; c.height = Hpx;
+                const g = c.getContext('2d');
+                g.fillStyle = '#fff'; g.fillRect(0, 0, Wpx, Hpx);
+                /* рамка печатной области */
+                g.strokeStyle = '#c9ced8'; g.lineWidth = mm(0.2);
+                g.strokeRect(mm(margin), mm(margin), mm(usableW), mm(usableH));
+                const multi = sheet.items.length > 1;
+                sheet.items.forEach(function (entry) {
+                    const it = entry.it, plan = entry.plan, tile = entry.tile || null;
+                    const k = plan.k;
+                    const tx = tile ? tile.col * advX : entry.x;
+                    const ty = tile ? tile.row * advY : entry.y;
+                    const ox = mm(margin + tx), oy = mm(margin + ty);
+                    const X = mx => ox + mm(mx);
+                    const Y = my => oy + mm(my);
+                    /* припуск на шов */
+                    if (it.seamPts) {
+                        g.strokeStyle = '#8a8f9c'; g.lineWidth = mm(0.3); g.setLineDash([mm(3), mm(2)]);
+                        g.beginPath();
+                        it.seamPts.forEach((q, i) => { const x = X(q[0] * k), y = Y(q[1] * k); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
+                        g.closePath(); g.stroke(); g.setLineDash([]);
+                    }
+                    /* контур лекала */
+                    g.strokeStyle = '#14161c'; g.lineWidth = mm(0.55); g.lineJoin = 'round';
+                    g.beginPath();
+                    it.pts.forEach((q, i) => { const x = X(q[0] * k), y = Y(q[1] * k); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
+                    g.closePath(); g.stroke();
+                    /* долевая и подписи */
+                    if (printOpts.labels) {
+                        const b = it.p._bounds;
+                        if (b.h * k > 15) {
+                            const gx = X((b.w / 2) * k), y1 = Y((b.h * 0.25) * k), y2 = Y((b.h * 0.75) * k);
+                            const ah = mm(2.5);
+                            g.strokeStyle = '#565b68'; g.lineWidth = mm(0.3);
+                            g.beginPath();
+                            g.moveTo(gx, y1); g.lineTo(gx, y2);
+                            g.moveTo(gx - ah, y1 + ah * 1.6); g.lineTo(gx, y1); g.lineTo(gx + ah, y1 + ah * 1.6);
+                            g.moveTo(gx - ah, y2 - ah * 1.6); g.lineTo(gx, y2); g.lineTo(gx + ah, y2 - ah * 1.6);
+                            g.stroke();
+                        }
+                        if (multi && !tile) {
+                            drawPieceTag(g, X, Y, it);
+                        } else {
+                            drawSheetHeader(g, X, Y, it, plan, si + 1);
+                            drawDimsFooter(g, X, Y, it, plan);
+                        }
+                    }
+                    /* метки совмещения для разбитых деталей */
+                    if (tile && (tile.cols > 1 || tile.rows > 1)) drawTileMarks(g, tile);
+                });
+                /* номер листа при совместном размещении */
+                if (multi && printOpts.labels) {
+                    const sLbl = sheet.items[0] ? sheet.items[0].plan.scaleLabel : '';
+                    g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
+                    const t = `Лист ${si + 1}/${totalPages} · ${paper.name} · ${sLbl}`;
+                    const tw = g.measureText(t).width;
+                    g.fillStyle = 'rgba(255,255,255,.9)';
+                    g.fillRect(mm(margin + usableW) - tw - mm(3), mm(margin) + mm(1), tw + mm(2), mm(4.5));
+                    g.fillStyle = '#3a3f4a'; g.textAlign = 'right'; g.textBaseline = 'top';
+                    g.fillText(t, mm(margin + usableW) - mm(2), mm(margin) + mm(1.8));
+                }
+                /* калибровочный квадрат на первом листе */
+                if (printOpts.calib && si === 0 && usableW >= 120 && usableH >= 120) {
+                    const cs = 100;
+                    const csx = margin + usableW - cs - 5, csy = margin + usableH - cs - 5;
+                    g.strokeStyle = '#14161c'; g.lineWidth = mm(0.4);
+                    g.strokeRect(mm(csx), mm(csy), mm(cs), mm(cs));
+                    g.lineWidth = mm(0.2);
+                    g.beginPath();
+                    g.moveTo(mm(csx + cs / 2), mm(csy)); g.lineTo(mm(csx + cs / 2), mm(csy + cs));
+                    g.moveTo(mm(csx), mm(csy + cs / 2)); g.lineTo(mm(csx + cs), mm(csy + cs / 2));
+                    g.stroke();
+                    g.fillStyle = '#14161c'; g.font = '600 ' + mm(3.4) + 'px "JetBrains Mono",monospace';
+                    g.textAlign = 'center'; g.textBaseline = 'middle';
+                    g.fillText('проверка масштаба — 10 см', mm(csx + cs / 2), mm(csy + cs / 2));
+                    g.textAlign = 'left'; g.textBaseline = 'top';
+                }
+                pages.push(c);
+            });
             return {
                 pages: pages, SW: SW, SH: SH, paperName: paper.name, orient: orient,
                 pieceCount: sel.length, totalPages: totalPages, truncated: totalPages > CAP,
-                scaleLabel: printOpts.scale === 'fit' ? 'в лист' : '1:' + Math.max(1, +printOpts.scale || 1)
+                scaleLabel: printOpts.scale === 'fit' ? 'в лист' : '1:' + Math.max(1, +printOpts.scale || 1),
+                separate: !combined
             };
         }
         function schedulePreview() {
@@ -5448,7 +5576,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 });
             }
             let sum = res.pages.length
-                ? `Деталей: ${res.pieceCount} · Листов: ${res.pages.length} · ${res.paperName} (${res.orient === 'landscape' ? 'альбомная' : 'книжная'}) · ${res.scaleLabel}`
+                ? `Деталей: ${res.pieceCount} · Листов: ${res.pages.length} · ${res.paperName} (${res.orient === 'landscape' ? 'альбомная' : 'книжная'}) · ${res.scaleLabel} · ${res.separate ? 'раздельно' : 'совместно'}`
                 : 'Нет деталей для печати';
             if (res.truncated) sum += ` · показаны первые 120 из ${res.totalPages}`;
             $('#prSummary').textContent = sum;
@@ -5459,6 +5587,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             $('#prOrient').value = printOpts.orient;
             $('#prScale').value = printOpts.scale;
             $('#prMargin').value = String(printOpts.margin);
+            $('#prSeparate').checked = !!printOpts.separate;
             $('#prMarks').checked = printOpts.marks;
             $('#prSeam').checked = printOpts.seam;
             $('#prLabels').checked = printOpts.labels;
@@ -5508,11 +5637,18 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 });
             }
         }
+        /* ИСПРАВЛЕНО: holder берётся из существующего контейнера #printSheet,
+        а при отсутствии — создаётся, чтобы печать не падала */
         function doPrint() {
             if (prTimer) { clearTimeout(prTimer); prTimer = null; buildPreview(); }
             if (!printCanvases.length) { toast('Нет листов для печати', 'warn'); return; }
             const info = printSheetInfo;
-            const holder = $('#printSheet');
+            let holder = $('#printSheet');
+            if (!holder) {
+                holder = document.createElement('div');
+                holder.id = 'printSheet';
+                document.body.appendChild(holder);
+            }
             holder.innerHTML = '';
             printCanvases.forEach(c => {
                 c.style.width = info.SW + 'mm';
@@ -5523,7 +5659,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             document.body.classList.add('printing');
             window.addEventListener('afterprint', restorePrintPages, { once: true });
             setTimeout(restorePrintPages, 2500);
-            toast(`🖨 Печать: ${printCanvases.length} лист(ов) · ${info.paperName} · ${info.scaleLabel}`);
+            toast(`🖨 Печать: ${printCanvases.length} лист(ов) · ${info.paperName} · ${info.scaleLabel} · ${info.separate ? 'раздельно' : 'совместно'}`);
             window.print();
         }
         /* ---------- обработчики печати ---------- */
@@ -5541,6 +5677,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             const v = parseFloat(e.target.value);
             if (isFinite(v)) { printOpts.margin = clamp(v, 0, 30); schedulePreview(); }
         });
+        $('#prSeparate').addEventListener('change', function (e) { printOpts.separate = e.target.checked; schedulePreview(); });
         $('#prMarks').addEventListener('change', function (e) { printOpts.marks = e.target.checked; schedulePreview(); });
         $('#prSeam').addEventListener('change', function (e) { printOpts.seam = e.target.checked; schedulePreview(); });
         $('#prLabels').addEventListener('change', function (e) { printOpts.labels = e.target.checked; schedulePreview(); });
@@ -5579,7 +5716,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         function currentProjectPayload() {
             return Object.assign(projectData(), { pxPerCm: state.pxPerCm, dprMode: state.dprMode, useDpr: state.dprMode !== '1' });
         }
-        /* ---------- окно экспорта ---------- */
         const exportOv = $('#exportOverlay');
         async function openExportModal() {
             $('#expCurLbl').textContent = `Текущий проект «${state.project.name || 'Без названия'}»`;
@@ -5647,7 +5783,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             downloadJson(data, 'neoncut-templates.json');
             toast('⇩ Шаблоны выгружены: ' + userTemplates.length + ' шт.');
         }
-        /* ---------- импорт ---------- */
         function validColor(c) {
             return (typeof c === 'string' && /^#[0-9a-fA-F]{6}$/i.test(c)) ? c : null;
         }
@@ -6307,7 +6442,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             'nAlgo', 'nRotMode', 'nAngleStep', 'nRefine', 'nVariants', 'nGap', 'nMargin',
             'vPieceStyle', 'vFabricStyle', 'vNames', 'vDims', 'vGrain', 'vSeam',
             'fabChk', 'fabMode', 'fabW', 'fabH',
-            'prFormat', 'prOrient', 'prScale', 'prMargin', 'prMarks', 'prSeam', 'prLabels', 'prCalib'
+            'prFormat', 'prOrient', 'prScale', 'prMargin', 'prSeparate', 'prMarks', 'prSeam', 'prLabels', 'prCalib'
         ]);
         let uiSaveTimer = null, uiSaving = false, lastUISavedAt = null;
         function collectUIPrefs() {
@@ -6391,6 +6526,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 if (po.orient === 'auto' || po.orient === 'portrait' || po.orient === 'landscape') printOpts.orient = po.orient;
                 if (['1', '2', '4', '8', 'fit'].indexOf(String(po.scale)) >= 0) printOpts.scale = String(po.scale);
                 if (isFinite(+po.margin)) printOpts.margin = clamp(+po.margin, 0, 30);
+                if (typeof po.separate === 'boolean') printOpts.separate = po.separate;
                 ['marks', 'seam', 'labels', 'calib'].forEach(function (k) {
                     if (typeof po[k] === 'boolean') printOpts[k] = po[k];
                 });
@@ -6464,9 +6600,11 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 scheduleUISave();
             });
         });
+        /* ИСПРАВЛЕНО: кнопка настроек статусбара открывает панель, размещённую в #stage
+        (вне скролл-контейнера статусбара), поэтому она больше не обрезается */
         $('#btnStatusOpts').addEventListener('click', function (e) {
             e.stopPropagation();
-            $('#statusPanel').classList.toggle('hidden');
+            toggleStatusPanel();
         });
         /* ============================ проекты ============================ */
         const projOv = $('#projOverlay');
@@ -6522,7 +6660,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             if (data.pxPerCm != null && isFinite(+data.pxPerCm)) state.pxPerCm = clamp(+data.pxPerCm, 1, 40);
             applyDprSetting(data);
             syncScaleUI();
-            /* текущий масштаб пересчитывается от базового коэффициента (с учётом DPR) */
+            /* текущий масштаб — от базового коэффициента (с учётом DPR) */
             state.view.scale = baseScale();
             state.selId = null; $('#quick').classList.add('hidden');
             state.dirty = false; lastSavedAt = new Date(data.updatedAt || Date.now());
@@ -6687,7 +6825,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             const v = parseFloat(e.target.value);
             if (isFinite(v)) state.gridOpts.snapStep = clamp(v, 0.1, 10);
         });
-        /* Обработчики коэффициента масштаба и DPR */
         $('#gPxCm').addEventListener('input', function (e) {
             const v = parseFloat(e.target.value);
             if (isFinite(v)) {
@@ -6707,7 +6844,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         $('#gDpr').addEventListener('change', function (e) {
             const v = e.target.value;
             state.dprMode = (v === 'auto' || (isFinite(+v) && +v > 0)) ? v : 'auto';
-            /* пересоздаём буфер с новым DPR и переприменяем активный режим отображения */
             const changed = ensureSize();
             if (FIT_MODES[fitMode]) {
                 applyFit(fitMode);
