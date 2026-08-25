@@ -1499,6 +1499,94 @@
             min-height: 16px;
         }
 
+        /* ---------- Кнопка печати (в секции Итог) ---------- */
+        .pr-print-btn {
+            padding: 13px 18px !important;
+            font: 700 13.5px var(--font-ui) !important;
+            letter-spacing: .5px;
+            margin-top: 2px;
+            gap: 10px !important;
+            background: linear-gradient(180deg, rgba(0, 229, 255, .22), rgba(0, 229, 255, .06)) !important;
+            border: 1px solid rgba(0, 229, 255, .65) !important;
+            color: #d6fbff !important;
+            box-shadow: 0 0 18px rgba(0, 229, 255, .28), inset 0 0 12px rgba(0, 229, 255, .08);
+            transition: .18s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pr-print-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(0, 229, 255, .18), transparent);
+            transform: translateX(-100%);
+            transition: transform .6s;
+        }
+
+        .pr-print-btn:hover:not(:disabled) {
+            border-color: rgba(0, 229, 255, .9) !important;
+            color: #fff !important;
+            box-shadow: 0 0 28px rgba(0, 229, 255, .55), inset 0 0 16px rgba(0, 229, 255, .14) !important;
+            transform: translateY(-1px);
+        }
+
+        .pr-print-btn:hover:not(:disabled)::before {
+            transform: translateX(100%);
+        }
+
+        .pr-print-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .pr-print-btn:disabled {
+            opacity: .4;
+            pointer-events: none;
+            filter: grayscale(.4);
+        }
+
+        .pr-print-btn .pr-print-ico {
+            font-size: 16px;
+            filter: drop-shadow(0 0 6px rgba(0, 229, 255, .6));
+        }
+
+        .pr-print-btn .pr-print-kbd {
+            margin-left: auto;
+            font: 600 9.5px var(--font-mono);
+            color: var(--dim);
+            border: 1px solid var(--line2);
+            border-radius: 4px;
+            padding: 2px 6px;
+            background: rgba(5, 6, 14, .5);
+        }
+
+        /* компактная кнопка в заголовке — только иконка */
+        .pr-head-print {
+            background: linear-gradient(180deg, rgba(0, 229, 255, .18), rgba(0, 229, 255, .04));
+            border: 1px solid rgba(0, 229, 255, .55);
+            color: #bffcff;
+            padding: 7px 12px !important;
+            font-size: 13px !important;
+            border-radius: 9px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: .16s;
+            margin-right: 4px;
+        }
+
+        .pr-head-print:hover:not(:disabled) {
+            border-color: rgba(0, 229, 255, .9);
+            box-shadow: 0 0 14px rgba(0, 229, 255, .45);
+            color: #fff;
+        }
+
+        .pr-head-print:disabled {
+            opacity: .4;
+            pointer-events: none;
+        }
+
         /* широкая область: сайдбар шире, секции параметров в две колонки */
         @container printbody (min-width: 700px) {
             .print-side {
@@ -1717,6 +1805,46 @@
             background: #2f3866
         }
 
+        /* ---------- ПЕЧАТЬ: скрытие UI при печати, показ только #printSheet ---------- */
+        @media print {
+
+            html,
+            body {
+                background: #fff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                height: auto !important;
+            }
+
+            body>*:not(#printSheet) {
+                display: none !important;
+            }
+
+            #printSheet {
+                display: block !important;
+                position: static !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            #printSheet canvas {
+                display: block !important;
+                margin: 0 !important;
+                page-break-after: always;
+                page-break-inside: avoid;
+                break-after: page;
+                break-inside: avoid;
+            }
+
+            #printSheet canvas:last-child {
+                page-break-after: auto;
+                break-after: auto;
+            }
+        }
+
         @media (max-width:860px) {
             aside {
                 position: fixed;
@@ -1853,6 +1981,10 @@
 
             .c-group .tbtn {
                 padding: 10px 10px
+            }
+
+            .pr-print-btn .pr-print-kbd {
+                display: none;
             }
         }
     </style>
@@ -2399,7 +2531,9 @@
                 <b>🖨 Печатная версия выкройки — лекала</b>
                 <span class="pr-head-summary" id="prHeadSummary"></span>
                 <button class="fs-btn" id="prFullscreen" title="Развернуть на весь экран">⛶</button>
-                <button class="btn primary pr-go" id="prGo" title="Открыть системный диалог печати">🖨 Печать…</button>
+                <button class="pr-head-print pr-go" id="prGoHead" title="Открыть системный диалог печати (Ctrl+P)">
+                    <span>🖨</span><span>Печать</span>
+                </button>
                 <button id="prClose" title="Закрыть">✕</button>
             </div>
             <div class="m-body print-body">
@@ -2498,6 +2632,12 @@
                         <div class="pr-summary" id="prSummary"></div>
                         <button class="btn wide-btn" id="prPreviewBtn" title="Пересчитать страницы">⟳ Обновить
                             предпросмотр</button>
+                        <button class="btn primary wide-btn pr-print-btn" id="prGo"
+                            title="Открыть системный диалог печати (Ctrl+P)">
+                            <span class="pr-print-ico">🖨</span>
+                            <span>Печать…</span>
+                            <span class="pr-print-kbd">Ctrl+P</span>
+                        </button>
                     </div>
                 </div>
                 <div class="print-preview" id="prPreview"></div>
@@ -6175,13 +6315,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         let printCanvases = [];
         let printSheetInfo = null;
         let prTimer = null;
-        /*
-         * Сборка печатных листов.
-         * - совместно: точная упаковка деталей на листах (карта занятости 1 мм, поиск «дырок»,
-         *   варианты 0°/90° — выбирается позиция с минимальным y);
-         * - раздельно: каждая деталь с нового листа;
-         * - деталь крупнее листа разбивается на сетку листов с нахлёстом и метками совмещения.
-         */
         function buildPrintSheets(SW, SH, infos, opts) {
             const margin = opts.margin, gap = opts.gap, ov = opts.ov;
             const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
@@ -6220,7 +6353,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             }
             if (combined && packItems.length) {
                 const gw = Math.floor(usableW), gh = Math.floor(usableH);
-                const order = packItems.slice().sort((a, b) => (b.w * b.h) - (a.w * b.h) || (b.h - a.h));
+                const order = packItems.slice().sort((a, b) => (b.w * b.h) - (a.w * a.h) || (b.h - a.h));
                 function rectFree(occ, x, y, w, h) {
                     for (let j = y; j < y + h; j++) {
                         const row = j * gw;
@@ -6498,7 +6631,12 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             }
             printCanvases.forEach((c, i) => {
                 const fig = document.createElement('div'); fig.className = 'pr-fig';
-                const th = document.createElement('div'); th.className = 'pr-thumb'; th.appendChild(c);
+                const th = document.createElement('div'); th.className = 'pr-thumb';
+                // Клонируем canvas, чтобы превью и печать использовали независимые элементы
+                const clone = document.createElement('canvas');
+                clone.width = c.width; clone.height = c.height;
+                clone.getContext('2d').drawImage(c, 0, 0);
+                th.appendChild(clone);
                 const cap = document.createElement('div'); cap.className = 'pr-cap';
                 cap.textContent = (printSheetInfo && printSheetInfo.captions && printSheetInfo.captions[i]) || ('Лист ' + (i + 1));
                 cap.title = cap.textContent;
@@ -6574,11 +6712,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         function closePrintModal() {
             $('#printOverlay').classList.remove('open');
         }
-        function restorePrintPages() {
-            if (!document.body.classList.contains('printing')) return;
-            document.body.classList.remove('printing');
-            mountPreview();
-        }
         function doPrint() {
             if (prTimer) { clearTimeout(prTimer); prTimer = null; buildPreview(); }
             if (!printCanvases.length) { toast('Нет листов для печати', 'warn'); return; }
@@ -6590,18 +6723,23 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 document.body.appendChild(holder);
             }
             holder.innerHTML = '';
+            // Клонируем canvas для печати — превью остаётся нетронутым,
+            // на печать уходят те же самые страницы, что в области предпросмотра
             printCanvases.forEach(c => {
-                c.style.width = info.SW + 'mm';
-                c.style.height = info.SH + 'mm';
-                holder.appendChild(c);
+                const clone = document.createElement('canvas');
+                clone.width = c.width;
+                clone.height = c.height;
+                clone.getContext('2d').drawImage(c, 0, 0);
+                clone.style.width = info.SW + 'mm';
+                clone.style.height = info.SH + 'mm';
+                clone.style.display = 'block';
+                holder.appendChild(clone);
             });
             const ps = $('#printStyle');
             if (ps) ps.textContent = `@page{size:${info.SW}mm ${info.SH}mm;margin:0}`;
-            document.body.classList.add('printing');
-            window.addEventListener('afterprint', restorePrintPages, { once: true });
-            setTimeout(restorePrintPages, 2500);
             toast(`🖨 Печать: ${printCanvases.length} лист(ов) · ${info.paperName} · ${info.scaleLabel} · ${info.separate ? 'раздельно' : 'совместно'}`);
-            window.print();
+            // Небольшая задержка, чтобы браузер успел применить @page и стили
+            setTimeout(function () { window.print(); }, 80);
         }
         /* обработчики печати */
         $('#btnPrint').onclick = openPrintModal;
@@ -6610,7 +6748,9 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         $('#prAll').onclick = function () { state.pieces.forEach(p => printSel.add(p.id)); buildPrintPieceList(); schedulePreview(); };
         $('#prNone').onclick = function () { printSel.clear(); buildPrintPieceList(); schedulePreview(); };
         $('#prPreviewBtn').onclick = function () { buildPreview(); };
+        // Обе кнопки печати (в заголовке и в секции Итог) вызывают одну функцию
         $('#prGo').onclick = doPrint;
+        $('#prGoHead').onclick = doPrint;
         $('#prFullscreen').onclick = function () {
             const m = $('#printModal');
             const fs = m.classList.toggle('fullscreen');
