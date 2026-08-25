@@ -816,8 +816,6 @@
             font-size: 12px;
         }
 
-        /* Панель настроек статусбара: живёт в #stage, чтобы не обрезаться
-скролл-контейнером статусбара; позиция по вертикали задаётся из JS */
         #statusPanel {
             position: absolute;
             right: 12px;
@@ -1341,7 +1339,7 @@
             color: var(--dim)
         }
 
-        /* ---------- печать: диалог с корректными зонами прокрутки ---------- */
+        /* ---------- печать: окно, адаптивный сайдбар, предпросмотр ---------- */
         #printOverlay .modal.print-modal {
             width: min(940px, 96vw);
             height: min(88vh, 780px);
@@ -1351,6 +1349,26 @@
             overflow: hidden;
         }
 
+        /* полноэкранный режим окна печати */
+        #printOverlay .modal.fullscreen {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0;
+            border: none;
+        }
+
+        .pr-head-summary {
+            font: 500 11px var(--font-mono);
+            color: var(--dim);
+            margin-right: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 380px;
+        }
+
         .print-body {
             flex: 1;
             min-height: 0;
@@ -1358,19 +1376,157 @@
             flex-direction: row;
             gap: 14px;
             overflow: hidden;
+            /* контейнер для адаптивной раскладки сайдбара под ширину окна печати */
+            container-name: printbody;
+            container-type: inline-size;
         }
 
         .print-side {
-            width: 272px;
+            width: clamp(240px, 32%, 340px);
             flex: none;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             min-height: 0;
             overflow-y: auto;
             overflow-x: hidden;
-            padding-right: 6px;
+            padding: 2px 8px 2px 0;
             scrollbar-width: thin;
+        }
+
+        .pr-section {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            min-width: 0;
+        }
+
+        .pr-sec-title {
+            font: 700 10px var(--font-ui);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--vio);
+            text-shadow: 0 0 6px rgba(139, 92, 255, .4);
+            position: sticky;
+            top: -2px;
+            z-index: 2;
+            background: linear-gradient(180deg, #0e1124 78%, rgba(14, 17, 36, 0));
+            padding: 2px 0 3px;
+        }
+
+        .pr-piece-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .pr-piece-actions .tbtn {
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+
+        .pr-count {
+            margin-left: auto;
+            font: 500 10px var(--font-mono);
+            color: var(--dim);
+            white-space: nowrap;
+        }
+
+        .pr-pieces {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 168px;
+            overflow-y: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 7px;
+            background: rgba(5, 6, 14, .4);
+            scrollbar-width: thin;
+        }
+
+        .pr-piece-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font: 500 11.5px var(--font-ui);
+            color: var(--txt);
+            cursor: pointer;
+            letter-spacing: 0;
+        }
+
+        .pr-piece-row small {
+            color: var(--dim);
+            font: 400 10px var(--font-mono);
+            margin-left: auto;
+        }
+
+        .print-side .pop-row {
+            gap: 8px;
+        }
+
+        .print-side .pop-row>label {
+            flex: none;
+        }
+
+        .print-side .pop-row select {
+            flex: 1;
+            width: auto;
+            min-width: 0;
+        }
+
+        .print-side .pop-row input[type=number] {
+            flex: 1;
+            width: auto;
+            min-width: 0;
+        }
+
+        .pr-grid2 {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .pr-note {
+            font: 400 9.5px/1.45 var(--font-ui);
+            color: var(--dim);
+        }
+
+        .pr-summary {
+            font: 500 11px/1.5 var(--font-mono);
+            color: var(--cyan);
+            min-height: 16px;
+        }
+
+        /* широкая область: сайдбар шире, секции параметров в две колонки */
+        @container printbody (min-width: 700px) {
+            .print-side {
+                width: clamp(300px, 37%, 440px);
+            }
+
+            .pr-grid2 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px 16px;
+                align-items: start;
+            }
+        }
+
+        /* очень широкая область (полный экран): крупнее предпросмотр */
+        @container printbody (min-width: 1100px) {
+            .print-side {
+                width: min(480px, 40%);
+            }
+
+            .pr-pieces {
+                max-height: 210px;
+            }
+
+            .pr-thumb canvas {
+                max-width: 250px;
+                max-height: 320px;
+            }
         }
 
         .print-preview {
@@ -1429,76 +1585,6 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             text-align: center;
-        }
-
-        .pr-sec-title {
-            font: 700 10px var(--font-ui);
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--vio);
-            margin-top: 6px;
-            text-shadow: 0 0 6px rgba(139, 92, 255, .4);
-        }
-
-        .pr-pieces {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            max-height: 170px;
-            overflow-y: auto;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 7px;
-            background: rgba(5, 6, 14, .4);
-            scrollbar-width: thin;
-        }
-
-        .pr-piece-row {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font: 500 11.5px var(--font-ui);
-            color: var(--txt);
-            cursor: pointer;
-            letter-spacing: 0;
-        }
-
-        .pr-piece-row small {
-            color: var(--dim);
-            font: 400 10px var(--font-mono);
-            margin-left: auto;
-        }
-
-        .pr-summary {
-            font: 500 11px/1.5 var(--font-mono);
-            color: var(--cyan);
-            padding: 4px 0;
-            min-height: 18px;
-        }
-
-        .print-note {
-            font: 400 10px/1.5 var(--font-ui);
-            color: var(--dim);
-        }
-
-        #printSheet {
-            display: none;
-        }
-
-        @media print {
-            body.printing>*:not(#printSheet) {
-                display: none !important;
-            }
-
-            #printSheet {
-                display: block !important;
-            }
-
-            #printSheet canvas {
-                display: block;
-                page-break-after: always;
-                break-after: page;
-            }
         }
 
         .proj {
@@ -1698,8 +1784,14 @@
             #printOverlay .modal.print-modal {
                 width: 100vw;
                 max-width: 100vw;
-                height: 84vh;
-                max-height: 84vh;
+                height: 86vh;
+                max-height: 86vh;
+            }
+
+            #printOverlay .modal.print-modal.fullscreen {
+                height: 100vh !important;
+                max-height: 100vh !important;
+                border-radius: 0;
             }
 
             .print-body {
@@ -1716,6 +1808,10 @@
             .print-preview {
                 flex: 1;
                 min-height: 120px;
+            }
+
+            .pr-head-summary {
+                display: none
             }
 
             #projName {
@@ -1780,7 +1876,7 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.24.3</span></div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.24.4</span></div>
                 <div class="desc">Студия швейных выкроек: собери свою выкройку на холсте</div>
             </div>
         </div>
@@ -2208,9 +2304,8 @@
                 </div>
                 <div id="cWrap"><canvas id="cCv"></canvas></div>
                 <div class="c-hint">Перетаскивайте точки · клик по линии — добавить точку · ПКМ по точке или Del —
-                    удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · 📐 линейки показывают координаты в
-                    см · 📏 Измерение (R): перетащите для замера или кликните по хорде, чтобы увидеть её размер, угол
-                    и Δx/Δy</div>
+                    удалить · колесо — масштаб · перетаскивание фона — сдвиг вида · 📏 Измерение (R): перетащите для
+                    замера или кликните по хорде, чтобы увидеть её размер, угол и Δx/Δy</div>
             </div>
             <div class="m-foot">
                 <span class="spacer"></span>
@@ -2297,90 +2392,113 @@
             </div>
         </div>
     </div>
-    <!-- Печатная версия выкройки -->
+    <!-- Печатная версия выкройки: полноэкранное окно + адаптивный сайдбар -->
     <div class="overlay" id="printOverlay">
-        <div class="modal print-modal">
-            <div class="m-head"><b>🖨 Печатная версия выкройки — лекала</b><button id="prClose"
-                    title="Закрыть">✕</button></div>
+        <div class="modal print-modal" id="printModal">
+            <div class="m-head">
+                <b>🖨 Печатная версия выкройки — лекала</b>
+                <span class="pr-head-summary" id="prHeadSummary"></span>
+                <button class="fs-btn" id="prFullscreen" title="Развернуть на весь экран">⛶</button>
+                <button class="btn primary pr-go" id="prGo" title="Открыть системный диалог печати">🖨 Печать…</button>
+                <button id="prClose" title="Закрыть">✕</button>
+            </div>
             <div class="m-body print-body">
                 <div class="print-side">
-                    <div class="pr-sec-title">Детали для печати</div>
-                    <div style="display:flex;gap:6px">
-                        <button class="tbtn" id="prAll" style="flex:1;justify-content:center"
-                            title="Отметить все детали">Все</button>
-                        <button class="tbtn" id="prNone" style="flex:1;justify-content:center"
-                            title="Снять все отметки">Ничего</button>
+                    <div class="pr-section">
+                        <div class="pr-sec-title">Детали для печати</div>
+                        <div class="pr-piece-actions">
+                            <button class="tbtn" id="prAll" title="Отметить все детали">Все</button>
+                            <button class="tbtn" id="prNone" title="Снять все отметки">Ничего</button>
+                            <span class="pr-count" id="prSelCount"></span>
+                        </div>
+                        <div class="pr-pieces" id="prPieces"></div>
                     </div>
-                    <div class="pr-pieces" id="prPieces"></div>
-                    <div class="pr-sec-title">Бумага</div>
-                    <div class="pop-row">
-                        <label>Формат</label>
-                        <select id="prFormat" title="Формат бумаги, мм">
-                            <option value="a4" selected>A4 · 210×297</option>
-                            <option value="a3">A3 · 297×420</option>
-                            <option value="a2">A2 · 420×594</option>
-                            <option value="a1">A1 · 594×841</option>
-                            <option value="a0">A0 · 841×1189</option>
-                            <option value="letter">Letter · 216×279</option>
-                            <option value="legal">Legal · 216×356</option>
-                        </select>
+                    <div class="pr-grid2">
+                        <div class="pr-section">
+                            <div class="pr-sec-title">Бумага</div>
+                            <div class="pop-row">
+                                <label>Формат</label>
+                                <select id="prFormat" title="Формат бумаги, мм">
+                                    <option value="a4" selected>A4 · 210×297</option>
+                                    <option value="a3">A3 · 297×420</option>
+                                    <option value="a2">A2 · 420×594</option>
+                                    <option value="a1">A1 · 594×841</option>
+                                    <option value="a0">A0 · 841×1189</option>
+                                    <option value="letter">Letter · 216×279</option>
+                                    <option value="legal">Legal · 216×356</option>
+                                </select>
+                            </div>
+                            <div class="pop-row">
+                                <label>Ориентация</label>
+                                <select id="prOrient" title="Авто — выбирает ориентацию с меньшим числом листов">
+                                    <option value="auto" selected>Авто</option>
+                                    <option value="portrait">Книжная</option>
+                                    <option value="landscape">Альбомная</option>
+                                </select>
+                            </div>
+                            <div class="pop-row">
+                                <label>Поля, мм</label>
+                                <input type="number" id="prMargin" value="10" min="0" max="30" step="1"
+                                    title="Непечатаемое поле листа; крупные детали будут разбиты на листы">
+                            </div>
+                        </div>
+                        <div class="pr-section">
+                            <div class="pr-sec-title">Масштаб</div>
+                            <div class="pop-row">
+                                <label>Масштаб</label>
+                                <select id="prScale" title="1:1 — натуральный размер для лекал">
+                                    <option value="1" selected>1:1 (натуральный)</option>
+                                    <option value="2">1:2</option>
+                                    <option value="4">1:4</option>
+                                    <option value="8">1:8</option>
+                                    <option value="fit">Вписать в лист</option>
+                                </select>
+                            </div>
+                            <div class="pr-note">Для лекал используйте 1:1 и проверьте калибровочный квадрат 10 см на
+                                первом
+                                листе.</div>
+                        </div>
+                        <div class="pr-section">
+                            <div class="pr-sec-title">Размещение</div>
+                            <div class="pop-row"><label class="chk"><input type="checkbox" id="prSeparate"> Каждая
+                                    деталь с
+                                    нового листа</label></div>
+                            <div class="pop-row">
+                                <label>Зазор, мм</label>
+                                <input type="number" id="prGap" value="5" min="0" max="20" step="1"
+                                    title="Минимальное расстояние между деталями на одном листе">
+                            </div>
+                            <div class="pop-row">
+                                <label>Нахлёст, мм</label>
+                                <input type="number" id="prOverlap" value="10" min="0" max="30" step="1"
+                                    title="Нахлёст соседних листов при разбиении крупной детали">
+                            </div>
+                            <div class="pr-note">Совместное размещение упаковывает несколько деталей на один лист (с
+                                поворотом
+                                на 90°, если так плотнее). Крупные детали разбиваются на сетку листов с нахлёстом —
+                                совмещайте по
+                                крестикам, обрезайте по пунктиру.</div>
+                        </div>
+                        <div class="pr-section">
+                            <div class="pr-sec-title">Разметка</div>
+                            <div class="pop-row"><label class="chk"><input type="checkbox" id="prMarks" checked> Метки
+                                    совмещения листов</label></div>
+                            <div class="pop-row"><label class="chk"><input type="checkbox" id="prSeam" checked> Припуски
+                                    на
+                                    швы (пунктир)</label></div>
+                            <div class="pop-row"><label class="chk"><input type="checkbox" id="prLabels" checked>
+                                    Подписи,
+                                    долевая, нумерация</label></div>
+                            <div class="pop-row"><label class="chk"><input type="checkbox" id="prCalib" checked>
+                                    Калибровочный квадрат 10 см</label></div>
+                        </div>
                     </div>
-                    <div class="pop-row">
-                        <label>Ориентация</label>
-                        <select id="prOrient" title="Авто — выбирает ориентацию с меньшим числом листов">
-                            <option value="auto" selected>Авто</option>
-                            <option value="portrait">Книжная</option>
-                            <option value="landscape">Альбомная</option>
-                        </select>
+                    <div class="pr-section">
+                        <div class="pr-sec-title">Итог</div>
+                        <div class="pr-summary" id="prSummary"></div>
+                        <button class="btn wide-btn" id="prPreviewBtn" title="Пересчитать страницы">⟳ Обновить
+                            предпросмотр</button>
                     </div>
-                    <div class="pop-row">
-                        <label>Поля, мм</label>
-                        <input type="number" id="prMargin" value="10" min="0" max="30" step="1"
-                            title="Непечатаемое поле листа; крупные детали будут разбиты на листы">
-                    </div>
-                    <div class="pr-sec-title">Масштаб</div>
-                    <div class="pop-row">
-                        <label>Масштаб</label>
-                        <select id="prScale" title="1:1 — натуральный размер для лекал">
-                            <option value="1" selected>1:1 (натуральный)</option>
-                            <option value="2">1:2</option>
-                            <option value="4">1:4</option>
-                            <option value="8">1:8</option>
-                            <option value="fit">Вписать в лист</option>
-                        </select>
-                    </div>
-                    <div class="pr-sec-title">Размещение</div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="prSeparate"> Каждая деталь с
-                            нового листа</label></div>
-                    <div class="pop-row">
-                        <label>Зазор деталей, мм</label>
-                        <input type="number" id="prGap" value="5" min="0" max="20" step="1"
-                            title="Минимальное расстояние между деталями на одном листе">
-                    </div>
-                    <div class="pop-row">
-                        <label>Нахлёст листов, мм</label>
-                        <input type="number" id="prOverlap" value="10" min="0" max="30" step="1"
-                            title="Нахлёст соседних листов при разбиении крупной детали">
-                    </div>
-                    <div class="print-note">Совместное размещение упаковывает несколько деталей на один лист (с
-                        поворотом
-                        на 90°, если так плотнее). Крупные детали в любом случае разбиваются на сетку листов с нахлёстом
-                        —
-                        совмещайте по крестикам, обрезайте по пунктиру.</div>
-                    <div class="pr-sec-title">Разметка</div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="prMarks" checked> Метки
-                            совмещения листов</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="prSeam" checked> Припуски на
-                            швы (пунктир)</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="prLabels" checked> Подписи,
-                            долевая, нумерация</label></div>
-                    <div class="pop-row"><label class="chk"><input type="checkbox" id="prCalib" checked>
-                            Калибровочный квадрат 10 см</label></div>
-                    <div class="pr-summary" id="prSummary"></div>
-                    <button class="btn primary wide-btn" id="prGo" title="Открыть системный диалог печати">🖨
-                        Печать…</button>
-                    <button class="btn wide-btn" id="prPreviewBtn" title="Пересчитать страницы">⟳ Обновить
-                        предпросмотр</button>
                 </div>
                 <div class="print-preview" id="prPreview"></div>
             </div>
@@ -3192,7 +3310,6 @@
             pieceStyle: 'neon', fabricStyle: 'weave',
             show: { names: true, dims: true, grain: true, seam: true },
             physRuler: { on: false, x: 25, y: 20, angle: 0, len: 50, w: 5, tick: 1 },
-            /* Видимость элементов статусбара (настраивается через ⚙ в статусбаре) */
             statusOpts: { coords: true, count: true, zoom: true, area: false, bounds: false, uiChip: true, storageChip: true },
             project: { id: null, name: 'Новый проект' },
             dirty: false,
@@ -3225,21 +3342,6 @@
         let W = 0, H = 0, dpr = 1;
         const mousePos = { x: 0, y: 0, on: false };
         const byId = id => state.pieces.find(p => p.id === id) || null;
-        /* ============================ ПЕЧАТЬ ЛЕКАЛ ============================ */
-        const PAPER_FORMATS = {
-            a4: { name: 'A4', w: 210, h: 297 },
-            a3: { name: 'A3', w: 297, h: 420 },
-            a2: { name: 'A2', w: 420, h: 594 },
-            a1: { name: 'A1', w: 594, h: 841 },
-            a0: { name: 'A0', w: 841, h: 1189 },
-            letter: { name: 'Letter', w: 216, h: 279 },
-            legal: { name: 'Legal', w: 216, h: 356 }
-        };
-        let printOpts = { format: 'a4', orient: 'auto', scale: '1', margin: 10, gap: 5, overlap: 10, separate: false, marks: true, seam: true, labels: true, calib: true };
-        let printSel = new Set();
-        let printCanvases = [];
-        let printSheetInfo = null;
-        let prTimer = null;
         function clientToCanvas(cx, cy) {
             const r = cv.getBoundingClientRect();
             const kx = r.width > 0 ? W / r.width : 1;
@@ -3259,7 +3361,7 @@
             const b = w2s(rect.maxx, rect.maxy);
             return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) };
         }
-        /* ============================ статусбар: видимость элементов ============================ */
+        /* ============================ статусбар: видимость ============================ */
         const STATUS_MAP = [
             { cb: '#sbCoords', el: '#stCoords', key: 'coords' },
             { cb: '#sbCount', el: '#stCount', key: 'count' },
@@ -3805,35 +3907,41 @@
             drawCursor();
             const eh = $('#emptyHint'); if (eh) eh.classList.toggle('hidden', state.pieces.length > 0);
             const zl = $('#zoomLbl'); if (zl) zl.textContent = zoomPercent() + '%';
-            /* ---------- статусбар: значения обновляются всегда, видимость — через классы ---------- */
-            const sz = $('#stZoom');
-            if (sz) {
-                const pct = zoomPercent();
-                const ppcm = state.view.scale.toFixed(1);
-                sz.innerHTML = `<span class="st-l">Масштаб</span> ${pct}% · ${ppcm} px/см`;
-                sz.title = `Масштаб относительно базового коэффициента: ${pct}%
+            const sbO = state.statusOpts;
+            if (sbO.zoom) {
+                const sz = $('#stZoom');
+                if (sz) {
+                    const pct = zoomPercent();
+                    const ppcm = state.view.scale.toFixed(1);
+                    sz.innerHTML = `<span class="st-l">Масштаб</span> ${pct}% · ${ppcm} px/см`;
+                    sz.title = `Масштаб относительно базового коэффициента: ${pct}%
 Базовый коэффициент (100%): ${baseScale().toFixed(2)} px/см
 DPR: ${effDpr()} (режим «${state.dprMode}»)`;
+                }
             }
-            const sa = $('#stArea');
-            if (sa) {
-                sa.innerHTML = `<span class="st-l">Область</span> ${Math.round(W)}×${Math.round(H)} px · буфер ${Math.round(W * dpr)}×${Math.round(H * dpr)} @${dpr}x`;
-                sa.title = `Видимая область: ${Math.round(W)}×${Math.round(H)} логических px
-Буфер канваса: ${Math.round(W * dpr)}×${Math.round(H * dpr)} физических px (DPR=${dpr}, режим «${state.dprMode}»)`;
+            if (sbO.area) {
+                const sa = $('#stArea');
+                if (sa) {
+                    sa.innerHTML = `<span class="st-l">Область</span> ${Math.round(W)}×${Math.round(H)} px · буфер ${Math.round(W * dpr)}×${Math.round(H * dpr)} @${dpr}x`;
+                    sa.title = `Видимая область: ${Math.round(W)}×${Math.round(H)} логических px
+Буфер канваса: ${Math.round(W * dpr)}×${Math.round(H * dpr)} физических px (DPR=${dpr})`;
+                }
             }
-            const sbEl = $('#stBounds');
-            if (sbEl) {
-                let rb = null;
-                if (state.pieces.length) rb = fitBounds();
-                else if (state.fabric) rb = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricMode === 'piece' ? state.fabricH : 100 };
-                if (rb) {
-                    const scr = worldRectToScreen(rb);
-                    sbEl.innerHTML = `<span class="st-l">Контент</span> ${Math.round(scr.w)}×${Math.round(scr.h)} px`;
-                    sbEl.title = `Рамка контента на экране: ${Math.round(scr.w)}×${Math.round(scr.h)} px
+            if (sbO.bounds) {
+                const sbEl = $('#stBounds');
+                if (sbEl) {
+                    let rb = null;
+                    if (state.pieces.length) rb = fitBounds();
+                    else if (state.fabric) rb = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricMode === 'piece' ? state.fabricH : 100 };
+                    if (rb) {
+                        const scr = worldRectToScreen(rb);
+                        sbEl.innerHTML = `<span class="st-l">Контент</span> ${Math.round(scr.w)}×${Math.round(scr.h)} px`;
+                        sbEl.title = `Рамка контента на экране: ${Math.round(scr.w)}×${Math.round(scr.h)} px
 В мировых координатах: ${fmt(rb.maxx - rb.minx)}×${fmt(rb.maxy - rb.miny)} см`;
-                } else {
-                    sbEl.textContent = 'Контент: —';
-                    sbEl.title = 'Холст пуст — нет деталей, ткань отключена';
+                    } else {
+                        sbEl.textContent = 'Контент: —';
+                        sbEl.title = 'Холст пуст — нет деталей, ткань отключена';
+                    }
                 }
             }
             let outN = 0; if (state.fabric) for (const p of state.pieces) if (outOfFabric(p)) outN++;
@@ -4804,88 +4912,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             if (ang > 180) ang = 360 - ang;
             return ang;
         }
-        function fmtRuler(v) {
-            const r = Math.round(v * 10) / 10;
-            return Number.isInteger(r) ? String(r) : r.toFixed(1);
-        }
-        function cDrawRulers() {
-            if (!ctrEd || !ctrEd.rulers) return;
-            const v = ctrEd.view;
-            const TH = 20, LW = 30;
-            cCtx.fillStyle = 'rgba(6,8,18,.92)';
-            cCtx.fillRect(0, 0, cW, TH);
-            cCtx.fillRect(0, 0, LW, cH);
-            cCtx.fillStyle = 'rgba(6,8,18,.97)';
-            cCtx.fillRect(0, 0, LW, TH);
-            cCtx.strokeStyle = 'rgba(0,229,255,.30)';
-            cCtx.lineWidth = 1;
-            cCtx.strokeRect(0.5, 0.5, LW - 1, TH - 1);
-            const steps = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
-            const step = steps.find(function (s) { return s * v.scale >= 46; }) || 1000;
-            const minor = step / 5;
-            cCtx.font = '600 8.5px "JetBrains Mono",monospace';
-            const wl = (-v.ox) / v.scale, wr = (cW - v.ox) / v.scale;
-            const i0 = Math.floor(wl / minor), i1 = Math.ceil(wr / minor);
-            if (i1 - i0 <= 3000) {
-                for (let i = i0; i <= i1; i++) {
-                    const xw = i * minor;
-                    const sx = xw * v.scale + v.ox;
-                    if (sx < LW || sx > cW) continue;
-                    const isMajor = Math.abs(xw / step - Math.round(xw / step)) < 1e-6;
-                    cCtx.strokeStyle = isMajor ? 'rgba(0,229,255,.65)' : 'rgba(110,130,255,.38)';
-                    cCtx.lineWidth = 1;
-                    cCtx.beginPath();
-                    cCtx.moveTo(sx, TH);
-                    cCtx.lineTo(sx, TH - (isMajor ? 9 : 5));
-                    cCtx.stroke();
-                    if (isMajor) {
-                        cCtx.fillStyle = Math.abs(xw) < 1e-9 ? '#39ffa0' : 'rgba(158,247,255,.85)';
-                        cCtx.textAlign = 'left'; cCtx.textBaseline = 'top';
-                        cCtx.fillText(fmtRuler(xw), sx + 3, 4);
-                    }
-                }
-            }
-            const wt = (-v.oy) / v.scale, wb = (cH - v.oy) / v.scale;
-            const j0 = Math.floor(wt / minor), j1 = Math.ceil(wb / minor);
-            if (j1 - j0 <= 3000) {
-                for (let j = j0; j <= j1; j++) {
-                    const yw = j * minor;
-                    const sy = yw * v.scale + v.oy;
-                    if (sy < TH || sy > cH) continue;
-                    const isMajor = Math.abs(yw / step - Math.round(yw / step)) < 1e-6;
-                    cCtx.strokeStyle = isMajor ? 'rgba(0,229,255,.65)' : 'rgba(110,130,255,.38)';
-                    cCtx.lineWidth = 1;
-                    cCtx.beginPath();
-                    cCtx.moveTo(LW, sy);
-                    cCtx.lineTo(LW - (isMajor ? 9 : 5), sy);
-                    cCtx.stroke();
-                    if (isMajor) {
-                        cCtx.save();
-                        cCtx.translate(LW - 11, sy + 3);
-                        cCtx.rotate(-Math.PI / 2);
-                        cCtx.textAlign = 'right'; cCtx.textBaseline = 'top';
-                        cCtx.fillStyle = Math.abs(yw) < 1e-9 ? '#39ffa0' : 'rgba(158,247,255,.85)';
-                        cCtx.fillText(fmtRuler(yw), 0, 0);
-                        cCtx.restore();
-                    }
-                }
-            }
-            if (ctrEd.cursor && ctrEd.cursor.on) {
-                const cx = ctrEd.cursor.x, cy = ctrEd.cursor.y;
-                cCtx.strokeStyle = '#ff3df0';
-                cCtx.lineWidth = 1.2;
-                cCtx.beginPath();
-                cCtx.moveTo(cx, 1); cCtx.lineTo(cx, TH - 1);
-                cCtx.moveTo(1, cy); cCtx.lineTo(LW - 1, cy);
-                cCtx.stroke();
-                const wpt = cS2W(cx, cy);
-                cCtx.font = '700 9px "JetBrains Mono",monospace';
-                cCtx.fillStyle = '#ff9df4';
-                cCtx.textAlign = 'left'; cCtx.textBaseline = 'top';
-                cCtx.fillText(fmtRuler(wpt.x), Math.min(cx + 4, cW - 34), 5);
-                cCtx.fillText(fmtRuler(wpt.y), LW + 4, clamp(cy - 5, TH + 2, cH - 13));
-            }
-        }
         function drawRulerOverlay() {
             if (!ctrEd) return;
             const items = ctrEd.rulerPins.slice();
@@ -4986,7 +5012,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 rulers: true, cursor: { x: 0, y: 0, on: false }
             };
             const rb = $('#cRuler'); if (rb) rb.classList.remove('active');
-            const ru = $('#cRulers'); if (ru) ru.classList.add('active');
             $('#cTitle').textContent = 'Редактор контура · ' + p.name;
             contourOverlay.classList.add('open');
             cResize();
@@ -5109,7 +5134,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             });
             drawRulerOverlay();
             drawChordSel();
-            cDrawRulers();
+            cDrawRulersEditor();
             const un = $('#cUndoN');
             if (un) {
                 un.textContent = String(ctrEd.undo.length);
@@ -5124,6 +5149,88 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 hoverTxt += ` · 📏 режим измерения`;
             }
             $('#cStatus').textContent = `точек: ${ctrEd.pts.length} · ${fmt(bb.w)}×${fmt(bb.h)} см${hoverTxt}`;
+        }
+        function fmtRuler(v) {
+            const r = Math.round(v * 10) / 10;
+            return Number.isInteger(r) ? String(r) : r.toFixed(1);
+        }
+        function cDrawRulersEditor() {
+            if (!ctrEd || !ctrEd.rulers) return;
+            const v = ctrEd.view;
+            const TH = 20, LW = 30;
+            cCtx.fillStyle = 'rgba(6,8,18,.92)';
+            cCtx.fillRect(0, 0, cW, TH);
+            cCtx.fillRect(0, 0, LW, cH);
+            cCtx.fillStyle = 'rgba(6,8,18,.97)';
+            cCtx.fillRect(0, 0, LW, TH);
+            cCtx.strokeStyle = 'rgba(0,229,255,.30)';
+            cCtx.lineWidth = 1;
+            cCtx.strokeRect(0.5, 0.5, LW - 1, TH - 1);
+            const steps = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+            const step = steps.find(function (s) { return s * v.scale >= 46; }) || 1000;
+            const minor = step / 5;
+            cCtx.font = '600 8.5px "JetBrains Mono",monospace';
+            const wl = (-v.ox) / v.scale, wr = (cW - v.ox) / v.scale;
+            const i0 = Math.floor(wl / minor), i1 = Math.ceil(wr / minor);
+            if (i1 - i0 <= 3000) {
+                for (let i = i0; i <= i1; i++) {
+                    const xw = i * minor;
+                    const sx = xw * v.scale + v.ox;
+                    if (sx < LW || sx > cW) continue;
+                    const isMajor = Math.abs(xw / step - Math.round(xw / step)) < 1e-6;
+                    cCtx.strokeStyle = isMajor ? 'rgba(0,229,255,.65)' : 'rgba(110,130,255,.38)';
+                    cCtx.lineWidth = 1;
+                    cCtx.beginPath();
+                    cCtx.moveTo(sx, TH);
+                    cCtx.lineTo(sx, TH - (isMajor ? 9 : 5));
+                    cCtx.stroke();
+                    if (isMajor) {
+                        cCtx.fillStyle = Math.abs(xw) < 1e-9 ? '#39ffa0' : 'rgba(158,247,255,.85)';
+                        cCtx.textAlign = 'left'; cCtx.textBaseline = 'top';
+                        cCtx.fillText(fmtRuler(xw), sx + 3, 4);
+                    }
+                }
+            }
+            const wt = (-v.oy) / v.scale, wb = (cH - v.oy) / v.scale;
+            const j0 = Math.floor(wt / minor), j1 = Math.ceil(wb / minor);
+            if (j1 - j0 <= 3000) {
+                for (let j = j0; j <= j1; j++) {
+                    const yw = j * minor;
+                    const sy = yw * v.scale + v.oy;
+                    if (sy < TH || sy > cH) continue;
+                    const isMajor = Math.abs(yw / step - Math.round(yw / step)) < 1e-6;
+                    cCtx.strokeStyle = isMajor ? 'rgba(0,229,255,.65)' : 'rgba(110,130,255,.38)';
+                    cCtx.lineWidth = 1;
+                    cCtx.beginPath();
+                    cCtx.moveTo(LW, sy);
+                    cCtx.lineTo(LW - (isMajor ? 9 : 5), sy);
+                    cCtx.stroke();
+                    if (isMajor) {
+                        cCtx.save();
+                        cCtx.translate(LW - 11, sy + 3);
+                        cCtx.rotate(-Math.PI / 2);
+                        cCtx.textAlign = 'right'; cCtx.textBaseline = 'top';
+                        cCtx.fillStyle = Math.abs(yw) < 1e-9 ? '#39ffa0' : 'rgba(158,247,255,.85)';
+                        cCtx.fillText(fmtRuler(yw), 0, 0);
+                        cCtx.restore();
+                    }
+                }
+            }
+            if (ctrEd.cursor && ctrEd.cursor.on) {
+                const cx = ctrEd.cursor.x, cy = ctrEd.cursor.y;
+                cCtx.strokeStyle = '#ff3df0';
+                cCtx.lineWidth = 1.2;
+                cCtx.beginPath();
+                cCtx.moveTo(cx, 1); cCtx.lineTo(cx, TH - 1);
+                cCtx.moveTo(1, cy); cCtx.lineTo(LW - 1, cy);
+                cCtx.stroke();
+                const wpt = cS2W(cx, cy);
+                cCtx.font = '700 9px "JetBrains Mono",monospace';
+                cCtx.fillStyle = '#ff9df4';
+                cCtx.textAlign = 'left'; cCtx.textBaseline = 'top';
+                cCtx.fillText(fmtRuler(wpt.x), Math.min(cx + 4, cW - 34), 5);
+                cCtx.fillText(fmtRuler(wpt.y), LW + 4, clamp(cy - 5, TH + 2, cH - 13));
+            }
         }
         function cPickPoint(sx, sy) {
             let best = -1, bd = 1e9;
@@ -5314,496 +5421,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             handle.addEventListener('pointerup', endRs);
             handle.addEventListener('pointercancel', endRs);
         })();
-        /* ============================ ПЕЧАТЬ: упаковка по листам ============================ */
-        /*
-         * Точная упаковка прямоугольников по листам (разрешение 1 мм, карта занятости).
-         * - детали сортируются по убыванию площади;
-         * - для каждой детали ищется место на уже открытых листах (перебор позиций
-         *   сверху-влево, поиск «дырок»), с вариантами 0° и 90°;
-         * - выбирается позиция с минимальным y (ниже = меньше высота стопы листов);
-         * - если ни на одном листе нет места — открывается новый лист.
-         */
-        function packRects(items, usableW, usableH, gap) {
-            const gw = Math.max(1, Math.floor(usableW)), gh = Math.max(1, Math.floor(usableH));
-            const sheets = [];
-            const order = items.slice().sort((a, b) => (b.w * b.h) - (a.w * a.h) || (b.h - a.h));
-            function rectFree(occ, x, y, w, h) {
-                for (let j = y; j < y + h; j++) {
-                    const row = j * gw;
-                    for (let i = x; i < x + w; i++) {
-                        if (occ[row + i]) return false;
-                    }
-                }
-                return true;
-            }
-            function findSpot(occ, bw, bh) {
-                if (bw > gw || bh > gh) return null;
-                for (let y = 0; y <= gh - bh; y++) {
-                    let x = 0;
-                    while (x <= gw - bw) {
-                        let ok = true, jump = 1;
-                        let foundI = 0, foundJ = 0;
-                        scan:
-                        for (let j = y; j < y + bh; j++) {
-                            const row = j * gw;
-                            for (let i = 0; i < bw; i++) {
-                                if (occ[row + x + i]) { ok = false; jump = i + 1; foundI = i; foundJ = j; break scan; }
-                            }
-                        }
-                        if (ok) return { x: x, y: y };
-                        x += jump;
-                        if (foundI === 0 && foundJ > y) break;
-                    }
-                }
-                return null;
-            }
-            function mark(occ, x, y, w, h) {
-                for (let j = y; j < y + h; j++) {
-                    const row = j * gw;
-                    for (let i = x; i < x + w; i++) occ[row + i] = 1;
-                }
-            }
-            for (const it of order) {
-                let best = null;
-                for (let si = 0; si < sheets.length; si++) {
-                    const sh = sheets[si];
-                    for (const rot of [0, 1]) {
-                        const w = rot ? it.h : it.w, h = rot ? it.w : it.h;
-                        const bw = Math.ceil(w + gap), bh = Math.ceil(h + gap);
-                        if (bw > gw || bh > gh) continue;
-                        const pos = findSpot(sh.occ, bw, bh);
-                        if (!pos) continue;
-                        if (!best || pos.y < best.pos.y || (pos.y === best.pos.y && pos.x < best.pos.x)) {
-                            best = { si: si, pos: pos, rot: rot, w: w, h: h };
-                        }
-                    }
-                }
-                if (!best) {
-                    const sh = { occ: new Uint8Array(gw * gh), placed: [] };
-                    sheets.push(sh);
-                    let rot = 0;
-                    const bw0 = Math.ceil(it.w + gap), bh0 = Math.ceil(it.h + gap);
-                    const bw1 = Math.ceil(it.h + gap), bh1 = Math.ceil(it.w + gap);
-                    const f0 = bw0 <= gw && bh0 <= gh, f1 = bw1 <= gw && bh1 <= gh;
-                    if (f0 && f1) rot = (bh1 < bh0 || (bh1 === bh0 && bw1 < bw0)) ? 1 : 0;
-                    else if (!f0 && f1) rot = 1;
-                    const w = rot ? it.h : it.w, h = rot ? it.w : it.h;
-                    best = { si: sheets.length - 1, pos: { x: 0, y: 0 }, rot: rot, w: w, h: h };
-                }
-                const sh = sheets[best.si];
-                mark(sh.occ, best.pos.x, best.pos.y, Math.ceil(best.w + gap), Math.ceil(best.h + gap));
-                sh.placed.push({ item: it, x: best.pos.x, y: best.pos.y, rot: best.rot, w: best.w, h: best.h });
-            }
-            return sheets;
-        }
-        /* Сборка печатных страниц для заданного размера листа */
-        function buildPrintSheets(SW, SH, infos, opts) {
-            const margin = opts.margin, gap = opts.gap, ov = opts.ov;
-            const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
-            const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
-            const den = Math.max(1, +opts.scale || 1);
-            const combined = !opts.separate && opts.scale !== 'fit';
-            const sheets = [];
-            const packItems = [];
-            for (const info of infos) {
-                let k, scaleLabel;
-                if (opts.scale === 'fit') {
-                    k = Math.min(usableW / info.wcm, usableH / info.hcm);
-                    scaleLabel = 'в лист ≈1:' + Math.max(1, 10 / k).toFixed(1);
-                } else {
-                    k = 10 / den;
-                    scaleLabel = '1:' + den;
-                }
-                info.k = k; info.wmm = info.wcm * k; info.hmm = info.hcm * k; info.scaleLabel = scaleLabel;
-                const fits0 = info.wmm <= usableW && info.hmm <= usableH;
-                const fits90 = info.hmm <= usableW && info.wmm <= usableH;
-                if (fits0 || fits90) {
-                    if (combined) {
-                        packItems.push({ w: info.wmm, h: info.hmm, info: info });
-                    } else {
-                        sheets.push({ entries: [{ info: info, x: 0, y: 0, rot: fits0 ? 0 : 1, boxW: fits0 ? info.wmm : info.hmm, boxH: fits0 ? info.hmm : info.wmm }] });
-                    }
-                } else {
-                    /* деталь не помещается ни в одной ориентации — разбиваем на сетку листов с нахлёстом */
-                    const cols = Math.max(1, Math.ceil((info.wmm - ov) / advX));
-                    const rows = Math.max(1, Math.ceil((info.hmm - ov) / advY));
-                    for (let r = 0; r < rows; r++) {
-                        for (let cIdx = 0; cIdx < cols; cIdx++) {
-                            sheets.push({
-                                entries: [{
-                                    info: info, x: -cIdx * advX, y: -r * advY, rot: 0,
-                                    boxW: info.wmm, boxH: info.hmm,
-                                    tile: { col: cIdx, row: r, cols: cols, rows: rows }
-                                }]
-                            });
-                        }
-                    }
-                }
-            }
-            if (combined && packItems.length) {
-                const packed = packRects(packItems, usableW, usableH, gap);
-                for (const sh of packed) {
-                    sheets.push({
-                        entries: sh.placed.map(pl => ({
-                            info: pl.item.info, x: pl.x, y: pl.y, rot: pl.rot,
-                            boxW: pl.w, boxH: pl.h
-                        }))
-                    });
-                }
-            }
-            return { sheets: sheets, usableW: usableW, usableH: usableH, advX: advX, advY: advY };
-        }
-        /* Рендер всех страниц + подписи под миниатюрами */
-        function renderPrintPages() {
-            const sel = state.pieces.filter(p => printSel.has(p.id));
-            const paper = PAPER_FORMATS[printOpts.format] || PAPER_FORMATS.a4;
-            const margin = clamp(printOpts.margin != null ? +printOpts.margin : 10, 0, 30);
-            const gap = clamp(printOpts.gap != null ? +printOpts.gap : 5, 0, 20);
-            const ov = clamp(printOpts.overlap != null ? +printOpts.overlap : 10, 0, 30);
-            const pxPerMm = 150 / 25.4;
-            const mm = v => v * pxPerMm;
-            const dimsFor = o => o === 'landscape' ? { SW: paper.h, SH: paper.w } : { SW: paper.w, SH: paper.h };
-            const opts = { margin: margin, gap: gap, ov: ov, scale: printOpts.scale, separate: printOpts.separate };
-            sel.forEach(rebuildPiece);
-            const infos = sel.map(p => {
-                const pts = printLocalPts(p);
-                const seamPts = (printOpts.seam && p.seam > 0) ? offsetPolyline(pts, p.seam) : null;
-                return { p: p, pts: pts, seamPts: seamPts, wcm: Math.max(0.01, p._bounds.w), hcm: Math.max(0.01, p._bounds.h), k: 0, wmm: 0, hmm: 0, scaleLabel: '' };
-            });
-            /* выбор ориентации: считаем оба варианта, затем пересобираем выбранный */
-            let orient = printOpts.orient;
-            if (orient === 'auto') {
-                const dP = dimsFor('portrait'), dL = dimsFor('landscape');
-                const bP = buildPrintSheets(dP.SW, dP.SH, infos, opts);
-                const bL = buildPrintSheets(dL.SW, dL.SH, infos, opts);
-                orient = bL.sheets.length < bP.sheets.length ? 'landscape' : 'portrait';
-            }
-            const dims = dimsFor(orient);
-            const SW = dims.SW, SH = dims.SH;
-            const built = buildPrintSheets(SW, SH, infos, opts);
-            const usableW = built.usableW, usableH = built.usableH;
-            const advX = built.advX, advY = built.advY;
-            const Wpx = Math.round(SW * pxPerMm), Hpx = Math.round(SH * pxPerMm);
-            const sheetsArr = built.sheets;
-            const totalPages = sheetsArr.length;
-            const CAP = 120;
-            const pages = [];
-            const captions = [];
-            function crossAt(g, x, y) {
-                g.beginPath();
-                g.moveTo(x - mm(3), y); g.lineTo(x + mm(3), y);
-                g.moveTo(x, y - mm(3)); g.lineTo(x, y + mm(3));
-                g.stroke();
-            }
-            sheetsArr.forEach(function (sheet, si) {
-                if (si >= CAP) return;
-                const c = document.createElement('canvas');
-                c.width = Wpx; c.height = Hpx;
-                const g = c.getContext('2d');
-                g.fillStyle = '#fff'; g.fillRect(0, 0, Wpx, Hpx);
-                /* рамка печатной области */
-                g.strokeStyle = '#c9ced8'; g.lineWidth = mm(0.2);
-                g.strokeRect(mm(margin), mm(margin), mm(usableW), mm(usableH));
-                const multi = sheet.entries.length > 1;
-                const capNames = [];
-                sheet.entries.forEach(function (entry) {
-                    const info = entry.info, k = info.k;
-                    /* отображение локальных мм детали в мм страницы (с учётом поворота на 90°) */
-                    function mapPt(lx, ly) {
-                        if (entry.rot) return [margin + entry.x + info.hmm - ly, margin + entry.y + lx];
-                        return [margin + entry.x + lx, margin + entry.y + ly];
-                    }
-                    function strokePoly(pts, style, width, dash) {
-                        g.strokeStyle = style; g.lineWidth = width; g.lineJoin = 'round';
-                        if (dash) g.setLineDash(dash);
-                        g.beginPath();
-                        pts.forEach((q, i) => {
-                            const mp = mapPt(q[0] * k, q[1] * k);
-                            const X = mp[0] * pxPerMm, Y = mp[1] * pxPerMm;
-                            if (i === 0) g.moveTo(X, Y); else g.lineTo(X, Y);
-                        });
-                        g.closePath(); g.stroke();
-                        if (dash) g.setLineDash([]);
-                    }
-                    /* припуск на шов (пунктир снаружи контура) */
-                    if (info.seamPts) strokePoly(info.seamPts, '#8a8f9c', mm(0.3), [mm(3), mm(2)]);
-                    /* контур лекала */
-                    strokePoly(info.pts, '#14161c', mm(0.55), null);
-                    /* долевая нить */
-                    if (printOpts.labels) {
-                        if (info.hmm > 15) {
-                            const p1 = mapPt(info.wmm / 2, info.hmm * 0.25);
-                            const p2 = mapPt(info.wmm / 2, info.hmm * 0.75);
-                            const x1 = p1[0] * pxPerMm, y1 = p1[1] * pxPerMm, x2 = p2[0] * pxPerMm, y2 = p2[1] * pxPerMm;
-                            const ah = mm(2.5);
-                            const dx = x2 - x1, dy = y2 - y1;
-                            const dl = Math.hypot(dx, dy) || 1;
-                            const ux = dx / dl, uy = dy / dl, nx = -uy, ny = ux;
-                            g.strokeStyle = '#565b68'; g.lineWidth = mm(0.3);
-                            g.beginPath();
-                            g.moveTo(x1, y1); g.lineTo(x2, y2);
-                            g.moveTo(x1 + nx * ah - ux * ah * 1.6, y1 + ny * ah - uy * ah * 1.6); g.lineTo(x1, y1); g.lineTo(x1 - nx * ah - ux * ah * 1.6, y1 - ny * ah - uy * ah * 1.6);
-                            g.moveTo(x2 + nx * ah + ux * ah * 1.6, y2 + ny * ah + uy * ah * 1.6); g.lineTo(x2, y2); g.lineTo(x2 - nx * ah + ux * ah * 1.6, y2 - ny * ah + uy * ah * 1.6);
-                            g.stroke();
-                        }
-                    }
-                    const nm = info.p.name + (entry.rot ? ' ⟳90°' : '');
-                    if (capNames.indexOf(nm) < 0) capNames.push(nm);
-                    /* подписи */
-                    if (printOpts.labels) {
-                        if (multi && !entry.tile) {
-                            /* компактная бирка у угла детали */
-                            const fs = mm(3.4);
-                            g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
-                            g.textAlign = 'left'; g.textBaseline = 'top';
-                            const l1 = nm + (info.p.custom ? ' ✎' : '');
-                            const l2 = `${fmt(info.wcm)}×${fmt(info.hcm)} см` + (info.seamPts ? ` +${fmt(info.p.seam)}` : '');
-                            const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(3);
-                            const bx = (margin + entry.x + 1) * pxPerMm, by = (margin + entry.y + 1) * pxPerMm;
-                            g.fillStyle = 'rgba(255,255,255,.92)';
-                            g.fillRect(bx, by, bw, fs * 2 + mm(3));
-                            g.fillStyle = '#14161c';
-                            g.fillText(l1, bx + mm(1), by + mm(1));
-                            g.fillText(l2, bx + mm(1), by + mm(1) + fs + mm(1));
-                        } else {
-                            /* полная шапка: одно-детальные листы и фрагменты разбиения */
-                            const fs = mm(4);
-                            g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
-                            g.textAlign = 'left'; g.textBaseline = 'top';
-                            const l1 = nm + (info.p.custom ? ' ✎' : '');
-                            let l2 = `Лист ${si + 1}/${totalPages} · ${paper.name} · ${info.scaleLabel}`;
-                            if (entry.tile) l2 += ` · фрагмент ${entry.tile.col + 1}.${entry.tile.row + 1}`;
-                            const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(4);
-                            const bx = (margin + Math.max(0, entry.x) + 1) * pxPerMm;
-                            const by = (margin + Math.max(0, entry.y) + 1) * pxPerMm;
-                            g.fillStyle = 'rgba(255,255,255,.92)';
-                            g.fillRect(bx, by, bw, fs * 2 + mm(4));
-                            g.fillStyle = '#14161c';
-                            g.fillText(l1, bx + mm(2), by + mm(2));
-                            g.fillText(l2, bx + mm(2), by + mm(2) + fs + mm(1));
-                            /* габариты в углу детали */
-                            const dTxt = `${fmt(info.wcm)}×${fmt(info.hcm)} см` + (info.seamPts ? ` · припуск ${fmt(info.p.seam)} см` : '');
-                            g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
-                            const dw = g.measureText(dTxt).width;
-                            const rp = mapPt(info.wmm, info.hmm);
-                            g.fillStyle = 'rgba(255,255,255,.92)';
-                            g.fillRect(rp[0] * pxPerMm - dw - mm(4), rp[1] * pxPerMm - mm(6), dw + mm(3), mm(5));
-                            g.fillStyle = '#3a3f4a';
-                            g.fillText(dTxt, rp[0] * pxPerMm - dw - mm(2.5), rp[1] * pxPerMm - mm(5.5));
-                        }
-                    }
-                    /* метки совмещения для разбитых деталей */
-                    if (entry.tile && (entry.tile.cols > 1 || entry.tile.rows > 1) && printOpts.marks) {
-                        const t = entry.tile;
-                        g.strokeStyle = '#9aa0ad'; g.lineWidth = mm(0.2); g.setLineDash([mm(2), mm(2)]);
-                        if (t.col > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin), mm(margin + usableH)); g.stroke(); }
-                        if (t.col < t.cols - 1) { g.beginPath(); g.moveTo(mm(margin + usableW), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
-                        if (t.row > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin)); g.stroke(); }
-                        if (t.row < t.rows - 1) { g.beginPath(); g.moveTo(mm(margin), mm(margin + usableH)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
-                        g.setLineDash([]);
-                        g.strokeStyle = '#2b2f38'; g.lineWidth = mm(0.35);
-                        const off = ov / 2;
-                        const cx0 = clamp(margin - off, 1, SW - 1), cx1 = clamp(margin + usableW + off, 1, SW - 1);
-                        const cy0 = clamp(margin - off, 1, SH - 1), cy1 = clamp(margin + usableH + off, 1, SH - 1);
-                        if (t.col > 0) for (let tt = 0; tt <= usableH + 1; tt += 60) crossAt(g, mm(cx0), mm(margin + Math.min(tt, usableH)));
-                        if (t.col < t.cols - 1) for (let tt = 0; tt <= usableH + 1; tt += 60) crossAt(g, mm(cx1), mm(margin + Math.min(tt, usableH)));
-                        if (t.row > 0) for (let tt = 0; tt <= usableW + 1; tt += 60) crossAt(g, mm(margin + Math.min(tt, usableW)), mm(cy0));
-                        if (t.row < t.rows - 1) for (let tt = 0; tt <= usableW + 1; tt += 60) crossAt(g, mm(margin + Math.min(tt, usableW)), mm(cy1));
-                        if (t.col > 0 && t.row > 0) crossAt(g, mm(cx0), mm(cy0));
-                        if (t.col < t.cols - 1 && t.row > 0) crossAt(g, mm(cx1), mm(cy0));
-                        if (t.col > 0 && t.row < t.rows - 1) crossAt(g, mm(cx0), mm(cy1));
-                        if (t.col < t.cols - 1 && t.row < t.rows - 1) crossAt(g, mm(cx1), mm(cy1));
-                    }
-                });
-                /* номер листа при совместном размещении */
-                if (multi && printOpts.labels) {
-                    const sLbl = sheet.entries[0] ? sheet.entries[0].info.scaleLabel : '';
-                    g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
-                    const t = `Лист ${si + 1}/${totalPages} · ${paper.name} · ${sLbl}`;
-                    const tw = g.measureText(t).width;
-                    g.fillStyle = 'rgba(255,255,255,.9)';
-                    g.fillRect(mm(margin + usableW) - tw - mm(3), mm(margin) + mm(1), tw + mm(2), mm(4.5));
-                    g.fillStyle = '#3a3f4a'; g.textAlign = 'right'; g.textBaseline = 'top';
-                    g.fillText(t, mm(margin + usableW) - mm(2), mm(margin) + mm(1.8));
-                }
-                /* калибровочный квадрат на первом листе */
-                if (printOpts.calib && si === 0 && usableW >= 120 && usableH >= 120) {
-                    const cs = 100;
-                    const csx = margin + usableW - cs - 5, csy = margin + usableH - cs - 5;
-                    g.strokeStyle = '#14161c'; g.lineWidth = mm(0.4);
-                    g.strokeRect(mm(csx), mm(csy), mm(cs), mm(cs));
-                    g.lineWidth = mm(0.2);
-                    g.beginPath();
-                    g.moveTo(mm(csx + cs / 2), mm(csy)); g.lineTo(mm(csx + cs / 2), mm(csy + cs));
-                    g.moveTo(mm(csx), mm(csy + cs / 2)); g.lineTo(mm(csx + cs), mm(csy + cs / 2));
-                    g.stroke();
-                    g.fillStyle = '#14161c'; g.font = '600 ' + mm(3.4) + 'px "JetBrains Mono",monospace';
-                    g.textAlign = 'center'; g.textBaseline = 'middle';
-                    g.fillText('проверка масштаба — 10 см', mm(csx + cs / 2), mm(csy + cs / 2));
-                    g.textAlign = 'left'; g.textBaseline = 'top';
-                }
-                pages.push(c);
-                captions.push(`Лист ${si + 1}: ${capNames.join(', ') || '—'}`);
-            });
-            return {
-                pages: pages, captions: captions, SW: SW, SH: SH, paperName: paper.name, orient: orient,
-                pieceCount: sel.length, totalPages: totalPages, truncated: totalPages > CAP,
-                scaleLabel: printOpts.scale === 'fit' ? 'в лист' : '1:' + Math.max(1, +printOpts.scale || 1),
-                separate: !!(printOpts.separate || printOpts.scale === 'fit')
-            };
-        }
-        /* Монтирование предпросмотра из готовых канвасов */
-        function mountPreview() {
-            const pv = $('#prPreview');
-            if (!pv) return;
-            pv.innerHTML = '';
-            if (!printCanvases.length) {
-                pv.innerHTML = '<div class="pr-empty">Выберите хотя бы одну деталь для печати</div>';
-                return;
-            }
-            printCanvases.forEach((c, i) => {
-                const fig = document.createElement('div'); fig.className = 'pr-fig';
-                const th = document.createElement('div'); th.className = 'pr-thumb'; th.appendChild(c);
-                const cap = document.createElement('div'); cap.className = 'pr-cap';
-                cap.textContent = (printSheetInfo && printSheetInfo.captions && printSheetInfo.captions[i]) || ('Лист ' + (i + 1));
-                cap.title = cap.textContent;
-                fig.appendChild(th); fig.appendChild(cap);
-                pv.appendChild(fig);
-            });
-        }
-        function buildPreview() {
-            const res = renderPrintPages();
-            printCanvases = res.pages;
-            printSheetInfo = res;
-            mountPreview();
-            let sum = res.pages.length
-                ? `Деталей: ${res.pieceCount} · Листов: ${res.pages.length} · ${res.paperName} (${res.orient === 'landscape' ? 'альбомная' : 'книжная'}) · ${res.scaleLabel} · ${res.separate ? 'раздельно' : 'совместно'}`
-                : 'Нет деталей для печати';
-            if (res.truncated) sum += ` · предпросмотр: первые 120 из ${res.totalPages}`;
-            $('#prSummary').textContent = sum;
-            $('#prGo').disabled = !res.pages.length;
-        }
-        function schedulePreview() {
-            clearTimeout(prTimer);
-            prTimer = setTimeout(buildPreview, 250);
-        }
-        function syncPrintControls() {
-            $('#prFormat').value = printOpts.format;
-            $('#prOrient').value = printOpts.orient;
-            $('#prScale').value = printOpts.scale;
-            $('#prMargin').value = String(printOpts.margin);
-            $('#prGap').value = String(printOpts.gap);
-            $('#prOverlap').value = String(printOpts.overlap);
-            $('#prSeparate').checked = !!printOpts.separate;
-            $('#prMarks').checked = printOpts.marks;
-            $('#prSeam').checked = printOpts.seam;
-            $('#prLabels').checked = printOpts.labels;
-            $('#prCalib').checked = printOpts.calib;
-        }
-        function buildPrintPieceList() {
-            const box = $('#prPieces');
-            box.innerHTML = '';
-            state.pieces.forEach(p => {
-                rebuildPiece(p);
-                const row = document.createElement('label'); row.className = 'pr-piece-row';
-                const cb = document.createElement('input'); cb.type = 'checkbox';
-                cb.checked = printSel.has(p.id);
-                cb.addEventListener('change', function () {
-                    if (cb.checked) printSel.add(p.id); else printSel.delete(p.id);
-                    schedulePreview();
-                });
-                const nm = document.createElement('span'); nm.textContent = p.name;
-                const sz = document.createElement('small'); sz.textContent = fmt(p._bounds.w) + '×' + fmt(p._bounds.h);
-                row.appendChild(cb); row.appendChild(nm); row.appendChild(sz);
-                box.appendChild(row);
-            });
-        }
-        function openPrintModal() {
-            if (!state.pieces.length) { toast('Холст пуст — нечего печатать', 'warn'); return; }
-            const ids = new Set(state.pieces.map(p => p.id));
-            for (const id of [...printSel]) if (!ids.has(id)) printSel.delete(id);
-            if (printSel.size === 0) state.pieces.forEach(p => printSel.add(p.id));
-            syncPrintControls();
-            buildPrintPieceList();
-            $('#printOverlay').classList.add('open');
-            buildPreview();
-        }
-        function closePrintModal() {
-            $('#printOverlay').classList.remove('open');
-        }
-        function restorePrintPages() {
-            if (!document.body.classList.contains('printing')) return;
-            document.body.classList.remove('printing');
-            mountPreview();
-        }
-        function doPrint() {
-            if (prTimer) { clearTimeout(prTimer); prTimer = null; buildPreview(); }
-            if (!printCanvases.length) { toast('Нет листов для печати', 'warn'); return; }
-            const info = printSheetInfo;
-            let holder = $('#printSheet');
-            if (!holder) {
-                holder = document.createElement('div');
-                holder.id = 'printSheet';
-                document.body.appendChild(holder);
-            }
-            holder.innerHTML = '';
-            printCanvases.forEach(c => {
-                c.style.width = info.SW + 'mm';
-                c.style.height = info.SH + 'mm';
-                holder.appendChild(c);
-            });
-            const ps = $('#printStyle');
-            if (ps) ps.textContent = `@page{size:${info.SW}mm ${info.SH}mm;margin:0}`;
-            document.body.classList.add('printing');
-            window.addEventListener('afterprint', restorePrintPages, { once: true });
-            setTimeout(restorePrintPages, 2500);
-            toast(`🖨 Печать: ${printCanvases.length} лист(ов) · ${info.paperName} · ${info.scaleLabel} · ${info.separate ? 'раздельно' : 'совместно'}`);
-            window.print();
-        }
-        /* ---------- обработчики печати ---------- */
-        $('#btnPrint').onclick = openPrintModal;
-        $('#prClose').onclick = closePrintModal;
-        $('#printOverlay').addEventListener('click', function (e) { if (e.target === $('#printOverlay')) closePrintModal(); });
-        $('#prAll').onclick = function () { state.pieces.forEach(p => printSel.add(p.id)); buildPrintPieceList(); schedulePreview(); };
-        $('#prNone').onclick = function () { printSel.clear(); buildPrintPieceList(); schedulePreview(); };
-        $('#prPreviewBtn').onclick = function () { buildPreview(); };
-        $('#prGo').onclick = doPrint;
-        $('#prFormat').addEventListener('change', function (e) { printOpts.format = e.target.value; schedulePreview(); });
-        $('#prOrient').addEventListener('change', function (e) { printOpts.orient = e.target.value; schedulePreview(); });
-        $('#prScale').addEventListener('change', function (e) { printOpts.scale = e.target.value; schedulePreview(); });
-        $('#prMargin').addEventListener('input', function (e) {
-            const v = parseFloat(e.target.value);
-            if (isFinite(v)) { printOpts.margin = clamp(v, 0, 30); schedulePreview(); }
-        });
-        $('#prGap').addEventListener('input', function (e) {
-            const v = parseFloat(e.target.value);
-            if (isFinite(v)) { printOpts.gap = clamp(v, 0, 20); schedulePreview(); }
-        });
-        $('#prOverlap').addEventListener('input', function (e) {
-            const v = parseFloat(e.target.value);
-            if (isFinite(v)) { printOpts.overlap = clamp(v, 0, 30); schedulePreview(); }
-        });
-        $('#prSeparate').addEventListener('change', function (e) { printOpts.separate = e.target.checked; schedulePreview(); });
-        $('#prMarks').addEventListener('change', function (e) { printOpts.marks = e.target.checked; schedulePreview(); });
-        $('#prSeam').addEventListener('change', function (e) { printOpts.seam = e.target.checked; schedulePreview(); });
-        $('#prLabels').addEventListener('change', function (e) { printOpts.labels = e.target.checked; schedulePreview(); });
-        $('#prCalib').addEventListener('change', function (e) { printOpts.calib = e.target.checked; schedulePreview(); });
-        /* ============================ обработчики статусбара ============================ */
-        STATUS_MAP.forEach(function (m) {
-            const cb = $(m.cb);
-            if (!cb) return;
-            cb.addEventListener('change', function () {
-                if (!state.statusOpts) state.statusOpts = {};
-                state.statusOpts[m.key] = cb.checked;
-                applyStatusVisibility();
-                draw();
-                scheduleUISave();
-            });
-        });
-        $('#btnStatusOpts').addEventListener('click', function (e) {
-            e.stopPropagation();
-            toggleStatusPanel();
-        });
         /* ============================ универсальный ввод имени ============================ */
         let nameCb = null;
         function openNameModal(title, val, cb) {
@@ -6543,6 +6160,483 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             const px = $('#gPxCm'); if (px) px.value = String(state.pxPerCm);
             const dp = $('#gDpr'); if (dp) dp.value = String(state.dprMode);
         }
+        /* ============================ ПЕЧАТЬ: упаковка по листам ============================ */
+        const PAPER_FORMATS = {
+            a4: { name: 'A4', w: 210, h: 297 },
+            a3: { name: 'A3', w: 297, h: 420 },
+            a2: { name: 'A2', w: 420, h: 594 },
+            a1: { name: 'A1', w: 594, h: 841 },
+            a0: { name: 'A0', w: 841, h: 1189 },
+            letter: { name: 'Letter', w: 216, h: 279 },
+            legal: { name: 'Legal', w: 216, h: 356 }
+        };
+        let printOpts = { format: 'a4', orient: 'auto', scale: '1', margin: 10, gap: 5, overlap: 10, separate: false, marks: true, seam: true, labels: true, calib: true };
+        let printSel = new Set();
+        let printCanvases = [];
+        let printSheetInfo = null;
+        let prTimer = null;
+        /*
+         * Сборка печатных листов.
+         * - совместно: точная упаковка деталей на листах (карта занятости 1 мм, поиск «дырок»,
+         *   варианты 0°/90° — выбирается позиция с минимальным y);
+         * - раздельно: каждая деталь с нового листа;
+         * - деталь крупнее листа разбивается на сетку листов с нахлёстом и метками совмещения.
+         */
+        function buildPrintSheets(SW, SH, infos, opts) {
+            const margin = opts.margin, gap = opts.gap, ov = opts.ov;
+            const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
+            const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
+            const den = Math.max(1, +opts.scale || 1);
+            const combined = !opts.separate && opts.scale !== 'fit';
+            const sheets = [];
+            const packItems = [];
+            for (const info of infos) {
+                let k, scaleLabel;
+                if (opts.scale === 'fit') {
+                    k = Math.min(usableW / info.wcm, usableH / info.hcm);
+                    scaleLabel = 'в лист ≈1:' + Math.max(1, 10 / k).toFixed(1);
+                } else {
+                    k = 10 / den;
+                    scaleLabel = '1:' + den;
+                }
+                info.k = k; info.wmm = info.wcm * k; info.hmm = info.hcm * k; info.scaleLabel = scaleLabel;
+                const fits0 = info.wmm <= usableW && info.hmm <= usableH;
+                const fits90 = info.hmm <= usableW && info.wmm <= usableH;
+                if (fits0 || fits90) {
+                    if (combined) {
+                        packItems.push({ w: info.wmm, h: info.hmm, info: info });
+                    } else {
+                        sheets.push({ entries: [{ info: info, x: 0, y: 0, rot: fits0 ? 0 : 1 }] });
+                    }
+                } else {
+                    const cols = Math.max(1, Math.ceil((info.wmm - ov) / advX));
+                    const rows = Math.max(1, Math.ceil((info.hmm - ov) / advY));
+                    for (let r = 0; r < rows; r++) {
+                        for (let cIdx = 0; cIdx < cols; cIdx++) {
+                            sheets.push({ entries: [{ info: info, x: -cIdx * advX, y: -r * advY, rot: 0, tile: { col: cIdx, row: r, cols: cols, rows: rows } }] });
+                        }
+                    }
+                }
+            }
+            if (combined && packItems.length) {
+                const gw = Math.floor(usableW), gh = Math.floor(usableH);
+                const order = packItems.slice().sort((a, b) => (b.w * b.h) - (a.w * b.h) || (b.h - a.h));
+                function rectFree(occ, x, y, w, h) {
+                    for (let j = y; j < y + h; j++) {
+                        const row = j * gw;
+                        for (let i = x; i < x + w; i++) if (occ[row + i]) return false;
+                    }
+                    return true;
+                }
+                function findSpot(occ, bw, bh) {
+                    if (bw > gw || bh > gh) return null;
+                    for (let y = 0; y <= gh - bh; y++) {
+                        let x = 0;
+                        while (x <= gw - bw) {
+                            let ok = true, jump = 1;
+                            let fI = 0;
+                            scan:
+                            for (let j = y; j < y + bh; j++) {
+                                const row = j * gw;
+                                for (let i = 0; i < bw; i++) {
+                                    if (occ[row + x + i]) { ok = false; jump = i + 1; fI = i; break scan; }
+                                }
+                            }
+                            if (ok) return { x: x, y: y };
+                            x += jump;
+                            if (fI === 0 && x <= gw - bw) continue;
+                        }
+                    }
+                    return null;
+                }
+                function mark(occ, x, y, w, h, val) {
+                    for (let j = y; j < y + h; j++) {
+                        const row = j * gw;
+                        for (let i = x; i < x + w; i++) occ[row + i] = val;
+                    }
+                }
+                const sheetsPack = [];
+                for (const it of order) {
+                    let best = null;
+                    for (let si = 0; si < sheetsPack.length; si++) {
+                        const sh = sheetsPack[si];
+                        for (const rot of [0, 1]) {
+                            const w = rot ? it.h : it.w, h = rot ? it.w : it.h;
+                            const bw = Math.ceil(w + gap), bh = Math.ceil(h + gap);
+                            if (bw > gw || bh > gh) continue;
+                            const pos = findSpot(sh.occ, bw, bh);
+                            if (pos && (!best || pos.y < best.pos.y || (pos.y === best.pos.y && pos.x < best.pos.x) ||
+                                (pos.y === best.pos.y && pos.x === best.pos.x && si < best.si))) {
+                                best = { si: si, pos: pos, rot: rot, w: w, h: h };
+                            }
+                        }
+                    }
+                    if (!best) {
+                        const sh = { occ: new Uint8Array(gw * gh), entries: [] };
+                        sheetsPack.push(sh);
+                        let rot = 0;
+                        const bw0 = Math.ceil(it.w + gap), bh0 = Math.ceil(it.h + gap);
+                        const bw1 = Math.ceil(it.h + gap), bh1 = Math.ceil(it.w + gap);
+                        const f0 = bw0 <= gw && bh0 <= gh, f1 = bw1 <= gw && bh1 <= gh;
+                        if (f0 && f1) rot = (bh1 < bh0 || (bh1 === bh0 && bw1 < bw0)) ? 1 : 0;
+                        else if (!f0 && f1) rot = 1;
+                        const w = rot ? it.h : it.w, h = rot ? it.w : it.h;
+                        best = { si: sheetsPack.length - 1, pos: { x: 0, y: 0 }, rot: rot, w: w, h: h };
+                    }
+                    const sh = sheetsPack[best.si];
+                    mark(sh.occ, best.pos.x, best.pos.y, Math.ceil(best.w + gap), Math.ceil(best.h + gap), 1);
+                    sh.entries.push({ info: it.info, x: best.pos.x, y: best.pos.y, rot: best.rot });
+                }
+                for (const sh of sheetsPack) sheets.push({ entries: sh.entries });
+            }
+            return sheets;
+        }
+        /* Рендер собранных листов в канвасы 150 dpi */
+        function renderPrintPages() {
+            const sel = state.pieces.filter(p => printSel.has(p.id));
+            const paper = PAPER_FORMATS[printOpts.format] || PAPER_FORMATS.a4;
+            const margin = clamp(printOpts.margin != null ? +printOpts.margin : 10, 0, 30);
+            const gap = clamp(printOpts.gap != null ? +printOpts.gap : 5, 0, 20);
+            const ov = clamp(printOpts.overlap != null ? +printOpts.overlap : 10, 0, 30);
+            const pxPerMm = 150 / 25.4;
+            const mm = v => v * pxPerMm;
+            const dimsFor = o => o === 'landscape' ? { SW: paper.h, SH: paper.w } : { SW: paper.w, SH: paper.h };
+            const usableW0 = SW0 => Math.max(10, SW0 - margin * 2);
+            const usableH0 = SH0 => Math.max(10, SH0 - margin * 2);
+            sel.forEach(rebuildPiece);
+            const infos = sel.map(p => {
+                const pts = printLocalPts(p);
+                const seamPts = (printOpts.seam && p.seam > 0) ? offsetPolyline(pts, p.seam) : null;
+                return { p: p, pts: pts, seamPts: seamPts, wcm: Math.max(0.01, p._bounds.w), hcm: Math.max(0.01, p._bounds.h), k: 0, wmm: 0, hmm: 0, scaleLabel: '' };
+            });
+            const opts = { margin: margin, gap: gap, ov: ov, scale: printOpts.scale, separate: printOpts.separate };
+            let orient = printOpts.orient;
+            if (orient === 'auto') {
+                const dP = dimsFor('portrait'), dL = dimsFor('landscape');
+                const sP = buildPrintSheets(dP.SW, dP.SH, infos, opts);
+                const sL = buildPrintSheets(dL.SW, dL.SH, infos, opts);
+                orient = sL.length < sP.length ? 'landscape' : 'portrait';
+            }
+            const dims = dimsFor(orient);
+            const SW = dims.SW, SH = dims.SH;
+            const usableW = usableW0(SW), usableH = usableH0(SH);
+            const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
+            const sheetsArr = buildPrintSheets(SW, SH, infos, opts);
+            const Wpx = Math.round(SW * pxPerMm), Hpx = Math.round(SH * pxPerMm);
+            const totalPages = sheetsArr.length;
+            const CAP = 120;
+            const pages = [];
+            const captions = [];
+            function crossAt(g, x, y) {
+                g.beginPath();
+                g.moveTo(x - mm(3), y); g.lineTo(x + mm(3), y);
+                g.moveTo(x, y - mm(3)); g.lineTo(x, y + mm(3));
+                g.stroke();
+            }
+            sheetsArr.forEach(function (sheet, si) {
+                if (si >= CAP) return;
+                const c = document.createElement('canvas');
+                c.width = Wpx; c.height = Hpx;
+                const g = c.getContext('2d');
+                g.fillStyle = '#fff'; g.fillRect(0, 0, Wpx, Hpx);
+                g.strokeStyle = '#c9ced8'; g.lineWidth = mm(0.2);
+                g.strokeRect(mm(margin), mm(margin), mm(usableW), mm(usableH));
+                const multi = sheet.entries.length > 1;
+                const capNames = [];
+                sheet.entries.forEach(function (entry) {
+                    const info = entry.info, k = info.k;
+                    const tile = entry.tile || null;
+                    const boxW = entry.rot ? info.hmm : info.wmm;
+                    const boxH = entry.rot ? info.wmm : info.hmm;
+                    function mapPt(lx, ly) {
+                        if (entry.rot) return [(margin + entry.x + info.hmm - ly), (margin + entry.y + lx)];
+                        return [(margin + entry.x + lx), (margin + entry.y + ly)];
+                    }
+                    function strokePoly(pts, style, width, dash) {
+                        g.strokeStyle = style; g.lineWidth = width; g.lineJoin = 'round';
+                        if (dash) g.setLineDash(dash);
+                        g.beginPath();
+                        pts.forEach((q, i) => {
+                            const mp = mapPt(q[0] * k, q[1] * k);
+                            const X = mp[0] * pxPerMm, Y = mp[1] * pxPerMm;
+                            if (i === 0) g.moveTo(X, Y); else g.lineTo(X, Y);
+                        });
+                        g.closePath(); g.stroke();
+                        if (dash) g.setLineDash([]);
+                    }
+                    if (info.seamPts) strokePoly(info.seamPts, '#8a8f9c', mm(0.3), [mm(3), mm(2)]);
+                    strokePoly(info.pts, '#14161c', mm(0.55), null);
+                    const nm = info.p.name + (entry.rot ? ' ⟳90°' : '') + (info.p.custom ? ' ✎' : '');
+                    if (capNames.indexOf(nm) < 0) capNames.push(nm);
+                    if (printOpts.labels) {
+                        /* долевая */
+                        if (info.hmm > 15) {
+                            const mp1 = mapPt(info.wmm / 2, info.hmm * 0.25);
+                            const mp2 = mapPt(info.wmm / 2, info.hmm * 0.75);
+                            const x1 = mp1[0] * pxPerMm, y1 = mp1[1] * pxPerMm, x2 = mp2[0] * pxPerMm, y2 = mp2[1] * pxPerMm;
+                            const ah = mm(2.5);
+                            const dx = x2 - x1, dy = y2 - y1;
+                            const dl = Math.hypot(dx, dy) || 1;
+                            const ux = dx / dl, uy = dy / dl, nx = -uy, ny = ux;
+                            g.strokeStyle = '#565b68'; g.lineWidth = mm(0.3);
+                            g.beginPath();
+                            g.moveTo(x1, y1); g.lineTo(x2, y2);
+                            g.moveTo(x1 + nx * ah - ux * ah * 1.6, y1 + ny * ah - uy * ah * 1.6); g.lineTo(x1, y1); g.lineTo(x1 - nx * ah - ux * ah * 1.6, y1 - ny * ah - uy * ah * 1.6);
+                            g.moveTo(x2 + nx * ah + ux * ah * 1.6, y2 + ny * ah + uy * ah * 1.6); g.lineTo(x2, y2); g.lineTo(x2 - nx * ah + ux * ah * 1.6, y2 - ny * ah + uy * ah * 1.6);
+                            g.stroke();
+                        }
+                        if (multi && !tile) {
+                            /* компактная бирка у угла детали */
+                            const fs = mm(3.4);
+                            g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
+                            g.textAlign = 'left'; g.textBaseline = 'top';
+                            const l1 = nm;
+                            const l2 = `${fmt(info.wcm)}×${fmt(info.hcm)} см` + (info.seamPts ? ` +${fmt(info.p.seam)}` : '');
+                            const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(3);
+                            const bx = (margin + entry.x + 1) * pxPerMm, by = (margin + entry.y + 1) * pxPerMm;
+                            g.fillStyle = 'rgba(255,255,255,.92)';
+                            g.fillRect(bx, by, bw, fs * 2 + mm(3));
+                            g.fillStyle = '#14161c';
+                            g.fillText(l1, bx + mm(1), by + mm(1));
+                            g.fillText(l2, bx + mm(1), by + mm(1) + fs + mm(1));
+                        } else {
+                            /* полная шапка одно-детального листа / фрагмента */
+                            const fs = mm(4);
+                            g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
+                            g.textAlign = 'left'; g.textBaseline = 'top';
+                            const l1 = nm;
+                            let l2 = `Лист ${si + 1}/${totalPages} · ${paper.name} · ${info.scaleLabel}`;
+                            if (tile) l2 += ` · фрагмент ${tile.col + 1}.${tile.row + 1}`;
+                            const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(4);
+                            const bx = (margin + Math.max(0, entry.x) + 1) * pxPerMm;
+                            const by = (margin + Math.max(0, entry.y) + 1) * pxPerMm;
+                            g.fillStyle = 'rgba(255,255,255,.92)';
+                            g.fillRect(bx, by, bw, fs * 2 + mm(4));
+                            g.fillStyle = '#14161c';
+                            g.fillText(l1, bx + mm(2), by + mm(2));
+                            g.fillText(l2, bx + mm(2), by + mm(2) + fs + mm(1));
+                            /* габариты в углу детали */
+                            const dTxt = `${fmt(info.wcm)}×${fmt(info.hcm)} см` + (info.seamPts ? ` · припуск ${fmt(info.p.seam)} см` : '');
+                            g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
+                            const dw = g.measureText(dTxt).width;
+                            const rp = mapPt(info.wmm, info.hmm);
+                            g.fillStyle = 'rgba(255,255,255,.92)';
+                            g.fillRect(rp[0] * pxPerMm - dw - mm(4), rp[1] * pxPerMm - mm(6), dw + mm(3), mm(5));
+                            g.fillStyle = '#3a3f4a';
+                            g.fillText(dTxt, rp[0] * pxPerMm - dw - mm(2.5), rp[1] * pxPerMm - mm(5.5));
+                        }
+                    }
+                    /* метки совмещения разбитых деталей */
+                    if (tile && (tile.cols > 1 || tile.rows > 1)) {
+                        g.strokeStyle = '#9aa0ad'; g.lineWidth = mm(0.2); g.setLineDash([mm(2), mm(2)]);
+                        if (tile.col > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin), mm(margin + usableH)); g.stroke(); }
+                        if (tile.col < tile.cols - 1) { g.beginPath(); g.moveTo(mm(margin + usableW), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
+                        if (tile.row > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin)); g.stroke(); }
+                        if (tile.row < tile.rows - 1) { g.beginPath(); g.moveTo(mm(margin), mm(margin + usableH)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
+                        g.setLineDash([]);
+                        if (printOpts.marks) {
+                            g.strokeStyle = '#2b2f38'; g.lineWidth = mm(0.35);
+                            const off = ov / 2;
+                            const cx0 = clamp(margin - off, 1, SW - 1), cx1 = clamp(margin + usableW + off, 1, SW - 1);
+                            const cy0 = clamp(margin - off, 1, SH - 1), cy1 = clamp(margin + usableH + off, 1, SH - 1);
+                            if (tile.col > 0) for (let t = 0; t <= usableH + 1; t += 60) crossAt(g, mm(cx0), mm(margin + Math.min(t, usableH)));
+                            if (tile.col < tile.cols - 1) for (let t = 0; t <= usableH + 1; t += 60) crossAt(g, mm(cx1), mm(margin + Math.min(t, usableH)));
+                            if (tile.row > 0) for (let t = 0; t <= usableW + 1; t += 60) crossAt(g, mm(margin + Math.min(t, usableW)), mm(cy0));
+                            if (tile.row < tile.rows - 1) for (let t = 0; t <= usableW + 1; t += 60) crossAt(g, mm(margin + Math.min(t, usableW)), mm(cy1));
+                            if (tile.col > 0 && tile.row > 0) crossAt(g, mm(cx0), mm(cy0));
+                            if (tile.col < tile.cols - 1 && tile.row > 0) crossAt(g, mm(cx1), mm(cy0));
+                            if (tile.col > 0 && tile.row < tile.rows - 1) crossAt(g, mm(cx0), mm(cy1));
+                            if (tile.col < tile.cols - 1 && tile.row < tile.rows - 1) crossAt(g, mm(cx1), mm(cy1));
+                        }
+                    }
+                });
+                /* номер листа при совместном размещении */
+                if (multi && printOpts.labels) {
+                    const sLbl = sheet.entries[0] ? sheet.entries[0].info.scaleLabel : '';
+                    g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
+                    const t = `Лист ${si + 1}/${totalPages} · ${paper.name} · ${sLbl}`;
+                    const tw = g.measureText(t).width;
+                    g.fillStyle = 'rgba(255,255,255,.9)';
+                    g.fillRect(mm(margin + usableW) - tw - mm(3), mm(margin) + mm(1), tw + mm(2), mm(4.5));
+                    g.fillStyle = '#3a3f4a'; g.textAlign = 'right'; g.textBaseline = 'top';
+                    g.fillText(t, mm(margin + usableW) - mm(2), mm(margin) + mm(1.8));
+                }
+                /* калибровочный квадрат 10×10 см на первом листе */
+                if (printOpts.calib && si === 0 && usableW >= 120 && usableH >= 120) {
+                    const cs = 100;
+                    const csx = margin + usableW - cs - 5, csy = margin + usableH - cs - 5;
+                    g.strokeStyle = '#14161c'; g.lineWidth = mm(0.4);
+                    g.strokeRect(mm(csx), mm(csy), mm(cs), mm(cs));
+                    g.lineWidth = mm(0.2);
+                    g.beginPath();
+                    g.moveTo(mm(csx + cs / 2), mm(csy)); g.lineTo(mm(csx + cs / 2), mm(csy + cs));
+                    g.moveTo(mm(csx), mm(csy + cs / 2)); g.lineTo(mm(csx + cs), mm(csy + cs / 2));
+                    g.stroke();
+                    g.fillStyle = '#14161c'; g.font = '600 ' + mm(3.4) + 'px "JetBrains Mono",monospace';
+                    g.textAlign = 'center'; g.textBaseline = 'middle';
+                    g.fillText('проверка масштаба — 10 см', mm(csx + cs / 2), mm(csy + cs / 2));
+                    g.textAlign = 'left'; g.textBaseline = 'top';
+                }
+                pages.push(c);
+                captions.push(`Лист ${si + 1}: ${capNames.join(', ') || '—'}`);
+            });
+            return {
+                pages: pages, captions: captions, SW: SW, SH: SH, paperName: paper.name, orient: orient,
+                pieceCount: sel.length, totalPages: totalPages, truncated: totalPages > CAP,
+                scaleLabel: printOpts.scale === 'fit' ? 'в лист' : '1:' + Math.max(1, +printOpts.scale || 1),
+                separate: !!(printOpts.separate || printOpts.scale === 'fit')
+            };
+        }
+        /* Монтирование предпросмотра из готовых канвасов */
+        function mountPreview() {
+            const pv = $('#prPreview');
+            if (!pv) return;
+            pv.innerHTML = '';
+            if (!printCanvases.length) {
+                pv.innerHTML = '<div class="pr-empty">Выберите хотя бы одну деталь для печати</div>';
+                return;
+            }
+            printCanvases.forEach((c, i) => {
+                const fig = document.createElement('div'); fig.className = 'pr-fig';
+                const th = document.createElement('div'); th.className = 'pr-thumb'; th.appendChild(c);
+                const cap = document.createElement('div'); cap.className = 'pr-cap';
+                cap.textContent = (printSheetInfo && printSheetInfo.captions && printSheetInfo.captions[i]) || ('Лист ' + (i + 1));
+                cap.title = cap.textContent;
+                fig.appendChild(th); fig.appendChild(cap);
+                pv.appendChild(fig);
+            });
+        }
+        function buildPreview() {
+            const res = renderPrintPages();
+            printCanvases = res.pages;
+            printSheetInfo = res;
+            mountPreview();
+            let sum = res.pages.length
+                ? `Деталей: ${res.pieceCount} · Листов: ${res.pages.length} · ${res.paperName} (${res.orient === 'landscape' ? 'альбомная' : 'книжная'}) · ${res.scaleLabel} · ${res.separate ? 'раздельно' : 'совместно'}`
+                : 'Нет деталей для печати';
+            if (res.truncated) sum += ` · предпросмотр: первые ${res.pages.length} из ${res.totalPages}`;
+            const ps = $('#prSummary'); if (ps) ps.textContent = sum;
+            const hs = $('#prHeadSummary'); if (hs) hs.textContent = res.pages.length ? `${res.pages.length} лист(ов) · ${res.paperName} · ${res.scaleLabel}` : '';
+            document.querySelectorAll('.pr-go').forEach(b => { b.disabled = !res.pages.length; });
+        }
+        function schedulePreview() {
+            clearTimeout(prTimer);
+            prTimer = setTimeout(buildPreview, 250);
+        }
+        function syncPrintControls() {
+            const f = $('#prFormat'); if (f) f.value = printOpts.format;
+            const o = $('#prOrient'); if (o) o.value = printOpts.orient;
+            const s = $('#prScale'); if (s) s.value = printOpts.scale;
+            const m = $('#prMargin'); if (m) m.value = String(printOpts.margin);
+            const g = $('#prGap'); if (g) g.value = String(printOpts.gap);
+            const ov = $('#prOverlap'); if (ov) ov.value = String(printOpts.overlap);
+            const sp = $('#prSeparate'); if (sp) sp.checked = !!printOpts.separate;
+            const mk = $('#prMarks'); if (mk) mk.checked = printOpts.marks;
+            const sm = $('#prSeam'); if (sm) sm.checked = printOpts.seam;
+            const lb = $('#prLabels'); if (lb) lb.checked = printOpts.labels;
+            const cl = $('#prCalib'); if (cl) cl.checked = printOpts.calib;
+        }
+        function buildPrintPieceList() {
+            const box = $('#prPieces');
+            if (!box) return;
+            box.innerHTML = '';
+            let cnt = 0;
+            state.pieces.forEach(p => {
+                rebuildPiece(p);
+                if (printSel.has(p.id)) cnt++;
+                const row = document.createElement('label'); row.className = 'pr-piece-row';
+                const cb = document.createElement('input'); cb.type = 'checkbox';
+                cb.checked = printSel.has(p.id);
+                cb.addEventListener('change', function () {
+                    if (cb.checked) printSel.add(p.id); else printSel.delete(p.id);
+                    const cEl = $('#prSelCount');
+                    if (cEl) cEl.textContent = `выбрано: ${cb.checked ? cnt + 1 : cnt} из ${state.pieces.length}`;
+                    schedulePreview();
+                });
+                const nm = document.createElement('span'); nm.textContent = p.name;
+                const sz = document.createElement('small'); sz.textContent = fmt(p._bounds.w) + '×' + fmt(p._bounds.h);
+                row.appendChild(cb); row.appendChild(nm); row.appendChild(sz);
+                box.appendChild(row);
+            });
+            const cEl = $('#prSelCount');
+            if (cEl) cEl.textContent = `выбрано: ${cnt} из ${state.pieces.length}`;
+        }
+        function openPrintModal() {
+            if (!state.pieces.length) { toast('Холст пуст — нечего печатать', 'warn'); return; }
+            const ids = new Set(state.pieces.map(p => p.id));
+            for (const id of [...printSel]) if (!ids.has(id)) printSel.delete(id);
+            if (printSel.size === 0) state.pieces.forEach(p => printSel.add(p.id));
+            syncPrintControls();
+            buildPrintPieceList();
+            $('#printOverlay').classList.add('open');
+            buildPreview();
+        }
+        function closePrintModal() {
+            $('#printOverlay').classList.remove('open');
+        }
+        function restorePrintPages() {
+            if (!document.body.classList.contains('printing')) return;
+            document.body.classList.remove('printing');
+            mountPreview();
+        }
+        function doPrint() {
+            if (prTimer) { clearTimeout(prTimer); prTimer = null; buildPreview(); }
+            if (!printCanvases.length) { toast('Нет листов для печати', 'warn'); return; }
+            const info = printSheetInfo;
+            let holder = $('#printSheet');
+            if (!holder) {
+                holder = document.createElement('div');
+                holder.id = 'printSheet';
+                document.body.appendChild(holder);
+            }
+            holder.innerHTML = '';
+            printCanvases.forEach(c => {
+                c.style.width = info.SW + 'mm';
+                c.style.height = info.SH + 'mm';
+                holder.appendChild(c);
+            });
+            const ps = $('#printStyle');
+            if (ps) ps.textContent = `@page{size:${info.SW}mm ${info.SH}mm;margin:0}`;
+            document.body.classList.add('printing');
+            window.addEventListener('afterprint', restorePrintPages, { once: true });
+            setTimeout(restorePrintPages, 2500);
+            toast(`🖨 Печать: ${printCanvases.length} лист(ов) · ${info.paperName} · ${info.scaleLabel} · ${info.separate ? 'раздельно' : 'совместно'}`);
+            window.print();
+        }
+        /* обработчики печати */
+        $('#btnPrint').onclick = openPrintModal;
+        $('#prClose').onclick = closePrintModal;
+        $('#printOverlay').addEventListener('click', function (e) { if (e.target === $('#printOverlay')) closePrintModal(); });
+        $('#prAll').onclick = function () { state.pieces.forEach(p => printSel.add(p.id)); buildPrintPieceList(); schedulePreview(); };
+        $('#prNone').onclick = function () { printSel.clear(); buildPrintPieceList(); schedulePreview(); };
+        $('#prPreviewBtn').onclick = function () { buildPreview(); };
+        $('#prGo').onclick = doPrint;
+        $('#prFullscreen').onclick = function () {
+            const m = $('#printModal');
+            const fs = m.classList.toggle('fullscreen');
+            $('#prFullscreen').textContent = fs ? '🗗' : '⛶';
+            $('#prFullscreen').title = fs ? 'Вернуть размер окна' : 'Развернуть на весь экран';
+        };
+        $('#prFormat').addEventListener('change', function (e) { printOpts.format = e.target.value; schedulePreview(); });
+        $('#prOrient').addEventListener('change', function (e) { printOpts.orient = e.target.value; schedulePreview(); });
+        $('#prScale').addEventListener('change', function (e) { printOpts.scale = e.target.value; schedulePreview(); });
+        $('#prMargin').addEventListener('input', function (e) {
+            const v = parseFloat(e.target.value);
+            if (isFinite(v)) { printOpts.margin = clamp(v, 0, 30); schedulePreview(); }
+        });
+        $('#prGap').addEventListener('input', function (e) {
+            const v = parseFloat(e.target.value);
+            if (isFinite(v)) { printOpts.gap = clamp(v, 0, 20); schedulePreview(); }
+        });
+        $('#prOverlap').addEventListener('input', function (e) {
+            const v = parseFloat(e.target.value);
+            if (isFinite(v)) { printOpts.overlap = clamp(v, 0, 30); schedulePreview(); }
+        });
+        $('#prSeparate').addEventListener('change', function (e) { printOpts.separate = e.target.checked; schedulePreview(); });
+        $('#prMarks').addEventListener('change', function (e) { printOpts.marks = e.target.checked; schedulePreview(); });
+        $('#prSeam').addEventListener('change', function (e) { printOpts.seam = e.target.checked; schedulePreview(); });
+        $('#prLabels').addEventListener('change', function (e) { printOpts.labels = e.target.checked; schedulePreview(); });
+        $('#prCalib').addEventListener('change', function (e) { printOpts.calib = e.target.checked; schedulePreview(); });
         /* ============================ АВТОСОХРАНЕНИЕ НАСТРОЕК ИНТЕРФЕЙСА ============================ */
         const UI_PREFS_KEY = 'ui';
         const LS_UI_KEY = 'neoncut-ui-prefs-v1';
@@ -6554,8 +6648,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             'vPieceStyle', 'vFabricStyle', 'vNames', 'vDims', 'vGrain', 'vSeam',
             'fabChk', 'fabMode', 'fabW', 'fabH',
             'prFormat', 'prOrient', 'prScale', 'prMargin', 'prGap', 'prOverlap', 'prSeparate',
-            'prMarks', 'prSeam', 'prLabels', 'prCalib',
-            'sbCoords', 'sbCount', 'sbZoom', 'sbArea', 'sbBounds', 'sbUiChip', 'sbStorageChip'
+            'prMarks', 'prSeam', 'prLabels', 'prCalib'
         ]);
         let uiSaveTimer = null, uiSaving = false, lastUISavedAt = null;
         function collectUIPrefs() {
@@ -6653,7 +6746,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         function updateUIChip() {
             const el = $('#uiChip'); if (!el) return;
             if (uiSaving) { el.className = 'chip warn'; el.textContent = '⚙ Настройки: сохранение…'; return; }
-            if (lastSavedAt) {
+            if (lastUISavedAt) {
                 el.className = 'chip ok';
                 el.textContent = '⚙ Настройки: ' + lastUISavedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); return;
             }
@@ -6706,6 +6799,22 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 location.reload();
             });
         })();
+        /* ---------- настройки статусбара ---------- */
+        STATUS_MAP.forEach(function (m) {
+            const cb = $(m.cb);
+            if (!cb) return;
+            cb.addEventListener('change', function () {
+                if (!state.statusOpts) state.statusOpts = {};
+                state.statusOpts[m.key] = cb.checked;
+                applyStatusVisibility();
+                draw();
+                scheduleUISave();
+            });
+        });
+        $('#btnStatusOpts').addEventListener('click', function (e) {
+            e.stopPropagation();
+            toggleStatusPanel();
+        });
         /* ============================ проекты ============================ */
         const projOv = $('#projOverlay');
         async function refreshProjectsList() {
@@ -6760,7 +6869,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             if (data.pxPerCm != null && isFinite(+data.pxPerCm)) state.pxPerCm = clamp(+data.pxPerCm, 1, 40);
             applyDprSetting(data);
             syncScaleUI();
-            /* текущий масштаб — от базового коэффициента (с учётом DPR) */
             state.view.scale = baseScale();
             state.selId = null; $('#quick').classList.add('hidden');
             state.dirty = false; lastSavedAt = new Date(data.updatedAt || Date.now());
@@ -6831,7 +6939,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         $('#btn100').onclick = function () {
             fitMode = 'free'; ensureSize();
             const c = s2w(W / 2, H / 2);
-            /* 100% = базовый коэффициент (с учётом DPR) */
             state.view.scale = baseScale();
             state.view.ox = W / 2 - c.x * state.view.scale; state.view.oy = H / 2 - c.y * state.view.scale;
             draw();
@@ -6935,12 +7042,11 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 if (fitMode !== 'free') {
                     applyFit(fitMode);
                 } else {
-                    if (oldBase > 0 && state.view?.scale > 0 || state.view.scale > 0) {
+                    if (oldBase > 0 && state.view.scale > 0) {
                         state.view.scale = state.view.scale * (newBase / oldBase);
                     }
                     draw();
                 }
-                scheduleUISave();
             }
         });
         $('#gDpr').addEventListener('change', function (e) {
@@ -7338,7 +7444,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                     buildLibrary(); buildPresetsUI();
                 }
                 await loadUIPrefs();
-                /* стартовый масштаб = базовый коэффициент (с учётом DPR) */
                 state.view.scale = baseScale();
                 applyStatusVisibility();
                 draw();
