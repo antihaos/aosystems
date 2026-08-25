@@ -742,7 +742,7 @@
             cursor: crosshair
         }
 
-        /* ---------- статусбар (эргономичный, настраиваемый) ---------- */
+        /* ---------- статусбар ---------- */
         #statusbar {
             flex: none;
             display: flex;
@@ -816,7 +816,7 @@
             font-size: 12px;
         }
 
-        /* панель настроек статусбара: живёт в #stage, чтобы не обрезаться
+        /* Панель настроек статусбара: живёт в #stage, чтобы не обрезаться
 скролл-контейнером статусбара; позиция по вертикали задаётся из JS */
         #statusPanel {
             position: absolute;
@@ -1056,10 +1056,6 @@
             width: min(800px, 96vw)
         }
 
-        .modal.print-modal {
-            width: min(900px, 96vw)
-        }
-
         .modal.small {
             width: min(380px, 92vw)
         }
@@ -1274,7 +1270,6 @@
             box-shadow: 0 0 10px rgba(255, 194, 77, .4)
         }
 
-        /* ---------- тулбар редактора контура ---------- */
         .c-bar {
             display: flex;
             gap: 6px;
@@ -1346,27 +1341,42 @@
             color: var(--dim)
         }
 
-        /* ---------- печать: диалог, предпросмотр, листы ---------- */
+        /* ---------- печать: диалог с корректными зонами прокрутки ---------- */
+        #printOverlay .modal.print-modal {
+            width: min(940px, 96vw);
+            height: min(88vh, 780px);
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
         .print-body {
+            flex: 1;
+            min-height: 0;
+            display: flex;
             flex-direction: row;
-            align-items: stretch;
             gap: 14px;
+            overflow: hidden;
         }
 
         .print-side {
-            width: 268px;
+            width: 272px;
             flex: none;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            max-height: 72vh;
+            min-height: 0;
             overflow-y: auto;
-            padding-right: 4px;
+            overflow-x: hidden;
+            padding-right: 6px;
+            scrollbar-width: thin;
         }
 
         .print-preview {
             flex: 1;
             min-width: 0;
+            min-height: 0;
             overflow: auto;
             display: flex;
             flex-wrap: wrap;
@@ -1376,7 +1386,7 @@
             border: 1px solid var(--line);
             border-radius: 10px;
             padding: 12px;
-            max-height: 72vh;
+            scrollbar-width: thin;
         }
 
         .pr-empty {
@@ -1385,6 +1395,14 @@
             padding: 20px;
             text-align: center;
             width: 100%;
+        }
+
+        .pr-fig {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+            flex: none;
         }
 
         .pr-thumb {
@@ -1401,6 +1419,16 @@
             max-height: 270px;
             width: auto;
             height: auto;
+        }
+
+        .pr-cap {
+            font: 500 9.5px/1.35 var(--font-mono);
+            color: var(--dim);
+            max-width: 215px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: center;
         }
 
         .pr-sec-title {
@@ -1422,6 +1450,7 @@
             border-radius: 8px;
             padding: 7px;
             background: rgba(5, 6, 14, .4);
+            scrollbar-width: thin;
         }
 
         .pr-piece-row {
@@ -1666,12 +1695,35 @@
                 border-bottom: none
             }
 
+            #printOverlay .modal.print-modal {
+                width: 100vw;
+                max-width: 100vw;
+                height: 84vh;
+                max-height: 84vh;
+            }
+
+            .print-body {
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            .print-side {
+                width: 100%;
+                max-height: 46%;
+                flex: none;
+            }
+
+            .print-preview {
+                flex: 1;
+                min-height: 120px;
+            }
+
             #projName {
                 width: 120px
             }
 
             #statusbar {
-                gap: 10px;
+                gap: 8px;
                 padding: 5px 10px
             }
 
@@ -1706,19 +1758,6 @@
             .c-group .tbtn {
                 padding: 10px 10px
             }
-
-            .print-body {
-                flex-direction: column
-            }
-
-            .print-side {
-                width: 100%;
-                max-height: none
-            }
-
-            .print-preview {
-                max-height: 40vh
-            }
         }
     </style>
 </head>
@@ -1741,7 +1780,7 @@
                 </g>
             </svg>
             <div>
-                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.24.2</span></div>
+                <div class="logo-name"><span class="logo-title">NEONCUT</span><span class="ver">v1.24.3</span></div>
                 <div class="desc">Студия швейных выкроек: собери свою выкройку на холсте</div>
             </div>
         </div>
@@ -2054,8 +2093,7 @@
                 <button class="gear st-gear" id="btnStatusOpts"
                     title="Настройки статусбара: какие элементы показывать">⚙</button>
             </div>
-            <!-- Панель настроек статусбара: размещена в #stage (вне скролл-контейнера статусбара),
-позиция над статусбаром задаётся из JS -->
+            <!-- Панель настроек статусбара (вне скролл-контейнера статусбара) -->
             <div id="statusPanel" class="hidden">
                 <div class="pop-title">Элементы статусбара</div>
                 <div class="pop-row"><label class="chk"><input type="checkbox" id="sbCoords" checked> Координаты
@@ -2314,8 +2352,21 @@
                     <div class="pr-sec-title">Размещение</div>
                     <div class="pop-row"><label class="chk"><input type="checkbox" id="prSeparate"> Каждая деталь с
                             нового листа</label></div>
-                    <div class="print-note">Если выключено — несколько деталей компактно размещаются на одном листе
-                        (полочная упаковка). Крупные детали в любом случае разбиваются на листы с нахлёстом.</div>
+                    <div class="pop-row">
+                        <label>Зазор деталей, мм</label>
+                        <input type="number" id="prGap" value="5" min="0" max="20" step="1"
+                            title="Минимальное расстояние между деталями на одном листе">
+                    </div>
+                    <div class="pop-row">
+                        <label>Нахлёст листов, мм</label>
+                        <input type="number" id="prOverlap" value="10" min="0" max="30" step="1"
+                            title="Нахлёст соседних листов при разбиении крупной детали">
+                    </div>
+                    <div class="print-note">Совместное размещение упаковывает несколько деталей на один лист (с
+                        поворотом
+                        на 90°, если так плотнее). Крупные детали в любом случае разбиваются на сетку листов с нахлёстом
+                        —
+                        совмещайте по крестикам, обрезайте по пунктиру.</div>
                     <div class="pr-sec-title">Разметка</div>
                     <div class="pop-row"><label class="chk"><input type="checkbox" id="prMarks" checked> Метки
                             совмещения листов</label></div>
@@ -2325,8 +2376,6 @@
                             долевая, нумерация</label></div>
                     <div class="pop-row"><label class="chk"><input type="checkbox" id="prCalib" checked>
                             Калибровочный квадрат 10 см</label></div>
-                    <div class="print-note">Крупные детали автоматически разбиваются на листы с нахлёстом 10 мм:
-                        совмещайте листы по крестикам, лишнее обрезайте по пунктиру.</div>
                     <div class="pr-summary" id="prSummary"></div>
                     <button class="btn primary wide-btn" id="prGo" title="Открыть системный диалог печати">🖨
                         Печать…</button>
@@ -3143,11 +3192,11 @@
             pieceStyle: 'neon', fabricStyle: 'weave',
             show: { names: true, dims: true, grain: true, seam: true },
             physRuler: { on: false, x: 25, y: 20, angle: 0, len: 50, w: 5, tick: 1 },
+            /* Видимость элементов статусбара (настраивается через ⚙ в статусбаре) */
             statusOpts: { coords: true, count: true, zoom: true, area: false, bounds: false, uiChip: true, storageChip: true },
             project: { id: null, name: 'Новый проект' },
             dirty: false,
         };
-        const STATUS_KEYS = ['coords', 'count', 'zoom', 'area', 'bounds', 'uiChip', 'storageChip'];
         let editorId = null, saving = false, lastSavedAt = null, storageFailedNoted = false, saveTimer = null, repackTimer = null;
         let fitMode = 'fit';
         const FIT_MODES = { fit: 1, pieces: 1, selected: 1, fabric: 1, fabW: 1, fabH: 1 };
@@ -3186,7 +3235,7 @@
             letter: { name: 'Letter', w: 216, h: 279 },
             legal: { name: 'Legal', w: 216, h: 356 }
         };
-        let printOpts = { format: 'a4', orient: 'auto', scale: '1', margin: 10, separate: false, marks: true, seam: true, labels: true, calib: true };
+        let printOpts = { format: 'a4', orient: 'auto', scale: '1', margin: 10, gap: 5, overlap: 10, separate: false, marks: true, seam: true, labels: true, calib: true };
         let printSel = new Set();
         let printCanvases = [];
         let printSheetInfo = null;
@@ -3210,26 +3259,30 @@
             const b = w2s(rect.maxx, rect.maxy);
             return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) };
         }
-        /* ============================ видимость и настройка статусбара ============================ */
+        /* ============================ статусбар: видимость элементов ============================ */
+        const STATUS_MAP = [
+            { cb: '#sbCoords', el: '#stCoords', key: 'coords' },
+            { cb: '#sbCount', el: '#stCount', key: 'count' },
+            { cb: '#sbZoom', el: '#stZoom', key: 'zoom' },
+            { cb: '#sbArea', el: '#stArea', key: 'area' },
+            { cb: '#sbBounds', el: '#stBounds', key: 'bounds' },
+            { cb: '#sbUiChip', el: '#uiChip', key: 'uiChip' },
+            { cb: '#sbStorageChip', el: '#storageChip', key: 'storageChip' }
+        ];
         function applyStatusVisibility() {
-            const o = state.statusOpts;
-            $('#stCoords').classList.toggle('hidden', !o.coords);
-            $('#stCount').classList.toggle('hidden', !o.count);
-            $('#stZoom').classList.toggle('hidden', !o.zoom);
-            $('#stArea').classList.toggle('hidden', !o.area);
-            $('#stBounds').classList.toggle('hidden', !o.bounds);
-            $('#uiChip').classList.toggle('hidden', !o.uiChip);
-            $('#storageChip').classList.toggle('hidden', !o.storageChip);
-            const g1 = !!(o.coords || o.count || o.zoom);
-            const g2 = !!(o.area || o.bounds);
-            const g3 = !!(o.uiChip || o.storageChip);
-            $('#stSep1').classList.toggle('hidden', !(g1 && g2));
-            $('#stSep2').classList.toggle('hidden', !(g2 && g3));
-            const map = { sbCoords: 'coords', sbCount: 'count', sbZoom: 'zoom', sbArea: 'area', sbBounds: 'bounds', sbUiChip: 'uiChip', sbStorageChip: 'storageChip' };
-            for (const id in map) { const el = $('#' + id); if (el) el.checked = !!o[map[id]]; }
+            const o = state.statusOpts || {};
+            let g1 = false, g2 = false, g3 = false;
+            STATUS_MAP.forEach(function (m) {
+                const on = !!o[m.key];
+                const el = $(m.el); if (el) el.classList.toggle('hidden', !on);
+                const cb = $(m.cb); if (cb && cb.checked !== on) cb.checked = on;
+                if (m.key === 'coords' || m.key === 'count' || m.key === 'zoom') g1 = g1 || on;
+                else if (m.key === 'area' || m.key === 'bounds') g2 = g2 || on;
+                else g3 = g3 || on;
+            });
+            const s1 = $('#stSep1'); if (s1) s1.classList.toggle('hidden', !(g1 && g2));
+            const s2 = $('#stSep2'); if (s2) s2.classList.toggle('hidden', !(g2 && g3));
         }
-        /* Панель настроек статусбара: позиционируется над статусбаром внутри #stage,
-        чтобы не обрезаться скролл-контейнером (overflow-x) статусбара */
         function toggleStatusPanel() {
             const panel = $('#statusPanel');
             if (!panel) return;
@@ -3752,51 +3805,43 @@
             drawCursor();
             const eh = $('#emptyHint'); if (eh) eh.classList.toggle('hidden', state.pieces.length > 0);
             const zl = $('#zoomLbl'); if (zl) zl.textContent = zoomPercent() + '%';
-            /* ---------- статусбар ---------- */
-            const sbO = state.statusOpts;
-            if (sbO.zoom) {
-                const sz = $('#stZoom');
-                if (sz) {
-                    const pct = zoomPercent();
-                    const ppcm = state.view.scale.toFixed(1);
-                    sz.innerHTML = `<span class="st-l">Масштаб</span> ${pct}% · ${ppcm} px/см`;
-                    sz.title = `Масштаб относительно базового коэффициента: ${pct}%
+            /* ---------- статусбар: значения обновляются всегда, видимость — через классы ---------- */
+            const sz = $('#stZoom');
+            if (sz) {
+                const pct = zoomPercent();
+                const ppcm = state.view.scale.toFixed(1);
+                sz.innerHTML = `<span class="st-l">Масштаб</span> ${pct}% · ${ppcm} px/см`;
+                sz.title = `Масштаб относительно базового коэффициента: ${pct}%
 Базовый коэффициент (100%): ${baseScale().toFixed(2)} px/см
 DPR: ${effDpr()} (режим «${state.dprMode}»)`;
-                }
             }
-            if (sbO.area) {
-                const sa = $('#stArea');
-                if (sa) {
-                    sa.innerHTML = `<span class="st-l">Область</span> ${Math.round(W)}×${Math.round(H)} px · буфер ${Math.round(W * dpr)}×${Math.round(H * dpr)} @${dpr}x`;
-                    sa.title = `Видимая область: ${Math.round(W)}×${Math.round(H)} логических px
+            const sa = $('#stArea');
+            if (sa) {
+                sa.innerHTML = `<span class="st-l">Область</span> ${Math.round(W)}×${Math.round(H)} px · буфер ${Math.round(W * dpr)}×${Math.round(H * dpr)} @${dpr}x`;
+                sa.title = `Видимая область: ${Math.round(W)}×${Math.round(H)} логических px
 Буфер канваса: ${Math.round(W * dpr)}×${Math.round(H * dpr)} физических px (DPR=${dpr}, режим «${state.dprMode}»)`;
-                }
             }
-            if (sbO.bounds) {
-                const sbEl = $('#stBounds');
-                if (sbEl) {
-                    let rb = null;
-                    if (state.pieces.length) rb = fitBounds();
-                    else if (state.fabric) rb = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricMode === 'piece' ? state.fabricH : 100 };
-                    if (rb) {
-                        const scr = worldRectToScreen(rb);
-                        sbEl.innerHTML = `<span class="st-l">Контент</span> ${Math.round(scr.w)}×${Math.round(scr.h)} px`;
-                        sbEl.title = `Рамка контента на экране: ${Math.round(scr.w)}×${Math.round(scr.h)} px
+            const sbEl = $('#stBounds');
+            if (sbEl) {
+                let rb = null;
+                if (state.pieces.length) rb = fitBounds();
+                else if (state.fabric) rb = { minx: 0, miny: 0, maxx: state.fabricW, maxy: state.fabricMode === 'piece' ? state.fabricH : 100 };
+                if (rb) {
+                    const scr = worldRectToScreen(rb);
+                    sbEl.innerHTML = `<span class="st-l">Контент</span> ${Math.round(scr.w)}×${Math.round(scr.h)} px`;
+                    sbEl.title = `Рамка контента на экране: ${Math.round(scr.w)}×${Math.round(scr.h)} px
 В мировых координатах: ${fmt(rb.maxx - rb.minx)}×${fmt(rb.maxy - rb.miny)} см`;
-                    } else {
-                        sbEl.textContent = 'Контент: —';
-                        sbEl.title = 'Холст пуст — нет деталей, ткань отключена';
-                    }
+                } else {
+                    sbEl.textContent = 'Контент: —';
+                    sbEl.title = 'Холст пуст — нет деталей, ткань отключена';
                 }
             }
-            if (sbO.count) {
-                let outN = 0; if (state.fabric) for (const p of state.pieces) if (outOfFabric(p)) outN++;
-                const sc = $('#stCount');
-                if (sc) {
-                    sc.innerHTML = `<span class="st-l">Деталей</span> ${state.pieces.length}` + (state.fabric && outN ? ` · вне ткани ${outN}` : '');
-                    sc.title = 'Количество деталей на холсте' + (state.fabric ? ' и сколько из них выходит за границы ткани' : '');
-                }
+            let outN = 0; if (state.fabric) for (const p of state.pieces) if (outOfFabric(p)) outN++;
+            const sc = $('#stCount');
+            if (sc) {
+                sc.innerHTML = `<span class="st-l">Деталей</span> ${state.pieces.length}` +
+                    (state.fabric && outN ? ` · <span style="color:#ff9db1">вне ткани ${outN}</span>` : '');
+                sc.title = 'Количество деталей на холсте' + (state.fabric ? ' и сколько из них выходит за границы ткани' : '');
             }
             updateFitMenuState();
             positionQuick();
@@ -4723,7 +4768,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             }
             return { minx: minx, miny: miny, maxx: maxx, maxy: maxy, w: maxx - minx, h: maxy - miny };
         }
-        /* Вписать контур: деталь центрируется в окне редактора (с учётом линеек слева/сверху) */
         function cFit(retry) {
             if (!ctrEd) return;
             cResize();
@@ -4760,7 +4804,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             if (ang > 180) ang = 360 - ang;
             return ang;
         }
-        /* ---------- линейки по краям окна редактора (координаты в см) ---------- */
         function fmtRuler(v) {
             const r = Math.round(v * 10) / 10;
             return Number.isInteger(r) ? String(r) : r.toFixed(1);
@@ -5271,203 +5314,187 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             handle.addEventListener('pointerup', endRs);
             handle.addEventListener('pointercancel', endRs);
         })();
-        /* ============================ ПЕЧАТЬ: реализация ============================ */
+        /* ============================ ПЕЧАТЬ: упаковка по листам ============================ */
         /*
-         * Размещение деталей на печатных листах.
-         * - Режим «совместно» (prSeparate=false): полочная упаковка — на одном листе
-         *   размещается несколько деталей, пока они помещаются.
-         * - Режим «раздельно» (prSeparate=true): каждая деталь начинается с нового листа.
-         * - Деталь, которая не помещается на лист целиком, в любом случае разбивается
-         *   на сетку листов с нахлёстом (метки совмещения).
-         * - Масштаб «вписать в лист» всегда печатает деталь на отдельном листе.
+         * Точная упаковка прямоугольников по листам (разрешение 1 мм, карта занятости).
+         * - детали сортируются по убыванию площади;
+         * - для каждой детали ищется место на уже открытых листах (перебор позиций
+         *   сверху-влево, поиск «дырок»), с вариантами 0° и 90°;
+         * - выбирается позиция с минимальным y (ниже = меньше высота стопы листов);
+         * - если ни на одном листе нет места — открывается новый лист.
          */
-        function renderPrintPages() {
-            const pages = [];
-            const sel = state.pieces.filter(p => printSel.has(p.id));
-            const paper = PAPER_FORMATS[printOpts.format] || PAPER_FORMATS.a4;
-            const margin = clamp(+printOpts.margin || 0, 0, 30);
-            const ov = 10;      // нахлёст соседних листов при разбиении крупной детали, мм
-            const gapMM = 5;    // зазор между деталями на одном листе, мм
-            const pxPerMm = 150 / 25.4;
-            const mm = v => v * pxPerMm;
-            const dimsFor = o => o === 'landscape' ? { SW: paper.h, SH: paper.w } : { SW: paper.w, SH: paper.h };
-            const combined = !printOpts.separate && printOpts.scale !== 'fit';
-
-            function planFor(p, SW, SH) {
-                const b = p._bounds;
-                const wcm = Math.max(0.01, b.w), hcm = Math.max(0.01, b.h);
-                const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
+        function packRects(items, usableW, usableH, gap) {
+            const gw = Math.max(1, Math.floor(usableW)), gh = Math.max(1, Math.floor(usableH));
+            const sheets = [];
+            const order = items.slice().sort((a, b) => (b.w * b.h) - (a.w * a.h) || (b.h - a.h));
+            function rectFree(occ, x, y, w, h) {
+                for (let j = y; j < y + h; j++) {
+                    const row = j * gw;
+                    for (let i = x; i < x + w; i++) {
+                        if (occ[row + i]) return false;
+                    }
+                }
+                return true;
+            }
+            function findSpot(occ, bw, bh) {
+                if (bw > gw || bh > gh) return null;
+                for (let y = 0; y <= gh - bh; y++) {
+                    let x = 0;
+                    while (x <= gw - bw) {
+                        let ok = true, jump = 1;
+                        let foundI = 0, foundJ = 0;
+                        scan:
+                        for (let j = y; j < y + bh; j++) {
+                            const row = j * gw;
+                            for (let i = 0; i < bw; i++) {
+                                if (occ[row + x + i]) { ok = false; jump = i + 1; foundI = i; foundJ = j; break scan; }
+                            }
+                        }
+                        if (ok) return { x: x, y: y };
+                        x += jump;
+                        if (foundI === 0 && foundJ > y) break;
+                    }
+                }
+                return null;
+            }
+            function mark(occ, x, y, w, h) {
+                for (let j = y; j < y + h; j++) {
+                    const row = j * gw;
+                    for (let i = x; i < x + w; i++) occ[row + i] = 1;
+                }
+            }
+            for (const it of order) {
+                let best = null;
+                for (let si = 0; si < sheets.length; si++) {
+                    const sh = sheets[si];
+                    for (const rot of [0, 1]) {
+                        const w = rot ? it.h : it.w, h = rot ? it.w : it.h;
+                        const bw = Math.ceil(w + gap), bh = Math.ceil(h + gap);
+                        if (bw > gw || bh > gh) continue;
+                        const pos = findSpot(sh.occ, bw, bh);
+                        if (!pos) continue;
+                        if (!best || pos.y < best.pos.y || (pos.y === best.pos.y && pos.x < best.pos.x)) {
+                            best = { si: si, pos: pos, rot: rot, w: w, h: h };
+                        }
+                    }
+                }
+                if (!best) {
+                    const sh = { occ: new Uint8Array(gw * gh), placed: [] };
+                    sheets.push(sh);
+                    let rot = 0;
+                    const bw0 = Math.ceil(it.w + gap), bh0 = Math.ceil(it.h + gap);
+                    const bw1 = Math.ceil(it.h + gap), bh1 = Math.ceil(it.w + gap);
+                    const f0 = bw0 <= gw && bh0 <= gh, f1 = bw1 <= gw && bh1 <= gh;
+                    if (f0 && f1) rot = (bh1 < bh0 || (bh1 === bh0 && bw1 < bw0)) ? 1 : 0;
+                    else if (!f0 && f1) rot = 1;
+                    const w = rot ? it.h : it.w, h = rot ? it.w : it.h;
+                    best = { si: sheets.length - 1, pos: { x: 0, y: 0 }, rot: rot, w: w, h: h };
+                }
+                const sh = sheets[best.si];
+                mark(sh.occ, best.pos.x, best.pos.y, Math.ceil(best.w + gap), Math.ceil(best.h + gap));
+                sh.placed.push({ item: it, x: best.pos.x, y: best.pos.y, rot: best.rot, w: best.w, h: best.h });
+            }
+            return sheets;
+        }
+        /* Сборка печатных страниц для заданного размера листа */
+        function buildPrintSheets(SW, SH, infos, opts) {
+            const margin = opts.margin, gap = opts.gap, ov = opts.ov;
+            const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
+            const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
+            const den = Math.max(1, +opts.scale || 1);
+            const combined = !opts.separate && opts.scale !== 'fit';
+            const sheets = [];
+            const packItems = [];
+            for (const info of infos) {
                 let k, scaleLabel;
-                if (printOpts.scale === 'fit') {
-                    k = Math.min(usableW / wcm, usableH / hcm);
-                    scaleLabel = 'вписать ≈1:' + Math.max(1, 10 / k).toFixed(1);
+                if (opts.scale === 'fit') {
+                    k = Math.min(usableW / info.wcm, usableH / info.hcm);
+                    scaleLabel = 'в лист ≈1:' + Math.max(1, 10 / k).toFixed(1);
                 } else {
-                    const den = Math.max(1, +printOpts.scale || 1);
                     k = 10 / den;
                     scaleLabel = '1:' + den;
                 }
-                return { k: k, scaleLabel: scaleLabel, wmm: wcm * k, hmm: hcm * k, usableW: usableW, usableH: usableH };
+                info.k = k; info.wmm = info.wcm * k; info.hmm = info.hcm * k; info.scaleLabel = scaleLabel;
+                const fits0 = info.wmm <= usableW && info.hmm <= usableH;
+                const fits90 = info.hmm <= usableW && info.wmm <= usableH;
+                if (fits0 || fits90) {
+                    if (combined) {
+                        packItems.push({ w: info.wmm, h: info.hmm, info: info });
+                    } else {
+                        sheets.push({ entries: [{ info: info, x: 0, y: 0, rot: fits0 ? 0 : 1, boxW: fits0 ? info.wmm : info.hmm, boxH: fits0 ? info.hmm : info.wmm }] });
+                    }
+                } else {
+                    /* деталь не помещается ни в одной ориентации — разбиваем на сетку листов с нахлёстом */
+                    const cols = Math.max(1, Math.ceil((info.wmm - ov) / advX));
+                    const rows = Math.max(1, Math.ceil((info.hmm - ov) / advY));
+                    for (let r = 0; r < rows; r++) {
+                        for (let cIdx = 0; cIdx < cols; cIdx++) {
+                            sheets.push({
+                                entries: [{
+                                    info: info, x: -cIdx * advX, y: -r * advY, rot: 0,
+                                    boxW: info.wmm, boxH: info.hmm,
+                                    tile: { col: cIdx, row: r, cols: cols, rows: rows }
+                                }]
+                            });
+                        }
+                    }
+                }
             }
-
+            if (combined && packItems.length) {
+                const packed = packRects(packItems, usableW, usableH, gap);
+                for (const sh of packed) {
+                    sheets.push({
+                        entries: sh.placed.map(pl => ({
+                            info: pl.item.info, x: pl.x, y: pl.y, rot: pl.rot,
+                            boxW: pl.w, boxH: pl.h
+                        }))
+                    });
+                }
+            }
+            return { sheets: sheets, usableW: usableW, usableH: usableH, advX: advX, advY: advY };
+        }
+        /* Рендер всех страниц + подписи под миниатюрами */
+        function renderPrintPages() {
+            const sel = state.pieces.filter(p => printSel.has(p.id));
+            const paper = PAPER_FORMATS[printOpts.format] || PAPER_FORMATS.a4;
+            const margin = clamp(printOpts.margin != null ? +printOpts.margin : 10, 0, 30);
+            const gap = clamp(printOpts.gap != null ? +printOpts.gap : 5, 0, 20);
+            const ov = clamp(printOpts.overlap != null ? +printOpts.overlap : 10, 0, 30);
+            const pxPerMm = 150 / 25.4;
+            const mm = v => v * pxPerMm;
+            const dimsFor = o => o === 'landscape' ? { SW: paper.h, SH: paper.w } : { SW: paper.w, SH: paper.h };
+            const opts = { margin: margin, gap: gap, ov: ov, scale: printOpts.scale, separate: printOpts.separate };
             sel.forEach(rebuildPiece);
-
-            /* подготовка элементов: локальный контур, припуски */
-            const items = sel.map(p => {
+            const infos = sel.map(p => {
                 const pts = printLocalPts(p);
                 const seamPts = (printOpts.seam && p.seam > 0) ? offsetPolyline(pts, p.seam) : null;
-                return { p: p, pts: pts, seamPts: seamPts, plan: null };
+                return { p: p, pts: pts, seamPts: seamPts, wcm: Math.max(0.01, p._bounds.w), hcm: Math.max(0.01, p._bounds.h), k: 0, wmm: 0, hmm: 0, scaleLabel: '' };
             });
-
-            /* сборка листов для заданного размера листа */
-            function buildSheets(SW, SH) {
-                const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
-                const sheets = [];
-                const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
-                const mkSheet = () => ({ x: 0, y: 0, rowH: 0, items: [] });
-                /* разбиение детали на сетку листов */
-                function pushTiled(it, plan) {
-                    const cols = Math.max(1, Math.ceil((plan.wmm - ov) / advX));
-                    const rows = Math.max(1, Math.ceil((plan.hmm - ov) / advY));
-                    for (let r = 0; r < rows; r++) {
-                        for (let c = 0; c < cols; c++) {
-                            sheets.push({ items: [{ it: it, x: 0, y: 0, plan: plan, tile: { col: c, row: r, cols: cols, rows: rows } }] });
-                        }
-                    }
-                }
-                if (!combined) {
-                    /* раздельно / вписать: каждая деталь — свои листы */
-                    for (const it of items) {
-                        const plan = planFor(it.p, SW, SH);
-                        it.plan = plan;
-                        if (plan.wmm <= usableW && plan.hmm <= usableH) {
-                            sheets.push({ items: [{ it: it, x: 0, y: 0, plan: plan }] });
-                        } else {
-                            pushTiled(it, plan);
-                        }
-                    }
-                    return sheets;
-                }
-                /* совместно: полочная упаковка (сортировка по высоте для плотности) */
-                const order = items.slice().sort((a, b) => b.p._bounds.h - a.p._bounds.h);
-                let sheet = mkSheet(); sheets.push(sheet);
-                for (const it of order) {
-                    const plan = planFor(it.p, SW, SH);
-                    it.plan = plan;
-                    if (plan.wmm > usableW || plan.hmm > usableH) { pushTiled(it, plan); continue; }
-                    const w = plan.wmm + gapMM, h = plan.hmm + gapMM;
-                    let pos = null;
-                    if (sheet.x + plan.wmm <= usableW + 1e-6) {
-                        pos = { x: sheet.x, y: sheet.y };
-                        sheet.x += w; sheet.rowH = Math.max(sheet.rowH, h);
-                    } else {
-                        const ny = sheet.y + sheet.rowH + gapMM;
-                        if (ny + plan.hmm <= usableH + 1e-6) {
-                            pos = { x: 0, y: ny };
-                            sheet.y = ny; sheet.x = w; sheet.rowH = h;
-                        }
-                    }
-                    if (!pos) {
-                        sheet = mkSheet(); sheets.push(sheet);
-                        pos = { x: 0, y: 0 };
-                        sheet.x = w; sheet.rowH = h;
-                    }
-                    sheet.items.push({ it: it, x: pos.x, y: pos.y, plan: plan });
-                }
-                return sheets;
-            }
-
-            /* выбор ориентации «авто»: меньше листов */
+            /* выбор ориентации: считаем оба варианта, затем пересобираем выбранный */
             let orient = printOpts.orient;
-            let sheetsArr;
             if (orient === 'auto') {
                 const dP = dimsFor('portrait'), dL = dimsFor('landscape');
-                const sP = buildSheets(dP.SW, dP.SH);
-                const sL = buildSheets(dL.SW, dL.SH);
-                if (sL.length < sP.length) { orient = 'landscape'; sheetsArr = sL; }
-                else { orient = 'portrait'; sheetsArr = sP; }
-            } else {
-                const d = dimsFor(orient);
-                sheetsArr = buildSheets(d.SW, d.SH);
+                const bP = buildPrintSheets(dP.SW, dP.SH, infos, opts);
+                const bL = buildPrintSheets(dL.SW, dL.SH, infos, opts);
+                orient = bL.sheets.length < bP.sheets.length ? 'landscape' : 'portrait';
             }
             const dims = dimsFor(orient);
             const SW = dims.SW, SH = dims.SH;
-            const usableW = Math.max(10, SW - margin * 2), usableH = Math.max(10, SH - margin * 2);
+            const built = buildPrintSheets(SW, SH, infos, opts);
+            const usableW = built.usableW, usableH = built.usableH;
+            const advX = built.advX, advY = built.advY;
             const Wpx = Math.round(SW * pxPerMm), Hpx = Math.round(SH * pxPerMm);
+            const sheetsArr = built.sheets;
             const totalPages = sheetsArr.length;
             const CAP = 120;
-            const advX = Math.max(5, usableW - ov), advY = Math.max(5, usableH - ov);
-
-            /* крестик совмещения */
-            function drawCrossAt(g, x, y) {
+            const pages = [];
+            const captions = [];
+            function crossAt(g, x, y) {
                 g.beginPath();
                 g.moveTo(x - mm(3), y); g.lineTo(x + mm(3), y);
                 g.moveTo(x, y - mm(3)); g.lineTo(x, y + mm(3));
                 g.stroke();
             }
-            /* метки совмещения для листа-тайла крупной детали */
-            function drawTileMarks(g, tile) {
-                const col = tile.col, row = tile.row;
-                g.strokeStyle = '#9aa0ad'; g.lineWidth = mm(0.2); g.setLineDash([mm(2), mm(2)]);
-                if (col > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin), mm(margin + usableH)); g.stroke(); }
-                if (col < tile.cols - 1) { g.beginPath(); g.moveTo(mm(margin + usableW), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
-                if (row > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin)); g.stroke(); }
-                if (row < tile.rows - 1) { g.beginPath(); g.moveTo(mm(margin), mm(margin + usableH)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
-                g.setLineDash([]);
-                if (!printOpts.marks) return;
-                g.strokeStyle = '#2b2f38'; g.lineWidth = mm(0.35);
-                const off = ov / 2;
-                const cx0 = clamp(margin - off, 1, SW - 1), cx1 = clamp(margin + usableW + off, 1, SW - 1);
-                const cy0 = clamp(margin - off, 1, SH - 1), cy1 = clamp(margin + usableH + off, 1, SH - 1);
-                if (col > 0) for (let t = 0; t <= usableH + 1; t += 60) drawCrossAt(g, mm(cx0), mm(margin + Math.min(t, usableH)));
-                if (col < tile.cols - 1) for (let t = 0; t <= usableH + 1; t += 60) drawCrossAt(g, mm(cx1), mm(margin + Math.min(t, usableH)));
-                if (row > 0) for (let t = 0; t <= usableW + 1; t += 60) drawCrossAt(g, mm(margin + Math.min(t, usableW)), mm(cy0));
-                if (row < tile.rows - 1) for (let t = 0; t <= usableW + 1; t += 60) drawCrossAt(g, mm(margin + Math.min(t, usableW)), mm(cy1));
-                if (col > 0 && row > 0) drawCrossAt(g, mm(cx0), mm(cy0));
-                if (col < tile.cols - 1 && row > 0) drawCrossAt(g, mm(cx1), mm(cy0));
-                if (col > 0 && row < tile.rows - 1) drawCrossAt(g, mm(cx0), mm(cy1));
-                if (col < tile.cols - 1 && row < tile.rows - 1) drawCrossAt(g, mm(cx1), mm(cy1));
-            }
-            /* компактная бирка детали (совместный режим) */
-            function drawPieceTag(g, X, Y, it) {
-                const fs = mm(3.4);
-                g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
-                g.textAlign = 'left'; g.textBaseline = 'top';
-                const l1 = it.p.name + (it.p.custom ? ' ✎' : '');
-                const l2 = `${fmt(it.p._bounds.w)}×${fmt(it.p._bounds.h)} см` + (it.seamPts ? ` +${fmt(it.p.seam)}` : '');
-                const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(3);
-                const bx = X(0) + mm(1.5), by = Y(0) + mm(1.5);
-                g.fillStyle = 'rgba(255,255,255,.9)';
-                g.fillRect(bx, by, bw, fs * 2 + mm(3));
-                g.fillStyle = '#14161c';
-                g.fillText(l1, bx + mm(1), by + mm(1));
-                g.fillText(l2, bx + mm(1), by + mm(1) + fs + mm(1));
-            }
-            /* полная шапка (раздельный режим / тайлы) */
-            function drawSheetHeader(g, X, Y, it, plan, pageNum) {
-                const fs = mm(4);
-                g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
-                g.textAlign = 'left'; g.textBaseline = 'top';
-                const l1 = it.p.name + (it.p.custom ? ' ✎' : '');
-                const l2 = `Лист ${pageNum}/${totalPages} · ${paper.name} · ${plan.scaleLabel}`;
-                const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(4);
-                g.fillStyle = 'rgba(255,255,255,.92)';
-                g.fillRect(X(0) + mm(1), Y(0) + mm(1), bw, fs * 2 + mm(4));
-                g.fillStyle = '#14161c';
-                g.fillText(l1, X(0) + mm(3), Y(0) + mm(3));
-                g.fillText(l2, X(0) + mm(3), Y(0) + mm(3) + fs + mm(1));
-            }
-            /* габариты в правом нижнем углу детали */
-            function drawDimsFooter(g, X, Y, it, plan) {
-                const dTxt = `${fmt(it.p._bounds.w)}×${fmt(it.p._bounds.h)} см` + (it.seamPts ? ` · припуск ${fmt(it.p.seam)} см` : '');
-                g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
-                const dw = g.measureText(dTxt).width;
-                const rx = X(plan.wmm), ry = Y(plan.hmm);
-                g.fillStyle = 'rgba(255,255,255,.92)';
-                g.fillRect(rx - dw - mm(4), ry - mm(6), dw + mm(3), mm(5));
-                g.fillStyle = '#3a3f4a';
-                g.fillText(dTxt, rx - dw - mm(2.5), ry - mm(5.5));
-            }
-
             sheetsArr.forEach(function (sheet, si) {
                 if (si >= CAP) return;
                 const c = document.createElement('canvas');
@@ -5477,53 +5504,120 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 /* рамка печатной области */
                 g.strokeStyle = '#c9ced8'; g.lineWidth = mm(0.2);
                 g.strokeRect(mm(margin), mm(margin), mm(usableW), mm(usableH));
-                const multi = sheet.items.length > 1;
-                sheet.items.forEach(function (entry) {
-                    const it = entry.it, plan = entry.plan, tile = entry.tile || null;
-                    const k = plan.k;
-                    const tx = tile ? tile.col * advX : entry.x;
-                    const ty = tile ? tile.row * advY : entry.y;
-                    const ox = mm(margin + tx), oy = mm(margin + ty);
-                    const X = mx => ox + mm(mx);
-                    const Y = my => oy + mm(my);
-                    /* припуск на шов */
-                    if (it.seamPts) {
-                        g.strokeStyle = '#8a8f9c'; g.lineWidth = mm(0.3); g.setLineDash([mm(3), mm(2)]);
-                        g.beginPath();
-                        it.seamPts.forEach((q, i) => { const x = X(q[0] * k), y = Y(q[1] * k); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
-                        g.closePath(); g.stroke(); g.setLineDash([]);
+                const multi = sheet.entries.length > 1;
+                const capNames = [];
+                sheet.entries.forEach(function (entry) {
+                    const info = entry.info, k = info.k;
+                    /* отображение локальных мм детали в мм страницы (с учётом поворота на 90°) */
+                    function mapPt(lx, ly) {
+                        if (entry.rot) return [margin + entry.x + info.hmm - ly, margin + entry.y + lx];
+                        return [margin + entry.x + lx, margin + entry.y + ly];
                     }
+                    function strokePoly(pts, style, width, dash) {
+                        g.strokeStyle = style; g.lineWidth = width; g.lineJoin = 'round';
+                        if (dash) g.setLineDash(dash);
+                        g.beginPath();
+                        pts.forEach((q, i) => {
+                            const mp = mapPt(q[0] * k, q[1] * k);
+                            const X = mp[0] * pxPerMm, Y = mp[1] * pxPerMm;
+                            if (i === 0) g.moveTo(X, Y); else g.lineTo(X, Y);
+                        });
+                        g.closePath(); g.stroke();
+                        if (dash) g.setLineDash([]);
+                    }
+                    /* припуск на шов (пунктир снаружи контура) */
+                    if (info.seamPts) strokePoly(info.seamPts, '#8a8f9c', mm(0.3), [mm(3), mm(2)]);
                     /* контур лекала */
-                    g.strokeStyle = '#14161c'; g.lineWidth = mm(0.55); g.lineJoin = 'round';
-                    g.beginPath();
-                    it.pts.forEach((q, i) => { const x = X(q[0] * k), y = Y(q[1] * k); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
-                    g.closePath(); g.stroke();
-                    /* долевая и подписи */
+                    strokePoly(info.pts, '#14161c', mm(0.55), null);
+                    /* долевая нить */
                     if (printOpts.labels) {
-                        const b = it.p._bounds;
-                        if (b.h * k > 15) {
-                            const gx = X((b.w / 2) * k), y1 = Y((b.h * 0.25) * k), y2 = Y((b.h * 0.75) * k);
+                        if (info.hmm > 15) {
+                            const p1 = mapPt(info.wmm / 2, info.hmm * 0.25);
+                            const p2 = mapPt(info.wmm / 2, info.hmm * 0.75);
+                            const x1 = p1[0] * pxPerMm, y1 = p1[1] * pxPerMm, x2 = p2[0] * pxPerMm, y2 = p2[1] * pxPerMm;
                             const ah = mm(2.5);
+                            const dx = x2 - x1, dy = y2 - y1;
+                            const dl = Math.hypot(dx, dy) || 1;
+                            const ux = dx / dl, uy = dy / dl, nx = -uy, ny = ux;
                             g.strokeStyle = '#565b68'; g.lineWidth = mm(0.3);
                             g.beginPath();
-                            g.moveTo(gx, y1); g.lineTo(gx, y2);
-                            g.moveTo(gx - ah, y1 + ah * 1.6); g.lineTo(gx, y1); g.lineTo(gx + ah, y1 + ah * 1.6);
-                            g.moveTo(gx - ah, y2 - ah * 1.6); g.lineTo(gx, y2); g.lineTo(gx + ah, y2 - ah * 1.6);
+                            g.moveTo(x1, y1); g.lineTo(x2, y2);
+                            g.moveTo(x1 + nx * ah - ux * ah * 1.6, y1 + ny * ah - uy * ah * 1.6); g.lineTo(x1, y1); g.lineTo(x1 - nx * ah - ux * ah * 1.6, y1 - ny * ah - uy * ah * 1.6);
+                            g.moveTo(x2 + nx * ah + ux * ah * 1.6, y2 + ny * ah + uy * ah * 1.6); g.lineTo(x2, y2); g.lineTo(x2 - nx * ah + ux * ah * 1.6, y2 - ny * ah + uy * ah * 1.6);
                             g.stroke();
                         }
-                        if (multi && !tile) {
-                            drawPieceTag(g, X, Y, it);
+                    }
+                    const nm = info.p.name + (entry.rot ? ' ⟳90°' : '');
+                    if (capNames.indexOf(nm) < 0) capNames.push(nm);
+                    /* подписи */
+                    if (printOpts.labels) {
+                        if (multi && !entry.tile) {
+                            /* компактная бирка у угла детали */
+                            const fs = mm(3.4);
+                            g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
+                            g.textAlign = 'left'; g.textBaseline = 'top';
+                            const l1 = nm + (info.p.custom ? ' ✎' : '');
+                            const l2 = `${fmt(info.wcm)}×${fmt(info.hcm)} см` + (info.seamPts ? ` +${fmt(info.p.seam)}` : '');
+                            const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(3);
+                            const bx = (margin + entry.x + 1) * pxPerMm, by = (margin + entry.y + 1) * pxPerMm;
+                            g.fillStyle = 'rgba(255,255,255,.92)';
+                            g.fillRect(bx, by, bw, fs * 2 + mm(3));
+                            g.fillStyle = '#14161c';
+                            g.fillText(l1, bx + mm(1), by + mm(1));
+                            g.fillText(l2, bx + mm(1), by + mm(1) + fs + mm(1));
                         } else {
-                            drawSheetHeader(g, X, Y, it, plan, si + 1);
-                            drawDimsFooter(g, X, Y, it, plan);
+                            /* полная шапка: одно-детальные листы и фрагменты разбиения */
+                            const fs = mm(4);
+                            g.font = '600 ' + fs + 'px "JetBrains Mono",monospace';
+                            g.textAlign = 'left'; g.textBaseline = 'top';
+                            const l1 = nm + (info.p.custom ? ' ✎' : '');
+                            let l2 = `Лист ${si + 1}/${totalPages} · ${paper.name} · ${info.scaleLabel}`;
+                            if (entry.tile) l2 += ` · фрагмент ${entry.tile.col + 1}.${entry.tile.row + 1}`;
+                            const bw = Math.max(g.measureText(l1).width, g.measureText(l2).width) + mm(4);
+                            const bx = (margin + Math.max(0, entry.x) + 1) * pxPerMm;
+                            const by = (margin + Math.max(0, entry.y) + 1) * pxPerMm;
+                            g.fillStyle = 'rgba(255,255,255,.92)';
+                            g.fillRect(bx, by, bw, fs * 2 + mm(4));
+                            g.fillStyle = '#14161c';
+                            g.fillText(l1, bx + mm(2), by + mm(2));
+                            g.fillText(l2, bx + mm(2), by + mm(2) + fs + mm(1));
+                            /* габариты в углу детали */
+                            const dTxt = `${fmt(info.wcm)}×${fmt(info.hcm)} см` + (info.seamPts ? ` · припуск ${fmt(info.p.seam)} см` : '');
+                            g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
+                            const dw = g.measureText(dTxt).width;
+                            const rp = mapPt(info.wmm, info.hmm);
+                            g.fillStyle = 'rgba(255,255,255,.92)';
+                            g.fillRect(rp[0] * pxPerMm - dw - mm(4), rp[1] * pxPerMm - mm(6), dw + mm(3), mm(5));
+                            g.fillStyle = '#3a3f4a';
+                            g.fillText(dTxt, rp[0] * pxPerMm - dw - mm(2.5), rp[1] * pxPerMm - mm(5.5));
                         }
                     }
                     /* метки совмещения для разбитых деталей */
-                    if (tile && (tile.cols > 1 || tile.rows > 1)) drawTileMarks(g, tile);
+                    if (entry.tile && (entry.tile.cols > 1 || entry.tile.rows > 1) && printOpts.marks) {
+                        const t = entry.tile;
+                        g.strokeStyle = '#9aa0ad'; g.lineWidth = mm(0.2); g.setLineDash([mm(2), mm(2)]);
+                        if (t.col > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin), mm(margin + usableH)); g.stroke(); }
+                        if (t.col < t.cols - 1) { g.beginPath(); g.moveTo(mm(margin + usableW), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
+                        if (t.row > 0) { g.beginPath(); g.moveTo(mm(margin), mm(margin)); g.lineTo(mm(margin + usableW), mm(margin)); g.stroke(); }
+                        if (t.row < t.rows - 1) { g.beginPath(); g.moveTo(mm(margin), mm(margin + usableH)); g.lineTo(mm(margin + usableW), mm(margin + usableH)); g.stroke(); }
+                        g.setLineDash([]);
+                        g.strokeStyle = '#2b2f38'; g.lineWidth = mm(0.35);
+                        const off = ov / 2;
+                        const cx0 = clamp(margin - off, 1, SW - 1), cx1 = clamp(margin + usableW + off, 1, SW - 1);
+                        const cy0 = clamp(margin - off, 1, SH - 1), cy1 = clamp(margin + usableH + off, 1, SH - 1);
+                        if (t.col > 0) for (let tt = 0; tt <= usableH + 1; tt += 60) crossAt(g, mm(cx0), mm(margin + Math.min(tt, usableH)));
+                        if (t.col < t.cols - 1) for (let tt = 0; tt <= usableH + 1; tt += 60) crossAt(g, mm(cx1), mm(margin + Math.min(tt, usableH)));
+                        if (t.row > 0) for (let tt = 0; tt <= usableW + 1; tt += 60) crossAt(g, mm(margin + Math.min(tt, usableW)), mm(cy0));
+                        if (t.row < t.rows - 1) for (let tt = 0; tt <= usableW + 1; tt += 60) crossAt(g, mm(margin + Math.min(tt, usableW)), mm(cy1));
+                        if (t.col > 0 && t.row > 0) crossAt(g, mm(cx0), mm(cy0));
+                        if (t.col < t.cols - 1 && t.row > 0) crossAt(g, mm(cx1), mm(cy0));
+                        if (t.col > 0 && t.row < t.rows - 1) crossAt(g, mm(cx0), mm(cy1));
+                        if (t.col < t.cols - 1 && t.row < t.rows - 1) crossAt(g, mm(cx1), mm(cy1));
+                    }
                 });
                 /* номер листа при совместном размещении */
                 if (multi && printOpts.labels) {
-                    const sLbl = sheet.items[0] ? sheet.items[0].plan.scaleLabel : '';
+                    const sLbl = sheet.entries[0] ? sheet.entries[0].info.scaleLabel : '';
                     g.font = '500 ' + mm(3.2) + 'px "JetBrains Mono",monospace';
                     const t = `Лист ${si + 1}/${totalPages} · ${paper.name} · ${sLbl}`;
                     const tw = g.measureText(t).width;
@@ -5549,44 +5643,57 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                     g.textAlign = 'left'; g.textBaseline = 'top';
                 }
                 pages.push(c);
+                captions.push(`Лист ${si + 1}: ${capNames.join(', ') || '—'}`);
             });
             return {
-                pages: pages, SW: SW, SH: SH, paperName: paper.name, orient: orient,
+                pages: pages, captions: captions, SW: SW, SH: SH, paperName: paper.name, orient: orient,
                 pieceCount: sel.length, totalPages: totalPages, truncated: totalPages > CAP,
                 scaleLabel: printOpts.scale === 'fit' ? 'в лист' : '1:' + Math.max(1, +printOpts.scale || 1),
-                separate: !combined
+                separate: !!(printOpts.separate || printOpts.scale === 'fit')
             };
         }
-        function schedulePreview() {
-            clearTimeout(prTimer);
-            prTimer = setTimeout(buildPreview, 250);
+        /* Монтирование предпросмотра из готовых канвасов */
+        function mountPreview() {
+            const pv = $('#prPreview');
+            if (!pv) return;
+            pv.innerHTML = '';
+            if (!printCanvases.length) {
+                pv.innerHTML = '<div class="pr-empty">Выберите хотя бы одну деталь для печати</div>';
+                return;
+            }
+            printCanvases.forEach((c, i) => {
+                const fig = document.createElement('div'); fig.className = 'pr-fig';
+                const th = document.createElement('div'); th.className = 'pr-thumb'; th.appendChild(c);
+                const cap = document.createElement('div'); cap.className = 'pr-cap';
+                cap.textContent = (printSheetInfo && printSheetInfo.captions && printSheetInfo.captions[i]) || ('Лист ' + (i + 1));
+                cap.title = cap.textContent;
+                fig.appendChild(th); fig.appendChild(cap);
+                pv.appendChild(fig);
+            });
         }
         function buildPreview() {
             const res = renderPrintPages();
             printCanvases = res.pages;
             printSheetInfo = res;
-            const pv = $('#prPreview');
-            pv.innerHTML = '';
-            if (!res.pages.length) {
-                pv.innerHTML = '<div class="pr-empty">Выберите хотя бы одну деталь для печати</div>';
-            } else {
-                res.pages.forEach(c => {
-                    const d = document.createElement('div'); d.className = 'pr-thumb'; d.appendChild(c);
-                    pv.appendChild(d);
-                });
-            }
+            mountPreview();
             let sum = res.pages.length
                 ? `Деталей: ${res.pieceCount} · Листов: ${res.pages.length} · ${res.paperName} (${res.orient === 'landscape' ? 'альбомная' : 'книжная'}) · ${res.scaleLabel} · ${res.separate ? 'раздельно' : 'совместно'}`
                 : 'Нет деталей для печати';
-            if (res.truncated) sum += ` · показаны первые 120 из ${res.totalPages}`;
+            if (res.truncated) sum += ` · предпросмотр: первые 120 из ${res.totalPages}`;
             $('#prSummary').textContent = sum;
             $('#prGo').disabled = !res.pages.length;
+        }
+        function schedulePreview() {
+            clearTimeout(prTimer);
+            prTimer = setTimeout(buildPreview, 250);
         }
         function syncPrintControls() {
             $('#prFormat').value = printOpts.format;
             $('#prOrient').value = printOpts.orient;
             $('#prScale').value = printOpts.scale;
             $('#prMargin').value = String(printOpts.margin);
+            $('#prGap').value = String(printOpts.gap);
+            $('#prOverlap').value = String(printOpts.overlap);
             $('#prSeparate').checked = !!printOpts.separate;
             $('#prMarks').checked = printOpts.marks;
             $('#prSeam').checked = printOpts.seam;
@@ -5627,18 +5734,8 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         function restorePrintPages() {
             if (!document.body.classList.contains('printing')) return;
             document.body.classList.remove('printing');
-            const pv = $('#prPreview');
-            if (pv) {
-                pv.innerHTML = '';
-                printCanvases.forEach(c => {
-                    c.style.width = ''; c.style.height = '';
-                    const d = document.createElement('div'); d.className = 'pr-thumb'; d.appendChild(c);
-                    pv.appendChild(d);
-                });
-            }
+            mountPreview();
         }
-        /* ИСПРАВЛЕНО: holder берётся из существующего контейнера #printSheet,
-        а при отсутствии — создаётся, чтобы печать не падала */
         function doPrint() {
             if (prTimer) { clearTimeout(prTimer); prTimer = null; buildPreview(); }
             if (!printCanvases.length) { toast('Нет листов для печати', 'warn'); return; }
@@ -5655,7 +5752,8 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 c.style.height = info.SH + 'mm';
                 holder.appendChild(c);
             });
-            $('#printStyle').textContent = `@page{size:${info.SW}mm ${info.SH}mm;margin:0}`;
+            const ps = $('#printStyle');
+            if (ps) ps.textContent = `@page{size:${info.SW}mm ${info.SH}mm;margin:0}`;
             document.body.classList.add('printing');
             window.addEventListener('afterprint', restorePrintPages, { once: true });
             setTimeout(restorePrintPages, 2500);
@@ -5677,11 +5775,35 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             const v = parseFloat(e.target.value);
             if (isFinite(v)) { printOpts.margin = clamp(v, 0, 30); schedulePreview(); }
         });
+        $('#prGap').addEventListener('input', function (e) {
+            const v = parseFloat(e.target.value);
+            if (isFinite(v)) { printOpts.gap = clamp(v, 0, 20); schedulePreview(); }
+        });
+        $('#prOverlap').addEventListener('input', function (e) {
+            const v = parseFloat(e.target.value);
+            if (isFinite(v)) { printOpts.overlap = clamp(v, 0, 30); schedulePreview(); }
+        });
         $('#prSeparate').addEventListener('change', function (e) { printOpts.separate = e.target.checked; schedulePreview(); });
         $('#prMarks').addEventListener('change', function (e) { printOpts.marks = e.target.checked; schedulePreview(); });
         $('#prSeam').addEventListener('change', function (e) { printOpts.seam = e.target.checked; schedulePreview(); });
         $('#prLabels').addEventListener('change', function (e) { printOpts.labels = e.target.checked; schedulePreview(); });
         $('#prCalib').addEventListener('change', function (e) { printOpts.calib = e.target.checked; schedulePreview(); });
+        /* ============================ обработчики статусбара ============================ */
+        STATUS_MAP.forEach(function (m) {
+            const cb = $(m.cb);
+            if (!cb) return;
+            cb.addEventListener('change', function () {
+                if (!state.statusOpts) state.statusOpts = {};
+                state.statusOpts[m.key] = cb.checked;
+                applyStatusVisibility();
+                draw();
+                scheduleUISave();
+            });
+        });
+        $('#btnStatusOpts').addEventListener('click', function (e) {
+            e.stopPropagation();
+            toggleStatusPanel();
+        });
         /* ============================ универсальный ввод имени ============================ */
         let nameCb = null;
         function openNameModal(title, val, cb) {
@@ -6421,17 +6543,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             const px = $('#gPxCm'); if (px) px.value = String(state.pxPerCm);
             const dp = $('#gDpr'); if (dp) dp.value = String(state.dprMode);
         }
-        function applyScaleFromUI() {
-            const px = parseFloat($('#gPxCm').value);
-            if (isFinite(px)) state.pxPerCm = clamp(px, 1, 40);
-            const dp = $('#gDpr');
-            if (dp) {
-                const v = dp.value;
-                state.dprMode = (v === 'auto' || (isFinite(+v) && +v > 0)) ? v : 'auto';
-            }
-            draw();
-            scheduleUISave();
-        }
         /* ============================ АВТОСОХРАНЕНИЕ НАСТРОЕК ИНТЕРФЕЙСА ============================ */
         const UI_PREFS_KEY = 'ui';
         const LS_UI_KEY = 'neoncut-ui-prefs-v1';
@@ -6442,7 +6553,9 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             'nAlgo', 'nRotMode', 'nAngleStep', 'nRefine', 'nVariants', 'nGap', 'nMargin',
             'vPieceStyle', 'vFabricStyle', 'vNames', 'vDims', 'vGrain', 'vSeam',
             'fabChk', 'fabMode', 'fabW', 'fabH',
-            'prFormat', 'prOrient', 'prScale', 'prMargin', 'prSeparate', 'prMarks', 'prSeam', 'prLabels', 'prCalib'
+            'prFormat', 'prOrient', 'prScale', 'prMargin', 'prGap', 'prOverlap', 'prSeparate',
+            'prMarks', 'prSeam', 'prLabels', 'prCalib',
+            'sbCoords', 'sbCount', 'sbZoom', 'sbArea', 'sbBounds', 'sbUiChip', 'sbStorageChip'
         ]);
         let uiSaveTimer = null, uiSaving = false, lastUISavedAt = null;
         function collectUIPrefs() {
@@ -6516,8 +6629,8 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             if (isFinite(+pr.pxPerCm)) state.pxPerCm = clamp(+pr.pxPerCm, 1, 40);
             applyDprSetting(pr);
             if (pr.statusOpts && typeof pr.statusOpts === 'object') {
-                STATUS_KEYS.forEach(function (k) {
-                    if (typeof pr.statusOpts[k] === 'boolean') state.statusOpts[k] = pr.statusOpts[k];
+                STATUS_MAP.forEach(function (m) {
+                    if (typeof pr.statusOpts[m.key] === 'boolean') state.statusOpts[m.key] = pr.statusOpts[m.key];
                 });
             }
             if (pr.printOpts && typeof pr.printOpts === 'object') {
@@ -6526,6 +6639,8 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 if (po.orient === 'auto' || po.orient === 'portrait' || po.orient === 'landscape') printOpts.orient = po.orient;
                 if (['1', '2', '4', '8', 'fit'].indexOf(String(po.scale)) >= 0) printOpts.scale = String(po.scale);
                 if (isFinite(+po.margin)) printOpts.margin = clamp(+po.margin, 0, 30);
+                if (isFinite(+po.gap)) printOpts.gap = clamp(+po.gap, 0, 20);
+                if (isFinite(+po.overlap)) printOpts.overlap = clamp(+po.overlap, 0, 30);
                 if (typeof po.separate === 'boolean') printOpts.separate = po.separate;
                 ['marks', 'seam', 'labels', 'calib'].forEach(function (k) {
                     if (typeof po[k] === 'boolean') printOpts[k] = po[k];
@@ -6538,7 +6653,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
         function updateUIChip() {
             const el = $('#uiChip'); if (!el) return;
             if (uiSaving) { el.className = 'chip warn'; el.textContent = '⚙ Настройки: сохранение…'; return; }
-            if (lastUISavedAt) {
+            if (lastSavedAt) {
                 el.className = 'chip ok';
                 el.textContent = '⚙ Настройки: ' + lastUISavedAt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); return;
             }
@@ -6591,21 +6706,6 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 location.reload();
             });
         })();
-        /* ---------- настройки статусбара ---------- */
-        [['sbCoords', 'coords'], ['sbCount', 'count'], ['sbZoom', 'zoom'], ['sbArea', 'area'], ['sbBounds', 'bounds'], ['sbUiChip', 'uiChip'], ['sbStorageChip', 'storageChip']].forEach(function (pair) {
-            $('#' + pair[0]).addEventListener('change', function (e) {
-                state.statusOpts[pair[1]] = e.target.checked;
-                applyStatusVisibility();
-                draw();
-                scheduleUISave();
-            });
-        });
-        /* ИСПРАВЛЕНО: кнопка настроек статусбара открывает панель, размещённую в #stage
-        (вне скролл-контейнера статусбара), поэтому она больше не обрезается */
-        $('#btnStatusOpts').addEventListener('click', function (e) {
-            e.stopPropagation();
-            toggleStatusPanel();
-        });
         /* ============================ проекты ============================ */
         const projOv = $('#projOverlay');
         async function refreshProjectsList() {
@@ -6665,6 +6765,7 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
             state.selId = null; $('#quick').classList.add('hidden');
             state.dirty = false; lastSavedAt = new Date(data.updatedAt || Date.now());
             projOv.classList.remove('open');
+            applyStatusVisibility();
             fitView(); updateStorageChip();
             toast(`📁 Открыт проект «${data.name}»`);
         }
@@ -6834,11 +6935,12 @@ DPR: ${effDpr()} (режим «${state.dprMode}»)`;
                 if (fitMode !== 'free') {
                     applyFit(fitMode);
                 } else {
-                    if (oldBase > 0 && state.view.scale > 0) {
+                    if (oldBase > 0 && state.view?.scale > 0 || state.view.scale > 0) {
                         state.view.scale = state.view.scale * (newBase / oldBase);
                     }
                     draw();
                 }
+                scheduleUISave();
             }
         });
         $('#gDpr').addEventListener('change', function (e) {
