@@ -49,12 +49,13 @@ input,textarea,select{font-family:inherit;color:var(--tx)}
   border:1px solid rgba(0,240,255,.35);border-radius:20px;padding:3px 9px;white-space:nowrap}
 .hdr-spacer{flex:1}
 .hdr-btn{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--tx2);
-  border:1px solid transparent;transition:.18s}
+  border:1px solid transparent;transition:.18s;flex:none}
 .hdr-btn:hover{color:var(--cy);border-color:rgba(0,240,255,.4);box-shadow:var(--glow-cy);background:rgba(0,240,255,.06)}
 .hdr-btn svg{width:20px;height:20px}
 
 #toolbar{height:var(--tbar);flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;
-  background:var(--bg2);border-bottom:1px solid var(--line);overflow-x:auto;overflow-y:hidden;z-index:30;user-select:none}
+  background:var(--bg2);border-bottom:1px solid var(--line);overflow-x:auto;overflow-y:hidden;z-index:30;user-select:none;
+  scrollbar-width:thin}
 .tb-group{display:flex;align-items:center;gap:6px;flex:none}
 .tb-sep{width:1px;height:32px;background:var(--line2);flex:none}
 .tool-btn{position:relative;width:42px;height:44px;border-radius:10px;display:flex;flex-direction:column;
@@ -86,28 +87,33 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 #sizeDot{border-radius:50%;flex:none}
 
 #workspace{flex:1;display:flex;min-height:0;position:relative}
-aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-height:0;transition:width .22s ease,transform .25s ease;z-index:25}
+aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-height:0;min-width:0;
+  transition:width .22s ease,transform .25s ease;z-index:25}
 #libSidebar{width:292px;border-right:1px solid var(--line)}
 #lessonSidebar{width:332px;border-left:1px solid var(--line)}
 #libSidebar.collapsed,#lessonSidebar.collapsed{width:0;overflow:hidden;border-color:transparent}
 .side-head{padding:12px 14px 10px;border-bottom:1px solid var(--line);flex:none}
 .side-title{font-family:'Unbounded',sans-serif;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;
   color:var(--tx);display:flex;align-items:center;gap:8px}
-.side-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cy);box-shadow:0 0 8px var(--cy)}
+.side-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cy);box-shadow:0 0 8px var(--cy);flex:none}
+.side-title .grow{flex:1}
 #libSearch{width:100%;margin-top:10px;background:var(--bg2);border:1px solid var(--line2);border-radius:9px;
   padding:8px 12px;font-size:13px;color:var(--tx)}
 #libSearch:focus{border-color:var(--cy);outline:none}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .chip{font-size:11px;padding:4px 11px;border-radius:20px;border:1px solid var(--line2);color:var(--tx2);transition:.15s}
 .chip.on{color:#041218;background:var(--cy);border-color:var(--cy);font-weight:700}
-#libList{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+#libList{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  padding:10px;display:flex;flex-direction:column;gap:8px}
 .lib-card{border:1px solid var(--line2);border-radius:var(--r);padding:10px;display:flex;gap:10px;cursor:pointer;
-  transition:.18s;background:var(--bg2);position:relative;overflow:hidden}
+  transition:.18s;background:var(--bg2);position:relative;flex:none}
 .lib-card:hover{border-color:rgba(0,240,255,.45);transform:translateY(-1px)}
 .lib-card.on{border-color:var(--cy);box-shadow:0 0 0 1px var(--cy),0 0 18px rgba(0,240,255,.25)}
-.lib-thumb{width:46px;height:46px;border-radius:10px;flex:none;display:grid;place-items:center;font-size:20px}
+.lib-thumb{width:46px;height:46px;border-radius:10px;flex:none;display:grid;place-items:center;font-size:20px;
+  overflow:hidden;background:#0a0f20;border:1px solid var(--line)}
+.lib-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .lib-meta{min-width:0;flex:1}
-.lib-title{font-weight:700;font-size:13px;line-height:1.25}
+.lib-title{font-weight:700;font-size:13px;line-height:1.25;overflow-wrap:anywhere}
 .lib-sub{font-size:10.5px;color:var(--tx3);margin-top:3px}
 .lib-badge{position:absolute;top:7px;right:8px;font-size:8.5px;letter-spacing:1px;color:var(--yl);text-transform:uppercase}
 .lib-custom-acts{display:flex;gap:4px;margin-top:6px}
@@ -143,7 +149,10 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 #canvasHint.hide{opacity:0}
 #canvasHint b{color:var(--cy);font-weight:600}
 
-#lessonBody{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+/* панель урока: инфо сверху, шаги — свой скролл, кнопки — фиксированы внизу */
+#lessonBody{flex:1;min-height:0;overflow:hidden;padding:14px;display:flex;flex-direction:column;gap:12px}
+.ls-info{flex:none;max-height:46%;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  display:flex;flex-direction:column;gap:12px;padding-right:4px}
 .ls-chips{display:flex;gap:6px;flex-wrap:wrap}
 .tag{font-size:10px;padding:3px 9px;border-radius:20px;letter-spacing:.5px;font-weight:700}
 .tag.cat{background:rgba(0,240,255,.12);color:var(--cy);border:1px solid rgba(0,240,255,.4)}
@@ -151,26 +160,21 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .tag.lvl1{background:rgba(255,225,77,.1);color:var(--yl);border:1px solid rgba(255,225,77,.4)}
 .tag.lvl2{background:rgba(255,46,196,.1);color:var(--mg);border:1px solid rgba(255,46,196,.4)}
 .tag.tool{background:rgba(138,92,255,.12);color:#b79bff;border:1px solid rgba(138,92,255,.45)}
-#lsTitle{font-family:'Unbounded',sans-serif;font-size:15.5px;line-height:1.35;margin-top:2px}
+#lsTitle{font-family:'Unbounded',sans-serif;font-size:15.5px;line-height:1.35;margin-top:2px;overflow-wrap:anywhere}
 #lsDesc{font-size:12.5px;color:var(--tx2);line-height:1.55}
 .progress{height:5px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:4px}
 .progress i{display:block;height:100%;width:0;border-radius:6px;transition:width .4s;
   background:linear-gradient(90deg,var(--cy),var(--mg))}
 .prog-lbl{font-size:10.5px;color:var(--tx3);font-family:'JetBrains Mono',monospace;margin-top:5px}
-.demo-wrap{border:1px solid var(--line2);border-radius:var(--r);overflow:hidden;background:#080c18;position:relative}
-#demoCanvas{display:block;width:100%;height:auto;background:#070a14}
-.demo-ph{aspect-ratio:360/230;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--tx3);font-size:12px;text-align:center;padding:14px}
-.demo-ph .orb{width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--pu),var(--mg) 65%,transparent 72%);animation:orb 2.6s ease-in-out infinite}
-@keyframes orb{0%,100%{transform:scale(.85);opacity:.6}50%{transform:scale(1.12);opacity:1}}
-.demo-ctrl{display:flex;align-items:center;gap:6px;padding:8px;border-top:1px solid var(--line);background:rgba(11,15,29,.6)}
-.dc-btn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--tx2);border:1px solid transparent;transition:.15s}
-.dc-btn svg{width:16px;height:16px}
-.dc-btn:hover{color:var(--cy)}
-.dc-btn.on{color:var(--cy);border-color:rgba(0,240,255,.5);background:rgba(0,240,255,.07)}
-#demoMode{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--tx3)}
-#stepsList{list-style:none;display:flex;flex-direction:column;gap:8px}
+.art-wrap{border:1px solid var(--line2);border-radius:var(--r);overflow:hidden;cursor:zoom-in;position:relative;background:#080c18;flex:none}
+.art-wrap img{width:100%;display:block;object-fit:cover;max-height:170px}
+.art-cap{position:absolute;left:0;right:0;bottom:0;font-size:10px;letter-spacing:.6px;text-transform:uppercase;
+  padding:7px 10px;color:var(--tx);background:linear-gradient(180deg,transparent,rgba(4,6,12,.92))}
+#artBig{width:100%;display:block;border-radius:10px;max-height:70vh;object-fit:contain;background:#080c18}
+#stepsList{list-style:none;flex:1 1 0;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  display:flex;flex-direction:column;gap:8px;padding-right:4px}
 .step{display:flex;gap:10px;padding:10px;border:1px solid var(--line2);border-radius:var(--r);cursor:pointer;
-  background:var(--bg2);transition:.18s;align-items:flex-start}
+  background:var(--bg2);transition:.18s;align-items:flex-start;flex:none}
 .step:hover{border-color:var(--tx3)}
 .step.active{border-color:var(--mg);box-shadow:0 0 0 1px var(--mg),0 0 16px rgba(255,46,196,.22)}
 .step.done .step-num{background:rgba(57,255,136,.15);border-color:var(--gn);color:var(--gn)}
@@ -180,7 +184,49 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .step-title{font-weight:700;font-size:12.5px}
 .step-text{font-size:11.5px;color:var(--tx2);line-height:1.5;margin-top:3px}
 .step-check{flex:none;margin-top:3px;accent-color:var(--gn);width:15px;height:15px;cursor:pointer}
-.ls-actions{display:flex;gap:8px}
+.ls-actions{flex:none;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}
+
+/* плавающее окно предпросмотра */
+#previewDock{position:fixed;z-index:60;background:rgba(14,20,38,.94);backdrop-filter:blur(10px);
+  border:1px solid var(--line2);border-radius:14px;overflow:hidden;
+  box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 24px rgba(0,240,255,.10);
+  display:flex;flex-direction:column}
+#previewDock.hidden{display:none}
+.dock-head{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(18,26,51,.95);
+  cursor:grab;user-select:none;touch-action:none;flex:none;border-bottom:1px solid var(--line)}
+.dock-head:active{cursor:grabbing}
+.dock-dot{width:7px;height:7px;border-radius:50%;background:var(--cy);box-shadow:0 0 8px var(--cy);flex:none}
+.dock-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--cy);letter-spacing:.5px;
+  flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.dock-btn{width:26px;height:26px;border-radius:7px;color:var(--tx2);display:grid;place-items:center;font-size:12px;flex:none;transition:.15s}
+.dock-btn:hover{color:var(--cy);background:rgba(0,240,255,.08)}
+.dock-btn svg{width:14px;height:14px}
+.dock-body{flex:1;min-height:0;padding:10px;display:flex;flex-direction:column;gap:8px}
+#previewDock.mini .dock-body,#previewDock.mini .dock-resize{display:none}
+#demoWrapBox{flex:1;min-height:90px;display:flex;align-items:center;justify-content:center;
+  background:#080c18;border-radius:10px;border:1px solid var(--line);overflow:hidden;position:relative}
+#demoCanvas{display:block}
+.demo-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;color:var(--tx3);font-size:12px;text-align:center;padding:14px}
+.demo-ph .orb{width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,var(--pu),var(--mg) 65%,transparent 72%);animation:orb 2.6s ease-in-out infinite}
+@keyframes orb{0%,100%{transform:scale(.85);opacity:.6}50%{transform:scale(1.12);opacity:1}}
+.dock-ctrl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:none}
+.dc-btn{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--tx2);border:1px solid transparent;transition:.15s;flex:none}
+.dc-btn svg{width:16px;height:16px}
+.dc-btn:hover{color:var(--cy)}
+.dc-btn.on{color:var(--cy);border-color:rgba(0,240,255,.5);background:rgba(0,240,255,.07)}
+#demoMode{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--tx3);white-space:nowrap}
+#dockSpeed{width:64px}
+.dock-resize{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;z-index:2;
+  background:linear-gradient(135deg,transparent 50%,rgba(0,240,255,.6) 50%,rgba(0,240,255,.6) 60%,transparent 60%,
+    transparent 72%,rgba(0,240,255,.6) 72%,rgba(0,240,255,.6) 82%,transparent 82%)}
+/* кнопка возврата предпросмотра — по центру снизу, не конфликтует с сайдбарами */
+#dockOpen{position:fixed;left:50%;transform:translateX(-50%);bottom:40px;z-index:59;display:none;align-items:center;gap:8px;
+  background:rgba(14,20,38,.92);border:1px solid rgba(0,240,255,.5);color:var(--cy);border-radius:22px;
+  padding:9px 16px;font-size:12px;font-weight:700;box-shadow:var(--glow-cy);max-width:92vw}
+#dockOpen.show{display:flex}
+#dockOpen svg{width:14px;height:14px;flex:none}
 
 #statusbar{height:var(--sbar);flex:none;display:flex;align-items:center;gap:16px;padding:0 14px;
   background:var(--bg2);border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;
@@ -195,8 +241,9 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .modal-bk{position:fixed;inset:0;background:rgba(4,6,12,.75);z-index:100;
   display:none;align-items:center;justify-content:center;padding:18px}
 .modal-bk.open{display:flex}
-.modal{background:var(--panel);border:1px solid var(--line2);border-radius:16px;width:min(560px,100%);
-  max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);animation:pop .22s ease}
+.modal{background:var(--panel);border:1px solid var(--line2);border-radius:16px;width:min(600px,100%);
+  max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);animation:pop .22s ease}
+#artModal .modal{width:min(760px,100%)}
 @keyframes pop{from{transform:translateY(14px) scale(.98);opacity:0}}
 .modal-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
 .modal-head h3{font-family:'Unbounded',sans-serif;font-size:14px}
@@ -210,11 +257,29 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .f-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .step-edit{border:1px solid var(--line2);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--bg2)}
 .step-edit .se-head{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--tx3)}
+.se-count{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--cy);margin-left:8px}
+.step-edit .mini-btn.del{margin-left:auto}
 .modal-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .help-tbl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:12.5px}
 .help-tbl kbd{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg2);border:1px solid var(--line2);
   border-radius:6px;padding:2px 8px;color:var(--cy)}
 #ioText{width:100%;min-height:120px;font-family:'JetBrains Mono',monospace;font-size:11px}
+
+/* запись демо-штрихов в редакторе */
+.rec-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#recStep{background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:6px 8px;font-size:12px;flex:none}
+.rec-tools{display:flex;gap:4px;flex-wrap:wrap}
+.rec-tool{font-size:10.5px;padding:5px 9px;border-radius:8px;border:1px solid var(--line2);color:var(--tx2);transition:.15s}
+.rec-tool.on{color:var(--cy);border-color:var(--cy);background:rgba(0,240,255,.07)}
+#recColor{width:26px;height:26px;border:none;background:none;padding:0;cursor:pointer;flex:none}
+#recColor::-webkit-color-swatch-wrapper{padding:0}
+#recColor::-webkit-color-swatch{border-radius:50%;border:2px solid var(--line2)}
+#recSize{width:80px;flex:none}
+.rec-act{flex:none;padding:6px 10px;font-size:11px}
+.rec-cv-wrap{border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:#070a14;touch-action:none}
+#recCanvas{display:block;width:100%;height:auto;cursor:crosshair}
+.rec-hint{font-size:11px;color:var(--tx3);line-height:1.5}
+
 #toastWrap{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
 .toast{background:rgba(14,20,38,.95);border:1px solid var(--cy);color:var(--tx);border-radius:12px;padding:10px 18px;
   font-size:12.5px;box-shadow:var(--glow-cy);max-width:92vw;text-align:center}
@@ -225,7 +290,8 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 #fatal pre{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tx2);white-space:pre-wrap;max-height:40vh;overflow:auto}
 #backdrop{position:fixed;inset:0;background:rgba(4,6,12,.6);z-index:20;display:none}
 
-@media (max-width:1180px){ #lessonSidebar{width:300px} #libSidebar{width:262px} }
+@media (max-width:1400px){ #lessonSidebar{width:310px} }
+@media (max-width:1180px){ #lessonSidebar{width:296px} #libSidebar{width:262px} }
 @media (max-width:900px){
   aside{position:fixed;top:var(--hdr);bottom:var(--sbar);width:min(84vw,330px);transform:translateX(-105%);
     box-shadow:20px 0 60px rgba(0,0,0,.5)}
@@ -235,6 +301,8 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   #backdrop.show{display:block;z-index:24}
   .st-hint{display:none}
   .logo-txt .sub{display:none}
+  .modal-bk{padding:12px}
+  .ls-info{max-height:40%}
 }
 @media (max-width:620px){
   :root{--hdr:52px;--tbar:56px}
@@ -242,7 +310,19 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   .ver{display:none}
   #stTool,#stCount{display:none}
   input[type=range]{width:70px}
+  #dockSpeed{width:52px}
+  #recSize{width:60px}
   #canvasHint{font-size:10px;padding:6px 12px;white-space:normal;text-align:center}
+  .modal-body{padding:14px}
+  .modal-head,.modal-foot{padding:12px 14px}
+  #zoomHud{right:8px;bottom:8px}
+  .zoom-btn{width:36px;height:36px}
+}
+@media (max-width:440px){
+  #stX,#stY{display:none}
+  .hdr-btn{width:34px;height:34px}
+  .slider-box{padding:5px 8px}
+  #dockOpen{bottom:34px}
 }
 </style>
 </head>
@@ -259,7 +339,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         <circle cx="26" cy="10" r="1.6" fill="#ffe14d"/>
       </svg>
       <div class="logo-txt"><div class="name">NeonBrush</div><div class="sub">тренажёр рисования</div></div>
-      <span class="ver">v1.0.0</span>
+      <span class="ver">v1.4.0</span>
     </div>
     <div class="hdr-spacer"></div>
     <button type="button" class="hdr-btn" id="btnLib" title="Библиотека приёмов">
@@ -330,21 +410,21 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     </section>
 
     <aside id="lessonSidebar">
-      <div class="side-head"><div class="side-title">Обучение</div></div>
+      <div class="side-head">
+        <div class="side-title">Обучение<span class="grow"></span>
+          <button type="button" class="hdr-btn" id="btnDock" title="Показать окно предпросмотра" style="width:30px;height:30px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg>
+          </button>
+        </div>
+      </div>
       <div id="lessonBody">
-        <div><div class="ls-chips" id="lsChips"></div><h2 id="lsTitle"></h2></div>
-        <p id="lsDesc"></p>
-        <div><div class="progress"><i id="progBar"></i></div><div class="prog-lbl" id="progLbl"></div></div>
-        <div class="demo-wrap" id="demoWrap">
-          <canvas id="demoCanvas"></canvas>
-          <div class="demo-ctrl">
-            <button type="button" class="dc-btn" id="demoPlay" title="Пауза / воспроизведение">
-              <svg id="icPause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-              <svg id="icPlay" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M7 4.5 19.5 12 7 19.5z"/></svg>
-            </button>
-            <button type="button" class="dc-btn" id="demoRestart" title="Сначала"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
-            <button type="button" class="dc-btn on" id="demoLoop" title="Зациклить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 0 1 2-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 0 1-2 2H3"/></svg></button>
-            <span id="demoMode">все шаги</span>
+        <div class="ls-info">
+          <div><div class="ls-chips" id="lsChips"></div><h2 id="lsTitle"></h2></div>
+          <p id="lsDesc"></p>
+          <div><div class="progress"><i id="progBar"></i></div><div class="prog-lbl" id="progLbl"></div></div>
+          <div class="art-wrap" id="artWrap" style="display:none">
+            <img id="artImg" alt="Эталон работы">
+            <div class="art-cap">Эталон · нажмите для увеличения</div>
           </div>
         </div>
         <ol id="stepsList"></ol>
@@ -368,9 +448,45 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   </footer>
 </div>
 
+<div id="previewDock">
+  <div class="dock-head" id="dockHead">
+    <span class="dock-dot"></span>
+    <span class="dock-title" id="dockTitle">Предпросмотр · демонстрация техники</span>
+    <button type="button" class="dock-btn" id="dockFit" title="По центру экрана"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg></button>
+    <button type="button" class="dock-btn" id="dockMini" title="Свернуть / развернуть">—</button>
+    <button type="button" class="dock-btn" id="dockReset" title="Сбросить положение и размер"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
+    <button type="button" class="dock-btn" id="dockClose" title="Скрыть окно">✕</button>
+  </div>
+  <div class="dock-body">
+    <div id="demoWrapBox"><canvas id="demoCanvas"></canvas></div>
+    <div class="dock-ctrl">
+      <button type="button" class="dc-btn" id="demoPlay" title="Пауза / воспроизведение">
+        <svg id="icPause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        <svg id="icPlay" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M7 4.5 19.5 12 7 19.5z"/></svg>
+      </button>
+      <button type="button" class="dc-btn" id="demoRestart" title="Сначала"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
+      <button type="button" class="dc-btn on" id="demoLoop" title="Зациклить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 0 1 2-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 0 1-2 2H3"/></svg></button>
+      <input type="range" id="dockSpeed" min="40" max="220" value="100" title="Скорость демонстрации">
+      <span id="demoMode">все шаги</span>
+    </div>
+  </div>
+  <div class="dock-resize" id="dockResize" title="Потяните, чтобы изменить размер"></div>
+</div>
+<button type="button" id="dockOpen">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5l5 2.5-5 2.5z" fill="currentColor"/></svg>
+  Показать предпросмотр
+</button>
+
 <div id="backdrop"></div>
 <div id="toastWrap"></div>
 <div id="fatal"><div class="box"><h2>⚠ Ошибка запуска приложения</h2><pre id="fatalMsg"></pre><p style="color:#5b6788;font-size:12px;margin-top:10px">Откройте консоль (F12) для деталей.</p></div></div>
+
+<div class="modal-bk" id="artModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="artTitle">Эталон работы</h3><button type="button" class="modal-x" data-close="artModal">✕</button></div>
+    <div class="modal-body"><img id="artBig" alt="Эталон"></div>
+  </div>
+</div>
 
 <div class="modal-bk" id="editorModal">
   <div class="modal">
@@ -384,6 +500,26 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       <div class="f-row"><label>Описание</label><textarea id="edDesc" placeholder="Чему учит этот приём…"></textarea></div>
       <div class="f-row"><label>Шаги инструкции</label><div id="edSteps"></div></div>
       <button type="button" class="btn" id="edAddStep" style="align-self:flex-start">+ Добавить шаг</button>
+      <div class="f-row">
+        <label>Демо: запись штрихов рисованием</label>
+        <div class="rec-bar">
+          <select id="recStep" title="Шаг для записи"></select>
+          <div class="rec-tools" id="recTools">
+            <button type="button" class="rec-tool on" data-rt="pencil">Карандаш</button>
+            <button type="button" class="rec-tool" data-rt="brush">Кисть</button>
+            <button type="button" class="rec-tool" data-rt="watercolor">Акварель</button>
+            <button type="button" class="rec-tool" data-rt="marker">Маркер</button>
+            <button type="button" class="rec-tool" data-rt="neon">Неон</button>
+            <button type="button" class="rec-tool" data-rt="dry">Сухая</button>
+          </div>
+          <input type="color" id="recColor" value="#00f0ff" title="Цвет">
+          <input type="range" id="recSize" min="2" max="30" value="6" title="Толщина">
+          <button type="button" class="btn rec-act" id="recUndo">↩ Отменить</button>
+          <button type="button" class="btn rec-act" id="recClear">Очистить шаг</button>
+        </div>
+        <div class="rec-cv-wrap"><canvas id="recCanvas"></canvas></div>
+        <p class="rec-hint">Рисуйте прямо здесь — штрихи записываются в выбранный шаг и после сохранения станут анимированным демо приёма. Полупрозрачные линии — штрихи других шагов.</p>
+      </div>
     </div>
     <div class="modal-foot">
       <button type="button" class="btn" data-close="editorModal">Отмена</button>
@@ -410,9 +546,9 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 
 <div class="modal-bk" id="helpModal">
   <div class="modal">
-    <div class="modal-head"><h3>Справка · NeonBrush v1.0.0</h3><button type="button" class="modal-x" data-close="helpModal">✕</button></div>
+    <div class="modal-head"><h3>Справка · NeonBrush v1.4.0</h3><button type="button" class="modal-x" data-close="helpModal">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:12.5px;color:#8b97bd;line-height:1.6">Выбирайте приём в библиотеке слева, смотрите анимированную демонстрацию техники и повторяйте её на неоновом холсте. Библиотеку можно пополнять своими уроками и обмениваться ими через JSON.</p>
+      <p style="font-size:12.5px;color:#8b97bd;line-height:1.6">Окно предпросмотра перетаскивается за заголовок и меняет размер за уголок. Свои приёмы можно снабжать анимированным демо: запишите штрихи реальным рисованием в редакторе приёма. Список шагов прокручивается, кнопки переключения всегда закреплены внизу панели урока.</p>
       <div class="help-tbl">
         <kbd>1…8</kbd><span>Выбор инструмента</span>
         <kbd>Пробел</kbd><span>Перемещение холста (зажать)</span>
@@ -438,7 +574,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function dist(a, b) { return Math.hypot(b.x - a.x, b.y - a.y); }
-  var APP_VER = '1.0.0';
+  var APP_VER = '1.4.0';
 
   function mulberry32(a) {
     return function () {
@@ -487,7 +623,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     console.error(e.error || e.message);
   });
 
-  /* геометрия демо-штрихов */
   function lin(x1, y1, x2, y2, n) {
     n = n || 18; var p = [], i;
     for (i = 0; i <= n; i++) p.push({ x: x1 + (x2 - x1) * i / n, y: y1 + (y2 - y1) * i / n });
@@ -506,6 +641,37 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     n = n || 40; var p = [], i, a;
     for (i = 0; i <= n; i++) { a = a0 + (a1 - a0) * i / n; p.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r }); }
     return p;
+  }
+  function ell(cx, cy, rx, ry, n) {
+    n = n || 40; var p = [], i, a;
+    for (i = 0; i <= n; i++) { a = i / n * Math.PI * 2; p.push({ x: cx + Math.cos(a) * rx, y: cy + Math.sin(a) * ry }); }
+    return p;
+  }
+  function egg(cx, cy, rx, ry, n) {
+    n = n || 64; var p = [], i, a, x, y;
+    for (i = 0; i <= n; i++) {
+      a = i / n * Math.PI * 2; x = Math.cos(a); y = Math.sin(a);
+      if (y > 0) { x *= 0.82; y *= 1.02; }
+      p.push({ x: cx + x * rx, y: cy + y * ry });
+    }
+    return p;
+  }
+  function qbez(p0, p1, p2, n) {
+    n = n || 40; var p = [], i, t;
+    for (i = 0; i <= n; i++) {
+      t = i / n;
+      p.push({
+        x: (1 - t) * (1 - t) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x,
+        y: (1 - t) * (1 - t) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y
+      });
+    }
+    return p;
+  }
+  function qbPt(p0, p1, p2, t) {
+    return {
+      x: (1 - t) * (1 - t) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x,
+      y: (1 - t) * (1 - t) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y
+    };
   }
   function blobPts(cx, cy, r, seed, wob, n) {
     wob = wob || 0.16; n = n || 46;
@@ -534,20 +700,29 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     return { x: cx + x * c - y * s, y: cy + x * s + y * c };
   }
 
-  /* уроки */
   var CATS = ['Все', 'Акварель', 'Карандаш', 'Сухая кисть', 'Графика', 'Другое'];
   var LVL = ['Начальный', 'Средний', 'Продвинутый'];
   function S(tool, color, size, alpha, pts, seed) {
     return { tool: tool, color: color, size: size, alpha: alpha, pts: pts, seed: seed || 7 };
   }
+  var ART = {
+    wash: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/11e68a0c8-3a0d-40c4-8c21-c0360797047d.png',
+    hatch: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/107c069a4-6dc1-40c4-8c21-c0360797047d.png',
+    wet: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/175e7846c-e31c-40cc-bca8-4960e3c1b617.png',
+    sphere: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/1e5b7aaff-1742-4eb4-917e-a4b35afaf770.png',
+    dry: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/128de3907-4030-425f-bbd6-f0b92bd4ac5f.png',
+    liner: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/186fffe90-b4ac-4899-9096-52bb55988e57.png',
+    face: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/11b8236e4-7ec8-4fef-9eae-1d7d12b48e6f.png',
+    eye: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/1d50f8e7c-d746-46d7-99b6-e2e744b933a0.png',
+    shade: 'https://image.qwenlm.ai/public_source/754a7e12-b4b7-4158-8546-9fe8b6a6d176/1d2116de9-13d1-480e-a20f-f872fdfa86de.png'
+  };
 
   function buildLessons() {
     var L = [];
-
     (function () {
       function wash(y, c, a, sz) { return S('watercolor', c, sz, a, wave(46, y, 314, y, 3, 2), 11); }
       L.push({
-        id: 'lb-wash', cat: 'Акварель', lvl: 0, title: 'Акварель: градиентная размывка',
+        id: 'lb-wash', cat: 'Акварель', lvl: 0, art: ART.wash, title: 'Акварель: градиентная размывка',
         desc: 'Базовый приём — плавный переход двух цветов по влажной бумаге. Основа почти всех акварельных работ.',
         tools: ['Акварель', 'Кисть №10'],
         steps: [
@@ -562,7 +737,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         ]
       });
     })();
-
     (function () {
       var cx = 180, cy = 112, rx = 88, ry = 44, ang = -0.34;
       function el(th, side) { return rotP(rx * Math.cos(th), side * ry * Math.sin(th), cx, cy, ang); }
@@ -590,7 +764,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       var botH = hatch(-0.95, 0.95, 15, 22, 1).map(function (p) { return S('pencil', '#93a7cc', 1.8, 0.9, p, 22); });
       var crossH = hatch(-0.6, 0.6, 9, 23, 1).map(function (p) { return S('pencil', '#6d81a8', 1.5, 0.8, p, 23); });
       L.push({
-        id: 'lb-hatch', cat: 'Карандаш', lvl: 0, title: 'Карандаш: штриховка по форме',
+        id: 'lb-hatch', cat: 'Карандаш', lvl: 0, art: ART.hatch, title: 'Карандаш: штриховка по форме',
         desc: 'Штрих должен следовать пластике объекта — тогда форма «читается» даже без света и цвета.',
         tools: ['Карандаш 2B', 'Ластик'],
         steps: [
@@ -603,7 +777,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         ]
       });
     })();
-
     (function () {
       function pet(a, r, rad, c, seed) {
         var px = 180 + Math.cos(a) * rad, py = 108 + Math.sin(a) * rad * 0.9;
@@ -612,7 +785,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       var petals1 = [0, 1, 2, 3, 4].map(function (i) { return pet(i / 5 * Math.PI * 2 - 0.5, 27, 42, '#ff2ec4', 30 + i); });
       var petals2 = [0, 1, 2, 3, 4].map(function (i) { return pet(i / 5 * Math.PI * 2 - 0.2, 18, 26, '#8a5cff', 40 + i); });
       L.push({
-        id: 'lb-wet', cat: 'Акварель', lvl: 1, title: 'Акварель: мокрое по мокрому',
+        id: 'lb-wet', cat: 'Акварель', lvl: 1, art: ART.wet, title: 'Акварель: мокрое по мокрому',
         desc: 'Краска втекает во влажную бумагу и распускается мягкими «цветами» — так рисуют облака, дым и лепестки.',
         tools: ['Акварель', 'Кисть №6'],
         steps: [
@@ -625,7 +798,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         ]
       });
     })();
-
     (function () {
       var cx = 168, cy = 98, r = 60;
       var circ = arcPts(cx, cy, r, 0, Math.PI * 2, 64);
@@ -645,7 +817,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       }
       var castS = cast.map(function (p, i2) { return S('pencil', '#7d90b6', 2, 0.85, p, 60 + i2); });
       L.push({
-        id: 'lb-sphere', cat: 'Карандаш', lvl: 1, title: 'Карандаш: светотень шара',
+        id: 'lb-sphere', cat: 'Карандаш', lvl: 1, art: ART.sphere, title: 'Карандаш: светотень шара',
         desc: 'Классика академического рисунка: блик, свет, полутень, собственная и падающая тени, рефлекс.',
         tools: ['Карандаш 2B–4B'],
         steps: [
@@ -657,13 +829,12 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         ]
       });
     })();
-
     (function () {
       function dry(x1, y1, x2, y2, c, a, sz, seed) { return S('dry', c, sz, a, lin(x1, y1, x2, y2, 26), seed); }
       var diag = [], i;
       for (i = 0; i < 6; i++) diag.push(dry(56 + i * 36, 60, 130 + i * 36, 176, '#39ff88', 0.7, 7, 80 + i));
       L.push({
-        id: 'lb-dry', cat: 'Сухая кисть', lvl: 1, title: 'Сухая кисть: фактура и штрих',
+        id: 'lb-dry', cat: 'Сухая кисть', lvl: 1, art: ART.dry, title: 'Сухая кисть: фактура и штрих',
         desc: 'Почти сухая кисть под острым углом оставляет рваный след — шерсть, камень, трава, древесина.',
         tools: ['Сухая кисть', 'Плотная бумага'],
         steps: [
@@ -676,7 +847,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         ]
       });
     })();
-
     (function () {
       var m1 = [{ x: 18, y: 172 }, { x: 88, y: 76 }, { x: 126, y: 122 }, { x: 178, y: 58 }, { x: 236, y: 132 }, { x: 278, y: 96 }, { x: 342, y: 172 }];
       var m2 = [{ x: 18, y: 172 }, { x: 70, y: 132 }, { x: 110, y: 158 }, { x: 160, y: 118 }, { x: 214, y: 160 }, { x: 268, y: 132 }, { x: 342, y: 172 }];
@@ -689,7 +859,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       }
       var hat2 = hatc.map(function (p, i2) { return S('pencil', '#9fe8ff', 1.4, 0.8, p, 120 + i2); });
       L.push({
-        id: 'lb-liner', cat: 'Графика', lvl: 2, title: 'Линер: контурная графика',
+        id: 'lb-liner', cat: 'Графика', lvl: 2, art: ART.liner, title: 'Линер: контурная графика',
         desc: 'Выразительный пейзаж одной линией: силуэт, детали и дозированный штрих пером.',
         tools: ['Линер 0.3', 'Линер 0.1'],
         steps: [
@@ -701,7 +871,124 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         ]
       });
     })();
-
+    (function () {
+      var cx = 180, cy = 104, rx = 58, ry = 78;
+      var outline = egg(cx, cy, rx, ry, 64);
+      var axisV = lin(cx, cy - ry - 8, cx, cy + ry * 1.02 + 8, 24);
+      var eyeLine = wave(cx - rx - 12, cy, cx + rx + 12, cy, 1.5, 2, 30);
+      var noseY = cy + ry * 0.45, mouthY = cy + ry * 0.68;
+      var eLs = ell(cx - 26, cy, 13, 5, 28), eRs = ell(cx + 26, cy, 13, 5, 28);
+      var eLb = wave(cx - 42, cy - 18, cx - 11, cy - 21, 3, 1.5, 16);
+      var eRb = wave(cx + 11, cy - 21, cx + 42, cy - 18, 3, 1.5, 16);
+      var neckL = lin(cx - 20, cy + ry * 0.9, cx - 27, 214, 12);
+      var neckR = lin(cx + 20, cy + ry * 0.9, cx + 27, 214, 12);
+      var shoulders = wave(56, 224, 304, 212, 6, 2, 36);
+      L.push({
+        id: 'lb-face', cat: 'Карандаш', lvl: 1, art: ART.face, title: 'Портрет: пропорции головы',
+        desc: 'Построение головы человека по классическим пропорциям: яйцевидный овал, осевые линии, линия глаз, носа и губ.',
+        tools: ['Карандаш HB', 'Ластик'],
+        steps: [
+          { t: 'Овал головы', x: 'Лёгкими движениями постройте яйцевидный овал: шире вверху, уже к подбородку. Не давите на карандаш.',
+            s: [S('pencil', '#cfd8ea', 2.2, 0.9, outline, 300)] },
+          { t: 'Осевые линии', x: 'Проведите центральную ось симметрии и горизонтальную линию глаз — она делит голову ровно пополам.',
+            s: [S('pencil', '#8fa3c8', 1.6, 0.7, axisV, 301), S('pencil', '#8fa3c8', 1.6, 0.7, eyeLine, 302)] },
+          { t: 'Линии носа и губ', x: 'Нос — посередине между глазами и подбородком, губы — между носом и подбородком.',
+            s: [S('pencil', '#8fa3c8', 1.6, 0.7, lin(cx - 26, noseY, cx + 26, noseY, 10), 303),
+                S('pencil', '#8fa3c8', 1.6, 0.7, lin(cx - 30, mouthY, cx + 30, mouthY, 10), 304)] },
+          { t: 'Глаза и брови', x: 'Расстояние между глазами равно ширине глаза. Брови — примерно на треть выше глаз.',
+            s: [S('pencil', '#cfd8ea', 2, 0.9, eLs, 305), S('pencil', '#cfd8ea', 2, 0.9, eRs, 306),
+                S('pencil', '#aebfdd', 2, 0.85, eLb, 307), S('pencil', '#aebfdd', 2, 0.85, eRb, 308)] },
+          { t: 'Шея и плечи', x: 'Шея выходит из-за челюсти и слегка наклонена вперёд. Плечи шире головы примерно вдвое.',
+            s: [S('pencil', '#cfd8ea', 2, 0.85, neckL, 309), S('pencil', '#cfd8ea', 2, 0.85, neckR, 310),
+                S('pencil', '#cfd8ea', 2, 0.85, shoulders, 311)] }
+        ]
+      });
+    })();
+    (function () {
+      var A = { x: 70, y: 118 }, B = { x: 175, y: 58 }, C = { x: 290, y: 106 }, D = { x: 185, y: 152 };
+      var upper = qbez(A, B, C, 44), lower = qbez(A, D, C, 44);
+      var lid = qbez({ x: 64, y: 112 }, { x: 175, y: 48 }, { x: 296, y: 102 }, 44);
+      var iris = ell(182, 110, 40, 40, 48), pupil = ell(182, 110, 15, 15, 32);
+      var lash = [], i, t, pp, pp2, ang;
+      for (i = 0; i < 8; i++) {
+        t = 0.42 + 0.5 * i / 7;
+        pp = qbPt(A, B, C, t);
+        pp2 = qbPt(A, B, C, Math.min(1, t + 0.04));
+        ang = Math.atan2(pp2.y - pp.y, pp2.x - pp.x) - Math.PI / 2 - 0.25;
+        lash.push(lin(pp.x, pp.y, pp.x + Math.cos(ang) * 16, pp.y + Math.sin(ang) * 16, 3));
+      }
+      var radial = [], rg = mulberry32(320), a, r1, r2;
+      for (i = 0; i < 22; i++) {
+        a = i / 22 * Math.PI * 2;
+        r1 = 18 + rg() * 4; r2 = 36 + rg() * 4;
+        radial.push(lin(182 + Math.cos(a) * r1, 110 + Math.sin(a) * r1, 182 + Math.cos(a) * r2, 110 + Math.sin(a) * r2, 4));
+      }
+      var brow = wave(84, 40, 282, 32, 4, 1.5, 30);
+      L.push({
+        id: 'lb-eye', cat: 'Карандаш', lvl: 1, art: ART.eye, title: 'Портрет: глаз крупным планом',
+        desc: 'Анатомия глаза: миндалевидная форма, радужка, зрачок, блик, ресницы и бровь.',
+        tools: ['Карандаш 2B', 'Линер'],
+        steps: [
+          { t: 'Миндаль глаза', x: 'Двумя дугами постройте миндалевидный контур: верхняя дуга круче нижней.',
+            s: [S('pencil', '#cfd8ea', 2, 0.9, upper, 321), S('pencil', '#cfd8ea', 1.8, 0.85, lower, 322)] },
+          { t: 'Радужка и зрачок', x: 'Радужка — круг, частично скрытый верхним веком. Зрачок — около трети диаметра радужки.',
+            s: [S('pencil', '#9fb4d8', 1.8, 0.8, iris, 323), S('pencil', '#e8f1ff', 2.4, 0.95, pupil, 324)] },
+          { t: 'Веко и ресницы', x: 'Утолщите верхнее веко и поставьте ресницы во внешней половине глаза.',
+            s: [S('marker', '#cfd8ea', 3.5, 0.9, lid, 325)].concat(lash.map(function (p, i2) { return S('pencil', '#e8f1ff', 1.8, 0.9, p, 326 + i2); })) },
+          { t: 'Штриховка радужки и блик', x: 'Штрихи расходятся от зрачка к краю радужки. Место блика оставляем белым.',
+            s: radial.map(function (p, i2) { return S('pencil', '#8fa3c8', 1.5, 0.85, p, 340 + i2); })
+              .concat([S('pencil', '#ffffff', 2.4, 0.95, ell(196, 96, 6, 6, 20), 360)]) },
+          { t: 'Бровь', x: 'Бровь шире у переносицы и сходит на нет к виску. Ведите штрих по направлению роста волос.',
+            s: [S('brush', '#aebfdd', 6, 0.4, brow, 361), S('pencil', '#cfd8ea', 2, 0.85, brow, 362)] }
+        ]
+      });
+    })();
+    (function () {
+      var cx = 180, cy = 104, rx = 58, ry = 78;
+      var outline = egg(cx, cy, rx, ry, 64);
+      var eyeLine = lin(cx - rx - 8, cy, cx + rx + 8, cy, 16);
+      function edgeX(y) {
+        var v = (y - cy) / ry, f = Math.sqrt(Math.max(0.02, 1 - v * v));
+        return cx + (y < cy ? rx : rx * 0.82) * f;
+      }
+      var rg = mulberry32(371), h1 = [], i, y, x0, x1;
+      for (i = 0; i < 16; i++) {
+        y = cy - 58 + i * 7.6;
+        x0 = cx + 10 + rg() * 8; x1 = edgeX(y) - 4;
+        if (x1 - x0 > 8) h1.push(lin(x0, y, x1, y + 10 + rg() * 6, 6));
+      }
+      var rg2 = mulberry32(372), h2 = [];
+      for (i = 0; i < 12; i++) {
+        y = cy - 46 + i * 7.5;
+        x0 = cx + 6 + rg2() * 6; x1 = cx + 34 + rg2() * 8;
+        h2.push(lin(x0, y + 8, x1, y - 8, 5));
+      }
+      var blend = wave(cx + 18, cy - 56, cx + 30, cy + 58, 5, 2, 30);
+      var refl = [], a;
+      for (i = 0; i <= 12; i++) {
+        a = lerp(0.35, 1.15, i / 12);
+        refl.push({ x: cx + Math.cos(a) * rx * 0.82 * 0.97, y: cy + Math.sin(a) * ry * 1.02 * 0.97 });
+      }
+      var neckShadow = [];
+      for (i = -2; i <= 2; i++) neckShadow.push(lin(cx - 30, 192 + i * 4, cx + 34, 188 + i * 4, 10));
+      L.push({
+        id: 'lb-shade', cat: 'Карандаш', lvl: 2, art: ART.shade, title: 'Портрет: светотень лица',
+        desc: 'Объём головы штриховкой по форме: теневая сторона, собственная тень, рефлекс и мягкая растушёвка.',
+        tools: ['Карандаш 2B–4B', 'Растушёвка'],
+        steps: [
+          { t: 'Каркас', x: 'Лёгкий овал и линия глаз — основа, на которую ляжет тон. Источник света — слева сверху.',
+            s: [S('pencil', '#cfd8ea', 1.8, 0.6, outline, 370), S('pencil', '#8fa3c8', 1.4, 0.5, eyeLine, 371)] },
+          { t: 'Теневая сторона', x: 'Штрихи по форме головы — от виска к скуле. Держите единый ритм и наклон.',
+            s: h1.map(function (p, i2) { return S('pencil', '#8fa3c8', 1.7, 0.8, p, 372 + i2); }) },
+          { t: 'Собственная тень', x: 'Терминатор — самая тёмная полоса на границе света и тени, ближе к центру формы.',
+            s: h2.map(function (p, i2) { return S('pencil', '#5d7096', 1.6, 0.9, p, 390 + i2); }) },
+          { t: 'Растушёвка и рефлекс', x: 'Разотрите тон по форме и оставьте светлую полоску рефлекса у освещённого края.',
+            s: [S('brush', '#7e93b8', 16, 0.18, blend, 410), S('pencil', '#9fd8ff', 1.8, 0.8, refl, 411)] },
+          { t: 'Тень под подбородком', x: 'Падающая тень шеи закрепляет голову в пространстве — темнее всего у подбородка.',
+            s: neckShadow.map(function (p, i2) { return S('pencil', '#5d7096', 2, 0.85, p, 420 + i2); }) }
+        ]
+      });
+    })();
     return L;
   }
   var BUILTIN = buildLessons();
@@ -727,7 +1014,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     if (!progress || typeof progress !== 'object' || Array.isArray(progress)) progress = {};
     var curLessonId = null, activeStep = 0, libFilter = 'Все', libQuery = '';
 
-    /* мир */
     var worldCv = document.createElement('canvas'); worldCv.width = WORLD_W; worldCv.height = WORLD_H;
     var wctx = worldCv.getContext('2d');
     var paperCv = document.createElement('canvas'); paperCv.width = WORLD_W; paperCv.height = WORLD_H;
@@ -830,7 +1116,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       for (var i = 0; i < strokes.length; i++) paintFull(wctx, strokes[i]);
     }
 
-    /* вид */
     var view = $('#view'), vctx = view.getContext('2d'), wrap = $('#canvasWrap');
     var dpr = 1, viewW = 2, viewH = 2, scale = 0.4, ox = 0, oy = 0, rafPending = false;
     function resize() {
@@ -902,7 +1187,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       requestRender();
     }
 
-    /* ввод */
     var spaceDown = false, panning = null, live = null, pinch = null, pointers = {}, pcount = 0;
     var ring = $('#cursorRing');
     view.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -1070,7 +1354,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       rebuildInk(); updateCount();
     })();
 
-    /* инструменты */
     var PALETTE = ['#00f0ff', '#ff2ec4', '#8a5cff', '#39ff88', '#ffe14d', '#ff6b35', '#ffffff'];
     PALETTE.forEach(function (c) {
       var b = document.createElement('button');
@@ -1143,12 +1426,20 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 
     /* демо-плеер */
     var demoCv = $('#demoCanvas'), dctx = demoCv.getContext('2d'), DW = 360, DH = 230;
-    (function () {
+    var demo = { items: [], queue: [], cur: null, idx: 0, playing: false, loop: true, speed: 1, budget: 0, mode: 'all', stepI: 0, hasContent: false, raf: 0, last: 0, hold: 0 };
+    function layoutDemo() {
+      var box = $('#demoWrapBox');
+      if (!box) return;
+      var bw = box.clientWidth - 10, bh = box.clientHeight - 10;
+      if (bw < 40 || bh < 30) return;
+      var k = Math.min(bw / DW, bh / DH);
       var d = Math.min(window.devicePixelRatio || 1, 2);
-      demoCv.width = DW * d; demoCv.height = DH * d;
-      dctx.setTransform(d, 0, 0, d, 0, 0);
-    })();
-    var demo = { items: [], queue: [], cur: null, idx: 0, playing: false, loop: true, budget: 0, mode: 'all', stepI: 0, hasContent: false, raf: 0, last: 0, hold: 0 };
+      demoCv.width = Math.max(2, Math.round(DW * k * d));
+      demoCv.height = Math.max(2, Math.round(DH * k * d));
+      demoCv.style.width = Math.round(DW * k) + 'px';
+      demoCv.style.height = Math.round(DH * k) + 'px';
+      dctx.setTransform(demoCv.width / DW, 0, 0, demoCv.height / DH, 0, 0);
+    }
     function demoClear() {
       dctx.setTransform(demoCv.width / DW, 0, 0, demoCv.height / DH, 0, 0);
       dctx.clearRect(0, 0, DW, DH);
@@ -1172,19 +1463,20 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
           if (s && s.pts && s.pts.length) { demo.items.push({ step: i, s: densifyStroke(s) }); demo.hasContent = true; }
         });
       });
-      $('#demoCanvas').style.display = demo.hasContent ? '' : 'none';
+      demoCv.style.display = demo.hasContent ? '' : 'none';
       var ph = $('#demoPh');
       if (!demo.hasContent) {
         if (!ph) {
           ph = document.createElement('div');
           ph.id = 'demoPh'; ph.className = 'demo-ph';
           ph.innerHTML = '<div class="orb"></div><div>Анимированное демо появится,<br>когда у шагов будут штрихи</div>';
-          $('#demoWrap').insertBefore(ph, $('#demoWrap').firstChild);
+          $('#demoWrapBox').appendChild(ph);
         }
         ph.style.display = 'flex';
         demoClear(); updateDemoBtn(false);
       } else {
         if (ph) ph.style.display = 'none';
+        layoutDemo();
         demoPlayAll();
       }
     }
@@ -1229,7 +1521,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         else demo.raf = requestAnimationFrame(demoFrame);
         return;
       }
-      demo.budget += dt * 230;
+      demo.budget += dt * 230 * demo.speed;
       var guard = 0, pts;
       while (demo.budget >= 1 && guard++ < 400) {
         demo.budget -= 1;
@@ -1270,6 +1562,118 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     });
     $('#demoRestart').addEventListener('click', function () { if (demo.hasContent) demoRestart(); });
     $('#demoLoop').addEventListener('click', function (e) { demo.loop = !demo.loop; e.currentTarget.classList.toggle('on', demo.loop); });
+    $('#dockSpeed').addEventListener('input', function () { demo.speed = this.value / 100; });
+
+    /* плавающее окно предпросмотра */
+    var dockS = Object.assign({ x: null, y: null, w: 360, h: 300, mini: false, hidden: false, moved: false }, lsGet('nb_dock', {}));
+    var dockEl = $('#previewDock');
+    function workspaceTop() {
+      var tb = $('#toolbar');
+      return tb.offsetTop + tb.offsetHeight + 12;
+    }
+    function dockDefault() {
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var mob = vw <= 620;
+      dockS.w = clamp(mob ? vw - 16 : 360, 240, vw - 16);
+      dockS.h = clamp(mob ? 250 : 300, 170, vh - workspaceTop() - 46);
+      dockS.x = mob ? 8 : vw - dockS.w - 16;
+      dockS.y = mob ? Math.max(workspaceTop(), vh - dockS.h - 36) : workspaceTop();
+    }
+    function clampDock() {
+      var vw = window.innerWidth, vh = window.innerHeight;
+      dockS.w = clamp(dockS.w, 230, Math.max(231, vw - 8));
+      dockS.h = clamp(dockS.h, 150, Math.max(151, vh - 70));
+      dockS.x = clamp(dockS.x, 4, Math.max(4, vw - dockS.w - 4));
+      dockS.y = clamp(dockS.y, 4, Math.max(4, vh - dockS.h - 30));
+    }
+    function applyDock(withLayout) {
+      clampDock();
+      dockEl.style.left = dockS.x + 'px';
+      dockEl.style.top = dockS.y + 'px';
+      dockEl.style.width = dockS.w + 'px';
+      dockEl.style.height = dockS.h + 'px';
+      dockEl.classList.toggle('mini', !!dockS.mini);
+      dockEl.classList.toggle('hidden', !!dockS.hidden);
+      $('#dockOpen').classList.toggle('show', !!dockS.hidden);
+      if (!dockS.hidden && !dockS.mini && withLayout !== false) {
+        requestAnimationFrame(function () { layoutDemo(); });
+      }
+    }
+    function saveDock() { lsSet('nb_dock', dockS); }
+    if (dockS.x === null || dockS.y === null) dockDefault();
+
+    function dragDock(e) {
+      if (e.target.closest('.dock-btn')) return;
+      e.preventDefault();
+      try { $('#dockHead').setPointerCapture(e.pointerId); } catch (err) {}
+      var sx = e.clientX, sy = e.clientY, x0 = dockS.x, y0 = dockS.y;
+      function mv(ev) {
+        dockS.x = x0 + ev.clientX - sx;
+        dockS.y = y0 + ev.clientY - sy;
+        dockS.moved = true;
+        applyDock(false);
+      }
+      function up() {
+        $('#dockHead').removeEventListener('pointermove', mv);
+        $('#dockHead').removeEventListener('pointerup', up);
+        $('#dockHead').removeEventListener('pointercancel', up);
+        saveDock();
+      }
+      $('#dockHead').addEventListener('pointermove', mv);
+      $('#dockHead').addEventListener('pointerup', up);
+      $('#dockHead').addEventListener('pointercancel', up);
+    }
+    $('#dockHead').addEventListener('pointerdown', dragDock);
+    $('#dockHead').addEventListener('dblclick', function (e) {
+      if (e.target.closest('.dock-btn')) return;
+      dockS.mini = !dockS.mini; saveDock(); applyDock();
+    });
+    function resizeDock(e) {
+      e.preventDefault(); e.stopPropagation();
+      try { $('#dockResize').setPointerCapture(e.pointerId); } catch (err) {}
+      var sx = e.clientX, sy = e.clientY, w0 = dockS.w, h0 = dockS.h, movedR = false;
+      var raf = 0;
+      function mv(ev) {
+        dockS.w = w0 + ev.clientX - sx;
+        dockS.h = h0 + ev.clientY - sy;
+        dockS.moved = true; movedR = true;
+        applyDock(false);
+        if (!raf) raf = requestAnimationFrame(function () { raf = 0; layoutDemo(); });
+      }
+      function up() {
+        $('#dockResize').removeEventListener('pointermove', mv);
+        $('#dockResize').removeEventListener('pointerup', up);
+        $('#dockResize').removeEventListener('pointercancel', up);
+        saveDock();
+        layoutDemo();
+        if (movedR && demo.hasContent) demoRestart();
+      }
+      $('#dockResize').addEventListener('pointermove', mv);
+      $('#dockResize').addEventListener('pointerup', up);
+      $('#dockResize').addEventListener('pointercancel', up);
+    }
+    $('#dockResize').addEventListener('pointerdown', resizeDock);
+
+    $('#dockFit').addEventListener('click', function () {
+      var vw = window.innerWidth, vh = window.innerHeight;
+      dockS.w = clamp(Math.min(vw - 24, 720), 240, vw - 8);
+      dockS.h = clamp(Math.min(vh - 140, Math.round(dockS.w * 0.6) + 96), 170, vh - 70);
+      dockS.x = Math.round((vw - dockS.w) / 2);
+      dockS.y = Math.round(Math.max(workspaceTop(), (vh - dockS.h) / 2));
+      dockS.mini = false; dockS.moved = true;
+      saveDock(); applyDock();
+      if (demo.hasContent) demoRestart();
+    });
+    $('#dockMini').addEventListener('click', function () { dockS.mini = !dockS.mini; saveDock(); applyDock(); });
+    $('#dockReset').addEventListener('click', function () {
+      dockDefault(); dockS.mini = false; dockS.hidden = false; dockS.moved = false;
+      saveDock(); applyDock();
+      if (demo.hasContent) demoRestart();
+      toast('Окно предпросмотра сброшено');
+    });
+    $('#dockClose').addEventListener('click', function () { dockS.hidden = true; saveDock(); applyDock(false); });
+    $('#dockOpen').addEventListener('click', function () { dockS.hidden = false; dockS.mini = false; saveDock(); applyDock(); });
+    $('#btnDock').addEventListener('click', function () { dockS.hidden = false; dockS.mini = false; saveDock(); applyDock(); });
 
     /* библиотека */
     var CAT_ICONS = { 'Акварель': '💧', 'Карандаш': '✏️', 'Сухая кисть': '🖌️', 'Графика': '🖋️', 'Другое': '✨' };
@@ -1309,7 +1713,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         c.className = 'lib-card' + (l.id === curLessonId ? ' on' : '');
         c.innerHTML =
           (l.custom ? '<span class="lib-badge">свой</span>' : '') +
-          '<div class="lib-thumb" style="background:' + (CAT_GRAD[l.cat] || CAT_GRAD['Другое']) + '">' + (CAT_ICONS[l.cat] || '✨') + '</div>' +
+          '<div class="lib-thumb">' + (l.art ? '<img src="' + l.art + '" alt="" loading="lazy">' : (CAT_ICONS[l.cat] || '✨')) + '</div>' +
           '<div class="lib-meta"><div class="lib-title">' + esc(l.title) + '</div>' +
           '<div class="lib-sub">' + esc(l.cat) + ' · ' + LVL[+l.lvl || 0] + ' · шагов: ' + (l.steps || []).length + '</div>' +
           (l.custom
@@ -1318,6 +1722,10 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
               '<button type="button" class="mini-btn del" data-del="' + l.id + '">удалить</button></div>'
             : '') +
           '</div>';
+        var img = c.querySelector('.lib-thumb img');
+        if (img) img.addEventListener('error', function () {
+          img.parentNode.innerHTML = CAT_ICONS[l.cat] || '✨';
+        });
         c.addEventListener('click', function (e) {
           var tg = e.target, now = Date.now();
           if (tg && tg.dataset) {
@@ -1339,7 +1747,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       });
     }
 
-    /* уроки и шаги */
     function getProgress(id) {
       var p = progress[id];
       return (p && Array.isArray(p.done)) ? p : { done: [], step: 0 };
@@ -1357,8 +1764,22 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       var chips = ['<span class="tag cat">' + esc(l.cat) + '</span>', '<span class="tag lvl' + (+l.lvl || 0) + '">' + LVL[+l.lvl || 0] + '</span>'];
       (l.tools || []).forEach(function (t) { chips.push('<span class="tag tool">' + esc(t) + '</span>'); });
       $('#lsChips').innerHTML = chips.join('');
+      var aw = $('#artWrap');
+      if (l.art) {
+        aw.style.display = '';
+        $('#artImg').src = l.art;
+        aw.dataset.title = l.title;
+      } else aw.style.display = 'none';
       renderSteps(l); renderProgress(l); demoSetLesson(l);
     }
+    $('#artWrap').addEventListener('click', function () {
+      var src = $('#artImg').src;
+      if (!src) return;
+      $('#artBig').src = src;
+      $('#artTitle').textContent = 'Эталон · ' + ($('#artWrap').dataset.title || '');
+      openModal('artModal');
+    });
+    $('#artImg').addEventListener('error', function () { $('#artWrap').style.display = 'none'; });
     function renderSteps(l) {
       var ol = $('#stepsList'); ol.innerHTML = '';
       var pr = getProgress(l.id);
@@ -1405,8 +1826,114 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     });
     $('#prevStep').addEventListener('click', function () { setActiveStep(Math.max(0, activeStep - 1), true); });
 
-    /* редактор */
+    /* ═══ редактор приёма + запись демо-штрихов ═══ */
     var editingId = null;
+    var rowObjs = [];
+    var recTool = 'pencil', recColorV = '#00f0ff', recSizeV = 6, recTarget = 0, recLive = null;
+    var recCv = $('#recCanvas'), rctx = recCv.getContext('2d'), RW = 360, RH = 230;
+
+    function recTransform() { rctx.setTransform(recCv.width / RW, 0, 0, recCv.height / RH, 0, 0); }
+    function recResize() {
+      var wrapEl = recCv.parentNode;
+      var w = wrapEl.clientWidth - 2 || 320;
+      var d = Math.min(window.devicePixelRatio || 1, 2);
+      recCv.width = Math.max(2, Math.round(w * d));
+      recCv.height = Math.max(2, Math.round(w * RH / RW * d));
+      recRender();
+    }
+    function recRender() {
+      if (!recCv.width) return;
+      recTransform();
+      rctx.clearRect(0, 0, RW, RH);
+      rctx.fillStyle = '#070a14'; rctx.fillRect(0, 0, RW, RH);
+      rctx.strokeStyle = 'rgba(90,140,255,.08)'; rctx.lineWidth = 1;
+      var gx, gy;
+      for (gx = 30; gx < RW; gx += 30) { rctx.beginPath(); rctx.moveTo(gx, 0); rctx.lineTo(gx, RH); rctx.stroke(); }
+      for (gy = 30; gy < RH; gy += 30) { rctx.beginPath(); rctx.moveTo(0, gy); rctx.lineTo(RW, gy); rctx.stroke(); }
+      rowObjs.forEach(function (row, i) {
+        if (i === recTarget || !row.s.length) return;
+        rctx.save(); rctx.globalAlpha = 0.16;
+        row.s.forEach(function (s) { paintFull(rctx, s); });
+        rctx.restore();
+      });
+      var cur = rowObjs[recTarget];
+      if (cur) cur.s.forEach(function (s) { paintFull(rctx, s); });
+    }
+    function recPos(e) {
+      var r = recCv.getBoundingClientRect();
+      return { x: (e.clientX - r.left) / r.width * RW, y: (e.clientY - r.top) / r.height * RH };
+    }
+    recCv.addEventListener('pointerdown', function (e) {
+      if (!rowObjs.length) { toast('Сначала добавьте шаг инструкции', true); return; }
+      e.preventDefault();
+      try { recCv.setPointerCapture(e.pointerId); } catch (err) {}
+      var p = recPos(e);
+      recLive = { tool: recTool, color: recColorV, size: recSizeV, alpha: 1, seed: (Math.random() * 1e9) | 0, pts: [p] };
+      recLive.painter = makePainter(rctx, recLive);
+      recLive.painter.seg(p, { x: p.x + 0.01, y: p.y + 0.01 });
+    });
+    recCv.addEventListener('pointermove', function (e) {
+      if (!recLive) return;
+      if (recLive.pts.length > 1500) return;
+      var p = recPos(e), last = recLive.pts[recLive.pts.length - 1];
+      if (Math.hypot(p.x - last.x, p.y - last.y) < 0.8) return;
+      recLive.painter.seg(last, p);
+      recLive.pts.push(p);
+    });
+    function recEnd() {
+      if (!recLive) return;
+      if (recLive.painter && recLive.painter.finish) recLive.painter.finish();
+      var row = rowObjs[recTarget];
+      if (row && recLive.pts.length) {
+        row.s.push({ tool: recLive.tool, color: recLive.color, size: recLive.size, alpha: 1, seed: recLive.seed, pts: recLive.pts });
+        refreshRecCounts();
+      }
+      recLive = null;
+      recRender();
+    }
+    recCv.addEventListener('pointerup', recEnd);
+    recCv.addEventListener('pointercancel', recEnd);
+    $('#recUndo').addEventListener('click', function () {
+      var row = rowObjs[recTarget];
+      if (row && row.s.length) { row.s.pop(); refreshRecCounts(); recRender(); }
+    });
+    $('#recClear').addEventListener('click', function () {
+      var row = rowObjs[recTarget];
+      if (row && row.s.length) { row.s = []; refreshRecCounts(); recRender(); toast('Штрихи шага очищены'); }
+    });
+    $('#recStep').addEventListener('change', function () {
+      recTarget = clamp(+this.value || 0, 0, Math.max(0, rowObjs.length - 1));
+      recRender();
+    });
+    $('#recColor').addEventListener('input', function (e) { recColorV = e.target.value; });
+    $('#recSize').addEventListener('input', function (e) { recSizeV = +e.target.value; });
+    $('#recTools').addEventListener('click', function (e) {
+      var b = e.target.closest('.rec-tool');
+      if (!b) return;
+      recTool = b.dataset.rt;
+      $$('#recTools .rec-tool').forEach(function (x) { x.classList.toggle('on', x === b); });
+    });
+    function rebuildRecStepSelect() {
+      var sel = $('#recStep');
+      sel.innerHTML = '';
+      rowObjs.forEach(function (r, i) {
+        var o = document.createElement('option');
+        o.value = i; o.textContent = 'Шаг ' + (i + 1);
+        sel.appendChild(o);
+      });
+      if (recTarget >= rowObjs.length) recTarget = Math.max(0, rowObjs.length - 1);
+      sel.value = recTarget;
+    }
+    function refreshRecCounts() {
+      rowObjs.forEach(function (r) {
+        var c = r.el.querySelector('.se-count');
+        if (c) c.textContent = r.s.length ? ('демо: ' + r.s.length + ' штр.') : '';
+      });
+      var sel = $('#recStep');
+      if (sel.options.length !== rowObjs.length) rebuildRecStepSelect();
+      else sel.value = recTarget;
+    }
+
     function openEditor(id) {
       editingId = id || null;
       $('#editorTitle').textContent = id ? 'Изменить приём' : 'Новый приём';
@@ -1416,22 +1943,33 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       $('#edLvl').value = l ? String(clamp(+l.lvl || 0, 0, 2)) : '0';
       $('#edDesc').value = l ? (l.desc || '') : '';
       $('#edSteps').innerHTML = '';
+      rowObjs = [];
+      recTarget = 0; recLive = null;
       (l && l.steps.length ? l.steps : [{ t: '', x: '' }]).forEach(addStepRow);
       openModal('editorModal');
+      requestAnimationFrame(recResize);
     }
     function addStepRow(st) {
       var box = $('#edSteps'), d = document.createElement('div');
       d.className = 'step-edit';
       d.innerHTML =
         '<div class="se-head"><span>Шаг <b class="se-n"></b></span>' +
-        '<button type="button" class="mini-btn del" style="margin-left:auto">удалить</button></div>' +
+        '<span class="se-count"></span>' +
+        '<button type="button" class="mini-btn del">удалить</button></div>' +
         '<input class="se-t" maxlength="80" placeholder="Заголовок шага">' +
         '<textarea class="se-x" placeholder="Что делать на этом шаге…"></textarea>';
+      var row = { el: d, s: (st && Array.isArray(st.s)) ? st.s.slice() : [] };
       d.querySelector('.se-t').value = (st && (st.t || st.title)) || '';
       d.querySelector('.se-x').value = (st && (st.x || st.text)) || '';
-      d.querySelector('.mini-btn').addEventListener('click', function () { d.remove(); renumSteps(); });
+      d.querySelector('.mini-btn').addEventListener('click', function () {
+        var idx = rowObjs.indexOf(row);
+        if (idx >= 0) rowObjs.splice(idx, 1);
+        d.remove();
+        renumSteps(); rebuildRecStepSelect(); refreshRecCounts(); recRender();
+      });
+      rowObjs.push(row);
       box.appendChild(d);
-      renumSteps();
+      renumSteps(); rebuildRecStepSelect(); refreshRecCounts();
     }
     function renumSteps() {
       $$('#edSteps .step-edit').forEach(function (el, i) { el.querySelector('.se-n').textContent = i + 1; });
@@ -1441,9 +1979,23 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     $('#edSave').addEventListener('click', function () {
       var title = $('#edTitle').value.trim();
       if (!title) { toast('Укажите название приёма', true); return; }
-      var steps = $$('#edSteps .step-edit').map(function (el) {
-        return { t: el.querySelector('.se-t').value.trim() || 'Шаг', x: el.querySelector('.se-x').value.trim() };
-      }).filter(function (s) { return s.t !== 'Шаг' || s.x; });
+      var steps = rowObjs.map(function (row) {
+        var se = row.el;
+        var out = {
+          t: se.querySelector('.se-t').value.trim() || 'Шаг',
+          x: se.querySelector('.se-x').value.trim()
+        };
+        if (row.s.length) {
+          out.s = row.s.map(function (s) {
+            return {
+              tool: s.tool, color: s.color, size: s.size, alpha: 1, seed: s.seed,
+              pts: s.pts.slice(0, 1500).map(function (p) { return { x: Math.round(p.x), y: Math.round(p.y) }; })
+            };
+          });
+        }
+        return out;
+      }).filter(function (s) { return s.t !== 'Шаг' || s.x || s.s; });
+      if (!steps.length) { toast('Добавьте хотя бы один шаг', true); return; }
       var data = { title: title, cat: $('#edCat').value, lvl: +$('#edLvl').value, desc: $('#edDesc').value.trim(), steps: steps, custom: true };
       if (editingId) {
         var i = customLessons.findIndex(function (x) { return x.id === editingId; });
@@ -1494,6 +2046,17 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         catch (e2) { toast('Выделите текст и скопируйте вручную', true); }
       }
     });
+    function sanitizeStroke(st) {
+      if (!st || !Array.isArray(st.pts)) return null;
+      return {
+        tool: String(st.tool || 'pencil'),
+        color: /^#[0-9a-fA-F]{6}$/.test(st.color) ? st.color : '#00f0ff',
+        size: clamp(+st.size || 4, 1, 60),
+        alpha: 1,
+        seed: +st.seed || 1,
+        pts: st.pts.slice(0, 1500).map(function (p) { return { x: +p.x || 0, y: +p.y || 0 }; })
+      };
+    }
     function importFromText(txt) {
       try {
         var j = JSON.parse(txt);
@@ -1510,10 +2073,15 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
               desc: String(it.desc || '').slice(0, 400),
               custom: true,
               steps: it.steps.slice(0, 20).map(function (s) {
-                return {
+                var o = {
                   t: String((s && (s.t || s.title)) || 'Шаг').slice(0, 80),
                   x: String((s && (s.x || s.text)) || '').slice(0, 500)
                 };
+                if (s && Array.isArray(s.s) && s.s.length) {
+                  var ss = s.s.slice(0, 40).map(sanitizeStroke).filter(function (v) { return v; });
+                  if (ss.length) o.s = ss;
+                }
+                return o;
               })
             });
             n++;
@@ -1537,7 +2105,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       e.target.value = '';
     });
 
-    /* модалки и сайдбары */
     function openModal(id) { $('#' + id).classList.add('open'); }
     function closeModals() { $$('.modal-bk').forEach(function (m) { m.classList.remove('open'); }); }
     $$('.modal-bk').forEach(function (m) {
@@ -1565,11 +2132,23 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       $$('aside').forEach(function (a) { a.classList.remove('open'); });
       backdrop.classList.remove('show');
     });
+
+    var winResizeTimer = null;
     window.addEventListener('resize', function () {
-      if (!isMobile()) {
-        backdrop.classList.remove('show');
-        $$('aside').forEach(function (a) { a.classList.remove('open'); });
-      }
+      clearTimeout(winResizeTimer);
+      winResizeTimer = setTimeout(function () {
+        if (!isMobile()) {
+          backdrop.classList.remove('show');
+          $$('aside').forEach(function (a) { a.classList.remove('open'); });
+        }
+        if (!dockS.moved) dockDefault();
+        clampDock(); applyDock(false);
+        if (!dockS.hidden && !dockS.mini) {
+          layoutDemo();
+          if (demo.hasContent) demoRestart();
+        }
+        if ($('#editorModal').classList.contains('open')) recResize();
+      }, 150);
     });
 
     setTimeout(function () { $('#canvasHint').classList.add('hide'); }, 9000);
@@ -1580,15 +2159,17 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     setColor(settings.color); setTool(settings.tool);
     updateUndoUI();
     resize();
+    clampDock(); applyDock(false);
     requestAnimationFrame(function () {
       resize();
       if (strokes.length) fitAll(); else fitPaper();
+      layoutDemo();
     });
     var all0 = allLessons();
     if (all0.length) selectLesson(all0[0].id);
     updateCount();
     $('#stHint').textContent = TOOL_HINTS[settings.tool] || '';
-    toast('Добро пожаловать в NeonBrush v' + APP_VER + ' ✨');
+    toast('NeonBrush v' + APP_VER + ': запись демо-штрихов в своих приёмах ✍️');
   }
 
   try { init(); } catch (err) { console.error(err); showFatal(err); }
