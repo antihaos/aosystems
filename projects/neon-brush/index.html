@@ -149,7 +149,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 #canvasHint.hide{opacity:0}
 #canvasHint b{color:var(--cy);font-weight:600}
 
-/* панель урока: инфо сверху, шаги — свой скролл, кнопки — фиксированы внизу */
 #lessonBody{flex:1;min-height:0;overflow:hidden;padding:14px;display:flex;flex-direction:column;gap:12px}
 .ls-info{flex:none;max-height:46%;min-height:0;overflow-y:auto;overscroll-behavior:contain;
   display:flex;flex-direction:column;gap:12px;padding-right:4px}
@@ -186,7 +185,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .step-check{flex:none;margin-top:3px;accent-color:var(--gn);width:15px;height:15px;cursor:pointer}
 .ls-actions{flex:none;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}
 
-/* плавающее окно предпросмотра */
 #previewDock{position:fixed;z-index:60;background:rgba(14,20,38,.94);backdrop-filter:blur(10px);
   border:1px solid var(--line2);border-radius:14px;overflow:hidden;
   box-shadow:0 18px 50px rgba(0,0,0,.55),0 0 24px rgba(0,240,255,.10);
@@ -221,7 +219,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .dock-resize{position:absolute;right:0;bottom:0;width:20px;height:20px;cursor:nwse-resize;touch-action:none;z-index:2;
   background:linear-gradient(135deg,transparent 50%,rgba(0,240,255,.6) 50%,rgba(0,240,255,.6) 60%,transparent 60%,
     transparent 72%,rgba(0,240,255,.6) 72%,rgba(0,240,255,.6) 82%,transparent 82%)}
-/* кнопка возврата предпросмотра — по центру снизу, не конфликтует с сайдбарами */
 #dockOpen{position:fixed;left:50%;transform:translateX(-50%);bottom:40px;z-index:59;display:none;align-items:center;gap:8px;
   background:rgba(14,20,38,.92);border:1px solid rgba(0,240,255,.5);color:var(--cy);border-radius:22px;
   padding:9px 16px;font-size:12px;font-weight:700;box-shadow:var(--glow-cy);max-width:92vw}
@@ -265,7 +262,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   border-radius:6px;padding:2px 8px;color:var(--cy)}
 #ioText{width:100%;min-height:120px;font-family:'JetBrains Mono',monospace;font-size:11px}
 
-/* запись демо-штрихов в редакторе */
+/* запись демо-штрихов */
 .rec-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 #recStep{background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:6px 8px;font-size:12px;flex:none}
 .rec-tools{display:flex;gap:4px;flex-wrap:wrap}
@@ -279,6 +276,16 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .rec-cv-wrap{border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:#070a14;touch-action:none}
 #recCanvas{display:block;width:100%;height:auto;cursor:crosshair}
 .rec-hint{font-size:11px;color:var(--tx3);line-height:1.5}
+
+/* загрузка эталона в редакторе */
+.ed-art{display:flex;gap:10px;align-items:stretch}
+.ed-art-prev{width:122px;height:82px;border:1px dashed var(--line2);border-radius:10px;overflow:hidden;
+  display:grid;place-items:center;background:var(--bg2);color:var(--tx3);font-size:10px;text-align:center;padding:6px;flex:none;
+  transition:.15s}
+.ed-art-prev.drag{border-color:var(--cy);box-shadow:var(--glow-cy)}
+.ed-art-prev img{width:100%;height:100%;object-fit:cover;display:block}
+.ed-art-btns{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.ed-art-btns .btn{padding:7px 10px;font-size:12px}
 
 #toastWrap{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
 .toast{background:rgba(14,20,38,.95);border:1px solid var(--cy);color:var(--tx);border-radius:12px;padding:10px 18px;
@@ -317,6 +324,8 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   .modal-head,.modal-foot{padding:12px 14px}
   #zoomHud{right:8px;bottom:8px}
   .zoom-btn{width:36px;height:36px}
+  .ed-art{flex-direction:column}
+  .ed-art-prev{width:100%;height:110px}
 }
 @media (max-width:440px){
   #stX,#stY{display:none}
@@ -339,7 +348,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         <circle cx="26" cy="10" r="1.6" fill="#ffe14d"/>
       </svg>
       <div class="logo-txt"><div class="name">NeonBrush</div><div class="sub">тренажёр рисования</div></div>
-      <span class="ver">v1.4.0</span>
+      <span class="ver">v1.5.0</span>
     </div>
     <div class="hdr-spacer"></div>
     <button type="button" class="hdr-btn" id="btnLib" title="Библиотека приёмов">
@@ -403,7 +412,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         <button type="button" class="zoom-btn" id="zIn" title="Приблизить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
         <div id="zoomLbl">100%</div>
         <button type="button" class="zoom-btn" id="zOut" title="Отдалить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
-        <button type="button" class="zoom-btn" id="zFit" title="Вписать всё (0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/><circle cx="12" cy="12" r="2.6"/></svg></button>
+        <button type="button" class="zoom-btn" id="zFit" title="Вписать бумагу и все штрихи в видимую область (0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/><circle cx="12" cy="12" r="2.6"/></svg></button>
         <button type="button" class="zoom-btn" id="z100" title="Масштаб 100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9 17V7l-2 2M13 17V7h3.5a1.5 1.5 0 0 1 0 3H13"/></svg></button>
       </div>
       <div id="canvasHint"><b>Пробел</b> или <b>средняя кнопка</b> — перемещение · <b>колесо</b> — масштаб · <b>0</b> — вписать всё</div>
@@ -498,6 +507,22 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         <div class="f-row"><label>Сложность</label><select id="edLvl"><option value="0">Начальный</option><option value="1">Средний</option><option value="2">Продвинутый</option></select></div>
       </div>
       <div class="f-row"><label>Описание</label><textarea id="edDesc" placeholder="Чему учит этот приём…"></textarea></div>
+      <div class="f-row">
+        <label>Эталон (изображение результата)</label>
+        <div class="ed-art">
+          <div class="ed-art-prev" id="edArtPrev" title="Можно перетащить файл сюда">
+            <span id="edArtEmpty">Нет изображения</span>
+            <img id="edArtImg" alt="" style="display:none">
+          </div>
+          <div class="ed-art-btns">
+            <button type="button" class="btn primary" id="edArtBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              Загрузить изображение…</button>
+            <button type="button" class="btn" id="edArtDel">Удалить эталон</button>
+          </div>
+        </div>
+        <input type="file" id="edArtFile" accept="image/*" style="display:none">
+      </div>
       <div class="f-row"><label>Шаги инструкции</label><div id="edSteps"></div></div>
       <button type="button" class="btn" id="edAddStep" style="align-self:flex-start">+ Добавить шаг</button>
       <div class="f-row">
@@ -546,14 +571,14 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 
 <div class="modal-bk" id="helpModal">
   <div class="modal">
-    <div class="modal-head"><h3>Справка · NeonBrush v1.4.0</h3><button type="button" class="modal-x" data-close="helpModal">✕</button></div>
+    <div class="modal-head"><h3>Справка · NeonBrush v1.5.0</h3><button type="button" class="modal-x" data-close="helpModal">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:12.5px;color:#8b97bd;line-height:1.6">Окно предпросмотра перетаскивается за заголовок и меняет размер за уголок. Свои приёмы можно снабжать анимированным демо: запишите штрихи реальным рисованием в редакторе приёма. Список шагов прокручивается, кнопки переключения всегда закреплены внизу панели урока.</p>
+      <p style="font-size:12.5px;color:#8b97bd;line-height:1.6">Свои приёмы можно снабжать эталоном (загрузите изображение в редакторе) и анимированным демо (запишите штрихи рисованием). Кнопка «вписать всё» центрирует бумагу и все штрихи в видимой области с запасом на толщину линий.</p>
       <div class="help-tbl">
         <kbd>1…8</kbd><span>Выбор инструмента</span>
         <kbd>Пробел</kbd><span>Перемещение холста (зажать)</span>
         <kbd>Колесо</kbd><span>Масштаб к курсору</span>
-        <kbd>0</kbd><span>Вписать все объекты в экран</span>
+        <kbd>0</kbd><span>Вписать бумагу и рисунок в экран</span>
         <kbd>Ctrl+Z / Ctrl+Y</kbd><span>Отменить / вернуть</span>
         <kbd>[ и ]</kbd><span>Размер кисти меньше / больше</span>
         <kbd>?</kbd><span>Эта справка</span>
@@ -574,7 +599,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function dist(a, b) { return Math.hypot(b.x - a.x, b.y - a.y); }
-  var APP_VER = '1.4.0';
+  var APP_VER = '1.5.0';
 
   function mulberry32(a) {
     return function () {
@@ -1161,29 +1186,27 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       ox = sx - (sx - ox) * k; oy = sy - (sy - oy) * k; scale = ns;
       requestRender();
     }
-    function bboxAll() {
-      if (!strokes.length) return { x: PAPER.x, y: PAPER.y, w: PAPER.w, h: PAPER.h };
-      var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    /* авто-вписывание: бумага + все штрихи, с запасом на толщину и растекание */
+    function fitAll() {
+      var vw = viewW, vh = viewH;
+      if (vw < 4 || vh < 4) return;
+      var margin = 30;
+      var x0 = PAPER.x, y0 = PAPER.y, x1 = PAPER.x + PAPER.w, y1 = PAPER.y + PAPER.h;
       strokes.forEach(function (s) {
+        var m = (s.size || 4) * (s.tool === 'watercolor' ? 2 : s.tool === 'dry' ? 1.4 : 1) + margin;
         s.pts.forEach(function (p) {
-          if (p.x < x0) x0 = p.x; if (p.y < y0) y0 = p.y;
-          if (p.x > x1) x1 = p.x; if (p.y > y1) y1 = p.y;
+          if (p.x - m < x0) x0 = p.x - m;
+          if (p.y - m < y0) y0 = p.y - m;
+          if (p.x + m > x1) x1 = p.x + m;
+          if (p.y + m > y1) y1 = p.y + m;
         });
       });
-      if (x0 > x1) return { x: PAPER.x, y: PAPER.y, w: PAPER.w, h: PAPER.h };
-      return { x: x0 - 30, y: y0 - 30, w: x1 - x0 + 60, h: y1 - y0 + 60 };
-    }
-    function fitAll() {
-      var b = bboxAll();
-      scale = clamp(Math.min(viewW * 0.92 / b.w, viewH * 0.92 / b.h), 0.04, 8);
-      ox = (viewW - b.w * scale) / 2 - b.x * scale;
-      oy = (viewH - b.h * scale) / 2 - b.y * scale;
-      requestRender();
-    }
-    function fitPaper() {
-      scale = clamp(Math.min(viewW * 0.9 / PAPER.w, viewH * 0.9 / PAPER.h), 0.04, 8);
-      ox = (viewW - PAPER.w * scale) / 2 - PAPER.x * scale;
-      oy = (viewH - PAPER.h * scale) / 2 - PAPER.y * scale;
+      var bw = Math.max(80, x1 - x0), bh = Math.max(80, y1 - y0);
+      var ns = Math.min(vw * 0.94 / bw, vh * 0.94 / bh);
+      if (!isFinite(ns) || ns <= 0) ns = 0.2;
+      scale = clamp(ns, 0.04, 8);
+      ox = (vw - bw * scale) / 2 - x0 * scale;
+      oy = (vh - bh * scale) / 2 - y0 * scale;
       requestRender();
     }
 
@@ -1397,7 +1420,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 
     $('#zIn').addEventListener('click', function () { zoomAt(viewW / 2, viewH / 2, 1.3); });
     $('#zOut').addEventListener('click', function () { zoomAt(viewW / 2, viewH / 2, 1 / 1.3); });
-    $('#zFit').addEventListener('click', fitAll);
+    $('#zFit').addEventListener('click', function () { fitAll(); });
     $('#z100').addEventListener('click', function () {
       var c = toWorld(viewW / 2, viewH / 2);
       scale = 1; ox = viewW / 2 - c.x; oy = viewH / 2 - c.y;
@@ -1413,7 +1436,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyY') { e.preventDefault(); redo(); return; }
       if (e.ctrlKey && (e.key === '=' || e.key === '+')) { e.preventDefault(); zoomAt(viewW / 2, viewH / 2, 1.25); return; }
       if (e.ctrlKey && e.key === '-') { e.preventDefault(); zoomAt(viewW / 2, viewH / 2, 0.8); return; }
-      if (e.key === '0') { fitAll(); return; }
+      if (e.key === '0') { e.preventDefault(); fitAll(); return; }
       if (e.key === '[') { settings.size = Math.max(1, settings.size - 2); $('#sizeRange').value = settings.size; refreshSizeUI(); return; }
       if (e.key === ']') { settings.size = Math.min(80, settings.size + 2); $('#sizeRange').value = settings.size; refreshSizeUI(); return; }
       if (e.key === '?') { openModal('helpModal'); return; }
@@ -1826,11 +1849,12 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     });
     $('#prevStep').addEventListener('click', function () { setActiveStep(Math.max(0, activeStep - 1), true); });
 
-    /* ═══ редактор приёма + запись демо-штрихов ═══ */
+    /* редактор приёма: запись демо-штрихов + загрузка эталона */
     var editingId = null;
     var rowObjs = [];
     var recTool = 'pencil', recColorV = '#00f0ff', recSizeV = 6, recTarget = 0, recLive = null;
     var recCv = $('#recCanvas'), rctx = recCv.getContext('2d'), RW = 360, RH = 230;
+    var edArtData = null;
 
     function recTransform() { rctx.setTransform(recCv.width / RW, 0, 0, recCv.height / RH, 0, 0); }
     function recResize() {
@@ -1934,6 +1958,55 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       else sel.value = recTarget;
     }
 
+    /* эталон */
+    function setEdArt(url) {
+      edArtData = url || null;
+      var img = $('#edArtImg'), empty = $('#edArtEmpty');
+      if (edArtData) { img.src = edArtData; img.style.display = ''; empty.style.display = 'none'; }
+      else { img.removeAttribute('src'); img.style.display = 'none'; empty.style.display = ''; }
+    }
+    function handleArtFile(file) {
+      if (!file) return;
+      if (!/^image\//.test(file.type)) { toast('Выберите файл изображения', true); return; }
+      if (file.size > 8 * 1024 * 1024) { toast('Файл слишком большой (до 8 МБ)', true); return; }
+      var rd = new FileReader();
+      rd.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var maxW = 640, k = Math.min(1, maxW / img.width);
+            var w = Math.max(1, Math.round(img.width * k)), h = Math.max(1, Math.round(img.height * k));
+            var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+            var c = cv.getContext('2d');
+            c.fillStyle = '#0a0f20'; c.fillRect(0, 0, w, h);
+            c.drawImage(img, 0, 0, w, h);
+            setEdArt(cv.toDataURL('image/jpeg', 0.82));
+            toast('Эталон добавлен');
+          } catch (e) { setEdArt(rd.result); }
+        };
+        img.onerror = function () { toast('Не удалось прочитать изображение', true); };
+        img.src = rd.result;
+      };
+      rd.onerror = function () { toast('Не удалось прочитать файл', true); };
+      rd.readAsDataURL(file);
+    }
+    $('#edArtBtn').addEventListener('click', function () { $('#edArtFile').click(); });
+    $('#edArtFile').addEventListener('change', function (e) {
+      handleArtFile(e.target.files[0]);
+      e.target.value = '';
+    });
+    $('#edArtDel').addEventListener('click', function () { setEdArt(null); });
+    (function () {
+      var box = $('#edArtPrev');
+      box.addEventListener('dragover', function (e) { e.preventDefault(); box.classList.add('drag'); });
+      box.addEventListener('dragleave', function () { box.classList.remove('drag'); });
+      box.addEventListener('drop', function (e) {
+        e.preventDefault(); box.classList.remove('drag');
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        handleArtFile(f);
+      });
+    })();
+
     function openEditor(id) {
       editingId = id || null;
       $('#editorTitle').textContent = id ? 'Изменить приём' : 'Новый приём';
@@ -1942,6 +2015,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       $('#edCat').value = (l && CATS.indexOf(l.cat) >= 1) ? l.cat : 'Акварель';
       $('#edLvl').value = l ? String(clamp(+l.lvl || 0, 0, 2)) : '0';
       $('#edDesc').value = l ? (l.desc || '') : '';
+      setEdArt(l && l.art ? l.art : null);
       $('#edSteps').innerHTML = '';
       rowObjs = [];
       recTarget = 0; recLive = null;
@@ -1997,9 +2071,11 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       }).filter(function (s) { return s.t !== 'Шаг' || s.x || s.s; });
       if (!steps.length) { toast('Добавьте хотя бы один шаг', true); return; }
       var data = { title: title, cat: $('#edCat').value, lvl: +$('#edLvl').value, desc: $('#edDesc').value.trim(), steps: steps, custom: true };
+      if (edArtData) data.art = edArtData;
       if (editingId) {
         var i = customLessons.findIndex(function (x) { return x.id === editingId; });
         if (i >= 0) customLessons[i] = Object.assign({}, customLessons[i], data);
+        if (!edArtData && customLessons[i]) delete customLessons[i].art;
         toast('Приём обновлён');
       } else {
         data.id = 'c' + Date.now();
@@ -2065,7 +2141,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         var n = 0;
         arr.forEach(function (it) {
           if (it && it.title && Array.isArray(it.steps)) {
-            customLessons.push({
+            var obj = {
               id: 'c' + Date.now() + Math.floor(Math.random() * 1e4) + n,
               title: String(it.title).slice(0, 80),
               cat: CATS.indexOf(it.cat) >= 1 ? it.cat : 'Другое',
@@ -2083,7 +2159,9 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
                 }
                 return o;
               })
-            });
+            };
+            if (typeof it.art === 'string' && it.art.length < 2000000) obj.art = it.art;
+            customLessons.push(obj);
             n++;
           }
         });
@@ -2162,14 +2240,14 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     clampDock(); applyDock(false);
     requestAnimationFrame(function () {
       resize();
-      if (strokes.length) fitAll(); else fitPaper();
+      fitAll();
       layoutDemo();
     });
     var all0 = allLessons();
     if (all0.length) selectLesson(all0[0].id);
     updateCount();
     $('#stHint').textContent = TOOL_HINTS[settings.tool] || '';
-    toast('NeonBrush v' + APP_VER + ': запись демо-штрихов в своих приёмах ✍️');
+    toast('NeonBrush v' + APP_VER + ': загрузка эталона и исправленный автофит 🎯');
   }
 
   try { init(); } catch (err) { console.error(err); showFatal(err); }
