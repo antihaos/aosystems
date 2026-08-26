@@ -241,6 +241,10 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .modal{background:var(--panel);border:1px solid var(--line2);border-radius:16px;width:min(600px,100%);
   max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6);animation:pop .22s ease}
 #artModal .modal{width:min(760px,100%)}
+.video-modal{width:min(860px,100%)}
+.video-body{padding:12px}
+.video-body video{width:100%;max-height:64vh;border-radius:10px;background:#000;display:block}
+.video-err{color:var(--mg);font-size:12.5px;line-height:1.5}
 @keyframes pop{from{transform:translateY(14px) scale(.98);opacity:0}}
 .modal-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
 .modal-head h3{font-family:'Unbounded',sans-serif;font-size:14px}
@@ -262,7 +266,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   border-radius:6px;padding:2px 8px;color:var(--cy)}
 #ioText{width:100%;min-height:120px;font-family:'JetBrains Mono',monospace;font-size:11px}
 
-/* запись демо-штрихов */
 .rec-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 #recStep{background:var(--bg2);border:1px solid var(--line2);border-radius:8px;padding:6px 8px;font-size:12px;flex:none}
 .rec-tools{display:flex;gap:4px;flex-wrap:wrap}
@@ -277,7 +280,6 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 #recCanvas{display:block;width:100%;height:auto;cursor:crosshair}
 .rec-hint{font-size:11px;color:var(--tx3);line-height:1.5}
 
-/* загрузка эталона в редакторе */
 .ed-art{display:flex;gap:10px;align-items:stretch}
 .ed-art-prev{width:122px;height:82px;border:1px dashed var(--line2);border-radius:10px;overflow:hidden;
   display:grid;place-items:center;background:var(--bg2);color:var(--tx3);font-size:10px;text-align:center;padding:6px;flex:none;
@@ -286,6 +288,10 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 .ed-art-prev img{width:100%;height:100%;object-fit:cover;display:block}
 .ed-art-btns{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
 .ed-art-btns .btn{padding:7px 10px;font-size:12px}
+
+.ed-video{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ed-video input[type=text]{flex:1;min-width:170px}
+.ed-video .btn{flex:none;padding:8px 12px;font-size:12px}
 
 #toastWrap{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
 .toast{background:rgba(14,20,38,.95);border:1px solid var(--cy);color:var(--tx);border-radius:12px;padding:10px 18px;
@@ -326,6 +332,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   .zoom-btn{width:36px;height:36px}
   .ed-art{flex-direction:column}
   .ed-art-prev{width:100%;height:110px}
+  .ed-video input[type=text]{min-width:120px}
 }
 @media (max-width:440px){
   #stX,#stY{display:none}
@@ -348,7 +355,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         <circle cx="26" cy="10" r="1.6" fill="#ffe14d"/>
       </svg>
       <div class="logo-txt"><div class="name">NeonBrush</div><div class="sub">тренажёр рисования</div></div>
-      <span class="ver">v1.5.0</span>
+      <span class="ver">v1.6.0</span>
     </div>
     <div class="hdr-spacer"></div>
     <button type="button" class="hdr-btn" id="btnLib" title="Библиотека приёмов">
@@ -434,6 +441,12 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
           <div class="art-wrap" id="artWrap" style="display:none">
             <img id="artImg" alt="Эталон работы">
             <div class="art-cap">Эталон · нажмите для увеличения</div>
+          </div>
+          <div id="lsVideoBox" style="display:none">
+            <button type="button" class="btn primary" id="lsVideoBtn">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5 19.5 12 7 19.5z"/></svg>
+              Смотреть видео-эталон
+            </button>
           </div>
         </div>
         <ol id="stepsList"></ol>
@@ -523,6 +536,18 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         </div>
         <input type="file" id="edArtFile" accept="image/*" style="display:none">
       </div>
+      <div class="f-row">
+        <label>Видео-эталон (дополнительно к изображению)</label>
+        <div class="ed-video">
+          <input type="text" id="edVideoUrl" placeholder="Ссылка на видео (mp4, webm, …)" autocomplete="off">
+          <button type="button" class="btn" id="edVideoFileBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h20M2 15h20M7 4v16M17 4v16"/></svg>
+            Файл…</button>
+          <button type="button" class="btn" id="edVideoDel">Удалить</button>
+        </div>
+        <input type="file" id="edVideoFile" accept="video/*" style="display:none">
+        <p class="rec-hint" id="edVideoStatus">Видео не задано. Укажите ссылку или загрузите файл до 4 МБ.</p>
+      </div>
       <div class="f-row"><label>Шаги инструкции</label><div id="edSteps"></div></div>
       <button type="button" class="btn" id="edAddStep" style="align-self:flex-start">+ Добавить шаг</button>
       <div class="f-row">
@@ -571,9 +596,9 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 
 <div class="modal-bk" id="helpModal">
   <div class="modal">
-    <div class="modal-head"><h3>Справка · NeonBrush v1.5.0</h3><button type="button" class="modal-x" data-close="helpModal">✕</button></div>
+    <div class="modal-head"><h3>Справка · NeonBrush v1.6.0</h3><button type="button" class="modal-x" data-close="helpModal">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:12.5px;color:#8b97bd;line-height:1.6">Свои приёмы можно снабжать эталоном (загрузите изображение в редакторе) и анимированным демо (запишите штрихи рисованием). Кнопка «вписать всё» центрирует бумагу и все штрихи в видимой области с запасом на толщину линий.</p>
+      <p style="font-size:12.5px;color:#8b97bd;line-height:1.6">Свои приёмы можно снабжать изображением-эталоном, видео-эталоном (ссылка или файл) и анимированным демо, записанным рисованием. Кнопка «вписать всё» берёт актуальный размер окна холста, объединяет бумагу и все штрихи с запасом на толщину линий и центрирует их с экранными полями 24 px.</p>
       <div class="help-tbl">
         <kbd>1…8</kbd><span>Выбор инструмента</span>
         <kbd>Пробел</kbd><span>Перемещение холста (зажать)</span>
@@ -599,7 +624,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function dist(a, b) { return Math.hypot(b.x - a.x, b.y - a.y); }
-  var APP_VER = '1.5.0';
+  var APP_VER = '1.6.0';
 
   function mulberry32(a) {
     return function () {
@@ -1182,18 +1207,21 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
 
     function toWorld(sx, sy) { return { x: (sx - ox) / scale, y: (sy - oy) / scale }; }
     function zoomAt(sx, sy, f) {
-      var ns = clamp(scale * f, 0.04, 8), k = ns / scale;
+      var ns = clamp(scale * f, 0.02, 8), k = ns / scale;
       ox = sx - (sx - ox) * k; oy = sy - (sy - oy) * k; scale = ns;
       requestRender();
     }
-    /* авто-вписывание: бумага + все штрихи, с запасом на толщину и растекание */
+    /* авто-вписывание: актуальный размер окна, объединение бумаги и штрихов,
+       запас на толщину линий, экранные поля 24 px, точное центрирование */
     function fitAll() {
-      var vw = viewW, vh = viewH;
+      var vw = wrap.clientWidth || viewW;
+      var vh = wrap.clientHeight || viewH;
+      if (vw > 4 && vh > 4) { viewW = vw; viewH = vh; }
       if (vw < 4 || vh < 4) return;
-      var margin = 30;
+      var PAD = 24;
       var x0 = PAPER.x, y0 = PAPER.y, x1 = PAPER.x + PAPER.w, y1 = PAPER.y + PAPER.h;
       strokes.forEach(function (s) {
-        var m = (s.size || 4) * (s.tool === 'watercolor' ? 2 : s.tool === 'dry' ? 1.4 : 1) + margin;
+        var m = (s.size || 4) * (s.tool === 'watercolor' ? 1.8 : s.tool === 'dry' ? 1.3 : 0.8) + 8;
         s.pts.forEach(function (p) {
           if (p.x - m < x0) x0 = p.x - m;
           if (p.y - m < y0) y0 = p.y - m;
@@ -1201,10 +1229,11 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
           if (p.y + m > y1) y1 = p.y + m;
         });
       });
-      var bw = Math.max(80, x1 - x0), bh = Math.max(80, y1 - y0);
-      var ns = Math.min(vw * 0.94 / bw, vh * 0.94 / bh);
+      var bw = Math.max(1, x1 - x0), bh = Math.max(1, y1 - y0);
+      var availW = Math.max(10, vw - PAD * 2), availH = Math.max(10, vh - PAD * 2);
+      var ns = Math.min(availW / bw, availH / bh);
       if (!isFinite(ns) || ns <= 0) ns = 0.2;
-      scale = clamp(ns, 0.04, 8);
+      scale = clamp(ns, 0.02, 8);
       ox = (vw - bw * scale) / 2 - x0 * scale;
       oy = (vh - bh * scale) / 2 - y0 * scale;
       requestRender();
@@ -1698,6 +1727,48 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     $('#dockOpen').addEventListener('click', function () { dockS.hidden = false; dockS.mini = false; saveDock(); applyDock(); });
     $('#btnDock').addEventListener('click', function () { dockS.hidden = false; dockS.mini = false; saveDock(); applyDock(); });
 
+    /* динамическое модальное окно с видеоплеером */
+    function openVideoModal(url, title) {
+      closeModals();
+      var bk = document.createElement('div');
+      bk.className = 'modal-bk open';
+      bk.innerHTML =
+        '<div class="modal video-modal">' +
+        '<div class="modal-head"><h3></h3><button type="button" class="modal-x">✕</button></div>' +
+        '<div class="modal-body video-body"></div></div>';
+      document.body.appendChild(bk);
+      bk.querySelector('h3').textContent = title || 'Видео-эталон';
+      var body = bk.querySelector('.video-body');
+      var v = document.createElement('video');
+      v.controls = true;
+      v.playsInline = true;
+      v.setAttribute('playsinline', '');
+      var failed = false;
+      v.addEventListener('error', function () {
+        if (failed) return;
+        failed = true;
+        body.innerHTML = '<p class="video-err">Не удалось загрузить видео. Проверьте ссылку, формат (mp4/webm) или доступ к файлу.</p>';
+      });
+      v.src = url;
+      body.appendChild(v);
+      try {
+        var pr = v.play();
+        if (pr && pr.catch) pr.catch(function () {
+          v.muted = true;
+          var p2 = v.play();
+          if (p2 && p2.catch) p2.catch(function () {});
+        });
+      } catch (e) {}
+      function close() {
+        try { v.pause(); } catch (e) {}
+        try { v.removeAttribute('src'); v.load(); } catch (e) {}
+        if (bk.parentNode) bk.parentNode.removeChild(bk);
+      }
+      bk._close = close;
+      bk.querySelector('.modal-x').addEventListener('click', close);
+      bk.addEventListener('mousedown', function (e) { if (e.target === bk) close(); });
+    }
+
     /* библиотека */
     var CAT_ICONS = { 'Акварель': '💧', 'Карандаш': '✏️', 'Сухая кисть': '🖌️', 'Графика': '🖋️', 'Другое': '✨' };
     var CAT_GRAD = {
@@ -1738,7 +1809,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
           (l.custom ? '<span class="lib-badge">свой</span>' : '') +
           '<div class="lib-thumb">' + (l.art ? '<img src="' + l.art + '" alt="" loading="lazy">' : (CAT_ICONS[l.cat] || '✨')) + '</div>' +
           '<div class="lib-meta"><div class="lib-title">' + esc(l.title) + '</div>' +
-          '<div class="lib-sub">' + esc(l.cat) + ' · ' + LVL[+l.lvl || 0] + ' · шагов: ' + (l.steps || []).length + '</div>' +
+          '<div class="lib-sub">' + esc(l.cat) + ' · ' + LVL[+l.lvl || 0] + ' · шагов: ' + (l.steps || []).length + (l.video ? ' · 🎬' : '') + '</div>' +
           (l.custom
             ? '<div class="lib-custom-acts">' +
               '<button type="button" class="mini-btn" data-edit="' + l.id + '">изменить</button>' +
@@ -1793,6 +1864,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         $('#artImg').src = l.art;
         aw.dataset.title = l.title;
       } else aw.style.display = 'none';
+      $('#lsVideoBox').style.display = l.video ? '' : 'none';
       renderSteps(l); renderProgress(l); demoSetLesson(l);
     }
     $('#artWrap').addEventListener('click', function () {
@@ -1803,6 +1875,10 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       openModal('artModal');
     });
     $('#artImg').addEventListener('error', function () { $('#artWrap').style.display = 'none'; });
+    $('#lsVideoBtn').addEventListener('click', function () {
+      var l = allLessons().find(function (x) { return x.id === curLessonId; });
+      if (l && l.video) openVideoModal(l.video, 'Видео-эталон · ' + l.title);
+    });
     function renderSteps(l) {
       var ol = $('#stepsList'); ol.innerHTML = '';
       var pr = getProgress(l.id);
@@ -1849,12 +1925,13 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     });
     $('#prevStep').addEventListener('click', function () { setActiveStep(Math.max(0, activeStep - 1), true); });
 
-    /* редактор приёма: запись демо-штрихов + загрузка эталона */
+    /* редактор: запись демо-штрихов + изображение + видео */
     var editingId = null;
     var rowObjs = [];
     var recTool = 'pencil', recColorV = '#00f0ff', recSizeV = 6, recTarget = 0, recLive = null;
     var recCv = $('#recCanvas'), rctx = recCv.getContext('2d'), RW = 360, RH = 230;
     var edArtData = null;
+    var edVideoData = null;
 
     function recTransform() { rctx.setTransform(recCv.width / RW, 0, 0, recCv.height / RH, 0, 0); }
     function recResize() {
@@ -1958,7 +2035,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       else sel.value = recTarget;
     }
 
-    /* эталон */
+    /* изображение-эталон */
     function setEdArt(url) {
       edArtData = url || null;
       var img = $('#edArtImg'), empty = $('#edArtEmpty');
@@ -2007,6 +2084,31 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       });
     })();
 
+    /* видео-эталон */
+    function setEdVideo(v, label) {
+      edVideoData = v || null;
+      var st = $('#edVideoStatus');
+      if (edVideoData) {
+        st.textContent = 'Видео добавлено' + (label ? (' · ' + label) : '') + '. Кнопка просмотра появится в панели урока.';
+      } else {
+        st.textContent = 'Видео не задано. Укажите ссылку или загрузите файл до 4 МБ.';
+      }
+      $('#edVideoUrl').value = (edVideoData && edVideoData.length < 200) ? edVideoData : '';
+    }
+    $('#edVideoFileBtn').addEventListener('click', function () { $('#edVideoFile').click(); });
+    $('#edVideoFile').addEventListener('change', function (e) {
+      var f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      if (!/^video\//.test(f.type)) { toast('Выберите видеофайл', true); return; }
+      if (f.size > 4 * 1024 * 1024) { toast('Видео больше 4 МБ — используйте ссылку', true); return; }
+      var rd = new FileReader();
+      rd.onload = function () { setEdVideo(String(rd.result), f.name); toast('Видео добавлено'); };
+      rd.onerror = function () { toast('Не удалось прочитать видеофайл', true); };
+      rd.readAsDataURL(f);
+    });
+    $('#edVideoDel').addEventListener('click', function () { setEdVideo(null); });
+
     function openEditor(id) {
       editingId = id || null;
       $('#editorTitle').textContent = id ? 'Изменить приём' : 'Новый приём';
@@ -2016,6 +2118,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
       $('#edLvl').value = l ? String(clamp(+l.lvl || 0, 0, 2)) : '0';
       $('#edDesc').value = l ? (l.desc || '') : '';
       setEdArt(l && l.art ? l.art : null);
+      setEdVideo(l && l.video ? l.video : null);
       $('#edSteps').innerHTML = '';
       rowObjs = [];
       recTarget = 0; recLive = null;
@@ -2070,12 +2173,25 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
         return out;
       }).filter(function (s) { return s.t !== 'Шаг' || s.x || s.s; });
       if (!steps.length) { toast('Добавьте хотя бы один шаг', true); return; }
+
+      var vurl = $('#edVideoUrl').value.trim();
+      var videoVal = null;
+      if (vurl) {
+        if (/^(https?:\/\/|data:video|blob:)/i.test(vurl)) videoVal = vurl;
+        else toast('Некорректная ссылка на видео — поддерживаются http(s), data:, blob:', true);
+      }
+      if (!videoVal && edVideoData) videoVal = edVideoData;
+
       var data = { title: title, cat: $('#edCat').value, lvl: +$('#edLvl').value, desc: $('#edDesc').value.trim(), steps: steps, custom: true };
       if (edArtData) data.art = edArtData;
+      if (videoVal) data.video = videoVal;
       if (editingId) {
         var i = customLessons.findIndex(function (x) { return x.id === editingId; });
-        if (i >= 0) customLessons[i] = Object.assign({}, customLessons[i], data);
-        if (!edArtData && customLessons[i]) delete customLessons[i].art;
+        if (i >= 0) {
+          customLessons[i] = Object.assign({}, customLessons[i], data);
+          if (!edArtData) delete customLessons[i].art;
+          if (!videoVal) delete customLessons[i].video;
+        }
         toast('Приём обновлён');
       } else {
         data.id = 'c' + Date.now();
@@ -2161,6 +2277,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
               })
             };
             if (typeof it.art === 'string' && it.art.length < 2000000) obj.art = it.art;
+            if (typeof it.video === 'string' && it.video.length < 2000000) obj.video = it.video;
             customLessons.push(obj);
             n++;
           }
@@ -2184,7 +2301,12 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     });
 
     function openModal(id) { $('#' + id).classList.add('open'); }
-    function closeModals() { $$('.modal-bk').forEach(function (m) { m.classList.remove('open'); }); }
+    function closeModals() {
+      $$('.modal-bk').forEach(function (m) {
+        if (typeof m._close === 'function') m._close();
+        else m.classList.remove('open');
+      });
+    }
     $$('.modal-bk').forEach(function (m) {
       m.addEventListener('mousedown', function (e) { if (e.target === m) closeModals(); });
     });
@@ -2247,7 +2369,7 @@ aside{background:var(--panel);flex:none;display:flex;flex-direction:column;min-h
     if (all0.length) selectLesson(all0[0].id);
     updateCount();
     $('#stHint').textContent = TOOL_HINTS[settings.tool] || '';
-    toast('NeonBrush v' + APP_VER + ': загрузка эталона и исправленный автофит 🎯');
+    toast('NeonBrush v' + APP_VER + ': видео-эталоны и точный автофит 🎬');
   }
 
   try { init(); } catch (err) { console.error(err); showFatal(err); }
