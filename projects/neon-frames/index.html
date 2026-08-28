@@ -152,10 +152,11 @@ label.f{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--
 .boxcard h4{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3)}
 .btnrow{display:flex;gap:6px;flex-wrap:wrap}
 .sbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 8px;border-radius:8px;border:1px solid var(--line2);background:var(--panel3);color:var(--tx2);font-size:11.5px;font-weight:600;transition:.13s;white-space:nowrap}
-.sbtn:hover{color:var(--tx);border-color:var(--cy);box-shadow:0 0 10px rgba(0,229,255,.15)}
-.sbtn.mg:hover{border-color:var(--mg);box-shadow:0 0 10px rgba(255,46,196,.2)}
+.sbtn:hover:not(:disabled){color:var(--tx);border-color:var(--cy);box-shadow:0 0 10px rgba(0,229,255,.15)}
+.sbtn.mg:hover:not(:disabled){border-color:var(--mg);box-shadow:0 0 10px rgba(255,46,196,.2)}
 .sbtn.rd{color:#ffb3c2}
-.sbtn.rd:hover{border-color:var(--rd);box-shadow:0 0 10px rgba(255,77,109,.25)}
+.sbtn.rd:hover:not(:disabled){border-color:var(--rd);box-shadow:0 0 10px rgba(255,77,109,.25)}
+.sbtn:disabled{opacity:.45;cursor:default}
 .empty-note{color:var(--tx3);font-size:11.5px;text-align:center;padding:18px 12px;border:1px dashed var(--line2);border-radius:10px;line-height:1.5}
 
 /* ===== VIEWPORT ===== */
@@ -314,6 +315,7 @@ const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slic
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 const rad=d=>d*Math.PI/180;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function hexToRgb(h){h=(h||'#ffffff').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16)||0;return[(n>>16)&255,(n>>8)&255,n&255];}
 function rgbToHex(r,g,b){return '#'+[r,g,b].map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join('');}
 function lerpColor(a,b,t){const A=hexToRgb(a),B=hexToRgb(b);return rgbToHex(lerp(A[0],B[0],t),lerp(A[1],B[1],t),lerp(A[2],B[2],t));}
@@ -383,8 +385,7 @@ let onionOn=true;
 let selectedObj=null, selectedKeyT=null;
 let undoStack=[], redoStack=[];
 let previewShape=null, dragSt=null, spaceHeld=false;
-let freeSt=null;   // произвольный скетч: {pts:[{x,y}]}
-let polySt=null;   // многоугольник: {pts:[], cursor:{x,y}}
+let freeSt=null, polySt=null;
 const pointers=new Map(); let pinchSt=null;
 let lastShownFrame=-1;
 
@@ -684,7 +685,6 @@ function simplifyPts(pts,tol){
   if(Math.hypot(a.x-b.x,a.y-b.y)>0.01)out.push(b);
   return out;
 }
-/* создание произвольного параметрического объекта из набора точек */
 function createPathObject(pts,opts={}){
   if(!pts||pts.length<2){toast('Слишком мало точек','warn');return;}
   const smooth=opts.smooth!==false;
@@ -711,7 +711,6 @@ function createPathObject(pts,opts={}){
   setTool('select');rebuildObjectsPanel();markDirty();requestRender();
   toast(closed?'Произвольная фигура создана (замкнутый контур)':'Произвольная фигура создана (линия)','ok');
 }
-/* растеризация произвольного контура в текущий кадр */
 function rasterPath(pts,closed,smooth){
   if(pts.length<2)return;
   const fr=curFrame();
@@ -738,6 +737,191 @@ function finishPoly(){
   else rasterPath(pts,true,false);
 }
 function cancelPoly(){if(polySt){polySt=null;requestRender();}}
+
+/* ============================================================ GIF encoder (без зависимостей) */
+function lzwEncode(minCodeSize,idx){
+  const clearCode=1<<minCodeSize,eoi=clearCode+1;
+  let codeSize=minCodeSize+1,next=eoi+1;
+  const out=[];let buf=0,bits=0;
+  const emit=c=>{buf|=c<<bits;bits+=codeSize;while(bits>=8){out.push(buf&255);buf>>>=8;bits-=8;}};
+  let root=new Map();
+  const rebuild=()=>{root=new Map();for(let i=0;i<clearCode;i++)root.set(i,{code:i,children:new Map()});next=eoi+1;codeSize=minCodeSize+1;};
+  rebuild();
+  emit(clearCode);
+  let node=null;
+  for(let i=0;i<idx.length;i++){
+    const k=idx[i];
+    const child=node?node.children.get(k):root.get(k);
+    if(child){node=child;continue;}
+    emit(node.code);
+    if(next<4096){
+      node.children.set(k,{code:next,children:new Map()});
+      next++;
+      if(next===(1<<codeSize)&&codeSize<12)codeSize++;
+    }else{
+      emit(clearCode);rebuild();
+    }
+    node=root.get(k);
+  }
+  if(node)emit(node.code);
+  emit(eoi);
+  if(bits>0)out.push(buf&255);
+  return out;
+}
+function quantizePalette(img,maxColors){
+  const d=img.data,total=img.width*img.height;
+  const step=Math.max(1,Math.floor(total/20000));
+  const pts=[];
+  for(let i=0;i<total;i+=step){const j=i*4;pts.push([d[j],d[j+1],d[j+2]]);}
+  if(!pts.length)pts.push([0,0,0]);
+  let boxes=[pts];
+  while(boxes.length<maxColors){
+    let bi=-1,bAxis=0,bRange=0;
+    for(let i=0;i<boxes.length;i++){
+      const box=boxes[i];if(box.length<2)continue;
+      for(let a=0;a<3;a++){
+        let mn=255,mx=0;
+        for(let j=0;j<box.length;j++){const v=box[j][a];if(v<mn)mn=v;if(v>mx)mx=v;}
+        if(mx-mn>bRange){bRange=mx-mn;bi=i;bAxis=a;}
+      }
+    }
+    if(bi<0||bRange<=0)break;
+    const box=boxes[bi];
+    box.sort((p,q)=>p[bAxis]-q[bAxis]);
+    const mid=box.length>>1;
+    boxes.splice(bi,1,box.slice(0,mid),box.slice(mid));
+  }
+  const pal=boxes.map(box=>{
+    let r=0,g=0,b2=0;
+    for(const p of box){r+=p[0];g+=p[1];b2+=p[2];}
+    const n=box.length;
+    return[Math.round(r/n),Math.round(g/n),Math.round(b2/n)];
+  });
+  while(pal.length<maxColors)pal.push(pal.length?pal[pal.length-1].slice():[0,0,0]);
+  return pal;
+}
+const imapCache=new Map();
+function getIndexMap(pal){
+  const key=pal.map(c=>(c[0]<<16)|(c[1]<<8)|c[2]).join(',');
+  let m=imapCache.get(key);
+  if(m)return m;
+  m=new Uint8Array(32768);
+  for(let r=0;r<32;r++){const R=r*255/31;
+    for(let g=0;g<32;g++){const G=g*255/31;
+      for(let b=0;b<32;b++){const B=b*255/31;
+        let bi=0,bd=Infinity;
+        for(let i=0;i<pal.length;i++){
+          const dr=pal[i][0]-R,dg=pal[i][1]-G,db=pal[i][2]-B,dd=dr*dr+dg*dg+db*db;
+          if(dd<bd){bd=dd;bi=i;}
+        }
+        m[(r<<10)|(g<<5)|b]=bi;
+      }}}
+  if(imapCache.size>6)imapCache.clear();
+  imapCache.set(key,m);
+  return m;
+}
+function gifWriter(w,h,delayCs,loopCount){
+  const bytes=[];
+  const str=s=>{for(let i=0;i<s.length;i++)bytes.push(s.charCodeAt(i));};
+  str('GIF89a');
+  bytes.push(w&255,(w>>8)&255,h&255,(h>>8)&255,0x70,0,0);
+  bytes.push(0x21,0xFF,0x0B);str('NETSCAPE2.0');
+  bytes.push(3,1,loopCount&255,(loopCount>>8)&255,0);
+  return{
+    addFrame(img){
+      const pal=quantizePalette(img,256);
+      const imap=getIndexMap(pal);
+      const d=img.data,n=w*h;
+      const idx=new Uint8Array(n);
+      for(let p=0;p<n;p++){
+        const j=p*4;
+        idx[p]=imap[((d[j]>>3)<<10)|((d[j+1]>>3)<<5)|(d[j+2]>>3)];
+      }
+      bytes.push(0x21,0xF9,0x04,0x04,delayCs&255,(delayCs>>8)&255,0,0);
+      bytes.push(0x2C,0,0,0,0,w&255,(w>>8)&255,h&255,(h>>8)&255,0x87);
+      for(let i=0;i<256;i++){const c=pal[i];bytes.push(c[0],c[1],c[2]);}
+      bytes.push(8);
+      const lzw=lzwEncode(8,idx);
+      for(let i=0;i<lzw.length;i+=255){
+        const len=Math.min(255,lzw.length-i);
+        bytes.push(len);
+        for(let j=0;j<len;j++)bytes.push(lzw[i+j]);
+      }
+      bytes.push(0);
+    },
+    finish(){bytes.push(0x3B);return new Uint8Array(bytes);}
+  };
+}
+
+/* ============================================================ экспорт: GIF / видео / изображения */
+function drawExportFrame(ctx,i,w,h){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle=project.bg||'#0a0e1a';ctx.fillRect(0,0,w,h);
+  const s=w/project.width;
+  ctx.setTransform(s,0,0,s,0,0);
+  if(project.mode==='frames'){
+    const fr=project.frames[i];
+    const fc=fr&&cache.get(fr.id);
+    if(fc)ctx.drawImage(fc,0,0);
+  }else drawObjectsAt(ctx,i);
+  ctx.setTransform(1,0,0,1,0,0);
+}
+function exportFrameCount(){
+  return project.mode==='frames'?project.frames.length:Math.max(1,project.paramLen);
+}
+async function exportGIF(opts,onProg){
+  const w=Math.max(2,Math.round(project.width*opts.scale));
+  const h=Math.max(2,Math.round(project.height*opts.scale));
+  const n=exportFrameCount();
+  if(w*h*n>30000000){toast('Слишком большой объём для GIF — уменьшите масштаб или длительность','err');return false;}
+  commitFrameSilent();
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const ctx=cv.getContext('2d');
+  const delayCs=clamp(Math.round(100/opts.fps),2,255);
+  const writer=gifWriter(w,h,delayCs,opts.loop);
+  for(let i=0;i<n;i++){
+    drawExportFrame(ctx,i,w,h);
+    writer.addFrame(ctx.getImageData(0,0,w,h));
+    onProg&&onProg((i+1)/n);
+    await sleep(0);
+  }
+  const bytes=writer.finish();
+  download(new Blob([bytes],{type:'image/gif'}),project.name.replace(/\s+/g,'_')+'.gif');
+  toast(`GIF сохранён · ${(bytes.length/1024).toFixed(0)} КБ`,'ok');
+  return true;
+}
+async function exportVideo(opts,onProg){
+  if(typeof MediaRecorder==='undefined'){toast('Видеозапись (MediaRecorder) не поддерживается этим браузером','err');return false;}
+  const w=Math.max(2,Math.round(project.width*opts.scale));
+  const h=Math.max(2,Math.round(project.height*opts.scale));
+  const n=exportFrameCount();
+  commitFrameSilent();
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const ctx=cv.getContext('2d');
+  if(!cv.captureStream){toast('captureStream не поддерживается этим браузером','err');return false;}
+  const stream=cv.captureStream(opts.fps);
+  const candidates=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  const mime=candidates.find(m=>{try{return MediaRecorder.isTypeSupported(m);}catch(e){return false;}})||'';
+  let rec;
+  try{rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:8000000}:{videoBitsPerSecond:8000000});}
+  catch(e){toast('Не удалось создать видеокодер: '+e.message,'err');return false;}
+  const chunks=[];
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+  rec.start(250);
+  const frameMs=1000/opts.fps;
+  for(let i=0;i<n;i++){
+    drawExportFrame(ctx,i,w,h);
+    const track=stream.getVideoTracks&&stream.getVideoTracks()[0];
+    if(track&&track.requestFrame){try{track.requestFrame();}catch(e){}}
+    onProg&&onProg((i+1)/n);
+    await sleep(frameMs);
+  }
+  await new Promise(r=>{rec.onstop=r;try{rec.stop();}catch(e){r();}});
+  const ext=(mime&&mime.includes('mp4'))?'mp4':'webm';
+  download(new Blob(chunks,{type:mime||'video/webm'}),project.name.replace(/\s+/g,'_')+'.'+ext);
+  toast(`Видео сохранено (${ext.toUpperCase()})`,'ok');
+  return true;
+}
 
 /* ============================================================ parametric drawing */
 function propsTemplate(o){return{x:project.width/2,y:project.height/2,sx:1,sy:1,rot:0,opacity:1,color:o.color||'#00e5ff'};}
@@ -908,7 +1092,6 @@ viewCanvas.addEventListener('pointerdown',e=>{
     }else toast('В параметрическом режиме используйте «Выбор», фигуры или скетч (P / T)','warn');
     return;
   }
-  // ---- frame mode drawing
   if(!['brush','eraser','line','rect','ellipse','star','tri','fill','pipette'].includes(tool)){toast('Выберите инструмент рисования','warn');return;}
   const fr=curFrame(),c=getFrameCanvas(fr),ctx=c.getContext('2d');
   if(tool==='brush'||tool==='eraser'){
@@ -1278,7 +1461,7 @@ function reorderFrame(srcId,dstId,before){
 function rebuildObjectsPanel(){
   const body=$('#objBody');body.innerHTML='';
   if(!project.objects.length){
-    body.innerHTML=`<div class="empty-note">Объектов пока нет.<br>Добавьте фигуру кнопками выше, нарисуйте свою от руки (инструмент ✏️ скетч) или постройте многоугольник.</div>`;
+    body.innerHTML=`<div class="empty-note">Объектов пока нет.<br>Добавьте фигуру кнопками выше, нарисуйте свою от руки (скетч) или постройте многоугольник.</div>`;
     return;
   }
   const list=document.createElement('div');list.style.display='flex';list.style.flexDirection='column';list.style.gap='6px';
@@ -1846,21 +2029,64 @@ function openProjectsModal(){
   }});
 }
 function openExportModal(){
-  openModal({title:'Экспорт',build:b=>{
-    b.innerHTML=`<div class="boxcard"><h4>Проект</h4>
-      <p style="color:var(--tx2);font-size:12px;line-height:1.55">JSON-файл со всеми кадрами, объектами и настройками. Его можно импортировать обратно.</p>
-      <button class="sbtn" id="exJson">${ic('dl',13)} Скачать проект (.json)</button></div>
-      <div class="boxcard"><h4>Спрайт-лист (PNG)</h4>
-      <label class="f">Кадров в строке<input type="number" id="exCols" value="4" min="1" max="32"></label>
-      <button class="sbtn" id="exSheet">${ic('image',13)} Скачать спрайт-лист</button></div>
-      <div class="boxcard"><h4>Текущий кадр</h4>
-      <button class="sbtn" id="exFrame">${ic('image',13)} Скачать PNG текущего кадра</button></div>`;
+  openModal({title:'Экспорт анимации',wide:true,build:b=>{
+    const n=exportFrameCount();
+    b.innerHTML=`
+    <div class="boxcard"><h4>GIF-анимация</h4>
+      <div class="prow">
+        <label class="f">Масштаб
+          <select id="gifScale"><option value="0.25">25%</option><option value="0.5" selected>50%</option><option value="0.75">75%</option><option value="1">100%</option></select></label>
+        <label class="f">FPS (≤50)<input type="number" id="gifFps" min="1" max="50" value="${clamp(project.fps,1,50)}"></label>
+        <label class="f">Повтор
+          <select id="gifLoop"><option value="0" selected>Бесконечно</option><option value="1">Один раз</option></select></label>
+      </div>
+      <p style="font-family:'JetBrains Mono';font-size:11px;color:var(--tx3)">Кадров: ${n} · палитра 256 цветов на кадр · кодировщик встроенный</p>
+      <button class="sbtn mg" id="gifBtn">${ic('image',13)} Скачать GIF</button>
+      <div class="prog-wrap" id="gifProgWrap" style="display:none"><div class="prog-bar" id="gifProg"></div></div>
+    </div>
+    <div class="boxcard"><h4>Видео · WebM / MP4</h4>
+      <div class="prow">
+        <label class="f">Масштаб
+          <select id="vidScale"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option></select></label>
+        <label class="f">FPS<input type="number" id="vidFps" min="1" max="60" value="${clamp(project.fps,1,60)}"></label>
+      </div>
+      <p style="font-family:'JetBrains Mono';font-size:11px;color:var(--tx3)">Запись идёт в реальном времени · формат зависит от браузера (в Safari — MP4)</p>
+      <button class="sbtn" id="vidBtn">${ic('film',13)} Записать видео</button>
+      <div class="prog-wrap" id="vidProgWrap" style="display:none"><div class="prog-bar" id="vidProg"></div></div>
+    </div>
+    <div class="boxcard"><h4>Проект и изображения</h4>
+      <div class="btnrow">
+        <button class="sbtn" id="exJson">${ic('dl',13)} Проект (.json)</button>
+        <button class="sbtn" id="exSheet">${ic('image',13)} Спрайт-лист (PNG)</button>
+        <button class="sbtn" id="exFrame">${ic('image',13)} Текущий кадр (PNG)</button>
+      </div>
+      <label class="f" style="margin-top:8px">Кадров в строке спрайт-листа<input type="number" id="exCols" value="4" min="1" max="32" style="width:100%"></label>
+    </div>`;
+    const gifBtn=b.querySelector('#gifBtn'),vidBtn=b.querySelector('#vidBtn');
+    gifBtn.addEventListener('click',async()=>{
+      gifBtn.disabled=true;
+      $('#gifProgWrap').style.display='block';
+      try{
+        await exportGIF({scale:parseFloat($('#gifScale').value),fps:clamp(+$('#gifFps').value||12,1,50),loop:+$('#gifLoop').value},
+          p=>{$('#gifProg').style.width=Math.round(p*100)+'%';});
+      }catch(err){console.error(err);toast('Ошибка GIF-экспорта: '+err.message,'err');}
+      $('#gifProgWrap').style.display='none';gifBtn.disabled=false;
+    });
+    vidBtn.addEventListener('click',async()=>{
+      vidBtn.disabled=true;
+      $('#vidProgWrap').style.display='block';
+      try{
+        await exportVideo({scale:parseFloat($('#vidScale').value),fps:clamp(+$('#vidFps').value||12,1,60)},
+          p=>{$('#vidProg').style.width=Math.round(p*100)+'%';});
+      }catch(err){console.error(err);toast('Ошибка видеозаписи: '+err.message,'err');}
+      $('#vidProgWrap').style.display='none';vidBtn.disabled=false;
+    });
     b.querySelector('#exJson').addEventListener('click',()=>exportProjectDoc(project));
     b.querySelector('#exSheet').addEventListener('click',()=>{
       if(project.mode==='param'){toast('В параметрическом режиме сначала выполните растеризацию (панель «Проект»)','warn');return;}
       const cols=clamp(+$('#exCols').value||4,1,32);
-      const n=project.frames.length,W=project.width,H=project.height;
-      const rows=Math.ceil(n/cols);
+      const cnt=project.frames.length,W=project.width,H=project.height;
+      const rows=Math.ceil(cnt/cols);
       if(W*cols>8192||H*rows>8192){toast('Слишком большой спрайт-лист','err');return;}
       commitFrameSilent();
       const c=document.createElement('canvas');c.width=W*cols;c.height=H*rows;
@@ -1911,9 +2137,9 @@ function openAboutModal(){
   openModal({title:'О программе',build:b=>{
     b.innerHTML=`<div style="text-align:center;padding:10px 0">
       <div style="font-family:'Orbitron','Manrope',sans-serif;font-weight:800;font-size:26px;letter-spacing:3px;color:#fff;text-shadow:0 0 14px var(--cy),0 0 40px rgba(0,229,255,.5)">NEON<b style="color:var(--mg);text-shadow:0 0 14px var(--mg)">FRAMES</b></div>
-      <p style="color:var(--tx3);margin-top:6px;font-size:12px">студия анимации · версия 1.2</p></div>
-      <p style="color:var(--tx2);line-height:1.7;font-size:12.5px">Покадровая рисованная и параметрическая keyframe-анимация, включая произвольные объекты: скетч от руки, многоугольники и редактирование точек контура. Проекты хранятся локально в IndexedDB и экспортируются в JSON. Тёмная тема, неоновая подсветка, холст с зумом и панорамированием, адаптивный интерфейс.</p>
-      <div class="kchips" style="justify-content:center"><span class="kchip">Canvas 2D</span><span class="kchip">IndexedDB</span><span class="kchip">0 зависимостей</span></div>`;
+      <p style="color:var(--tx3);margin-top:6px;font-size:12px">студия анимации · версия 1.3</p></div>
+      <p style="color:var(--tx2);line-height:1.7;font-size:12.5px">Покадровая рисованная и параметрическая keyframe-анимация, включая произвольные объекты: скетч от руки, многоугольники и редактирование точек контура. Экспорт в GIF (встроенный кодировщик), видео WebM/MP4, спрайт-листы и JSON. Проекты хранятся локально в IndexedDB.</p>
+      <div class="kchips" style="justify-content:center"><span class="kchip">Canvas 2D</span><span class="kchip">IndexedDB</span><span class="kchip">GIF · WebM · PNG</span><span class="kchip">0 зависимостей</span></div>`;
   },buttons:[{label:'Отлично',type:'primary',onClick:c=>c()}]});
 }
 function openRasterizeModal(){
@@ -2082,7 +2308,7 @@ async function boot(){
   requestAnimationFrame(playTick);
   requestRender();
   setTimeout(()=>{$('#vpHint').style.opacity='0';},6000);
-  if(first)toast('Добро пожаловать! Нарисуйте свою фигуру инструментом ✏️ (P) или многоугольником (T)','ok');
+  if(first)toast('Добро пожаловать! Экспорт в GIF и видео — через Ctrl+E','ok');
 }
 boot();
 </script>
