@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>NEONFRAMES — студия анимации</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.0.20/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.0.20/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.0.20/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/orbitron@5.0.20/600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/orbitron@5.0.20/800.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/500.css">
+<style>
+:root{
+  --bg:#05060c; --bg2:#0a0c16; --panel:#0c0f1d; --panel2:#10142a; --panel3:#151a36;
+  --line:#1a2040; --line2:#262e5e;
+  --tx:#e2e6ff; --tx2:#8f97c9; --tx3:#5b6394;
+  --cy:#00e5ff; --mg:#ff2ec4; --pu:#8b5cff; --gr:#3dff8f; --yl:#ffd60a; --rd:#ff4d6d;
+  --glow-cy:0 0 6px rgba(0,229,255,.6),0 0 22px rgba(0,229,255,.25);
+  --glow-mg:0 0 6px rgba(255,46,196,.6),0 0 22px rgba(255,46,196,.25);
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Manrope',system-ui,sans-serif;font-size:13px;color:var(--tx);
+  background:var(--bg);overflow:hidden;height:100vh;height:100dvh;
+  display:grid;grid-template-rows:48px 48px minmax(0,1fr) 62px 26px;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#232a55;border-radius:6px;border:2px solid var(--panel)}
+::-webkit-scrollbar-thumb:hover{background:#33407e}
+button{font-family:inherit;color:var(--tx);background:none;border:none;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:13px;color:var(--tx);background:var(--bg2);border:1px solid var(--line2);border-radius:7px;padding:6px 9px;outline:none;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--cy);box-shadow:0 0 0 2px rgba(0,229,255,.15)}
+input[type=color]{padding:2px;height:32px;width:42px;cursor:pointer}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:26px;padding:0;border:none;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--cy),var(--pu))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-5px;border-radius:50%;background:#fff;box-shadow:0 0 8px var(--cy)}
+input[type=number]{width:64px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:var(--tx2);font-weight:500}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ===== TOPBAR ===== */
+#topbar{display:flex;align-items:center;gap:8px;padding:0 10px;background:linear-gradient(180deg,#0d1022,#0a0d1b);border-bottom:1px solid var(--line);position:relative;z-index:60}
+#topbar::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--cy) 25%,var(--mg) 75%,transparent);opacity:.55;pointer-events:none}
+.logo{font-family:'Orbitron','Manrope',sans-serif;font-weight:800;font-size:15px;letter-spacing:2px;white-space:nowrap;color:#fff;text-shadow:0 0 10px var(--cy),0 0 30px rgba(0,229,255,.5);padding:0 6px;user-select:none}
+.logo b{color:var(--mg);text-shadow:0 0 10px var(--mg),0 0 30px rgba(255,46,196,.5)}
+#projName{flex:0 1 220px;min-width:80px;background:transparent;border:1px solid transparent;font-weight:700;font-size:13.5px;border-radius:7px;padding:6px 8px}
+#projName:hover{border-color:var(--line2)}
+#projName:focus{border-color:var(--cy);background:var(--bg2)}
+.mbtn{padding:7px 11px;border-radius:8px;color:var(--tx2);font-weight:500;font-size:12.5px}
+.mbtn:hover,.mbtn.open{color:var(--tx);background:var(--panel3)}
+#topRight{margin-left:auto;display:flex;align-items:center;gap:7px}
+#saveState{font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:6px;white-space:nowrap}
+#saveDot{width:7px;height:7px;border-radius:50%;background:var(--gr);box-shadow:0 0 8px var(--gr)}
+#saveState.dirty #saveDot{background:var(--yl);box-shadow:0 0 8px var(--yl)}
+#saveState.saving #saveDot{background:var(--cy);box-shadow:0 0 8px var(--cy);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.tbtn{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:8px;border:1px solid transparent;color:var(--tx2);font-size:12px;font-weight:600;white-space:nowrap;transition:.15s}
+.tbtn:hover{color:var(--tx);background:var(--panel3);border-color:var(--line2)}
+.tbtn.primary{color:#031018;background:linear-gradient(135deg,var(--cy),#38bdf8);box-shadow:var(--glow-cy)}
+.tbtn.primary:hover{filter:brightness(1.12)}
+.tbtn.danger{color:#fff;background:linear-gradient(135deg,var(--rd),#c02653)}
+.tbtn svg{flex:none}
+
+/* ===== DROPDOWN MENU ===== */
+.dmenu{position:fixed;z-index:300;min-width:210px;background:rgba(14,17,36,.96);backdrop-filter:blur(14px);border:1px solid var(--line2);border-radius:11px;padding:5px;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(0,229,255,.06),0 0 30px rgba(0,229,255,.08);animation:mIn .13s ease}
+@keyframes mIn{from{opacity:0;transform:translateY(-5px)}}
+.dmi{display:flex;align-items:center;gap:9px;width:100%;padding:7.5px 10px;border-radius:7px;font-size:12.5px;color:var(--tx);text-align:left;font-weight:500}
+.dmi:hover:not(:disabled){background:linear-gradient(90deg,rgba(0,229,255,.14),rgba(139,92,255,.10));box-shadow:inset 2px 0 0 var(--cy)}
+.dmi:disabled{opacity:.35;cursor:default}
+.dmi svg{color:var(--cy)}
+.dmi.danger svg{color:var(--rd)}
+.dmi.danger:hover{background:rgba(255,77,109,.12);box-shadow:inset 2px 0 0 var(--rd)}
+.dmi .k{margin-left:auto;font-family:'JetBrains Mono';font-size:10px;color:var(--tx3)}
+.dmi .chk{margin-left:auto;color:var(--cy)}
+.dmsep{height:1px;background:var(--line);margin:5px 8px}
+
+/* ===== TOOLBAR ===== */
+#toolbar{display:flex;align-items:center;gap:4px;padding:0 10px;background:var(--bg2);border-bottom:1px solid var(--line);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;z-index:50;user-select:none}
+#toolbar::-webkit-scrollbar{display:none}
+.tgroup{display:flex;align-items:center;gap:3px;flex:none}
+.tsep{width:1px;height:26px;background:var(--line2);margin:0 6px;flex:none}
+.tspacer{flex:1 0 12px}
+.ibtn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:9px;color:var(--tx2);border:1px solid transparent;transition:.13s;flex:none;position:relative}
+.ibtn:hover{color:var(--tx);background:var(--panel3);border-color:var(--line2)}
+.ibtn.on{color:var(--cy);background:rgba(0,229,255,.10);border-color:rgba(0,229,255,.45);box-shadow:inset 0 0 12px rgba(0,229,255,.12),0 0 10px rgba(0,229,255,.22)}
+.ibtn.on-mg{color:var(--mg);background:rgba(255,46,196,.10);border-color:rgba(255,46,196,.45);box-shadow:inset 0 0 12px rgba(255,46,196,.12),0 0 10px rgba(255,46,196,.22)}
+.ibtn:disabled{opacity:.3;cursor:default}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line2);border-radius:9px;padding:2px;gap:2px;flex:none}
+.seg button{padding:5px 12px;border-radius:7px;font-size:11.5px;font-weight:700;color:var(--tx3);letter-spacing:.3px;white-space:nowrap}
+.seg button.on{color:#031018;background:linear-gradient(135deg,var(--cy),#4cc2ff);box-shadow:0 0 12px rgba(0,229,255,.4)}
+.seg button.on.alt{background:linear-gradient(135deg,var(--mg),#ff6ad5);box-shadow:0 0 12px rgba(255,46,196,.4)}
+#colorSwatch{width:34px;height:34px;border-radius:9px;border:2px solid var(--line2);cursor:pointer;position:relative;overflow:hidden;flex:none}
+#colorSwatch:hover{border-color:var(--cy);box-shadow:var(--glow-cy)}
+.slider-wrap{display:flex;align-items:center;gap:5px;padding:0 4px;flex:none}
+.slider-wrap .sv{font-family:'JetBrains Mono';font-size:10px;color:var(--tx2);width:30px;text-align:center}
+#fpsInput{width:46px;text-align:center;font-family:'JetBrains Mono'}
+#zoomLbl{font-family:'JetBrains Mono';font-size:11px;color:var(--tx2);min-width:46px;text-align:center;border-radius:7px;padding:7px 2px;cursor:pointer}
+#zoomLbl:hover{color:var(--cy);background:var(--panel3)}
+
+/* ===== MAIN ===== */
+#main{display:flex;min-height:0;position:relative}
+#sidebar{width:268px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;z-index:80}
+#sidebar.collapsed{display:none}
+#sideTabs{display:flex;border-bottom:1px solid var(--line);flex:none;user-select:none}
+#sideTabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 4px;font-size:11.5px;font-weight:700;color:var(--tx3);border-bottom:2px solid transparent;letter-spacing:.4px}
+#sideTabs button:hover{color:var(--tx2)}
+#sideTabs button.on{color:var(--cy);border-bottom-color:var(--cy);text-shadow:0 0 12px rgba(0,229,255,.5)}
+.spanel{flex:1;overflow-y:auto;display:none;flex-direction:column;min-height:0}
+.spanel.on{display:flex}
+.shead{display:flex;align-items:center;gap:6px;padding:10px 10px 8px;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--tx3);text-transform:uppercase;position:sticky;top:0;background:var(--panel);z-index:2}
+.shead .grow{flex:1}
+.sbody{padding:0 10px 14px;display:flex;flex-direction:column;gap:8px}
+
+/* frames list */
+#frameList{display:flex;flex-direction:column;gap:6px;padding:0 10px 14px}
+.fcard{display:flex;gap:8px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px;cursor:pointer;transition:.13s;position:relative;user-select:none}
+.fcard:hover{border-color:var(--line2);transform:translateX(2px)}
+.fcard.on{border-color:rgba(0,229,255,.6);box-shadow:0 0 0 1px rgba(0,229,255,.3),0 0 16px rgba(0,229,255,.15)}
+.fcard.dragover-top{box-shadow:0 -3px 0 0 var(--mg)}
+.fcard.dragover-bot{box-shadow:0 3px 0 0 var(--mg)}
+.fthumb{width:76px;height:46px;border-radius:6px;background:#080a14;flex:none;border:1px solid var(--line)}
+.fnum{font-family:'Orbitron','Manrope',sans-serif;font-size:12px;font-weight:600;color:var(--tx2)}
+.fcard.on .fnum{color:var(--cy);text-shadow:0 0 8px rgba(0,229,255,.6)}
+.fops{margin-left:auto;display:flex;gap:2px;opacity:0;transition:.15s}
+.fcard:hover .fops{opacity:1}
+.fops button{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--tx3)}
+.fops button:hover{color:var(--tx);background:var(--panel3)}
+
+/* objects */
+.orow{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;cursor:pointer;transition:.13s;user-select:none}
+.orow:hover{border-color:var(--line2)}
+.orow.on{border-color:rgba(255,46,196,.55);box-shadow:0 0 0 1px rgba(255,46,196,.3),0 0 14px rgba(255,46,196,.13)}
+.orow .oic{color:var(--pu);flex:none}
+.orow.on .oic{color:var(--mg)}
+.oname{flex:1;font-weight:600;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kchips{display:flex;flex-wrap:wrap;gap:5px}
+.kchip{display:flex;align-items:center;gap:4px;background:var(--panel3);border:1px solid var(--line2);border-radius:6px;padding:3px 4px 3px 8px;font-family:'JetBrains Mono';font-size:10.5px;color:var(--tx2);cursor:pointer}
+.kchip:hover{border-color:var(--mg);color:var(--tx)}
+.kchip.now{border-color:var(--mg);color:var(--mg);box-shadow:0 0 8px rgba(255,46,196,.3)}
+.kchip b{cursor:pointer;padding:1px 4px;border-radius:4px;font-weight:400}
+.kchip b:hover{background:rgba(255,77,109,.25);color:var(--rd)}
+.props-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.props-grid label.f input,.props-grid label.f select{width:100%}
+.boxcard{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px;display:flex;flex-direction:column;gap:9px}
+.boxcard h4{font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3)}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap}
+.sbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 8px;border-radius:8px;border:1px solid var(--line2);background:var(--panel3);color:var(--tx2);font-size:11.5px;font-weight:600;transition:.13s;white-space:nowrap}
+.sbtn:hover{color:var(--tx);border-color:var(--cy);box-shadow:0 0 10px rgba(0,229,255,.15)}
+.sbtn.mg:hover{border-color:var(--mg);box-shadow:0 0 10px rgba(255,46,196,.2)}
+.sbtn.rd{color:#ffb3c2}
+.sbtn.rd:hover{border-color:var(--rd);box-shadow:0 0 10px rgba(255,77,109,.25)}
+.empty-note{color:var(--tx3);font-size:11.5px;text-align:center;padding:18px 12px;border:1px dashed var(--line2);border-radius:10px;line-height:1.5}
+
+/* ===== VIEWPORT ===== */
+#viewportWrap{flex:1;position:relative;min-width:0;background:radial-gradient(1200px 700px at 60% 30%,#0a0d1e 0%,var(--bg) 70%)}
+#view{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
+#vpHint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:11px;color:var(--tx3);background:rgba(10,12,25,.7);backdrop-filter:blur(8px);border:1px solid var(--line);padding:5px 14px;border-radius:20px;pointer-events:none;white-space:nowrap;transition:opacity .5s}
+
+/* ===== TIMELINE ===== */
+#timelineWrap{background:var(--bg2);border-top:1px solid var(--line);display:flex;align-items:stretch;padding:6px 10px;gap:8px;position:relative;z-index:40}
+#timelineWrap::before{content:'';position:absolute;left:0;right:0;top:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--mg) 30%,var(--cy) 70%,transparent);opacity:.4}
+#tlBox{flex:1;position:relative;min-width:0}
+#tl{position:absolute;inset:0;width:100%;height:100%;border-radius:9px;background:var(--panel);border:1px solid var(--line);cursor:pointer;touch-action:none}
+
+/* ===== STATUSBAR ===== */
+#statusbar{display:flex;align-items:center;gap:14px;padding:0 12px;background:#080a13;border-top:1px solid var(--line);font-family:'JetBrains Mono','Manrope',monospace;font-size:10.5px;color:var(--tx3);overflow:hidden;white-space:nowrap;user-select:none}
+#statusbar .chip{display:flex;align-items:center;gap:6px}
+#stMode{color:var(--cy);text-shadow:0 0 8px rgba(0,229,255,.5);font-weight:700;letter-spacing:1px}
+#stMode.param{color:var(--mg);text-shadow:0 0 8px rgba(255,46,196,.5)}
+#statusbar .grow{flex:1}
+
+/* ===== MODALS ===== */
+.mback{position:fixed;inset:0;background:rgba(3,4,10,.7);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fIn .16s ease}
+@keyframes fIn{from{opacity:0}}
+.modal{width:min(560px,100%);max-height:min(86vh,900px);display:flex;flex-direction:column;background:linear-gradient(180deg,#101327,#0b0e1d);border:1px solid var(--line2);border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.7),0 0 0 1px rgba(0,229,255,.07),0 0 50px rgba(0,229,255,.10);overflow:hidden;animation:mUp .18s ease}
+@keyframes mUp{from{opacity:0;transform:translateY(14px) scale(.98)}}
+.modal.wide{width:min(820px,100%)}
+.modal.full{width:100%;max-height:100%;height:100%;border-radius:0}
+.mhead{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);flex:none}
+.mtitle{font-family:'Orbitron','Manrope',sans-serif;font-size:13.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#fff;text-shadow:0 0 12px rgba(0,229,255,.4);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mbody{padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;min-height:0}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--line);flex:none;flex-wrap:wrap}
+.prow{display:flex;gap:14px;flex-wrap:wrap}
+.prow label.f{flex:1;min-width:120px}
+.prow label.f input,.prow label.f select{width:100%}
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:7px}
+.preset-grid div{aspect-ratio:1;border-radius:8px;cursor:pointer;border:2px solid transparent}
+.preset-grid div:hover{border-color:#fff;transform:scale(1.08)}
+.proj-row{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:8px;transition:.13s}
+.proj-row:hover{border-color:var(--line2)}
+.proj-row img{width:84px;height:50px;object-fit:cover;border-radius:7px;background:#080a14;border:1px solid var(--line);flex:none}
+.proj-row .pi{flex:1;min-width:0}
+.proj-row .pn{font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proj-row .pm{font-size:10.5px;color:var(--tx3);font-family:'JetBrains Mono';margin-top:2px}
+.proj-row .ops{display:flex;gap:3px}
+.kbd-table{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;align-items:center}
+kbd{font-family:'JetBrains Mono';font-size:10.5px;background:var(--panel3);border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:2px 7px;color:var(--cy)}
+.prog-wrap{height:10px;background:var(--bg);border:1px solid var(--line2);border-radius:6px;overflow:hidden}
+.prog-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--cy),var(--mg));box-shadow:0 0 12px rgba(0,229,255,.5);transition:width .15s}
+
+/* ===== TOASTS ===== */
+#toasts{position:fixed;right:16px;bottom:36px;z-index:400;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:9px;background:rgba(13,16,32,.94);backdrop-filter:blur(10px);border:1px solid var(--line2);border-left:3px solid var(--cy);border-radius:10px;padding:10px 14px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.5),0 0 20px rgba(0,229,255,.1);animation:tIn .2s ease;max-width:320px}
+.toast.err{border-left-color:var(--rd)}
+.toast.ok{border-left-color:var(--gr)}
+.toast.warn{border-left-color:var(--yl)}
+@keyframes tIn{from{opacity:0;transform:translateX(20px)}}
+.toast.out{opacity:0;transform:translateX(20px);transition:.3s}
+
+#fileInput{display:none}
+#sideBackdrop{display:none}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:960px){
+  #sidebar{position:fixed;left:0;top:96px;bottom:88px;transform:translateX(-105%);transition:transform .22s ease;box-shadow:20px 0 60px rgba(0,0,0,.6);width:min(300px,84vw)}
+  #sidebar.collapsed{display:flex}
+  #sidebar.open{transform:translateX(0)}
+  #sideBackdrop{display:block;position:fixed;inset:0;top:96px;bottom:88px;background:rgba(0,0,0,.5);z-index:70;opacity:0;pointer-events:none;transition:.2s}
+  #sideBackdrop.on{opacity:1;pointer-events:auto}
+  #stPos,#stTimeBox{display:none}
+  .mbtn{padding:7px 8px}
+  #saveState span.txt{display:none}
+}
+@media (max-width:640px){
+  .logo span.full{display:none}
+  #projName{flex:1 1 auto}
+  .tbtn .lbl{display:none}
+  #timelineWrap{padding:5px 6px}
+  #stMode{display:none}
+}
+@media (max-height:520px){
+  body{grid-template-rows:44px 44px minmax(0,1fr) 48px 24px}
+  #sideTabs button{padding:7px 4px}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= TOPBAR ================= -->
+<header id="topbar">
+  <button class="ibtn" id="btnSide" title="Панели"></button>
+  <div class="logo"><span class="full">NEON<b>FRAMES</b></span></div>
+  <input id="projName" value="" spellcheck="false" title="Название проекта">
+  <nav id="menuBar" style="display:flex;gap:2px"></nav>
+  <div id="topRight">
+    <div id="saveState"><span id="saveDot"></span><span class="txt">сохранено</span></div>
+    <button class="tbtn" id="btnProjects" title="Менеджер проектов"></button>
+    <button class="tbtn" id="btnImport" title="Импорт проекта"></button>
+    <button class="tbtn" id="btnExport" title="Экспорт"></button>
+    <button class="tbtn primary" id="btnSave" title="Сохранить (Ctrl+S)"></button>
+  </div>
+</header>
+
+<!-- ================= TOOLBAR ================= -->
+<div id="toolbar"></div>
+
+<!-- ================= MAIN ================= -->
+<div id="main">
+  <aside id="sidebar">
+    <div id="sideTabs"></div>
+    <div class="spanel" id="panelFrames">
+      <div class="shead"><span id="framesCount">Кадры</span><span class="grow"></span>
+        <button class="ibtn" id="fAdd" title="Добавить кадр" style="width:28px;height:28px"></button>
+        <button class="ibtn" id="fDup" title="Дублировать кадр (Ctrl+D)" style="width:28px;height:28px"></button>
+        <button class="ibtn" id="fDel" title="Удалить кадр" style="width:28px;height:28px"></button>
+      </div>
+      <div id="frameList"></div>
+    </div>
+    <div class="spanel" id="panelObjects">
+      <div class="shead"><span>Объекты</span><span class="grow"></span><span id="shapeAdd" style="display:flex;gap:2px"></span></div>
+      <div class="sbody" id="objBody"></div>
+    </div>
+    <div class="spanel" id="panelSettings">
+      <div class="shead"><span>Проект</span></div>
+      <div class="sbody" id="setBody"></div>
+    </div>
+  </aside>
+  <div id="sideBackdrop"></div>
+  <section id="viewportWrap">
+    <canvas id="view"></canvas>
+    <div id="vpHint">Колесо — масштаб · Пробел/ПКМ — перемещение · 0 — вписать</div>
+  </section>
+</div>
+
+<!-- ================= TIMELINE ================= -->
+<div id="timelineWrap"><div id="tlBox"><canvas id="tl"></canvas></div></div>
+
+<!-- ================= STATUSBAR ================= -->
+<footer id="statusbar">
+  <div class="chip"><span id="stMode">КАДРЫ</span></div>
+  <div class="chip" id="stFrame">Кадр 1/1</div>
+  <div class="chip" id="stTimeBox">⏱ <span id="stTime">0.00с</span></div>
+  <div class="grow"></div>
+  <div class="chip" id="stPos">X — · Y —</div>
+  <div class="chip">🔍 <span id="stZoom">100%</span></div>
+  <div class="chip" id="stFps"></div>
+</footer>
+
+<div id="toasts"></div>
+<input type="file" id="fileInput" accept=".json,application/json">
+
+<script>
+'use strict';
+/* ============================================================ utils */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rad=d=>d*Math.PI/180;
+function hexToRgb(h){h=(h||'#ffffff').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16)||0;return[(n>>16)&255,(n>>8)&255,n&255];}
+function rgbToHex(r,g,b){return '#'+[r,g,b].map(v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0')).join('');}
+function lerpColor(a,b,t){const A=hexToRgb(a),B=hexToRgb(b);return rgbToHex(lerp(A[0],B[0],t),lerp(A[1],B[1],t),lerp(A[2],B[2],t));}
+const easings={linear:t=>t,easeIn:t=>t*t,easeOut:t=>1-(1-t)*(1-t),easeInOut:t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2};
+const NEON=['#00e5ff','#3dff8f','#ffd60a','#ff2ec4','#8b5cff','#ff4d6d','#4cc2ff','#ffffff'];
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+
+/* ============================================================ icons */
+const P={
+pen:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+eraser:'<path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>',
+line:'<circle cx="5" cy="19" r="1.6"/><circle cx="19" cy="5" r="1.6"/><path d="M6.5 17.5 17.5 6.5"/>',
+rect:'<rect x="4" y="4" width="16" height="16" rx="1.5"/>',
+circle:'<circle cx="12" cy="12" r="8.5"/>',
+star:'<path d="M12 3l2.7 5.7 6.3.8-4.6 4.3 1.2 6.2-5.6-3.1-5.6 3.1 1.2-6.2L3 9.5l6.3-.8z"/>',
+bucket:'<path d="m19 11-8-8-8.6 8.6a2 2 0 0 0 0 2.8l5.2 5.2c.8.8 2 .8 2.8 0L19 11Z"/><path d="m5 2 5 5"/><path d="M2 13h15"/><path d="M22 20a2 2 0 1 1-4 0c0-1.6 1.7-2.4 2-4 .3 1.6 2 2.4 2 4Z"/>',
+pipette:'<path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/>',
+hand:'<path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="m7 15-1.8-1.8a2 2 0 0 0-2.8 2.8L6.6 20a6 6 0 0 0 8.4 1.4l4.9-4a2 2 0 0 0-2.5-3.1L16 15"/>',
+cursor:'<path d="m4 4 7.1 16.9 2-6.8 6.8-2L4 4Z"/>',
+undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/>',
+redo:'<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-6.7L21 13"/>',
+play:'<path d="M6.5 4.5 19 12 6.5 19.5Z" fill="currentColor" stroke="none"/>',
+pause:'<rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor" stroke="none"/>',
+prev:'<path d="M19 20 9.5 12 19 4v16Z" fill="currentColor" stroke="none"/><path d="M5.5 4v16"/>',
+next:'<path d="M5 4l9.5 8L5 20V4Z" fill="currentColor" stroke="none"/><path d="M18.5 4v16"/>',
+loop:'<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+layers:'<path d="m12 2 8.5 4.5L12 11 3.5 6.5 12 2Z"/><path d="m3.5 11.5 8.5 4.5 8.5-4.5"/><path d="m3.5 16.5 8.5 4.5 8.5-4.5"/>',
+zin:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6M11 8v6"/>',
+zout:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/>',
+fit:'<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',
+trash:'<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6M14 11v6"/>',
+copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+dl:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+ul:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 8 5-5 5 5"/><path d="M12 3v12"/>',
+folder:'<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+x:'<path d="M18 6 6 18M6 6l12 12"/>',
+expand:'<path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>',
+shrink:'<path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/>',
+film:'<rect x="3" y="3" width="18" height="18" rx="2.5"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4M7 12h10"/>',
+eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+eyeOff:'<path d="M10.7 5.1A9.8 9.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.4 3.4M6.6 6.6A16.7 16.7 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="m2 2 20 20"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+up:'<path d="m18 15-6-6-6 6"/>',
+down:'<path d="m6 9 6 6 6-6"/>',
+save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+key:'<path d="m12 12 8.5-8.5"/><path d="M17 7l2.5 2.5M14 10l2 2"/><circle cx="8.5" cy="15.5" r="5"/>',
+burger:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+tri:'<path d="M12 4 21 19H3z"/>',
+doc:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/>',
+wand:'<path d="m15 4 5 5-11.5 11.5a2.1 2.1 0 0 1-3 0l-2-2a2.1 2.1 0 0 1 0-3Z"/><path d="M14 7l3 3"/><path d="M5 3v2M4 4h2M19 15v2M18 16h2M9 3.5V5M20 8.5V10"/>',
+clear:'<path d="M4 4 20 20"/><path d="M9 4h9a2 2 0 0 1 2 2v9"/><path d="M15 20H6a2 2 0 0 1-2-2V9"/>'
+};
+const ic=(n,s=17)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${P[n]||''}</svg>`;
+
+/* ============================================================ state */
+let project=null, cache=new Map();
+let frameIndex=0, playhead=0, playing=false, loopOn=true;
+let tool='brush', brushColor='#00e5ff', brushSize=10, brushOpacity=1;
+let view={s:1,x:0,y:0};
+let onionOn=true;
+let selectedObj=null, selectedKeyT=null;
+let undoStack=[], redoStack=[];
+let previewShape=null, dragSt=null, spaceHeld=false;
+const pointers=new Map(); let pinchSt=null;
+let lastShownFrame=-1;
+
+function newProjectData(o={}){
+  return {version:1,id:uid(),name:o.name||'Без названия',width:o.width||960,height:o.height||540,
+    fps:o.fps||12,mode:o.mode||'frames',bg:o.bg||'#0a0e1a',paramLen:o.paramLen||60,
+    frames:[{id:uid(),duration:1,data:null}],objects:[],createdAt:Date.now(),updatedAt:Date.now()};
+}
+function demoProject(){
+  const p=newProjectData({name:'Демо · Неоновый полёт',mode:'param',fps:24,paramLen:72});
+  p.objects=[
+    {id:uid(),name:'Звезда',type:'star',w:150,h:150,color:'#ff2ec4',stroke:'#ffffff',strokeW:0,visible:true,easing:'linear',
+      keyframes:[
+        {t:0,x:480,y:260,sx:1,sy:1,rot:0,opacity:.95,color:'#ff2ec4'},
+        {t:18,x:480,y:260,sx:1.28,sy:1.28,rot:95,opacity:1,color:'#ffd60a'},
+        {t:36,x:480,y:260,sx:.92,sy:.92,rot:190,opacity:.9,color:'#8b5cff'},
+        {t:54,x:480,y:260,sx:1.25,sy:1.25,rot:280,opacity:1,color:'#00e5ff'},
+        {t:71,x:480,y:260,sx:1,sy:1,rot:360,opacity:.95,color:'#ff2ec4'}]},
+    {id:uid(),name:'Шар',type:'ellipse',w:84,h:84,color:'#00e5ff',stroke:'#ffffff',strokeW:0,visible:true,easing:'easeInOut',
+      keyframes:[
+        {t:0,x:120,y:430,sx:1,sy:1,rot:0,opacity:1,color:'#00e5ff'},
+        {t:18,x:480,y:120,sx:1.15,sy:.85,rot:0,opacity:1,color:'#3dff8f'},
+        {t:36,x:840,y:430,sx:.9,sy:1.1,rot:0,opacity:1,color:'#ffd60a'},
+        {t:54,x:480,y:200,sx:1.1,sy:.9,rot:0,opacity:1,color:'#ff2ec4'},
+        {t:71,x:120,y:430,sx:1,sy:1,rot:0,opacity:1,color:'#00e5ff'}]}
+  ];
+  return p;
+}
+const curFrame=()=>project.frames[frameIndex];
+const totalFrames=()=>project.mode==='frames'?Math.max(1,project.frames.length):Math.max(1,project.paramLen||60);
+
+/* ============================================================ indexeddb */
+let dbP=null;
+function openDB(){
+  if(dbP)return dbP;
+  dbP=new Promise((res,rej)=>{const r=indexedDB.open('neonframes-db',1);
+    r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('projects'))d.createObjectStore('projects',{keyPath:'id'});};
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
+  return dbP;
+}
+async function dbPut(doc){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction('projects','readwrite');tx.objectStore('projects').put(doc);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});}
+async function dbAll(){const db=await openDB();return new Promise((res,rej)=>{const rq=db.transaction('projects').objectStore('projects').getAll();rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>rej(rq.error);});}
+async function dbDel(id){const db=await openDB();return new Promise((res,rej)=>{const tx=db.transaction('projects','readwrite');tx.objectStore('projects').delete(id);tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});}
+
+let saveTimer=null;
+function markDirty(){
+  const el=$('#saveState');el.className='dirty';el.querySelector('.txt').textContent='изменения…';
+  clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveProject(),1200);
+}
+function setSaveUI(st){const el=$('#saveState');el.className=st;el.querySelector('.txt').textContent=st==='saved'?'сохранено':st==='saving'?'сохранение…':'изменения…';}
+async function makeThumb(){
+  try{const c=document.createElement('canvas');c.width=168;c.height=96;const ctx=c.getContext('2d');
+    ctx.fillStyle='#080a14';ctx.fillRect(0,0,c.width,c.height);
+    const s=Math.min(c.width/project.width,c.height/project.height);
+    ctx.translate((c.width-project.width*s)/2,(c.height-project.height*s)/2);ctx.scale(s,s);
+    ctx.fillStyle=project.bg;ctx.fillRect(0,0,project.width,project.height);
+    if(project.mode==='frames'){const fc=getFrameCanvas(project.frames[Math.min(frameIndex,project.frames.length-1)]);ctx.drawImage(fc,0,0);}
+    else drawObjectsAt(ctx,0);
+    return c.toDataURL('image/jpeg',.72);
+  }catch(e){return null;}
+}
+async function saveProject(){
+  if(!project)return;
+  setSaveUI('saving');
+  try{
+    commitFrameSilent();
+    project.updatedAt=Date.now();
+    const thumb=await makeThumb();
+    const doc=JSON.parse(JSON.stringify(project));doc.thumb=thumb;
+    await dbPut(doc);setSaveUI('saved');
+  }catch(e){console.error(e);setSaveUI('dirty');toast('Ошибка сохранения: '+e.message,'err');}
+}
+
+/* ============================================================ frames runtime */
+function getFrameCanvas(fr){
+  let c=cache.get(fr.id);
+  if(!c){c=document.createElement('canvas');c.width=project.width;c.height=project.height;cache.set(fr.id,c);
+    if(fr.data){const img=new Image();img.onload=()=>{c.getContext('2d').drawImage(img,0,0);refreshThumb(fr);requestRender();};img.src=fr.data;}}
+  return c;
+}
+async function decodeFrames(p){
+  cache=new Map();
+  for(const fr of p.frames){
+    const c=document.createElement('canvas');c.width=p.width;c.height=p.height;
+    if(fr.data){await new Promise(res=>{const img=new Image();img.onload=()=>{c.getContext('2d').drawImage(img,0,0);res();};img.onerror=res;img.src=fr.data;});}
+    cache.set(fr.id,c);
+  }
+}
+function commitFrameSilent(){const fr=curFrame();if(!fr)return;const c=cache.get(fr.id);if(c)fr.data=c.toDataURL('image/png');}
+function commitFrame(){commitFrameSilent();refreshThumb(curFrame());markDirty();requestRender();}
+function loadFrameData(fr,dataUrl){
+  return new Promise(res=>{const c=getFrameCanvas(fr);const ctx=c.getContext('2d');
+    if(!dataUrl){ctx.clearRect(0,0,c.width,c.height);refreshThumb(fr);requestRender();res();return;}
+    const img=new Image();img.onload=()=>{ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);refreshThumb(fr);requestRender();res();};
+    img.onerror=()=>{ctx.clearRect(0,0,c.width,c.height);res();};img.src=dataUrl;});
+}
+
+/* ============================================================ history */
+function capStack(st){if(st.length>50)st.splice(0,st.length-50);}
+function pushHistory(e){undoStack.push(e);capStack(undoStack);redoStack=[];updateHistBtns();}
+const snapObjects=()=>JSON.stringify(project.objects);
+const snapFrames=()=>({type:'framesAll',data:JSON.stringify(project.frames),sel:curFrame().id});
+function applyFramesEntry(e,pushTo){
+  pushTo.push({type:'framesAll',data:JSON.stringify(project.frames),sel:curFrame().id});capStack(pushTo);
+  project.frames=JSON.parse(e.data);
+  const si=project.frames.findIndex(f=>f.id===e.sel);
+  frameIndex=Math.max(0,si);playhead=frameIndex;
+  rebuildFramesPanel();
+}
+async function doUndo(){
+  const e=undoStack.pop();if(!e)return;
+  if(e.type==='frame'){
+    const idx=project.frames.findIndex(f=>f.id===e.frameId);
+    if(idx>=0){const fr=project.frames[idx];
+      redoStack.push({type:'frame',frameId:fr.id,data:fr.data??null});capStack(redoStack);
+      frameIndex=idx;playhead=idx;fr.data=e.data;await loadFrameData(fr,e.data);rebuildFramesPanel();}
+  }else if(e.type==='framesAll'){
+    applyFramesEntry(e,redoStack);
+  }else if(e.type==='objects'){
+    redoStack.push({type:'objects',data:snapObjects()});capStack(redoStack);
+    project.objects=JSON.parse(e.data);
+    if(selectedObj&&!project.objects.find(o=>o.id===selectedObj))selectedObj=null;
+    rebuildObjectsPanel();requestRender();
+  }
+  updatePlayheadUI();markDirty();updateHistBtns();requestRender();
+}
+async function doRedo(){
+  const e=redoStack.pop();if(!e)return;
+  if(e.type==='frame'){
+    const idx=project.frames.findIndex(f=>f.id===e.frameId);
+    if(idx>=0){const fr=project.frames[idx];
+      undoStack.push({type:'frame',frameId:fr.id,data:fr.data??null});capStack(undoStack);
+      frameIndex=idx;playhead=idx;fr.data=e.data;await loadFrameData(fr,e.data);rebuildFramesPanel();}
+  }else if(e.type==='framesAll'){
+    applyFramesEntry(e,undoStack);
+  }else if(e.type==='objects'){
+    undoStack.push({type:'objects',data:snapObjects()});capStack(undoStack);
+    project.objects=JSON.parse(e.data);
+    if(selectedObj&&!project.objects.find(o=>o.id===selectedObj))selectedObj=null;
+    rebuildObjectsPanel();requestRender();
+  }
+  updatePlayheadUI();markDirty();updateHistBtns();requestRender();
+}
+function updateHistBtns(){const u=$('#tUndo'),r=$('#tRedo');if(u)u.disabled=!undoStack.length;if(r)r.disabled=!redoStack.length;}
+
+/* ============================================================ view / render */
+const viewCanvas=$('#view'), tlCanvas=$('#tl');
+function evtPos(e){const r=viewCanvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+const s2w=p=>({x:(p.x-view.x)/view.s,y:(p.y-view.y)/view.s});
+function zoomAt(p,f){const ns=clamp(view.s*f,.02,64);f=ns/view.s;view.x=p.x-(p.x-view.x)*f;view.y=p.y-(p.y-view.y)*f;view.s=ns;updateZoomUI();requestRender();}
+function setFit(mode){
+  const r=viewCanvas.getBoundingClientRect(),pad=28,W=project.width,H=project.height;
+  let s=1;
+  if(mode==='all')s=Math.min((r.width-pad*2)/W,(r.height-pad*2)/H);
+  else if(mode==='width')s=(r.width-pad*2)/W;
+  else if(mode==='height')s=(r.height-pad*2)/H;
+  else if(mode==='fill')s=Math.max(r.width/W,r.height/H);
+  else if(mode==='100')s=1;
+  view.s=clamp(s,.02,64);
+  view.x=(r.width-W*view.s)/2;view.y=(r.height-H*view.s)/2;
+  updateZoomUI();requestRender();
+}
+function updateZoomUI(){$('#stZoom').textContent=Math.round(view.s*100)+'%';$('#zoomLbl').textContent=Math.round(view.s*100)+'%';}
+
+let dotPat=null;
+function getDotPattern(ctx){
+  if(dotPat)return dotPat;
+  const p=document.createElement('canvas');p.width=p.height=28;
+  const pc=p.getContext('2d');pc.fillStyle='rgba(120,140,255,0.09)';pc.fillRect(13,13,1.6,1.6);
+  dotPat=ctx.createPattern(p,'repeat');return dotPat;
+}
+
+let needR=false;
+function requestRender(){if(!needR){needR=true;requestAnimationFrame(()=>{needR=false;render();renderTimeline();});}}
+
+function render(){
+  if(!project)return;
+  const dpr=window.devicePixelRatio||1,w=viewCanvas.clientWidth,h=viewCanvas.clientHeight;
+  if(w<2||h<2)return;
+  if(viewCanvas.width!==Math.round(w*dpr)||viewCanvas.height!==Math.round(h*dpr)){viewCanvas.width=Math.round(w*dpr);viewCanvas.height=Math.round(h*dpr);}
+  const ctx=viewCanvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle='#05060c';ctx.fillRect(0,0,w,h);
+  ctx.fillStyle=getDotPattern(ctx);ctx.fillRect(0,0,w,h);
+  const W=project.width,H=project.height;
+  ctx.save();ctx.translate(view.x,view.y);ctx.scale(view.s,view.s);
+  ctx.fillStyle=project.bg||'#0a0e1a';ctx.fillRect(0,0,W,H);
+  const v0=s2w({x:0,y:0}),v1=s2w({x:w,y:h}),tile=16;
+  const x0=clamp(Math.floor(v0.x/tile),0,W/tile),y0=clamp(Math.floor(v0.y/tile),0,H/tile);
+  const x1=clamp(Math.ceil(v1.x/tile),0,W/tile),y1=clamp(Math.ceil(v1.y/tile),0,H/tile);
+  if((x1-x0)*(y1-y0)<=5000){ctx.fillStyle='rgba(255,255,255,0.035)';
+    for(let ty=y0;ty<y1;ty++)for(let tx=x0;tx<x1;tx++)if((tx+ty)%2===0)ctx.fillRect(tx*tile,ty*tile,tile,tile);}
+  if(project.mode==='frames'){
+    if(!playing&&onionOn&&frameIndex>0){const pf=project.frames[frameIndex-1],pc=cache.get(pf.id);
+      if(pc){ctx.globalAlpha=.28;ctx.drawImage(pc,0,0);ctx.globalAlpha=1;}}
+    if(!playing&&onionOn&&frameIndex<project.frames.length-1){const nf=project.frames[frameIndex+1],nc=cache.get(nf.id);
+      if(nc){ctx.globalAlpha=.14;ctx.drawImage(nc,0,0);ctx.globalAlpha=1;}}
+    ctx.drawImage(getFrameCanvas(curFrame()),0,0);
+  }else drawObjectsAt(ctx,playhead);
+  if(previewShape)drawPreview(ctx);
+  if(project.mode==='param'&&selectedObj)drawSelection(ctx);
+  ctx.restore();
+  ctx.save();ctx.translate(view.x,view.y);ctx.scale(view.s,view.s);
+  ctx.lineWidth=1.6/view.s;ctx.strokeStyle='rgba(0,229,255,.85)';ctx.shadowColor='rgba(0,229,255,.9)';ctx.shadowBlur=14;
+  ctx.strokeRect(0,0,W,H);ctx.shadowBlur=0;ctx.restore();
+}
+
+/* ============================================================ parametric drawing */
+function propsTemplate(o){return{x:project.width/2,y:project.height/2,sx:1,sy:1,rot:0,opacity:1,color:o.color||'#00e5ff'};}
+function propsAt(o,t){
+  const base=propsTemplate(o);const k=o.keyframes;
+  if(!k||!k.length)return base;
+  const ks=[...k].sort((a,b)=>a.t-b.t);
+  if(t<=ks[0].t)return{...base,...ks[0]};
+  if(t>=ks[ks.length-1].t)return{...base,...ks[ks.length-1]};
+  let i=0;while(i<ks.length-1&&ks[i+1].t<t)i++;
+  const a=ks[i],b=ks[i+1];
+  const u=b.t===a.t?0:(t-a.t)/(b.t-a.t);
+  const e=(easings[o.easing]||easings.linear)(clamp(u,0,1));
+  const out={...base,...a};
+  for(const key of['x','y','sx','sy','rot','opacity'])if(typeof b[key]==='number'&&typeof a[key]==='number')out[key]=lerp(a[key],b[key],e);
+  if(b.color&&a.color)out.color=lerpColor(a.color,b.color,e);
+  return out;
+}
+function shapePath(ctx,type,w,h){
+  ctx.beginPath();
+  if(type==='ellipse')ctx.ellipse(0,0,Math.abs(w/2),Math.abs(h/2),0,0,Math.PI*2);
+  else if(type==='rect'){
+    if(ctx.roundRect){const r=Math.min(8,Math.abs(w)/6,Math.abs(h)/6);ctx.roundRect(-w/2,-h/2,w,h,r);}
+    else ctx.rect(-w/2,-h/2,w,h);
+  }
+  else if(type==='tri'){ctx.moveTo(0,-h/2);ctx.lineTo(w/2,h/2);ctx.lineTo(-w/2,h/2);ctx.closePath();}
+  else if(type==='star'){const r1=Math.abs(w/2),r2=r1*.45;
+    for(let i=0;i<10;i++){const rr=i%2===0?r1:r2,a=Math.PI/5*i-Math.PI/2;
+      const px=Math.cos(a)*rr,py=Math.sin(a)*rr*(h/w||1);i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}ctx.closePath();}
+}
+function drawShapeObj(ctx,o,p){
+  ctx.save();ctx.translate(p.x,p.y);ctx.rotate(rad(p.rot));ctx.scale(p.sx,p.sy);
+  ctx.globalAlpha=clamp(p.opacity??1,0,1);
+  shapePath(ctx,o.type,o.w,o.h);
+  ctx.fillStyle=p.color||o.color;ctx.shadowColor=p.color||o.color;ctx.shadowBlur=16;
+  ctx.fill();ctx.shadowBlur=0;
+  if(o.strokeW>0){ctx.lineWidth=o.strokeW;ctx.strokeStyle=o.stroke||'#fff';ctx.stroke();}
+  ctx.restore();
+}
+function drawObjectsAt(ctx,t){
+  for(const o of project.objects){if(o.visible===false)continue;drawShapeObj(ctx,o,propsAt(o,t));}
+}
+function worldCorners(o,p){
+  const r=rad(p.rot),c=Math.cos(r),s=Math.sin(r);
+  return[[-1,-1],[1,-1],[1,1],[-1,1]].map(([mx,my])=>{
+    const lx=mx*o.w/2*p.sx,ly=my*o.h/2*p.sy;
+    return{x:p.x+c*lx-s*ly,y:p.y+s*lx+c*ly};});
+}
+function drawSelection(ctx){
+  const o=project.objects.find(x=>x.id===selectedObj);if(!o)return;
+  const p=propsAt(o,playhead),cs=worldCorners(o,p);
+  ctx.save();
+  ctx.strokeStyle='#00e5ff';ctx.lineWidth=1.4/view.s;ctx.setLineDash([6/view.s,4/view.s]);
+  ctx.shadowColor='rgba(0,229,255,.8)';ctx.shadowBlur=8;
+  ctx.beginPath();cs.forEach((c,i)=>i===0?ctx.moveTo(c.x,c.y):ctx.lineTo(c.x,c.y));ctx.closePath();ctx.stroke();
+  ctx.setLineDash([]);ctx.shadowBlur=0;
+  const hs=8/view.s;ctx.fillStyle='#ff2ec4';
+  for(const c of cs)ctx.fillRect(c.x-hs/2,c.y-hs/2,hs,hs);
+  const r=rad(p.rot),upx=-Math.sin(r),upy=-Math.cos(r);
+  const dist=o.h/2*p.sy+26/view.s;
+  const kx=p.x+upx*dist,ky=p.y+upy*dist;
+  const tc={x:p.x+upx*(o.h/2*p.sy),y:p.y+upy*(o.h/2*p.sy)};
+  ctx.strokeStyle='rgba(255,46,196,.8)';ctx.beginPath();ctx.moveTo(tc.x,tc.y);ctx.lineTo(kx,ky);ctx.stroke();
+  ctx.fillStyle='#0c0f1d';ctx.beginPath();ctx.arc(kx,ky,6/view.s,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#ff2ec4';ctx.lineWidth=1.6/view.s;ctx.stroke();
+  ctx.restore();
+}
+function hitTestParam(w){
+  const o=selectedObj?project.objects.find(x=>x.id===selectedObj):null;
+  if(o&&o.visible!==false){
+    const p=propsAt(o,playhead),r=rad(p.rot);
+    const upx=-Math.sin(r),upy=-Math.cos(r);
+    const kx=p.x+upx*(o.h/2*p.sy+26/view.s),ky=p.y+upy*(o.h/2*p.sy+26/view.s);
+    if(Math.hypot(w.x-kx,w.y-ky)<10/view.s)return{mode:'rotate',obj:o,p};
+    const cs=worldCorners(o,p);
+    for(let i=0;i<4;i++)if(Math.hypot(w.x-cs[i].x,w.y-cs[i].y)<10/view.s)return{mode:'scale',obj:o,p,corner:i};
+  }
+  for(let i=project.objects.length-1;i>=0;i--){
+    const ob=project.objects[i];if(ob.visible===false)continue;
+    const p=propsAt(ob,playhead),r=rad(p.rot);
+    const dx=w.x-p.x,dy=w.y-p.y;
+    const lx=(Math.cos(-r)*dx-Math.sin(-r)*dy)/Math.max(.0001,p.sx);
+    const ly=(Math.sin(-r)*dx+Math.cos(-r)*dy)/Math.max(.0001,p.sy);
+    let hit=false;
+    if(ob.type==='rect')hit=Math.abs(lx)<=ob.w/2+6&&Math.abs(ly)<=ob.h/2+6;
+    else hit=(lx/(ob.w/2+6))**2+(ly/(ob.h/2+6))**2<=1;
+    if(hit)return{mode:'move',obj:ob,p};
+  }
+  return null;
+}
+function ensureKeyAt(o,t){
+  o.keyframes=o.keyframes||[];
+  let k=o.keyframes.find(k=>k.t===t);
+  if(!k){const cur=propsAt(o,t);k={t,x:cur.x,y:cur.y,sx:cur.sx,sy:cur.sy,rot:cur.rot,opacity:cur.opacity,color:cur.color};o.keyframes.push(k);o.keyframes.sort((a,b)=>a.t-b.t);}
+  return k;
+}
+
+/* ============================================================ pointer interaction */
+function setTool(t){
+  tool=t;
+  $$('#toolGroup .ibtn').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
+  viewCanvas.style.cursor=t==='hand'?'grab':['brush','eraser','line','rect','ellipse','star','tri','fill','pipette'].includes(t)?'crosshair':(t==='select'?'default':'crosshair');
+}
+viewCanvas.addEventListener('contextmenu',e=>e.preventDefault());
+viewCanvas.addEventListener('pointerdown',e=>{
+  if(!project)return;
+  viewCanvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===2){dragSt=null;previewShape=null;pinchSt=null;return;}
+  const sp=evtPos(e),w=s2w(sp);
+  const panMode=tool==='hand'||spaceHeld||e.button===1||e.button===2;
+  if(panMode){dragSt={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y};viewCanvas.style.cursor='grabbing';e.preventDefault();return;}
+  if(project.mode==='param'){
+    if(tool==='select'){
+      const hit=hitTestParam(w);
+      if(hit){selectedObj=hit.obj.id;selectedKeyT=null;
+        const p0=propsAt(hit.obj,playhead);
+        dragSt={mode:hit.mode,obj:hit.obj,startW:w,startP:{...p0},corner:hit.corner,moved:false};
+      }else{selectedObj=null;}
+      rebuildObjectsPanel();requestRender();
+    }else if(['ellipse','rect','star','tri'].includes(tool)){
+      pushHistory({type:'objects',data:snapObjects()});
+      const type=tool;
+      const ob={id:uid(),name:`Объект ${project.objects.length+1}`,type,w:110,h:110,
+        color:NEON[project.objects.length%NEON.length],stroke:'#ffffff',strokeW:0,visible:true,easing:'easeInOut',keyframes:[]};
+      ob.keyframes=[{t:Math.floor(playhead),x:w.x,y:w.y,sx:1,sy:1,rot:0,opacity:1,color:ob.color}];
+      project.objects.push(ob);selectedObj=ob.id;
+      setTool('select');rebuildObjectsPanel();markDirty();requestRender();
+    }else toast('В параметрическом режиме используйте «Выбор» или фигуры','warn');
+    return;
+  }
+  // ---- frame mode drawing
+  if(!['brush','eraser','line','rect','ellipse','star','tri','fill','pipette'].includes(tool)){toast('Выберите инструмент рисования','warn');return;}
+  const fr=curFrame(),c=getFrameCanvas(fr),ctx=c.getContext('2d');
+  if(tool==='brush'||tool==='eraser'){
+    pushHistory({type:'frame',frameId:fr.id,data:fr.data??null});
+    ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+    if(tool==='eraser'){ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='rgba(0,0,0,1)';}
+    else{ctx.strokeStyle=brushColor;ctx.globalAlpha=brushOpacity;}
+    ctx.lineWidth=brushSize;
+    ctx.beginPath();ctx.moveTo(w.x,w.y);ctx.lineTo(w.x+.01,w.y+.01);ctx.stroke();ctx.restore();
+    dragSt={mode:'stroke',last:w,ctx,eraser:tool==='eraser'};
+    requestRender();
+  }else if(['line','rect','ellipse','star','tri'].includes(tool)){
+    pushHistory({type:'frame',frameId:fr.id,data:fr.data??null});
+    previewShape={type:tool,x0:w.x,y0:w.y,x1:w.x,y1:w.y,shift:false};
+    dragSt={mode:'shape'};requestRender();
+  }else if(tool==='fill'){
+    pushHistory({type:'frame',frameId:fr.id,data:fr.data??null});
+    if(floodFill(Math.floor(w.x),Math.floor(w.y),brushColor,brushOpacity))commitFrame();
+    else{undoStack.pop();updateHistBtns();}
+  }else if(tool==='pipette'){
+    try{const d=ctx.getImageData(clamp(Math.floor(w.x),0,c.width-1),clamp(Math.floor(w.y),0,c.height-1),1,1).data;
+      if(d[3]>0){brushColor=rgbToHex(d[0],d[1],d[2]);updateColorSwatch();toast('Цвет взят: '+brushColor,'ok');}
+    }catch(err){}
+  }
+});
+viewCanvas.addEventListener('pointermove',e=>{
+  const sp=evtPos(e),w=s2w(sp);
+  $('#stPos').textContent=`X ${Math.round(w.x)} · Y ${Math.round(w.y)}`;
+  if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===2){handlePinch();return;}
+  if(!dragSt)return;
+  if(dragSt.mode==='pan'){
+    view.x=dragSt.vx+(e.clientX-dragSt.sx);view.y=dragSt.vy+(e.clientY-dragSt.sy);requestRender();
+  }else if(dragSt.mode==='stroke'){
+    const ctx=dragSt.ctx;ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+    if(dragSt.eraser){ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='rgba(0,0,0,1)';}
+    else{ctx.strokeStyle=brushColor;ctx.globalAlpha=brushOpacity;}
+    ctx.lineWidth=brushSize;
+    ctx.beginPath();ctx.moveTo(dragSt.last.x,dragSt.last.y);ctx.lineTo(w.x,w.y);ctx.stroke();ctx.restore();
+    dragSt.last=w;requestRender();
+  }else if(dragSt.mode==='shape'){
+    previewShape.x1=w.x;previewShape.y1=w.y;previewShape.shift=e.shiftKey;requestRender();
+  }else if(['move','scale','rotate'].includes(dragSt.mode)){
+    if(!dragSt.moved){pushHistory({type:'objects',data:snapObjects()});dragSt.moved=true;}
+    const o=dragSt.obj,t=Math.floor(playhead),k=ensureKeyAt(o,t);
+    if(dragSt.mode==='move'){k.x=dragSt.startP.x+(w.x-dragSt.startW.x);k.y=dragSt.startP.y+(w.y-dragSt.startW.y);}
+    else if(dragSt.mode==='scale'){
+      const p=dragSt.startP,r=rad(p.rot);
+      const dx=w.x-p.x,dy=w.y-p.y;
+      const lx=Math.cos(-r)*dx-Math.sin(-r)*dy,ly=Math.sin(-r)*dx+Math.cos(-r)*dy;
+      let nsx=clamp(Math.abs(lx)/(o.w/2),.05,60),nsy=clamp(Math.abs(ly)/(o.h/2),.05,60);
+      if(e.shiftKey){const m=Math.max(nsx,nsy);nsx=nsy=m;}
+      k.sx=nsx;k.sy=nsy;
+    }else if(dragSt.mode==='rotate'){
+      const p=dragSt.startP;
+      let a=Math.atan2(w.y-p.y,w.x-p.x)*180/Math.PI+90;
+      if(e.shiftKey)a=Math.round(a/15)*15;
+      k.rot=((a%360)+360)%360;
+    }
+    requestRender();syncPropsPanel();
+  }
+});
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if(pointers.size<2)pinchSt=null;
+  if(!dragSt)return;
+  if(dragSt.mode==='pan')viewCanvas.style.cursor=tool==='hand'?'grab':'crosshair';
+  else if(dragSt.mode==='stroke')commitFrame();
+  else if(dragSt.mode==='shape'&&previewShape){commitShapeToFrame();previewShape=null;commitFrame();}
+  else if(['move','scale','rotate'].includes(dragSt.mode)){if(dragSt.moved){markDirty();rebuildKeyChips();}requestRender();}
+  dragSt=null;
+}
+viewCanvas.addEventListener('pointerup',endPointer);
+viewCanvas.addEventListener('pointercancel',endPointer);
+viewCanvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  zoomAt(evtPos(e),Math.exp(-e.deltaY*0.0014));
+},{passive:false});
+function handlePinch(){
+  const pts=[...pointers.values()];
+  if(pts.length<2)return;
+  const mid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+  const dist=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+  if(pinchSt){
+    const r=viewCanvas.getBoundingClientRect();
+    zoomAt({x:mid.x-r.left,y:mid.y-r.top},dist/Math.max(1,pinchSt.dist));
+    view.x+=mid.x-pinchSt.mid.x;view.y+=mid.y-pinchSt.mid.y;requestRender();
+  }
+  pinchSt={mid,dist};
+}
+function drawPreview(ctx){
+  const s=previewShape;let{x0,y0,x1,y1}=s;
+  if(s.shift&&(s.type==='rect'||s.type==='ellipse'||s.type==='star'||s.type==='tri')){
+    const dx=x1-x0,dy=y1-y0,m=Math.max(Math.abs(dx),Math.abs(dy));
+    x1=x0+Math.sign(dx||1)*m;y1=y0+Math.sign(dy||1)*m;
+  }
+  if(s.shift&&s.type==='line'){
+    const dx=x1-x0,dy=y1-y0,a=Math.round(Math.atan2(dy,dx)/(Math.PI/4))*(Math.PI/4),L=Math.hypot(dx,dy);
+    x1=x0+Math.cos(a)*L;y1=y0+Math.sin(a)*L;
+  }
+  s._n={x0,y0,x1,y1};
+  ctx.save();
+  ctx.strokeStyle=brushColor;ctx.globalAlpha=brushOpacity;ctx.lineWidth=brushSize;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.shadowColor=brushColor;ctx.shadowBlur=10;
+  ctx.beginPath();
+  if(s.type==='line'){ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);}
+  else if(s.type==='rect'){ctx.rect(Math.min(x0,x1),Math.min(y0,y1),Math.abs(x1-x0)||1,Math.abs(y1-y0)||1);}
+  else if(s.type==='ellipse'){ctx.ellipse((x0+x1)/2,(y0+y1)/2,Math.max(1,Math.abs(x1-x0)/2),Math.max(1,Math.abs(y1-y0)/2),0,0,Math.PI*2);}
+  else{ctx.save();ctx.translate((x0+x1)/2,(y0+y1)/2);shapePath(ctx,s.type,Math.max(2,Math.abs(x1-x0)),Math.max(2,Math.abs(y1-y0)));ctx.restore();}
+  ctx.stroke();
+  ctx.setLineDash([5/view.s,5/view.s]);ctx.lineWidth=1/view.s;ctx.globalAlpha=.6;ctx.strokeStyle='#fff';ctx.shadowBlur=0;ctx.stroke();
+  ctx.restore();
+}
+function commitShapeToFrame(){
+  const fr=curFrame(),ctx=getFrameCanvas(fr).getContext('2d'),s=previewShape._n||previewShape;
+  ctx.save();ctx.strokeStyle=brushColor;ctx.globalAlpha=brushOpacity;ctx.lineWidth=brushSize;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();
+  if(previewShape.type==='line'){ctx.moveTo(s.x0,s.y0);ctx.lineTo(s.x1,s.y1);}
+  else if(previewShape.type==='rect'){ctx.rect(Math.min(s.x0,s.x1),Math.min(s.y0,s.y1),Math.abs(s.x1-s.x0)||1,Math.abs(s.y1-s.y0)||1);}
+  else if(previewShape.type==='ellipse'){ctx.ellipse((s.x0+s.x1)/2,(s.y0+s.y1)/2,Math.max(1,Math.abs(s.x1-s.x0)/2),Math.max(1,Math.abs(s.y1-s.y0)/2),0,0,Math.PI*2);}
+  else{ctx.save();ctx.translate((s.x0+s.x1)/2,(s.y0+s.y1)/2);shapePath(ctx,previewShape.type,Math.max(2,Math.abs(s.x1-s.x0)),Math.max(2,Math.abs(s.y1-s.y0)));ctx.restore();}
+  ctx.stroke();ctx.restore();
+}
+function floodFill(cx,cy,hex,alpha){
+  const c=getFrameCanvas(curFrame()),ctx=c.getContext('2d'),W=c.width,H=c.height;
+  if(cx<0||cy<0||cx>=W||cy>=H)return false;
+  const img=ctx.getImageData(0,0,W,H),d=img.data;
+  const si=(cy*W+cx)*4,tr=d[si],tg=d[si+1],tb=d[si+2],ta=d[si+3];
+  const[fr,fg,fb]=hexToRgb(hex),fa=Math.round(alpha*255);
+  if(tr===fr&&tg===fg&&tb===fb&&ta===fa)return false;
+  const tol=28,seen=new Uint8Array(W*H);
+  const match=i=>Math.abs(d[i]-tr)<=tol&&Math.abs(d[i+1]-tg)<=tol&&Math.abs(d[i+2]-tb)<=tol&&Math.abs(d[i+3]-ta)<=tol;
+  const stack=[cx,cy];
+  while(stack.length){
+    const y=stack.pop(),x=stack.pop();
+    if(x<0||y<0||x>=W||y>=H)continue;
+    const mi=y*W+x;
+    if(seen[mi]||!match(mi*4))continue;
+    seen[mi]=1;
+    const i=mi*4;d[i]=fr;d[i+1]=fg;d[i+2]=fb;d[i+3]=fa;
+    stack.push(x+1,y,x-1,y,x,y+1,x,y-1);
+  }
+  ctx.putImageData(img,0,0);return true;
+}
+
+/* ============================================================ playback */
+let lastTs=0;
+function playTick(ts){
+  if(playing&&project){
+    const dt=Math.min(.1,(ts-lastTs)/1000);
+    playhead+=dt*project.fps;
+    const tot=totalFrames();
+    if(playhead>=tot){
+      if(loopOn)playhead=playhead%tot;
+      else{playhead=tot-0.001;setPlaying(false);}
+    }
+    if(project.mode==='frames'){
+      const f=clamp(Math.floor(playhead),0,project.frames.length-1);
+      if(f!==frameIndex){frameIndex=f;refreshFrameHighlights();}
+    }
+    updatePlayheadUI();requestRender();
+  }
+  lastTs=ts;requestAnimationFrame(playTick);
+}
+function setPlaying(v){
+  playing=v;
+  $('#tPlay').innerHTML=ic(v?'pause':'play',19);
+  $('#tPlay').classList.toggle('on-mg',v);
+  if(v&&playhead>=totalFrames()-0.01)playhead=0;
+}
+function setFrameIndex(i){
+  i=clamp(i,0,project.frames.length-1);
+  frameIndex=i;playhead=i;
+  refreshFrameHighlights();updatePlayheadUI();requestRender();
+}
+function updatePlayheadUI(){
+  const tot=totalFrames();
+  $('#stFrame').textContent=project.mode==='frames'?`Кадр ${frameIndex+1}/${project.frames.length}`:`Кадр ${Math.floor(playhead)+1}/${tot}`;
+  $('#stTime').textContent=(playhead/project.fps).toFixed(2)+'с';
+  if(Math.floor(playhead)!==lastShownFrame){lastShownFrame=Math.floor(playhead);rebuildKeyChips();}
+}
+
+/* ============================================================ timeline */
+let tlGeo=null,tlDrag=null;
+function renderTimeline(){
+  if(!project)return;
+  const dpr=window.devicePixelRatio||1,c=tlCanvas,w=c.clientWidth,h=c.clientHeight;
+  if(w<2)return;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
+  const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  const tot=totalFrames(),pad=14,iw=w-pad*2;
+  const xOf=t=>pad+(tot>1?t/(tot-1):0)*iw;
+  tlGeo={pad,iw,tot};
+  const pxPer=iw/Math.max(1,tot-1);
+  const step=Math.max(1,Math.ceil(40/Math.max(1,pxPer)));
+  ctx.font='9px "JetBrains Mono"';ctx.textAlign='center';
+  for(let t=0;t<tot;t+=step){
+    const x=xOf(t);
+    ctx.strokeStyle='rgba(90,110,200,.35)';ctx.beginPath();ctx.moveTo(x,h-18);ctx.lineTo(x,h-12);ctx.stroke();
+    ctx.fillStyle='#5b6394';ctx.fillText(String(t+1),x,h-4);
+  }
+  ctx.strokeStyle='rgba(90,110,200,.2)';ctx.beginPath();ctx.moveTo(pad,h-12);ctx.lineTo(w-pad,h-12);ctx.stroke();
+  if(project.mode==='param'&&selectedObj){
+    const o=project.objects.find(x=>x.id===selectedObj);
+    if(o)for(const k of(o.keyframes||[])){
+      const x=xOf(clamp(k.t,0,tot-1)),y=h-26;
+      ctx.save();ctx.translate(x,y);ctx.rotate(Math.PI/4);
+      ctx.fillStyle=selectedKeyT===k.t?'#ffd60a':'#ff2ec4';
+      ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=8;
+      ctx.fillRect(-4,-4,8,8);ctx.restore();
+    }
+  }
+  const px=xOf(clamp(playhead,0,tot-1));
+  ctx.strokeStyle='#00e5ff';ctx.shadowColor='#00e5ff';ctx.shadowBlur=8;ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.moveTo(px,6);ctx.lineTo(px,h-12);ctx.stroke();ctx.shadowBlur=0;
+  ctx.fillStyle='#00e5ff';ctx.beginPath();ctx.moveTo(px-5,4);ctx.lineTo(px+5,4);ctx.lineTo(px,12);ctx.closePath();ctx.fill();
+}
+function tlPosT(e){
+  const r=tlCanvas.getBoundingClientRect(),x=e.clientX-r.left;
+  if(!tlGeo)return 0;
+  return clamp((x-tlGeo.pad)/Math.max(1,tlGeo.iw),0,1)*(tlGeo.tot-1);
+}
+tlCanvas.addEventListener('pointerdown',e=>{
+  if(!project)return;
+  tlCanvas.setPointerCapture(e.pointerId);
+  const t=tlPosT(e),r=tlCanvas.getBoundingClientRect(),x=e.clientX-r.left;
+  if(project.mode==='param'&&selectedObj){
+    const o=project.objects.find(x2=>x2.id===selectedObj);
+    if(o)for(const k of(o.keyframes||[])){
+      const kx=tlGeo.pad+(tlGeo.tot>1?clamp(k.t,0,tlGeo.tot-1)/(tlGeo.tot-1):0)*tlGeo.iw;
+      if(Math.abs(x-kx)<8&&e.clientY-r.top>r.height/2-8){
+        pushHistory({type:'objects',data:snapObjects()});
+        tlDrag={key:k,obj:o};selectedKeyT=k.t;renderTimeline();return;
+      }
+    }
+  }
+  tlDrag={scrub:true};applyScrub(t);
+});
+tlCanvas.addEventListener('pointermove',e=>{
+  if(!tlDrag)return;
+  const t=tlPosT(e);
+  if(tlDrag.key){tlDrag.key.t=clamp(Math.round(t),0,totalFrames()-1);selectedKeyT=tlDrag.key.t;tlDrag.obj.keyframes.sort((a,b)=>a.t-b.t);rebuildKeyChips();requestRender();}
+  else applyScrub(t);
+});
+tlCanvas.addEventListener('pointerup',()=>{tlDrag=null;markDirty();});
+function applyScrub(t){
+  playhead=t;
+  if(project.mode==='frames'){frameIndex=clamp(Math.round(t),0,project.frames.length-1);refreshFrameHighlights();}
+  updatePlayheadUI();syncPropsPanel();requestRender();
+}
+
+/* ============================================================ panels: frames */
+function rebuildFramesPanel(){
+  const list=$('#frameList');list.innerHTML='';
+  $('#framesCount').textContent=`Кадры · ${project.frames.length}`;
+  project.frames.forEach((fr,i)=>{
+    const card=document.createElement('div');
+    card.className='fcard'+(i===frameIndex?' on':'');card.dataset.id=fr.id;card.draggable=true;
+    card.innerHTML=`<canvas class="fthumb" width="76" height="46" data-id="${fr.id}"></canvas>
+      <div><div class="fnum">${String(i+1).padStart(2,'0')}</div>
+      <div style="font-size:10px;color:var(--tx3)">${fr.data?'рисунок':'пусто'}</div></div>
+      <div class="fops">
+        <button data-op="up" title="Выше">${ic('up',13)}</button>
+        <button data-op="down" title="Ниже">${ic('down',13)}</button>
+        <button data-op="dup" title="Дублировать">${ic('copy',13)}</button>
+        <button data-op="clear" title="Очистить">${ic('clear',13)}</button>
+        <button data-op="del" title="Удалить">${ic('trash',13)}</button>
+      </div>`;
+    card.addEventListener('click',e=>{
+      const op=e.target.closest('[data-op]')?.dataset.op;
+      if(!op){if(playing)setPlaying(false);setFrameIndex(i);return;}
+      frameOp(op,i);
+    });
+    card.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',fr.id);e.dataTransfer.effectAllowed='move';});
+    card.addEventListener('dragover',e=>{e.preventDefault();const r=card.getBoundingClientRect();
+      card.classList.toggle('dragover-top',e.clientY<r.top+r.height/2);card.classList.toggle('dragover-bot',e.clientY>=r.top+r.height/2);});
+    card.addEventListener('dragleave',()=>card.classList.remove('dragover-top','dragover-bot'));
+    card.addEventListener('dragend',()=>$$('.fcard').forEach(c2=>c2.classList.remove('dragover-top','dragover-bot')));
+    card.addEventListener('drop',e=>{
+      e.preventDefault();
+      const srcId=e.dataTransfer.getData('text/plain');
+      const r=card.getBoundingClientRect(),before=e.clientY<r.top+r.height/2;
+      card.classList.remove('dragover-top','dragover-bot');
+      reorderFrame(srcId,fr.id,before);
+    });
+    list.appendChild(card);
+    refreshThumbIn(card,fr);
+  });
+}
+function refreshThumb(fr){const card=$(`.fcard[data-id="${fr.id}"]`);if(card)refreshThumbIn(card,fr);}
+function refreshThumbIn(card,fr){
+  const tc=card.querySelector('.fthumb');if(!tc)return;
+  const ctx=tc.getContext('2d');
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle='#080a14';ctx.fillRect(0,0,tc.width,tc.height);
+  const src=cache.get(fr.id);if(!src)return;
+  const s=Math.min(tc.width/project.width,tc.height/project.height);
+  ctx.translate((tc.width-project.width*s)/2,(tc.height-project.height*s)/2);ctx.scale(s,s);
+  ctx.drawImage(src,0,0);
+}
+function refreshFrameHighlights(){$$('.fcard').forEach(c=>c.classList.toggle('on',project.frames[frameIndex]&&c.dataset.id===project.frames[frameIndex].id));}
+function frameOp(op,i){
+  if(op==='up'&&i>0){pushHistory(snapFrames());const f=project.frames.splice(i,1)[0];project.frames.splice(i-1,0,f);frameIndex=i-1;playhead=frameIndex;rebuildFramesPanel();markDirty();requestRender();}
+  else if(op==='down'&&i<project.frames.length-1){pushHistory(snapFrames());const f=project.frames.splice(i,1)[0];project.frames.splice(i+1,0,f);frameIndex=i+1;playhead=frameIndex;rebuildFramesPanel();markDirty();requestRender();}
+  else if(op==='dup')duplicateFrame(i);
+  else if(op==='del')deleteFrame(i);
+  else if(op==='clear')clearFrame(i);
+}
+function addFrame(){
+  commitFrameSilent();
+  pushHistory(snapFrames());
+  project.frames.splice(frameIndex+1,0,{id:uid(),duration:1,data:null});
+  setFrameIndex(frameIndex+1);rebuildFramesPanel();markDirty();
+  toast('Кадр добавлен','ok');
+}
+function duplicateFrame(i){
+  commitFrameSilent();
+  pushHistory(snapFrames());
+  const src=project.frames[i];
+  const nf={id:uid(),duration:1,data:src.data};
+  project.frames.splice(i+1,0,nf);
+  getFrameCanvas(nf);
+  setFrameIndex(i+1);rebuildFramesPanel();markDirty();
+  toast('Кадр продублирован','ok');
+}
+function deleteFrame(i){
+  if(project.frames.length<=1){clearFrame(0);return;}
+  commitFrameSilent();
+  pushHistory(snapFrames());
+  const keepId=curFrame().id;
+  project.frames.splice(i,1);
+  frameIndex=Math.max(0,project.frames.findIndex(f=>f.id===keepId));
+  playhead=frameIndex;
+  rebuildFramesPanel();markDirty();requestRender();
+  toast('Кадр удалён','ok');
+}
+function clearFrame(i){
+  const fr=project.frames[i];
+  pushHistory({type:'frame',frameId:fr.id,data:fr.data??null});
+  const c=getFrameCanvas(fr);c.getContext('2d').clearRect(0,0,c.width,c.height);
+  fr.data=null;refreshThumb(fr);markDirty();requestRender();
+}
+function reorderFrame(srcId,dstId,before){
+  if(srcId===dstId)return;
+  commitFrameSilent();
+  pushHistory(snapFrames());
+  const si=project.frames.findIndex(f=>f.id===srcId);
+  const[f]=project.frames.splice(si,1);
+  let di=project.frames.findIndex(f2=>f2.id===dstId);
+  if(!before)di+=1;
+  project.frames.splice(di,0,f);
+  frameIndex=project.frames.findIndex(f2=>f2.id===srcId);
+  playhead=frameIndex;
+  rebuildFramesPanel();markDirty();requestRender();
+}
+
+/* ============================================================ panels: objects */
+function rebuildObjectsPanel(){
+  const body=$('#objBody');body.innerHTML='';
+  if(!project.objects.length){
+    body.innerHTML=`<div class="empty-note">Объектов пока нет.<br>Добавьте фигуру кнопками выше или выберите инструмент-фигуру на панели и кликните по холсту.</div>`;
+    return;
+  }
+  const list=document.createElement('div');list.style.display='flex';list.style.flexDirection='column';list.style.gap='6px';
+  project.objects.forEach(o=>{
+    const row=document.createElement('div');
+    row.className='orow'+(o.id===selectedObj?' on':'');
+    row.innerHTML=`<button class="ibtn" style="width:26px;height:26px" data-act="vis" title="Видимость">${ic(o.visible===false?'eyeOff':'eye',14)}</button>
+      <span class="oic">${ic(o.type==='ellipse'?'circle':o.type==='rect'?'rect':o.type==='star'?'star':'tri',15)}</span>
+      <span class="oname">${o.name}</span>
+      <button class="ibtn" style="width:26px;height:26px" data-act="ren" title="Переименовать">${ic('doc',13)}</button>
+      <button class="ibtn" style="width:26px;height:26px" data-act="del" title="Удалить">${ic('trash',13)}</button>`;
+    row.addEventListener('click',e=>{
+      const act=e.target.closest('[data-act]')?.dataset.act;
+      if(act==='vis'){o.visible=o.visible===false?true:false;markDirty();rebuildObjectsPanel();requestRender();return;}
+      if(act==='ren'){const nm=prompt('Название объекта:',o.name);if(nm){o.name=nm;markDirty();rebuildObjectsPanel();}return;}
+      if(act==='del'){pushHistory({type:'objects',data:snapObjects()});
+        project.objects=project.objects.filter(x=>x.id!==o.id);
+        if(selectedObj===o.id)selectedObj=null;
+        rebuildObjectsPanel();markDirty();requestRender();toast('Объект удалён','ok');return;}
+      selectedObj=o.id;rebuildObjectsPanel();requestRender();
+    });
+    list.appendChild(row);
+  });
+  body.appendChild(list);
+  buildPropsCard(body);
+}
+function buildPropsCard(body){
+  const o=project.objects.find(x=>x.id===selectedObj);
+  if(!o)return;
+  const p=propsAt(o,playhead);
+  const card=document.createElement('div');card.className='boxcard';card.id='propsCard';
+  card.innerHTML=`<h4 style="color:var(--mg)">${o.name} · ключи: ${o.keyframes.length}</h4>
+    <div class="props-grid">
+      <label class="f">X<input type="number" step="1" data-pr="x" value="${Math.round(p.x)}"></label>
+      <label class="f">Y<input type="number" step="1" data-pr="y" value="${Math.round(p.y)}"></label>
+      <label class="f">Масштаб X<input type="number" step="0.05" min="0.05" data-pr="sx" value="${(+p.sx.toFixed(2))}"></label>
+      <label class="f">Масштаб Y<input type="number" step="0.05" min="0.05" data-pr="sy" value="${(+p.sy.toFixed(2))}"></label>
+      <label class="f">Поворот °<input type="number" step="1" data-pr="rot" value="${Math.round(p.rot)}"></label>
+      <label class="f">Прозрачность<input type="number" step="0.05" min="0" max="1" data-pr="opacity" value="${(+p.opacity.toFixed(2))}"></label>
+    </div>
+    <div class="props-grid">
+      <label class="f">Цвет заливки<input type="color" data-pr="color" value="${p.color}"></label>
+      <label class="f">Сглаживание
+        <select data-pr="easing">
+          ${Object.keys(easings).map(k=>`<option value="${k}" ${o.easing===k?'selected':''}>${{linear:'Линейно',easeIn:'Разгон',easeOut:'Торможение',easeInOut:'Плавно'}[k]}</option>`).join('')}
+        </select></label>
+    </div>
+    <div class="btnrow">
+      <button class="sbtn mg" id="addKeyBtn">${ic('key',13)} Ключ на кадре ${Math.floor(playhead)+1}</button>
+      <button class="sbtn rd" id="delKeyBtn">${ic('trash',13)} Ключ</button>
+    </div>
+    <h4>Ключевые кадры</h4>
+    <div class="kchips" id="kchips"></div>`;
+  card.querySelectorAll('[data-pr]').forEach(inp=>{
+    inp.addEventListener('change',()=>{
+      const t=Math.floor(playhead);
+      pushHistory({type:'objects',data:snapObjects()});
+      const k=ensureKeyAt(o,t),pr=inp.dataset.pr;
+      if(pr==='easing')o.easing=inp.value;
+      else if(pr==='color')k.color=inp.value;
+      else k[pr]=parseFloat(inp.value)||0;
+      markDirty();requestRender();rebuildKeyChips();
+    });
+  });
+  card.querySelector('#addKeyBtn').addEventListener('click',()=>{
+    pushHistory({type:'objects',data:snapObjects()});
+    const t=Math.floor(playhead),cur=propsAt(o,t);
+    const ex=o.keyframes.find(k=>k.t===t);
+    if(ex)Object.assign(ex,{x:cur.x,y:cur.y,sx:cur.sx,sy:cur.sy,rot:cur.rot,opacity:cur.opacity,color:cur.color});
+    else o.keyframes.push({t,...cur});
+    o.keyframes.sort((a,b)=>a.t-b.t);selectedKeyT=t;
+    markDirty();requestRender();rebuildKeyChips();toast('Ключевой кадр добавлен','ok');
+  });
+  card.querySelector('#delKeyBtn').addEventListener('click',()=>{
+    const t=selectedKeyT??Math.floor(playhead);
+    const idx=o.keyframes.findIndex(k=>k.t===t);
+    if(idx<0){toast('На этом кадре нет ключа','warn');return;}
+    pushHistory({type:'objects',data:snapObjects()});
+    o.keyframes.splice(idx,1);selectedKeyT=null;
+    markDirty();requestRender();rebuildKeyChips();
+  });
+  body.appendChild(card);
+  rebuildKeyChips();
+}
+function rebuildKeyChips(){
+  const box=$('#kchips');if(!box)return;
+  const o=project.objects.find(x=>x.id===selectedObj);
+  if(!o){box.innerHTML='';return;}
+  box.innerHTML='';
+  if(!o.keyframes.length){box.innerHTML='<span style="font-size:11px;color:var(--tx3)">нет ключей</span>';return;}
+  o.keyframes.forEach(k=>{
+    const ch=document.createElement('span');
+    ch.className='kchip'+((selectedKeyT===k.t||Math.floor(playhead)===k.t)?' now':'');
+    ch.innerHTML=`к.${k.t+1}<b title="Удалить ключ">✕</b>`;
+    ch.addEventListener('click',e=>{
+      if(e.target.tagName==='B'){
+        pushHistory({type:'objects',data:snapObjects()});
+        o.keyframes=o.keyframes.filter(x=>x!==k);markDirty();requestRender();rebuildKeyChips();return;
+      }
+      playhead=k.t;selectedKeyT=k.t;
+      updatePlayheadUI();requestRender();rebuildKeyChips();syncPropsPanel();
+    });
+    box.appendChild(ch);
+  });
+}
+function syncPropsPanel(){
+  const o=project.objects.find(x=>x.id===selectedObj);
+  const card=$('#propsCard');
+  if(!o||!card)return;
+  const p=propsAt(o,playhead);
+  const map={x:Math.round(p.x),y:Math.round(p.y),sx:+p.sx.toFixed(2),sy:+p.sy.toFixed(2),rot:Math.round(p.rot),opacity:+p.opacity.toFixed(2)};
+  card.querySelectorAll('[data-pr]').forEach(inp=>{
+    const pr=inp.dataset.pr;
+    if(document.activeElement===inp)return;
+    if(pr==='color')inp.value=p.color;
+    else if(pr==='easing'){/* keep */}
+    else if(map[pr]!==undefined)inp.value=map[pr];
+  });
+  const ak=$('#addKeyBtn');if(ak)ak.innerHTML=`${ic('key',13)} Ключ на кадре ${Math.floor(playhead)+1}`;
+}
+
+/* ============================================================ panels: settings */
+function rebuildSettingsPanel(){
+  const b=$('#setBody');
+  b.innerHTML=`
+  <div class="boxcard"><h4>Параметры проекта</h4>
+    <label class="f">Название<input id="pName" value="${project.name}"></label>
+    <div class="props-grid">
+      <label class="f">Ширина<input type="number" id="pW" min="16" max="4096" value="${project.width}"></label>
+      <label class="f">Высота<input type="number" id="pH" min="16" max="4096" value="${project.height}"></label>
+      <label class="f">FPS<input type="number" id="pFps" min="1" max="120" value="${project.fps}"></label>
+      <label class="f">Длительность (кадры)<input type="number" id="pLen" min="2" max="2000" value="${project.paramLen}"></label>
+    </div>
+    <label class="f">Фон холста<input type="color" id="pBg" value="${project.bg}"></label>
+    <button class="sbtn" id="applyProj">${ic('save',13)} Применить</button>
+  </div>
+  <div class="boxcard"><h4>Действия</h4>
+    <div class="btnrow">
+      ${project.mode==='param'?`<button class="sbtn mg" id="rastBtn">${ic('wand',13)} Растеризовать в кадры</button>`:''}
+      <button class="sbtn rd" id="clearAllBtn">${ic('trash',13)} Очистить все кадры</button>
+    </div>
+  </div>`;
+  b.querySelector('#applyProj').addEventListener('click',()=>{
+    commitFrameSilent();
+    project.name=$('#pName').value.trim()||'Без названия';
+    const nw=clamp(parseInt($('#pW').value)||960,16,4096),nh=clamp(parseInt($('#pH').value)||540,16,4096);
+    project.fps=clamp(parseInt($('#pFps').value)||12,1,120);
+    project.paramLen=clamp(parseInt($('#pLen').value)||60,2,2000);
+    project.bg=$('#pBg').value;
+    if(nw!==project.width||nh!==project.height){
+      project.width=nw;project.height=nh;
+      for(const[id,c]of cache){const nc=document.createElement('canvas');nc.width=nw;nc.height=nh;nc.getContext('2d').drawImage(c,0,0);cache.set(id,nc);}
+    }
+    $('#projName').value=project.name;
+    rebuildFramesPanel();setFit('all');markDirty();requestRender();updatePlayheadUI();
+    toast('Параметры проекта применены','ok');
+  });
+  b.querySelector('#clearAllBtn').addEventListener('click',async()=>{
+    const ok=await confirmModal('Очистить все кадры?','Все рисунки покадровой анимации будут удалены. Действие можно отменить (Ctrl+Z).','Очистить');
+    if(!ok)return;
+    commitFrameSilent();
+    pushHistory(snapFrames());
+    for(const fr of project.frames){const c=getFrameCanvas(fr);c.getContext('2d').clearRect(0,0,c.width,c.height);fr.data=null;}
+    rebuildFramesPanel();markDirty();requestRender();
+  });
+  const rb=b.querySelector('#rastBtn');
+  if(rb)rb.addEventListener('click',openRasterizeModal);
+}
+
+/* ============================================================ toolbar build */
+function buildToolbar(){
+  const tb=$('#toolbar');
+  tb.innerHTML=`
+  <div class="tgroup">
+    <div class="seg" id="modeSeg">
+      <button data-mode="frames" class="on">КАДРЫ</button>
+      <button data-mode="param" class="alt">ПАРАМЕТРИКА</button>
+    </div>
+  </div>
+  <div class="tsep"></div>
+  <div class="tgroup" id="toolGroup">
+    <button class="ibtn" data-tool="brush" title="Кисть (B)">${ic('pen')}</button>
+    <button class="ibtn" data-tool="eraser" title="Ластик (E)">${ic('eraser')}</button>
+    <button class="ibtn" data-tool="line" title="Линия (L)">${ic('line')}</button>
+    <button class="ibtn" data-tool="rect" title="Прямоугольник (R)">${ic('rect')}</button>
+    <button class="ibtn" data-tool="ellipse" title="Эллипс (O)">${ic('circle')}</button>
+    <button class="ibtn" data-tool="tri" title="Треугольник">${ic('tri')}</button>
+    <button class="ibtn" data-tool="star" title="Звезда">${ic('star')}</button>
+    <button class="ibtn" data-tool="fill" title="Заливка (G)">${ic('bucket')}</button>
+    <button class="ibtn" data-tool="pipette" title="Пипетка (I)">${ic('pipette')}</button>
+    <button class="ibtn" data-tool="select" title="Выбор / трансформация (V)">${ic('cursor')}</button>
+    <button class="ibtn" data-tool="hand" title="Рука (H / Пробел)">${ic('hand')}</button>
+  </div>
+  <div class="tsep"></div>
+  <div class="tgroup">
+    <div id="colorSwatch" title="Цвет"></div>
+    <div class="slider-wrap" title="Размер кисти"><input type="range" id="sizeR" min="1" max="120" value="${brushSize}" style="width:80px"><span class="sv" id="sizeV">${brushSize}</span></div>
+    <div class="slider-wrap" title="Непрозрачность"><input type="range" id="opR" min="5" max="100" value="100" style="width:70px"><span class="sv" id="opV">100%</span></div>
+  </div>
+  <div class="tsep"></div>
+  <div class="tgroup">
+    <button class="ibtn" id="tUndo" title="Отменить (Ctrl+Z)">${ic('undo')}</button>
+    <button class="ibtn" id="tRedo" title="Вернуть (Ctrl+Y)">${ic('redo')}</button>
+  </div>
+  <div class="tspacer"></div>
+  <div class="tgroup">
+    <button class="ibtn" id="tPrev" title="Предыдущий кадр (←)">${ic('prev')}</button>
+    <button class="ibtn" id="tPlay" title="Пуск / пауза (K)" style="width:40px">${ic('play',19)}</button>
+    <button class="ibtn" id="tNext" title="Следующий кадр (→)">${ic('next')}</button>
+    <button class="ibtn" id="tLoop" title="Зациклить">${ic('loop')}</button>
+    <input id="fpsInput" type="number" min="1" max="120" title="Кадров в секунду" value="12">
+  </div>
+  <div class="tsep"></div>
+  <div class="tgroup">
+    <button class="ibtn" id="tOnion" title="Калька: соседние кадры (M)">${ic('layers')}</button>
+    <button class="ibtn" id="tFit" title="Масштабирование / вписывание">${ic('fit')}</button>
+    <button class="ibtn" id="tZout" title="Отдалить (−)">${ic('zout')}</button>
+    <span id="zoomLbl" title="Клик — 100%">100%</span>
+    <button class="ibtn" id="tZin" title="Приблизить (+)">${ic('zin')}</button>
+    <button class="ibtn" id="tFull" title="Во весь экран">${ic('expand')}</button>
+  </div>`;
+  $$('#toolGroup .ibtn').forEach(b=>b.addEventListener('click',()=>setTool(b.dataset.tool)));
+  $('#modeSeg').addEventListener('click',e=>{const m=e.target.dataset.mode;if(m)setMode(m);});
+  $('#colorSwatch').addEventListener('click',openColorModal);
+  updateColorSwatch();
+  $('#sizeR').addEventListener('input',e=>{brushSize=+e.target.value;$('#sizeV').textContent=brushSize;});
+  $('#opR').addEventListener('input',e=>{brushOpacity=+e.target.value/100;$('#opV').textContent=e.target.value+'%';});
+  $('#tUndo').addEventListener('click',doUndo);
+  $('#tRedo').addEventListener('click',doRedo);
+  $('#tPrev').addEventListener('click',()=>{if(playing)setPlaying(false);
+    if(project.mode==='frames')setFrameIndex(frameIndex-1);else{playhead=Math.max(0,Math.floor(playhead)-1);updatePlayheadUI();syncPropsPanel();requestRender();}});
+  $('#tNext').addEventListener('click',()=>{if(playing)setPlaying(false);
+    if(project.mode==='frames')setFrameIndex(frameIndex+1);else{playhead=Math.min(totalFrames()-1,Math.floor(playhead)+1);updatePlayheadUI();syncPropsPanel();requestRender();}});
+  $('#tPlay').addEventListener('click',()=>setPlaying(!playing));
+  $('#tLoop').addEventListener('click',()=>{loopOn=!loopOn;$('#tLoop').classList.toggle('on',loopOn);});
+  $('#tLoop').classList.add('on');
+  $('#fpsInput').addEventListener('change',e=>{project.fps=clamp(+e.target.value||12,1,120);e.target.value=project.fps;$('#stFps').textContent=project.fps+' fps';markDirty();});
+  $('#tOnion').addEventListener('click',()=>{onionOn=!onionOn;$('#tOnion').classList.toggle('on',onionOn);requestRender();});
+  $('#tOnion').classList.add('on');
+  $('#tZin').addEventListener('click',()=>{const r=viewCanvas.getBoundingClientRect();zoomAt({x:r.width/2,y:r.height/2},1.25);});
+  $('#tZout').addEventListener('click',()=>{const r=viewCanvas.getBoundingClientRect();zoomAt({x:r.width/2,y:r.height/2},0.8);});
+  $('#zoomLbl').addEventListener('click',()=>setFit('100'));
+  $('#stZoom').addEventListener('click',()=>setFit('100'));
+  $('#tFit').addEventListener('click',e=>openMenu(e.currentTarget,[
+    {icon:'fit',label:'Вписать всё',key:'0',fn:()=>setFit('all')},
+    {icon:'fit',label:'По ширине',key:'2',fn:()=>setFit('width')},
+    {icon:'fit',label:'По высоте',key:'3',fn:()=>setFit('height')},
+    {icon:'expand',label:'Заполнить',fn:()=>setFit('fill')},
+    {sep:true},
+    {icon:'zin',label:'Масштаб 100%',key:'1',fn:()=>setFit('100')},
+  ]));
+  $('#tFull').addEventListener('click',()=>{
+    const el=$('#main');
+    if(document.fullscreenElement)document.exitFullscreen();
+    else el.requestFullscreen?.().catch(()=>{});
+  });
+  setTool('brush');updateHistBtns();
+}
+function updateColorSwatch(){
+  const sw=$('#colorSwatch');
+  sw.style.background=`radial-gradient(circle at 35% 35%, #ffffff44, transparent 60%), ${brushColor}`;
+  sw.style.boxShadow=`0 0 10px ${brushColor}66`;
+}
+function setMode(m){
+  if(!project||project.mode===m)return;
+  commitFrameSilent();
+  project.mode=m;
+  $$('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===m));
+  selectTab(m==='param'?'objects':'frames');
+  $('#stMode').textContent=m==='param'?'ПАРАМЕТРИКА':'КАДРЫ';
+  $('#stMode').classList.toggle('param',m==='param');
+  setTool(m==='param'?'select':'brush');
+  if(m==='param'&&!project.objects.length)toast('Создайте фигуру инструментом на панели сверху','info');
+  playhead=clamp(playhead,0,totalFrames()-1);
+  if(m==='frames')frameIndex=clamp(Math.floor(playhead),0,project.frames.length-1);
+  rebuildSettingsPanel();updatePlayheadUI();markDirty();requestRender();
+}
+
+/* ============================================================ sidebar */
+function buildSidebar(){
+  const tabs=$('#sideTabs');
+  tabs.innerHTML=`<button data-tab="frames" class="on">${ic('film',14)} Кадры</button>
+    <button data-tab="objects">${ic('star',14)} Объекты</button>
+    <button data-tab="settings">${ic('gear',14)} Проект</button>`;
+  tabs.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)selectTab(b.dataset.tab);});
+  const sa=$('#shapeAdd');
+  sa.innerHTML=[['ellipse','circle','Эллипс'],['rect','rect','Квадрат'],['star','star','Звезда'],['tri','tri','Треугольник']]
+    .map(([t,i,tt])=>`<button class="ibtn" style="width:28px;height:28px" data-shape="${t}" title="Добавить: ${tt}">${ic(i,15)}</button>`).join('');
+  sa.addEventListener('click',e=>{
+    const b=e.target.closest('[data-shape]');if(!b||!project)return;
+    pushHistory({type:'objects',data:snapObjects()});
+    const type=b.dataset.shape;
+    const ob={id:uid(),name:`Объект ${project.objects.length+1}`,type,w:110,h:110,
+      color:NEON[project.objects.length%NEON.length],stroke:'#fff',strokeW:0,visible:true,easing:'easeInOut',keyframes:[]};
+    ob.keyframes=[{t:Math.floor(playhead),x:project.width/2,y:project.height/2,sx:1,sy:1,rot:0,opacity:1,color:ob.color}];
+    project.objects.push(ob);selectedObj=ob.id;setMode('param');
+    rebuildObjectsPanel();markDirty();requestRender();
+  });
+  $('#fAdd').innerHTML=ic('plus',15);$('#fDup').innerHTML=ic('copy',15);$('#fDel').innerHTML=ic('trash',15);
+  $('#fAdd').addEventListener('click',()=>{if(project.mode!=='frames'){toast('Доступно в покадровом режиме','warn');return;}addFrame();});
+  $('#fDup').addEventListener('click',()=>{if(project.mode!=='frames'){toast('Доступно в покадровом режиме','warn');return;}duplicateFrame(frameIndex);});
+  $('#fDel').addEventListener('click',()=>{if(project.mode!=='frames'){toast('Доступно в покадровом режиме','warn');return;}deleteFrame(frameIndex);});
+  $('#btnSide').innerHTML=ic('burger',18);
+  $('#btnSide').addEventListener('click',toggleSidebar);
+  $('#sideBackdrop').addEventListener('click',toggleSidebar);
+}
+function toggleSidebar(){
+  const sb=$('#sidebar');
+  if(innerWidth<=960){sb.classList.toggle('open');$('#sideBackdrop').classList.toggle('on');}
+  else sb.classList.toggle('collapsed');
+}
+function selectTab(t){
+  $$('#sideTabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  $$('.spanel').forEach(p=>p.classList.remove('on'));
+  $('#panel'+t[0].toUpperCase()+t.slice(1)).classList.add('on');
+  if(t==='settings')rebuildSettingsPanel();
+  if(t==='objects')rebuildObjectsPanel();
+}
+
+/* ============================================================ menus */
+let openMenuEl=null;
+function closeMenus(){if(openMenuEl){openMenuEl.remove();openMenuEl=null;}$$('.mbtn.open').forEach(b=>b.classList.remove('open'));}
+function openMenu(anchor,items){
+  closeMenus();
+  const m=document.createElement('div');m.className='dmenu';
+  items.forEach(it=>{
+    if(it.sep){const s=document.createElement('div');s.className='dmsep';m.appendChild(s);return;}
+    const b=document.createElement('button');b.className='dmi'+(it.danger?' danger':'');
+    b.disabled=!!it.disabled;
+    b.innerHTML=`${it.icon?ic(it.icon,15):'<span style="width:15px"></span>'}<span>${it.label}</span>${it.checked?'<span class="chk">✓</span>':''}${it.key?`<span class="k">${it.key}</span>`:''}`;
+    b.addEventListener('click',()=>{closeMenus();it.fn&&it.fn();});
+    m.appendChild(b);
+  });
+  document.body.appendChild(m);
+  const r=anchor.getBoundingClientRect(),mw=m.offsetWidth,mh=m.offsetHeight;
+  const left=clamp(r.left,8,innerWidth-mw-8);
+  let top=r.bottom+6;if(top+mh>innerHeight-8)top=r.top-mh-6;
+  m.style.left=left+'px';m.style.top=top+'px';
+  openMenuEl=m;anchor.classList.add('open');
+}
+document.addEventListener('pointerdown',e=>{if(openMenuEl&&!openMenuEl.contains(e.target)&&!e.target.closest('.mbtn')&&!e.target.closest('#tFit'))closeMenus();},true);
+function buildMenus(){
+  const bar=$('#menuBar');
+  const menus={
+    'Файл':()=>[
+      {icon:'plus',label:'Новый проект…',fn:openNewProjectModal},
+      {icon:'folder',label:'Открыть…',key:'Ctrl+O',fn:openProjectsModal},
+      {icon:'save',label:'Сохранить',key:'Ctrl+S',fn:()=>{saveProject();toast('Проект сохранён','ok');}},
+      {sep:true},
+      {icon:'ul',label:'Импорт проекта…',fn:()=>$('#fileInput').click()},
+      {icon:'dl',label:'Экспорт…',key:'Ctrl+E',fn:openExportModal},
+    ],
+    'Правка':()=>[
+      {icon:'undo',label:'Отменить',key:'Ctrl+Z',disabled:!undoStack.length,fn:doUndo},
+      {icon:'redo',label:'Вернуть',key:'Ctrl+Y',disabled:!redoStack.length,fn:doRedo},
+      {sep:true},
+      {icon:'copy',label:'Дублировать кадр',key:'Ctrl+D',disabled:project?.mode!=='frames',fn:()=>duplicateFrame(frameIndex)},
+      {icon:'plus',label:'Добавить кадр',disabled:project?.mode!=='frames',fn:addFrame},
+      {icon:'trash',label:'Удалить кадр',danger:true,disabled:project?.mode!=='frames',fn:()=>deleteFrame(frameIndex)},
+      {sep:true},
+      {icon:'key',label:'Добавить ключ (объект)',disabled:project?.mode!=='param'||!selectedObj,fn:()=>$('#addKeyBtn')?.click()},
+    ],
+    'Вид':()=>[
+      {icon:'zin',label:'Приблизить',key:'+',fn:()=>$('#tZin').click()},
+      {icon:'zout',label:'Отдалить',key:'−',fn:()=>$('#tZout').click()},
+      {sep:true},
+      {icon:'fit',label:'Вписать всё',key:'0',fn:()=>setFit('all')},
+      {icon:'fit',label:'По ширине',key:'2',fn:()=>setFit('width')},
+      {icon:'fit',label:'По высоте',key:'3',fn:()=>setFit('height')},
+      {icon:'expand',label:'Заполнить',fn:()=>setFit('fill')},
+      {icon:'fit',label:'Масштаб 100%',key:'1',fn:()=>setFit('100')},
+      {sep:true},
+      {icon:'layers',label:'Калька (луковая кожура)',key:'M',checked:onionOn,fn:()=>$('#tOnion').click()},
+      {icon:'film',label:'Боковая панель',fn:toggleSidebar},
+    ],
+    'Справка':()=>[
+      {icon:'doc',label:'Горячие клавиши',fn:openShortcutsModal},
+      {icon:'star',label:'О программе',fn:openAboutModal},
+    ],
+  };
+  bar.innerHTML='';
+  Object.keys(menus).forEach(name=>{
+    const b=document.createElement('button');b.className='mbtn';b.textContent=name;
+    b.addEventListener('click',e=>{e.stopPropagation();
+      if(b.classList.contains('open')){closeMenus();return;}
+      openMenu(b,menus[name]());});
+    bar.appendChild(b);
+  });
+}
+
+/* ============================================================ modals */
+function openModal({title,build,buttons=[],wide=false,persistent=false,onClose}){
+  const back=document.createElement('div');back.className='mback';
+  const win=document.createElement('div');win.className='modal'+(wide?' wide':'');
+  win.innerHTML=`<div class="mhead"><div class="mtitle">${title}</div>
+    <button class="ibtn mfull" title="На весь экран">${ic('expand',16)}</button>
+    <button class="ibtn mclose" title="Закрыть">${ic('x',16)}</button></div>
+    <div class="mbody"></div><div class="mfoot"></div>`;
+  back.appendChild(win);document.body.appendChild(back);
+  const body=win.querySelector('.mbody'),foot=win.querySelector('.mfoot');
+  const close=()=>{back.remove();document.removeEventListener('keydown',escH);onClose&&onClose();};
+  const escH=e=>{if(e.key==='Escape'&&!persistent)close();};
+  document.addEventListener('keydown',escH);
+  back.addEventListener('mousedown',e=>{if(e.target===back&&!persistent)close();});
+  const fullBtn=win.querySelector('.mfull');
+  fullBtn.addEventListener('click',()=>{
+    const full=win.classList.toggle('full');
+    fullBtn.innerHTML=ic(full?'shrink':'expand',16);
+  });
+  win.querySelector('.mclose').addEventListener('click',close);
+  buttons.forEach(bt=>{
+    const b=document.createElement('button');
+    b.className='tbtn '+(bt.type||'');b.textContent=bt.label;
+    b.addEventListener('click',()=>{if(bt.onClick)bt.onClick(close);else close();});
+    foot.appendChild(b);
+  });
+  if(!buttons.length)foot.style.display='none';
+  if(build)build(body);
+  return{close,body,win};
+}
+function confirmModal(title,text,okLabel='Подтвердить'){
+  return new Promise(res=>{
+    let done=false;const fin=v=>{if(!done){done=true;res(v);}};
+    openModal({title,onClose:()=>fin(false),
+      build:b=>{b.innerHTML=`<p style="color:var(--tx2);line-height:1.6">${text}</p>`;},
+      buttons:[{label:'Отмена',onClick:close=>{fin(false);close();}},
+        {label:okLabel,type:'danger',onClick:close=>{fin(true);close();}}]});
+  });
+}
+function openColorModal(){
+  openModal({title:'Цвет',build:b=>{
+    b.innerHTML=`<div class="prow" style="align-items:flex-end">
+        <label class="f" style="flex:0">Палитра<input type="color" id="mcPick" value="${brushColor}"></label>
+        <label class="f" style="flex:1">HEX<input id="mcHex" value="${brushColor}" spellcheck="false"></label>
+      </div>
+      <div class="preset-grid">${NEON.concat(['#ff8800','#00ff9d','#4d7cff','#ff0055','#c8ff00','#00b3ff']).map(c=>`<div data-c="${c}" style="background:${c};box-shadow:0 0 10px ${c}55"></div>`).join('')}</div>`;
+    const pick=b.querySelector('#mcPick'),hex=b.querySelector('#mcHex');
+    const apply=c=>{if(/^#[0-9a-fA-F]{6}$/.test(c)){brushColor=c;updateColorSwatch();pick.value=c;if(document.activeElement!==hex)hex.value=c;}};
+    pick.addEventListener('input',e=>apply(e.target.value));
+    hex.addEventListener('change',e=>apply(e.target.value.trim()));
+    b.querySelector('.preset-grid').addEventListener('click',e=>{const c=e.target.dataset.c;if(c)apply(c);});
+  },buttons:[{label:'Готово',type:'primary',onClick:c=>c()}]});
+}
+function openNewProjectModal(){
+  openModal({title:'Новый проект',build:b=>{
+    b.innerHTML=`<label class="f">Название<input id="npName" value="Новый проект" spellcheck="false"></label>
+    <div class="prow">
+      <label class="f">Ширина<input type="number" id="npW" value="960" min="16" max="4096"></label>
+      <label class="f">Высота<input type="number" id="npH" value="540" min="16" max="4096"></label>
+      <label class="f">FPS<input type="number" id="npFps" value="12" min="1" max="120"></label>
+    </div>
+    <label class="f">Пресеты
+      <select id="npPreset">
+        <option value="960x540">HD 16:9 — 960×540</option>
+        <option value="1280x720">720p — 1280×720</option>
+        <option value="1080x1080">Квадрат — 1080×1080</option>
+        <option value="720x1280">Вертикальный — 720×1280</option>
+        <option value="640x360">Мини — 640×360</option>
+      </select></label>
+    <label class="f">Режим анимации
+      <select id="npMode"><option value="frames">Покадровое рисование</option><option value="param">Параметрическая</option></select></label>`;
+    b.querySelector('#npPreset').addEventListener('change',e=>{
+      const[w,h]=e.target.value.split('x');b.querySelector('#npW').value=w;b.querySelector('#npH').value=h;});
+  },buttons:[
+    {label:'Отмена',onClick:c=>c()},
+    {label:'Создать',type:'primary',onClick:async close=>{
+      const p=newProjectData({
+        name:$('#npName').value.trim()||'Без названия',
+        width:clamp(+$('#npW').value||960,16,4096),height:clamp(+$('#npH').value||540,16,4096),
+        fps:clamp(+$('#npFps').value||12,1,120),mode:$('#npMode').value});
+      close();await loadProject(p,true);toast('Проект создан','ok');
+    }}]});
+}
+function openProjectsModal(){
+  const m=openModal({title:'Проекты · IndexedDB',wide:true,build:b=>{
+    b.innerHTML=`<div class="btnrow"><button class="sbtn" id="pmNew">${ic('plus',13)} Новый проект</button>
+      <button class="sbtn" id="pmImp">${ic('ul',13)} Импорт из файла</button></div>
+      <div id="pmList" style="display:flex;flex-direction:column;gap:8px"></div>`;
+    b.querySelector('#pmNew').addEventListener('click',()=>{m.close();openNewProjectModal();});
+    b.querySelector('#pmImp').addEventListener('click',()=>$('#fileInput').click());
+    refreshList();
+    async function refreshList(){
+      const list=b.querySelector('#pmList');list.innerHTML='<div class="empty-note">Загрузка…</div>';
+      let all=[];try{all=(await dbAll()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));}catch(e){}
+      if(!all.length){list.innerHTML='<div class="empty-note">Хранилище пусто. Создайте новый проект.</div>';return;}
+      list.innerHTML='';
+      all.forEach(p=>{
+        const row=document.createElement('div');row.className='proj-row';
+        const sz=(JSON.stringify(p).length/1024).toFixed(1);
+        const dt=p.updatedAt?new Date(p.updatedAt).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+        row.innerHTML=`${p.thumb?`<img src="${p.thumb}" alt="">`:'<img alt="">'}
+          <div class="pi"><div class="pn">${p.name}</div>
+          <div class="pm">${p.mode==='param'?'параметрика':'кадры'} · ${p.width}×${p.height} · ${p.fps}fps · ${sz} КБ · ${dt}</div></div>
+          <div class="ops">
+            <button class="ibtn" data-a="open" title="Открыть">${ic('folder',15)}</button>
+            <button class="ibtn" data-a="exp" title="Экспорт в файл">${ic('dl',15)}</button>
+            <button class="ibtn" data-a="dup" title="Дублировать">${ic('copy',15)}</button>
+            <button class="ibtn" data-a="del" title="Удалить">${ic('trash',15)}</button>
+          </div>`;
+        row.addEventListener('click',async e=>{
+          const a=e.target.closest('[data-a]')?.dataset.a;if(!a)return;
+          if(a==='open'){m.close();await loadProject(p,false);toast(`Открыт «${p.name}»`,'ok');}
+          else if(a==='exp'){exportProjectDoc(p);}
+          else if(a==='dup'){const c=JSON.parse(JSON.stringify(p));c.id=uid();c.name=p.name+' (копия)';c.updatedAt=Date.now();await dbPut(c);refreshList();}
+          else if(a==='del'){
+            const ok=await confirmModal('Удалить проект?',`«${p.name}» будет удалён из хранилища безвозвратно.`,'Удалить');
+            if(ok){await dbDel(p.id);refreshList();toast('Проект удалён','ok');}
+          }
+        });
+        list.appendChild(row);
+      });
+    }
+  }});
+}
+function openExportModal(){
+  openModal({title:'Экспорт',build:b=>{
+    b.innerHTML=`<div class="boxcard"><h4>Проект</h4>
+      <p style="color:var(--tx2);font-size:12px;line-height:1.55">JSON-файл со всеми кадрами, объектами и настройками. Его можно импортировать обратно.</p>
+      <button class="sbtn" id="exJson">${ic('dl',13)} Скачать проект (.json)</button></div>
+      <div class="boxcard"><h4>Спрайт-лист (PNG)</h4>
+      <label class="f">Кадров в строке<input type="number" id="exCols" value="4" min="1" max="32"></label>
+      <button class="sbtn" id="exSheet">${ic('image',13)} Скачать спрайт-лист</button></div>
+      <div class="boxcard"><h4>Текущий кадр</h4>
+      <button class="sbtn" id="exFrame">${ic('image',13)} Скачать PNG текущего кадра</button></div>`;
+    b.querySelector('#exJson').addEventListener('click',()=>exportProjectDoc(project));
+    b.querySelector('#exSheet').addEventListener('click',()=>{
+      if(project.mode==='param'){toast('В параметрическом режиме сначала выполните растеризацию (панель «Проект»)','warn');return;}
+      const cols=clamp(+$('#exCols').value||4,1,32);
+      const n=project.frames.length,W=project.width,H=project.height;
+      const rows=Math.ceil(n/cols);
+      if(W*cols>8192||H*rows>8192){toast('Слишком большой спрайт-лист','err');return;}
+      commitFrameSilent();
+      const c=document.createElement('canvas');c.width=W*cols;c.height=H*rows;
+      const ctx=c.getContext('2d');ctx.fillStyle=project.bg;ctx.fillRect(0,0,c.width,c.height);
+      project.frames.forEach((fr,i)=>{const fc=cache.get(fr.id);if(fc)ctx.drawImage(fc,(i%cols)*W,Math.floor(i/cols)*H);});
+      c.toBlob(bl=>download(bl,project.name.replace(/\s+/g,'_')+'_sheet.png'));
+      toast('Спрайт-лист сохранён','ok');
+    });
+    b.querySelector('#exFrame').addEventListener('click',()=>{
+      const c=document.createElement('canvas');c.width=project.width;c.height=project.height;
+      const ctx=c.getContext('2d');ctx.fillStyle=project.bg;ctx.fillRect(0,0,c.width,c.height);
+      if(project.mode==='frames')ctx.drawImage(getFrameCanvas(curFrame()),0,0);
+      else drawObjectsAt(ctx,playhead);
+      c.toBlob(bl=>download(bl,project.name.replace(/\s+/g,'_')+'_frame.png'));
+      toast('Кадр сохранён','ok');
+    });
+  },buttons:[{label:'Закрыть',onClick:c=>c()}]});
+}
+function exportProjectDoc(p){
+  commitFrameSilent();
+  const doc=JSON.parse(JSON.stringify(p));delete doc.thumb;doc.app='neonframes';doc.exportedAt=new Date().toISOString();
+  download(new Blob([JSON.stringify(doc)],{type:'application/json'}),(p.name.replace(/\s+/g,'_')||'project')+'.neonframes.json');
+  toast('Проект экспортирован','ok');
+}
+function openShortcutsModal(){
+  const rows=[
+    ['B / E / L / R / O','Кисть · Ластик · Линия · Прямоугольник · Эллипс'],
+    ['G / I / H / V','Заливка · Пипетка · Рука · Выбор'],
+    ['Пробел / ПКМ','Временное перемещение холста'],
+    ['Колесо мыши','Масштаб к курсору'],
+    ['← →','Предыдущий / следующий кадр'],
+    ['K','Пуск / пауза'],['M','Калька (луковая кожура)'],
+    ['Ctrl+Z / Ctrl+Y','Отменить / вернуть'],['Ctrl+D','Дублировать кадр'],
+    ['Ctrl+S','Сохранить'],['Ctrl+E','Экспорт'],['Ctrl+O','Проекты'],
+    ['+ − / 0 / 1 / 2 / 3','Зум · Вписать · 100% · По ширине · По высоте'],
+    ['Shift + фигура','Квадрат / круг / угол 45°'],
+    ['Уголки выделения','Масштаб объекта (Shift — равномерно)'],
+    ['Ручка над объектом','Поворот (Shift — шаг 15°)'],
+  ];
+  openModal({title:'Горячие клавиши',build:b=>{
+    b.innerHTML=`<div class="kbd-table">${rows.map(([k,d])=>`<span><kbd>${k}</kbd></span><span style="color:var(--tx2)">${d}</span>`).join('')}</div>`;
+  },buttons:[{label:'Закрыть',onClick:c=>c()}]});
+}
+function openAboutModal(){
+  openModal({title:'О программе',build:b=>{
+    b.innerHTML=`<div style="text-align:center;padding:10px 0">
+      <div style="font-family:'Orbitron','Manrope',sans-serif;font-weight:800;font-size:26px;letter-spacing:3px;color:#fff;text-shadow:0 0 14px var(--cy),0 0 40px rgba(0,229,255,.5)">NEON<b style="color:var(--mg);text-shadow:0 0 14px var(--mg)">FRAMES</b></div>
+      <p style="color:var(--tx3);margin-top:6px;font-size:12px">студия анимации · версия 1.1</p></div>
+      <p style="color:var(--tx2);line-height:1.7;font-size:12.5px">Покадровая рисованная и параметрическая keyframe-анимация в одном флаконе. Проекты хранятся локально в IndexedDB вашего браузера и экспортируются в JSON. Тёмная тема, неоновая подсветка, холст с зумом и панорамированием, адаптивный интерфейс.</p>
+      <div class="kchips" style="justify-content:center"><span class="kchip">Canvas 2D</span><span class="kchip">IndexedDB</span><span class="kchip">0 зависимостей</span></div>`;
+  },buttons:[{label:'Отлично',type:'primary',onClick:c=>c()}]});
+}
+function openRasterizeModal(){
+  openModal({title:'Растеризация в кадры',build:b=>{
+    b.innerHTML=`<p style="color:var(--tx2);font-size:12.5px;line-height:1.6">Параметрическая анимация будет отрисована в последовательность растровых кадров. Режим переключится на покадровый. Объекты сохранятся.</p>
+      <label class="f">Число кадров (длительность)<input type="number" id="rzN" value="${project.paramLen}" min="2" max="1000"></label>
+      <div class="prog-wrap" id="rzWrap" style="display:none"><div class="prog-bar" id="rzBar"></div></div>
+      <p id="rzStat" style="font-family:'JetBrains Mono';font-size:11px;color:var(--tx3)"></p>`;
+  },buttons:[{label:'Отмена',onClick:c=>c()},
+    {label:'Растеризовать',type:'primary',onClick:(close)=>{
+      const n=clamp(+$('#rzN').value||project.paramLen,2,1000);
+      $('#rzWrap').style.display='block';
+      const bar=$('#rzBar'),stat=$('#rzStat');
+      const frames=[];let i=0;
+      function step(){
+        const t0=performance.now();
+        while(i<n&&performance.now()-t0<40){
+          const c=document.createElement('canvas');c.width=project.width;c.height=project.height;
+          const ctx=c.getContext('2d');ctx.fillStyle=project.bg;ctx.fillRect(0,0,c.width,c.height);
+          drawObjectsAt(ctx,i);
+          frames.push({id:uid(),duration:1,data:c.toDataURL('image/png')});
+          i++;bar.style.width=(i/n*100)+'%';stat.textContent=`кадр ${i} / ${n}`;
+        }
+        if(i<n){requestAnimationFrame(step);return;}
+        project.frames=frames;cache=new Map();
+        project.frames.forEach(fr=>getFrameCanvas(fr));
+        project.mode='frames';frameIndex=0;playhead=0;
+        $$('#modeSeg button').forEach(x=>x.classList.toggle('on',x.dataset.mode==='frames'));
+        $('#stMode').textContent='КАДРЫ';$('#stMode').classList.remove('param');
+        setTool('brush');
+        rebuildFramesPanel();rebuildSettingsPanel();selectTab('frames');
+        setFit('all');markDirty();requestRender();updatePlayheadUI();close();
+        toast(`Растеризовано ${n} кадров`,'ok');
+      }
+      requestAnimationFrame(step);
+    }}]});
+}
+
+/* ============================================================ toast */
+function toast(msg,type='info'){
+  const t=document.createElement('div');t.className='toast '+type;
+  t.innerHTML=msg;
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),350);},2600);
+}
+
+/* ============================================================ project lifecycle */
+async function loadProject(p,fresh){
+  if(project){try{await saveProject();}catch(e){}}
+  const clean=JSON.parse(JSON.stringify(p));delete clean.thumb;
+  if(!Array.isArray(clean.frames)||!clean.frames.length)clean.frames=[{id:uid(),duration:1,data:null}];
+  if(!Array.isArray(clean.objects))clean.objects=[];
+  clean.paramLen=clean.paramLen||60;
+  project=clean;
+  await decodeFrames(project);
+  frameIndex=0;playhead=0;undoStack=[];redoStack=[];previewShape=null;dragSt=null;selectedObj=null;selectedKeyT=null;
+  if(playing)setPlaying(false);
+  $('#projName').value=project.name;
+  $('#fpsInput').value=project.fps;
+  $('#stFps').textContent=project.fps+' fps';
+  $$('#modeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.mode===project.mode));
+  $('#stMode').textContent=project.mode==='param'?'ПАРАМЕТРИКА':'КАДРЫ';
+  $('#stMode').classList.toggle('param',project.mode==='param');
+  setTool(project.mode==='param'?'select':'brush');
+  rebuildFramesPanel();rebuildObjectsPanel();rebuildSettingsPanel();
+  selectTab(project.mode==='param'?'objects':'frames');
+  updateHistBtns();updatePlayheadUI();updateColorSwatch();
+  setFit('all');
+  if(fresh){await saveProject();}else setSaveUI('saved');
+}
+
+/* ============================================================ topbar buttons */
+function buildTopbar(){
+  $('#btnProjects').innerHTML=ic('folder',15)+'<span class="lbl">Проекты</span>';
+  $('#btnImport').innerHTML=ic('ul',15)+'<span class="lbl">Импорт</span>';
+  $('#btnExport').innerHTML=ic('dl',15)+'<span class="lbl">Экспорт</span>';
+  $('#btnSave').innerHTML=ic('save',15)+'<span class="lbl">Сохранить</span>';
+  $('#btnProjects').addEventListener('click',openProjectsModal);
+  $('#btnImport').addEventListener('click',()=>$('#fileInput').click());
+  $('#btnExport').addEventListener('click',openExportModal);
+  $('#btnSave').addEventListener('click',async()=>{await saveProject();toast('Проект сохранён в IndexedDB','ok');});
+  $('#projName').addEventListener('change',e=>{project.name=e.target.value.trim()||'Без названия';e.target.value=project.name;markDirty();});
+  $('#fileInput').addEventListener('change',async e=>{
+    const f=e.target.files[0];if(!f)return;
+    try{
+      const doc=JSON.parse(await f.text());
+      if(typeof doc.width!=='number'||!Array.isArray(doc.frames))throw new Error('неверный формат файла проекта');
+      if(!Array.isArray(doc.objects))doc.objects=[];
+      doc.id=uid();doc.updatedAt=Date.now();
+      await loadProject(doc,true);
+      toast(`Импортирован «${doc.name}»`,'ok');
+    }catch(err){toast('Ошибка импорта: '+err.message,'err');}
+    e.target.value='';
+  });
+}
+
+/* ============================================================ keyboard */
+document.addEventListener('keydown',e=>{
+  const tag=e.target.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||e.target.isContentEditable){
+    if(e.key==='Escape')e.target.blur();
+    return;
+  }
+  const mod=e.ctrlKey||e.metaKey;
+  if(mod){
+    const k=e.key.toLowerCase();
+    if(k==='z'){e.preventDefault();e.shiftKey?doRedo():doUndo();return;}
+    if(k==='y'){e.preventDefault();doRedo();return;}
+    if(k==='s'){e.preventDefault();saveProject();toast('Сохранено','ok');return;}
+    if(k==='e'){e.preventDefault();openExportModal();return;}
+    if(k==='o'){e.preventDefault();openProjectsModal();return;}
+    if(k==='d'){e.preventDefault();if(project&&project.mode==='frames')duplicateFrame(frameIndex);return;}
+    return;
+  }
+  if(e.key==='Escape'){closeMenus();return;}
+  if(e.code==='Space'){if(!spaceHeld){spaceHeld=true;viewCanvas.style.cursor='grab';}e.preventDefault();return;}
+  const km={KeyB:'brush',KeyE:'eraser',KeyL:'line',KeyR:'rect',KeyO:'ellipse',KeyG:'fill',KeyI:'pipette',KeyH:'hand',KeyV:'select'};
+  if(km[e.code]){setTool(km[e.code]);return;}
+  if(e.key==='ArrowLeft'){if(playing)setPlaying(false);
+    if(project.mode==='frames')setFrameIndex(frameIndex-1);else{playhead=Math.max(0,Math.floor(playhead)-1);updatePlayheadUI();syncPropsPanel();requestRender();}return;}
+  if(e.key==='ArrowRight'){if(playing)setPlaying(false);
+    if(project.mode==='frames')setFrameIndex(frameIndex+1);else{playhead=Math.min(totalFrames()-1,Math.floor(playhead)+1);updatePlayheadUI();syncPropsPanel();requestRender();}return;}
+  if(e.key==='k'||e.key==='K'){setPlaying(!playing);return;}
+  if(e.key==='m'||e.key==='M'){$('#tOnion').click();return;}
+  if(e.key==='+'||e.key==='='){$('#tZin').click();return;}
+  if(e.key==='-'){$('#tZout').click();return;}
+  if(e.key==='0'){setFit('all');return;}
+  if(e.key==='1'){setFit('100');return;}
+  if(e.key==='2'){setFit('width');return;}
+  if(e.key==='3'){setFit('height');return;}
+  if(e.key==='Delete'&&selectedObj&&project.mode==='param'){
+    pushHistory({type:'objects',data:snapObjects()});
+    if(selectedKeyT!==null){const o=project.objects.find(x=>x.id===selectedObj);
+      if(o){o.keyframes=o.keyframes.filter(k=>k.t!==selectedKeyT);selectedKeyT=null;}}
+    else{project.objects=project.objects.filter(o=>o.id!==selectedObj);selectedObj=null;}
+    rebuildObjectsPanel();markDirty();requestRender();return;
+  }
+});
+document.addEventListener('keyup',e=>{if(e.code==='Space'){spaceHeld=false;viewCanvas.style.cursor=tool==='hand'?'grab':'crosshair';}});
+
+/* ============================================================ resize & boot */
+new ResizeObserver(()=>requestRender()).observe($('#viewportWrap'));
+window.addEventListener('resize',()=>{
+  if(innerWidth>960){$('#sidebar').classList.remove('open');$('#sideBackdrop').classList.remove('on');}
+  requestRender();
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&project)saveProject().catch(()=>{});});
+window.addEventListener('beforeunload',()=>{try{commitFrameSilent();project.updatedAt=Date.now();const doc=JSON.parse(JSON.stringify(project));dbPut(doc).catch(()=>{});}catch(e){}});
+
+async function boot(){
+  buildTopbar();buildMenus();buildToolbar();buildSidebar();
+  $('#stPos').textContent='X — · Y —';
+  let first=false;
+  try{
+    const all=(await dbAll()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+    if(all.length)await loadProject(all[0],false);
+    else{first=true;await loadProject(demoProject(),true);}
+  }catch(e){
+    console.warn('IndexedDB недоступен, работаем в памяти',e);
+    await loadProject(demoProject(),false);
+    toast('Хранилище недоступно — проект живёт в памяти','warn');
+  }
+  updatePlayheadUI();
+  requestAnimationFrame(playTick);
+  requestRender();
+  setTimeout(()=>{$('#vpHint').style.opacity='0';},6000);
+  if(first)toast('Добро пожаловать! Это демо параметрической анимации — нажмите ▶','ok');
+}
+boot();
+</script>
+</body>
+</html>
