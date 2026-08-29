@@ -434,7 +434,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
     </div>
   </div>
   <div class="flex1"></div>
-  <button class="btn primary" data-cmd="gen3d" title="Создать 3D-сцену по фото (люминесценция или нейросеть)"><svg class="ic"><use href="#i-spark"/></svg><span class="lbl">Создать 3D</span></button>
+  <button class="btn primary" data-cmd="gen3d" title="Создать 3D-сцену по фото (яркость или нейросеть)"><svg class="ic"><use href="#i-spark"/></svg><span class="lbl">Создать 3D</span></button>
 </div>
 
 <!-- ================= MAIN ================= -->
@@ -499,15 +499,15 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
           <div class="ctl" style="margin-top:2px">
             <div class="ctl-top"><span>Модель ИИ</span></div>
             <select data-set="nnModel">
-              <option value="Xenova/depth-anything-small">Depth Anything Small · ≈47 МБ</option>
-              <option value="Xenova/depth-estimation">Intel DPT (MiDaS-стиль) · ≈54 МБ</option>
+              <option value="Xenova/depth-anything-small-hf">Depth Anything Small · ≈47 МБ · быстрая</option>
+              <option value="onnx-community/depth-anything-v2-small">Depth Anything V2 Small · ≈100 МБ · качество</option>
             </select>
           </div>
           <div class="nn-box">
             <div class="nn-row"><span class="nn-dot"></span><span class="nn-text">Модель не загружена</span></div>
             <div class="nn-bar"><div class="nn-fill"></div></div>
           </div>
-          <div class="nn-note">При первом запуске модель скачивается (≈45–55 МБ) и кэшируется браузером. Нейросеть предсказывает карту глубины по одному фото — без стереопары.</div>
+          <div class="nn-note">При первом запуске модель скачивается с huggingface.co и кэшируется браузером. Если выбранная модель недоступна, приложение автоматически попробует резервную.</div>
         </div>
 
         <div class="ctl">
@@ -642,8 +642,8 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
             <div class="ctl" style="margin-top:2px">
               <div class="ctl-top"><span>Модель ИИ</span></div>
               <select data-set="nnModel">
-                <option value="Xenova/depth-anything-small">Depth Anything Small</option>
-                <option value="Xenova/depth-estimation">Intel DPT</option>
+                <option value="Xenova/depth-anything-small-hf">Depth Anything Small</option>
+                <option value="onnx-community/depth-anything-v2-small">Depth Anything V2 Small</option>
               </select>
             </div>
             <div class="nn-box">
@@ -710,11 +710,11 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
           <p>Приложение строит карту глубины по 2D-фото и превращает её в рельефную 3D-поверхность (или облако точек) в реальном времени на WebGL. Доступны два метода:</p>
           <ul>
             <li><b style="color:var(--tx)">Яркость</b> — мгновенная эвристика: светлые пиксели считаются ближе;</li>
-            <li><b style="color:var(--cy)">Нейросеть</b> <span class="ai-tag">AI</span> — монокулярная оценка глубины моделями Depth Anything / DPT (transformers.js, ONNX + WebAssembly), работает прямо в браузере.</li>
+            <li><b style="color:var(--cy)">Нейросеть</b> <span class="ai-tag">AI</span> — монокулярная оценка глубины моделями Depth Anything v1/v2 (transformers.js, ONNX + WebAssembly/WebGPU), выполняется прямо в браузере.</li>
           </ul>
           <p style="margin-top:8px">Загрузите фото → выберите метод → нажмите <b style="color:var(--cy)">«Создать 3D»</b> → экспортируйте в PNG или OBJ.</p>
           <h3>Хранение</h3>
-          <p>Проекты — в IndexedDB браузера. Импорт/экспорт — файлы <b>.json</b>. Модель нейросети скачивается один раз и кэшируется (Cache API).</p>
+          <p>Проекты — в IndexedDB браузера. Импорт/экспорт — файлы <b>.json</b>. Модель нейросети скачивается один раз с huggingface.co и кэшируется (Cache API). Если модель недоступна, автоматически пробуется резервная.</p>
         </div>
         <div>
           <h3>Горячие клавиши</h3>
@@ -732,7 +732,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
       </div>
     </div>
     <div class="modal-foot">
-      <span>NeoDepth 3D · v1.1 · сборка 2026.08</span>
+      <span>NeoDepth 3D · v1.2 · сборка 2026.08</span>
       <span>Three.js · transformers.js · IndexedDB</span>
     </div>
   </div>
@@ -803,7 +803,7 @@ const idbPut=r=>idbReq(idbOpen(),'readwrite',s=>s.put(r));
 const idbDel=id=>idbReq(idbOpen(),'readwrite',s=>s.delete(id));
 
 /* ================= СОСТОЯНИЕ ================= */
-function defSettings(){return{depth:35,res:192,smooth:1,invert:false,mode:'mesh',wire:false,spin:true,depthSource:'luma',nnModel:'Xenova/depth-anything-small'};}
+function defSettings(){return{depth:35,res:192,smooth:1,invert:false,mode:'mesh',wire:false,spin:true,depthSource:'luma',nnModel:'Xenova/depth-anything-small-hf'};}
 const state={
   id:null,name:'Новый проект',createdAt:0,dirty:false,
   img:null,dataUrl:null,
@@ -814,39 +814,79 @@ const state={
 let sample=null,projCache=[];
 
 /* ================= НЕЙРОСЕТЬ (TRANSFORMERS.JS) ================= */
+/* ВАЖНО: используются репозитории с полным набором файлов (включая
+   preprocessor_config.json). Xenova/depth-anything-small БЕЗ суффикса
+   -hf не содержит пресессор и вызывает ошибку "Unauthorized access to file". */
+const NN_MODELS=[
+  'Xenova/depth-anything-small-hf',
+  'onnx-community/depth-anything-v2-small'
+];
 const nn={pipe:null,loading:null,model:'',cacheKey:null,depthMap:null,w:0,h:0};
 let nnHintShown=false;
 
-function nnSetStatus(text,mode){$$('.nn-text').forEach(e=>e.textContent=text);$$('.nn-dot').forEach(e=>e.className='nn-dot'+(mode?' '+mode:''));}
+function nnSetStatus(text,mode){
+  const t=String(text||'').slice(0,96);
+  $$('.nn-text').forEach(e=>e.textContent=t);
+  $$('.nn-dot').forEach(e=>e.className='nn-dot'+(mode?' '+mode:''));
+}
 function nnSetProgress(p){$$('.nn-fill').forEach(e=>e.style.width=(p==null?0:p)+'%');}
 function vlShow(){$('#v3d-loading').hidden=false;}
 function vlHide(){$('#v3d-loading').hidden=true;}
-
+function nnProgressFactory(files){
+  return (p)=>{
+    if(!p)return;
+    if(p.status==='progress'&&p.total){files[p.file]={loaded:p.loaded||0,total:p.total};}
+    if(p.status==='done'&&p.file&&files[p.file])files[p.file].loaded=files[p.file].total;
+    let L=0,T=0;for(const k in files){L+=files[k].loaded;T+=files[k].total;}
+    const pc=T>0?Math.min(100,Math.round(L/T*100)):0;
+    nnSetProgress(pc);
+    nnSetStatus(`Скачивание весов… ${pc}% · ${fmtBytes(L)} / ${fmtBytes(T)}`,'load');
+  };
+}
+async function nnLoadLib(){
+  try{
+    return await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3');
+  }catch(e1){
+    try{
+      return await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+    }catch(e2){
+      throw new Error('Не удалось загрузить библиотеку ИИ (transformers.js). Проверьте доступ в интернет.');
+    }
+  }
+}
 async function nnEnsure(model){
   if(nn.pipe&&nn.model===model)return nn.pipe;
-  if(nn.loading){await nn.loading;}
-  if(nn.pipe&&nn.model===model)return nn.pipe;
+  if(nn.loading){await nn.loading;if(nn.pipe&&nn.model===model)return nn.pipe;}
   nn.loading=(async()=>{
     nnSetStatus('Загрузка библиотеки ИИ…','load');nnSetProgress(2);
-    const mod=await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+    const mod=await nnLoadLib();
     if(mod.env)mod.env.allowLocalModels=false;
-    const files={};
-    const pipe=await mod.pipeline('depth-estimation',model,{
-      quantized:true,
-      progress_callback:(p)=>{
-        if(p&&p.status==='progress'&&p.total){files[p.file]={loaded:p.loaded||0,total:p.total};}
-        if(p&&p.status==='done'&&p.file&&files[p.file])files[p.file].loaded=files[p.file].total;
-        let L=0,T=0;for(const k in files){L+=files[k].loaded;T+=files[k].total;}
-        const pc=T>0?Math.min(100,Math.round(L/T*100)):0;
-        nnSetProgress(pc);
-        nnSetStatus(`Скачивание модели… ${pc}% · ${fmtBytes(L)} / ${fmtBytes(T)}`,'load');
+    /* цепочка кандидатов: выбранная модель, затем резервные */
+    const candidates=[model,...NN_MODELS.filter(m=>m!==model)];
+    let lastErr=null;
+    for(const cand of candidates){
+      const short=cand.split('/')[1];
+      try{
+        nnSetStatus('Инициализация модели '+short+'…','load');
+        const files={};
+        const pipe=await mod.pipeline('depth-estimation',cand,{
+          progress_callback:nnProgressFactory(files)
+        });
+        nn.pipe=pipe;nn.model=cand;nn.cacheKey=null;
+        if(cand!==model){
+          toast(`Модель ${model.split('/')[1]} недоступна — использована резервная ${short}`,'info',5200);
+        }
+        nnSetStatus('Модель готова · '+short,'ok');
+        nnSetProgress(100);
+        setTimeout(()=>nnSetProgress(0),1400);
+        return pipe;
+      }catch(err){
+        lastErr=err;
+        console.warn('[NeoDepth] Ошибка загрузки модели',cand,err);
       }
-    });
-    nn.pipe=pipe;nn.model=model;nn.cacheKey=null;
-    nnSetStatus('Модель готова · '+model.replace('Xenova/',''),'ok');
-    nnSetProgress(100);
-    setTimeout(()=>nnSetProgress(0),1400);
-    return pipe;
+    }
+    const msg=lastErr&&lastErr.message?lastErr.message:'неизвестная ошибка';
+    throw new Error('Ни одна модель глубины не загрузилась. '+msg+' — проверьте доступ к huggingface.co.');
   })();
   try{return await nn.loading;}
   finally{nn.loading=null;}
@@ -855,10 +895,10 @@ function nnInputKey(){
   const im=state.img;if(!im)return'';
   const maxSize=640,k=Math.min(1,maxSize/Math.max(im.naturalWidth,im.naturalHeight));
   const w=Math.max(8,Math.round(im.naturalWidth*k)),h=Math.max(8,Math.round(im.naturalHeight*k));
-  return w+'x'+h+'|'+state.settings.nnModel+'|'+(state.dataUrl?state.dataUrl.slice(-96):'');
+  return w+'x'+h+'|'+(nn.model||state.settings.nnModel)+'|'+(state.dataUrl?state.dataUrl.slice(-96):'');
 }
 async function nnCompute(img){
-  const model=state.settings.nnModel;
+  await nnEnsure(state.settings.nnModel);
   const key=nnInputKey();
   if(nn.cacheKey===key&&nn.depthMap)return;
   const im=img,maxSize=640,k=Math.min(1,maxSize/Math.max(im.naturalWidth,im.naturalHeight));
@@ -866,10 +906,9 @@ async function nnCompute(img){
   const c=document.createElement('canvas');c.width=w;c.height=h;
   c.getContext('2d').drawImage(im,0,0,w,h);
   const url=c.toDataURL('image/jpeg',.92);
-  const pipe=await nnEnsure(model);
   nnSetStatus('Нейросеть анализирует фото…','run');nnSetProgress(null);
-  const out=await pipe(url);
-  const dep=out[0].depth; // RawImage {data,width,height}
+  const out=await nn.pipe(url);
+  const dep=out.depth; // RawImage {data,width,height,channels}
   const n=dep.width*dep.height;
   const f=new Float32Array(n);
   let mn=255,mx=0;
@@ -881,7 +920,7 @@ async function nnCompute(img){
 }
 function nnInvalidate(){nn.cacheKey=null;nn.depthMap=null;}
 function updateNNStatus(){
-  if(nn.pipe)nnSetStatus('Модель готова · '+nn.model.replace('Xenova/',''),'ok');
+  if(nn.pipe)nnSetStatus('Модель готова · '+nn.model.split('/')[1],'ok');
   else nnSetStatus('Модель не загружена — скачается при генерации','');
 }
 
@@ -1201,10 +1240,10 @@ function bindSettings(){
       else v=el.value;
       state.settings[k]=v;
       syncSettingsUI();setDirty(true);
-      if(k==='nnModel'){nnInvalidate();if(nn.model!==v)nn.pipe=null;updateNNStatus();}
+      if(k==='nnModel'){nnInvalidate();if(nn.model&&nn.model!==v){nn.pipe=null;nn.model='';}updateNNStatus();}
       if(k==='depthSource'&&v==='nn'&&!nnHintShown){
         nnHintShown=true;
-        toast('Режим ИИ: при первой генерации модель скачается (~45 МБ) и закэшируется','info',5200);
+        toast('Режим ИИ: при первой генерации модель скачается и закэшируется в браузере','info',5200);
       }
       if(v3d.open)v3dSchedule();
     });
@@ -1531,8 +1570,9 @@ async function v3dRebuild(){
     $('#v3d-stats').textContent=stats;
   }catch(err){
     console.error(err);
-    nnSetStatus('Ошибка: '+(err&&err.message?err.message:'не удалось загрузить модель'),'err');
-    toast('Ошибка оценки глубины: '+(err&&err.message?err.message:err),'err',6000);
+    const msg=err&&err.message?err.message:String(err);
+    nnSetStatus('Ошибка: '+msg.slice(0,80),'err');
+    toast('Ошибка оценки глубины: '+msg,'err',7000);
   }finally{
     if(tk===v3dToken)vlHide();
   }
