@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NeoDepth 3D — фото в 3D (AI)</title>
+<title>NeonDepth 3D — фото в 3D (AI)</title>
+<link rel="icon" type="image/png" href="https://image.qwenlm.ai/public_source/21c542cd-4d52-49d1-a7fa-898ca031f2e2/1e327ec7b-000b-4178-8b89-558994a6b040.png">
 <style>
 @import url('https://cdn.jsdelivr.net/npm/@fontsource/inter@5/400.css');
 @import url('https://cdn.jsdelivr.net/npm/@fontsource/inter@5/500.css');
@@ -47,9 +48,13 @@ kbd{font:600 10px var(--fm);background:#181c30;border:1px solid var(--bd2);borde
   border-bottom:1px solid var(--bd);z-index:60;position:relative;
   box-shadow:0 1px 0 rgba(0,229,255,.08),0 8px 24px rgba(0,0,0,.45);
 }
-#btn-sb{display:none}
 .brand{display:flex;align-items:center;gap:10px;margin-right:8px;user-select:none}
-.brand>.ic{width:28px;height:28px;filter:drop-shadow(0 0 7px rgba(0,229,255,.55))}
+.brand-logo{
+  width:32px;height:32px;border-radius:9px;object-fit:cover;flex:none;
+  border:1px solid rgba(0,229,255,.35);
+  box-shadow:0 0 12px rgba(0,229,255,.35),0 0 26px rgba(255,61,242,.18);
+  filter:drop-shadow(0 0 6px rgba(0,229,255,.45));
+}
 .brand-name{font:700 16px var(--fd);letter-spacing:.18em;background:linear-gradient(90deg,var(--cy),var(--mg));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 10px rgba(0,229,255,.35));line-height:1.1}
 .brand-sub{font:600 8.5px var(--fm);color:var(--tx3);letter-spacing:.34em;margin-top:1px}
 .proj-wrap{display:flex;align-items:center;gap:8px;min-width:0}
@@ -121,12 +126,27 @@ body.dirty .dirty-dot{display:block}
 .pop-item{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:8px 11px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--tx2);transition:.12s}
 .pop-item:hover{background:rgba(0,229,255,.09);color:#fff}
 
+/* переключатель 2D/3D */
+.view-switch{display:inline-flex;border:1px solid var(--bd2);border-radius:9px;background:#0d101d;padding:3px;gap:3px;flex:none}
+.vs-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border:none;border-radius:7px;
+  background:transparent;color:var(--tx2);font:600 11.5px var(--fb);cursor:pointer;transition:.18s;
+}
+.vs-btn:hover{color:#fff}
+.vs-btn.active{
+  background:linear-gradient(135deg,rgba(0,229,255,.22),rgba(124,92,255,.22));
+  color:#eaffff;box-shadow:0 0 12px rgba(0,229,255,.28);text-shadow:0 0 8px rgba(0,229,255,.55);
+}
+.vs-btn .ic{width:13px;height:13px}
+
 /* ============ MAIN / STAGE ============ */
 #main{flex:1;display:flex;min-height:0;position:relative}
 #stage{flex:1;position:relative;min-width:0;background:#07080f;overflow:hidden}
 #cv{position:absolute;inset:0;display:block;touch-action:none;cursor:grab}
 #cv.grabbing{cursor:grabbing}
 #cv.probe{cursor:crosshair}
+#v3d-view{position:absolute;inset:0;background:radial-gradient(1100px 600px at 50% 18%,#0e1128,#07080f)}
+#v3d-view canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block;outline:none;touch-action:none}
 .float-ctl{
   position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:5px;z-index:8;
   background:rgba(12,15,28,.75);border:1px solid var(--bd);border-radius:11px;padding:6px;
@@ -135,7 +155,7 @@ body.dirty .dirty-dot{display:block}
 .mini-lbl{font:600 9px var(--fm)}
 
 /* empty state */
-#empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;background:radial-gradient(640px 420px at 50% 42%,rgba(0,229,255,.06),transparent)}
+#empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:9;background:radial-gradient(640px 420px at 50% 42%,rgba(0,229,255,.06),transparent)}
 .empty-card{
   max-width:440px;width:calc(100% - 40px);text-align:center;padding:38px 32px;
   border:1.5px dashed rgba(0,229,255,.4);border-radius:18px;
@@ -153,7 +173,9 @@ body.dirty .dirty-dot{display:block}
 #sidebar{
   width:302px;flex:none;background:linear-gradient(180deg,#0e1120,#0a0c16);
   border-left:1px solid var(--bd);overflow-y:auto;z-index:65;
+  transition:width .25s ease;
 }
+#sidebar.collapsed{width:0;border-left-color:transparent;overflow:hidden}
 .sec{border-bottom:1px solid var(--bd)}
 .sec-h{
   display:flex;align-items:center;gap:9px;padding:12px 14px;cursor:pointer;user-select:none;
@@ -236,6 +258,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
 .st-dot.warn{background:var(--am);box-shadow:0 0 8px var(--am);animation:pulse 1.4s infinite}
 .st-swatch{width:13px;height:13px;border-radius:4px;border:1px solid var(--bd2);background:transparent;flex:none}
 #st-zoom{color:var(--cy);font-weight:600}
+#st-view{color:var(--vi);font-weight:600;letter-spacing:.08em}
 
 /* ============ MODALS ============ */
 .modal-backdrop{
@@ -278,19 +301,8 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
 .pj-empty{text-align:center;color:var(--tx3);padding:48px 20px;font-size:13px;line-height:2}
 .rn-input{width:100%;padding:4px 7px;font:600 12.5px var(--fb)}
 
-/* 3d modal */
-#m-3d .modal-body{display:flex;padding:0}
-.v3d-panel{width:252px;flex:none;border-right:1px solid var(--bd);overflow-y:auto;padding:14px;background:rgba(255,255,255,.015)}
-.vp-sec{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(35,40,66,.6)}
-.vp-sec:last-child{border:none}
-.vp-h{font:700 10px var(--fd);letter-spacing:.18em;color:var(--cy);text-transform:uppercase;margin-bottom:6px;text-shadow:0 0 10px rgba(0,229,255,.4)}
-#v3d-stage{flex:1;position:relative;min-width:0;background:radial-gradient(1100px 600px at 50% 18%,#0e1128,#07080f)}
-#v3d-stage canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block;outline:none}
-.v3d-menubtn{position:absolute;left:10px;top:10px;z-index:7;display:none;background:rgba(12,15,28,.8);border:1px solid var(--bd2)}
-.v3d-badge{position:absolute;right:12px;top:10px;z-index:6;font:600 9.5px var(--fm);color:var(--tx3);background:rgba(12,15,28,.6);border:1px solid var(--bd);border-radius:6px;padding:4px 9px;letter-spacing:.12em;pointer-events:none}
-
-/* NN loading overlay in 3d stage */
-.v3d-loading{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;background:rgba(5,6,13,.72);backdrop-filter:blur(5px)}
+/* NN loading overlay */
+.v3d-loading{position:absolute;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;background:rgba(5,6,13,.72);backdrop-filter:blur(5px)}
 .v3d-loading[hidden]{display:none!important}
 .vl-card{width:min(340px,86%);text-align:center;padding:28px 24px;border:1px solid rgba(0,229,255,.35);border-radius:16px;background:rgba(12,15,28,.92);box-shadow:0 0 44px rgba(0,229,255,.12)}
 .vl-spin{width:46px;height:46px;margin:0 auto 16px;border-radius:50%;border:3px solid rgba(0,229,255,.15);border-top-color:var(--cy);animation:spin 1s linear infinite;box-shadow:0 0 18px rgba(0,229,255,.25)}
@@ -327,13 +339,14 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
 
 /* ============ RESPONSIVE ============ */
 @media(max-width:1080px){
-  #btn-sb{display:inline-flex}
   #sidebar{position:fixed;right:0;top:54px;bottom:29px;transform:translateX(105%);transition:transform .25s;box-shadow:-20px 0 60px rgba(0,0,0,.55);width:min(320px,88vw)}
+  #sidebar.collapsed{width:min(320px,88vw)}
   #sidebar.open{transform:none}
 }
 @media(max-width:760px){
   .brand-sub{display:none}
   .brand-name{font-size:14px}
+  .brand-logo{width:28px;height:28px}
   .btn .lbl{display:none}
   .btn{padding:7px 10px}
   #proj-name{width:34vw;min-width:80px;font-size:12.5px}
@@ -341,10 +354,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
   #st-proj{display:none}
   .modal-backdrop{padding:10px}
   .help-cols{grid-template-columns:1fr}
-  .v3d-panel{position:absolute;left:0;top:0;bottom:0;z-index:8;transform:translateX(-102%);transition:transform .25s;background:#0d1020;box-shadow:16px 0 40px rgba(0,0,0,.5)}
-  .v3d-panel.open{transform:none}
-  .v3d-menubtn{display:inline-flex}
-  #m-3d .modal-foot .hint{display:none}
+  .vs-btn{padding:4px 9px}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -355,12 +365,6 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
 
 <!-- ================= SVG SPRITE ================= -->
 <svg style="display:none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#00e5ff"/><stop offset="1" stop-color="#ff3df2"/>
-    </linearGradient>
-  </defs>
-  <symbol id="i-logo" viewBox="0 0 24 24"><path stroke="url(#lg1)" stroke-width="1.7" fill="none" stroke-linejoin="round" d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path stroke="url(#lg1)" stroke-width="1.7" fill="none" stroke-linejoin="round" d="M3.3 7L12 12l8.7-5M12 22V12"/><circle cx="12" cy="12" r="1.6" fill="#00e5ff" stroke="none"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
   <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
@@ -371,8 +375,6 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
   <symbol id="i-zin" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></symbol>
   <symbol id="i-zout" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/></symbol>
   <symbol id="i-frame" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M16 21h3a2 2 0 0 0 2-2v-3M8 21H5a2 2 0 0 1-2-2v-3"/></symbol>
-  <symbol id="i-arh" viewBox="0 0 24 24"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></symbol>
-  <symbol id="i-arv" viewBox="0 0 24 24"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></symbol>
   <symbol id="i-cube" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></symbol>
   <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
@@ -389,16 +391,17 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
   <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"/></symbol>
+  <symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4.5"/></symbol>
   <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.8 5.8 1.9-5.8 1.9L12 18.4l-1.9-5.8-5.8-1.9 5.8-1.9zM19 2l.7 1.8L21.5 4.5l-1.8.7L19 7l-.7-1.8-1.8-.7 1.8-.7z"/></symbol>
   <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></symbol>
 </svg>
 
 <!-- ================= TOPBAR ================= -->
 <header id="topbar">
-  <button class="icon-btn" id="btn-sb" data-cmd="sidebar" title="Панель настроек"><svg class="ic"><use href="#i-panel"/></svg></button>
+  <button class="icon-btn" id="btn-sb" data-cmd="sidebar" title="Показать / скрыть боковую панель"><svg class="ic"><use href="#i-panel"/></svg></button>
   <div class="brand">
-    <svg class="ic"><use href="#i-logo"/></svg>
-    <div><div class="brand-name">NEODEPTH</div><div class="brand-sub">AI · 2D → 3D STUDIO</div></div>
+    <img class="brand-logo" src="https://image.qwenlm.ai/public_source/21c542cd-4d52-49d1-a7fa-898ca031f2e2/1e327ec7b-000b-4178-8b89-558994a6b040.png" alt="NeonDepth">
+    <div><div class="brand-name">NEONDEPTH</div><div class="brand-sub">AI · 2D → 3D STUDIO</div></div>
   </div>
   <div class="proj-wrap">
     <input id="proj-name" value="Новый проект" spellcheck="false" autocomplete="off" title="Имя проекта" maxlength="80">
@@ -435,6 +438,11 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
       <div class="pop-item" data-cmd="zoom-200">Масштаб 200% <kbd>2</kbd></div>
     </div>
   </div>
+  <span class="vr"></span>
+  <div class="view-switch" id="view-switch" title="Режим холста">
+    <button class="vs-btn active" data-cmd="view-2d" title="2D-просмотр фото"><svg class="ic"><use href="#i-image"/></svg>2D</button>
+    <button class="vs-btn" data-cmd="view-3d" title="3D-сцена"><svg class="ic"><use href="#i-cube"/></svg>3D</button>
+  </div>
   <div class="flex1"></div>
   <button class="btn primary" data-cmd="gen3d" title="Создать 3D-сцену по фото (яркость или нейросеть)"><svg class="ic"><use href="#i-spark"/></svg><span class="lbl">Создать 3D</span></button>
 </div>
@@ -443,6 +451,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
 <div id="main">
   <div id="stage">
     <canvas id="cv"></canvas>
+    <div id="v3d-view" hidden></div>
 
     <div class="float-ctl" id="float-ctl">
       <button class="icon-btn" data-cmd="zoom-in" title="Приблизить"><svg class="ic"><use href="#i-zin"/></svg></button>
@@ -451,11 +460,28 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
       <button class="icon-btn" data-cmd="zoom-100" title="100%"><span class="mini-lbl">1:1</span></button>
     </div>
 
+    <div class="float-ctl" id="float-3d-ctl" hidden>
+      <button class="icon-btn" data-cmd="v3d-reset" title="Сброс камеры"><svg class="ic"><use href="#i-rotate"/></svg></button>
+      <button class="icon-btn" id="btn-spin" data-cmd="v3d-spin" title="Автовращение вкл/выкл"><svg class="ic"><use href="#i-orbit"/></svg></button>
+      <button class="icon-btn" data-cmd="v3d-shot" title="Скриншот PNG"><svg class="ic"><use href="#i-camera"/></svg></button>
+      <button class="icon-btn" data-cmd="v3d-obj" title="Экспорт OBJ"><svg class="ic"><use href="#i-download"/></svg></button>
+      <button class="icon-btn" data-cmd="view-2d" title="Вернуться к 2D"><svg class="ic"><use href="#i-image"/></svg></button>
+    </div>
+
+    <div class="v3d-loading" id="v3d-loading" hidden>
+      <div class="vl-card">
+        <div class="vl-spin"></div>
+        <div class="vl-title">НЕЙРООЦЕНКА ГЛУБИНЫ</div>
+        <div class="nn-text vl-text">Подготовка…</div>
+        <div class="nn-bar"><div class="nn-fill"></div></div>
+      </div>
+    </div>
+
     <div id="empty">
       <div class="empty-card">
         <div class="e-ico"><svg class="ic"><use href="#i-image"/></svg></div>
         <h2>2D ФОТО → 3D СЦЕНА</h2>
-        <p>Перетащите изображение сюда, вставьте из буфера обмена (<kbd>Ctrl</kbd>+<kbd>V</kbd>) или выберите источник. Глубину оценит <b style="color:var(--cy)">нейросеть</b> или быстрый эвристический метод:</p>
+        <p>Перетащите изображение сюда, вставьте из буфера обмена (<kbd>Ctrl</kbd>+<kbd>V</kbd>) или выберите источник. Затем переключите холст в режим <b style="color:var(--cy)">3D</b>:</p>
         <div class="e-btns">
           <button class="btn primary" data-cmd="pick-file"><svg class="ic"><use href="#i-folder"/></svg>Выбрать файл</button>
           <button class="btn" data-cmd="demo"><svg class="ic"><use href="#i-spark"/></svg>Демо-изображение</button>
@@ -509,8 +535,18 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
             <div class="nn-row"><span class="nn-dot"></span><span class="nn-text">Модель не загружена</span></div>
             <div class="nn-bar"><div class="nn-fill"></div></div>
           </div>
-          <div class="nn-note">При первом запуске модель скачивается с huggingface.co и кэшируется браузером. Если выбранная модель недоступна, приложение автоматически попробует резервную. При ошибке нажмите «Создать 3D» повторно.</div>
+          <div class="nn-note">При первом запуске модель скачивается с huggingface.co и кэшируется браузером. Если выбранная модель недоступна, приложение автоматически попробует резервную.</div>
         </div>
+
+        <div class="ctl">
+          <div class="ctl-top"><span>Режим сцены</span></div>
+          <select data-set="mode">
+            <option value="mesh">Рельеф (сетка)</option>
+            <option value="points">Облако точек</option>
+          </select>
+        </div>
+        <label class="chk"><input type="checkbox" data-set="wire"><span>Каркас (wireframe)</span></label>
+        <label class="chk"><input type="checkbox" data-set="spin" checked><span>Автовращение</span></label>
 
         <div class="ctl">
           <div class="ctl-top"><span>Глубина рельефа</span><span class="ctl-val" data-val="depth">35</span></div>
@@ -564,6 +600,8 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
     <span id="st-hex"></span>
   </div>
   <div class="st-g">
+    <span id="st-view">2D</span>
+    <span class="st-sep"></span>
     <span id="st-dim">—</span>
     <span class="st-sep"></span>
     <span id="st-zoom">100%</span>
@@ -599,107 +637,11 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
   </div>
 </div>
 
-<!-- ================= MODAL: 3D ================= -->
-<div class="modal-backdrop" id="m-3d">
-  <div class="modal" style="--mw:min(1180px,100%)">
-    <div class="modal-head">
-      <div class="modal-title"><svg class="ic"><use href="#i-cube"/></svg><span id="v3d-title">3D-просмотр</span></div>
-      <div class="modal-tools">
-        <button class="icon-btn max-btn" title="На весь экран"><svg class="ic"><use href="#i-expand"/></svg></button>
-        <button class="icon-btn close-btn" title="Закрыть"><svg class="ic"><use href="#i-x"/></svg></button>
-      </div>
-    </div>
-    <div class="modal-body">
-      <aside class="v3d-panel" id="v3d-panel">
-        <div class="vp-sec">
-          <div class="vp-h">Сцена</div>
-          <div class="ctl">
-            <div class="ctl-top"><span>Режим</span></div>
-            <select data-set="mode">
-              <option value="mesh">Рельеф (сетка)</option>
-              <option value="points">Облако точек</option>
-            </select>
-          </div>
-          <label class="chk"><input type="checkbox" data-set="wire"><span>Каркас (wireframe)</span></label>
-          <label class="chk"><input type="checkbox" data-set="spin"><span>Автовращение</span></label>
-        </div>
-        <div class="vp-sec">
-          <div class="vp-h">Карта глубины</div>
-
-          <div class="ctl">
-            <div class="ctl-top"><span>Метод</span></div>
-            <div class="dcard-group">
-              <label class="dcard"><input type="radio" name="dsrc-m" value="luma" data-set="depthSource" checked>
-                <svg class="ic"><use href="#i-image"/></svg>
-                <div><b>Яркость</b><span>эвристика</span></div>
-              </label>
-              <label class="dcard"><input type="radio" name="dsrc-m" value="nn" data-set="depthSource">
-                <svg class="ic"><use href="#i-spark"/></svg>
-                <div><b>Нейросеть</b><span>AI depth</span></div>
-              </label>
-            </div>
-          </div>
-
-          <div class="nn-block">
-            <div class="ctl" style="margin-top:2px">
-              <div class="ctl-top"><span>Модель ИИ</span></div>
-              <select data-set="nnModel">
-                <option value="Xenova/depth-anything-small-hf">Depth Anything Small</option>
-                <option value="onnx-community/depth-anything-v2-small">Depth Anything V2 Small</option>
-              </select>
-            </div>
-            <div class="nn-box">
-              <div class="nn-row"><span class="nn-dot"></span><span class="nn-text">Модель не загружена</span></div>
-              <div class="nn-bar"><div class="nn-fill"></div></div>
-            </div>
-          </div>
-
-          <div class="ctl">
-            <div class="ctl-top"><span>Глубина</span><span class="ctl-val" data-val="depth">35</span></div>
-            <input type="range" min="0" max="100" step="1" value="35" data-set="depth">
-          </div>
-          <div class="ctl">
-            <div class="ctl-top"><span>Разрешение сетки</span><span class="ctl-val" data-val="res">192</span></div>
-            <input type="range" min="64" max="448" step="16" value="192" data-set="res">
-          </div>
-          <div class="ctl smooth-ctl">
-            <div class="ctl-top"><span>Сглаживание</span><span class="ctl-val" data-val="smooth">1</span></div>
-            <input type="range" min="0" max="10" step="1" value="1" data-set="smooth">
-          </div>
-          <label class="chk"><input type="checkbox" data-set="invert"><span>Инвертировать</span></label>
-        </div>
-        <div class="vp-sec">
-          <div class="vp-h">Действия</div>
-          <button class="btn w100" data-cmd="v3d-shot"><svg class="ic"><use href="#i-camera"/></svg>Скриншот PNG</button>
-          <button class="btn w100" data-cmd="v3d-obj"><svg class="ic"><use href="#i-download"/></svg>Экспорт OBJ</button>
-          <button class="btn w100" data-cmd="v3d-reset"><svg class="ic"><use href="#i-rotate"/></svg>Сброс камеры</button>
-        </div>
-      </aside>
-      <div id="v3d-stage">
-        <button class="icon-btn v3d-menubtn" data-cmd="v3d-panel" title="Параметры"><svg class="ic"><use href="#i-sliders"/></svg></button>
-        <div class="v3d-badge">WEBGL · NEURAL DEPTH</div>
-        <div class="v3d-loading" id="v3d-loading" hidden>
-          <div class="vl-card">
-            <div class="vl-spin"></div>
-            <div class="vl-title">НЕЙРООЦЕНКА ГЛУБИНЫ</div>
-            <div class="nn-text vl-text">Подготовка…</div>
-            <div class="nn-bar"><div class="nn-fill"></div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <span class="hint">Вращение — ЛКМ · Масштаб — колесо · Панорама — ПКМ</span>
-      <span id="v3d-stats">—</span>
-    </div>
-  </div>
-</div>
-
 <!-- ================= MODAL: HELP ================= -->
 <div class="modal-backdrop" id="m-help">
   <div class="modal" style="--mw:760px">
     <div class="modal-head">
-      <div class="modal-title"><svg class="ic"><use href="#i-info"/></svg><span>Справка · NeoDepth 3D</span></div>
+      <div class="modal-title"><svg class="ic"><use href="#i-info"/></svg><span>Справка · NeonDepth 3D</span></div>
       <div class="modal-tools">
         <button class="icon-btn max-btn" title="На весь экран"><svg class="ic"><use href="#i-expand"/></svg></button>
         <button class="icon-btn close-btn" title="Закрыть"><svg class="ic"><use href="#i-x"/></svg></button>
@@ -714,7 +656,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
             <li><b style="color:var(--tx)">Яркость</b> — мгновенная эвристика: светлые пиксели считаются ближе;</li>
             <li><b style="color:var(--cy)">Нейросеть</b> <span class="ai-tag">AI</span> — монокулярная оценка глубины моделями Depth Anything v1/v2 (transformers.js, ONNX + WebAssembly/WebGPU), выполняется прямо в браузере.</li>
           </ul>
-          <p style="margin-top:8px">Загрузите фото → выберите метод → нажмите <b style="color:var(--cy)">«Создать 3D»</b> → экспортируйте в PNG или OBJ.</p>
+          <p style="margin-top:8px">Загрузите фото → переключайте режим холста <b style="color:var(--cy)">2D / 3D</b> на панели инструментов → экспортируйте в PNG или OBJ.</p>
           <h3>Хранение</h3>
           <p>Проекты — в IndexedDB браузера. Импорт/экспорт — файлы <b>.json</b>. Модель нейросети скачивается один раз с huggingface.co и кэшируется (Cache API). Если модель недоступна, автоматически пробуется резервная.</p>
         </div>
@@ -729,12 +671,12 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
           <div class="hk"><span>Масштаб 100% / 200%</span><span><kbd>1</kbd> <kbd>2</kbd></span></div>
           <div class="hk"><span>Инструмент рука / проба</span><span><kbd>V</kbd> <kbd>P</kbd></span></div>
           <div class="hk"><span>Временная рука</span><kbd>Space</kbd></div>
-          <div class="hk"><span>Закрыть окно</span><kbd>Esc</kbd></div>
+          <div class="hk"><span>Закрыть окно / панель</span><kbd>Esc</kbd></div>
         </div>
       </div>
     </div>
     <div class="modal-foot">
-      <span>NeoDepth 3D · v1.3 · сборка 2026.08</span>
+      <span>NeonDepth 3D · v1.5 · сборка 2026.08</span>
       <span>Three.js · transformers.js · IndexedDB</span>
     </div>
   </div>
@@ -775,6 +717,7 @@ const slug=s=>(s||'project').toLowerCase().replace(/[^a-zа-яё0-9]+/gi,'-').re
 const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};};
 const fmtBytes=b=>{if(b==null||isNaN(b))return '—';const u=['Б','КБ','МБ','ГБ'];let i=0;while(b>=1024&&i<u.length-1){b/=1024;i++;}return b.toFixed(b>=10||i===0?0:1)+' '+u[i];};
 const fmtDate=t=>t?new Date(t).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const isMobileLayout=()=>window.innerWidth<=1080;
 function toast(msg,type='info',ms=2800){
   const box=$('#toasts'),el=document.createElement('div');
   el.className='toast t-'+(type==='ok'?'ok':type==='err'?'err':'info');
@@ -788,7 +731,7 @@ function dlBlob(blob,name){const u=URL.createObjectURL(blob);const a=document.cr
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 
 /* ================= INDEXEDDB ================= */
-const DB={name:'neodepth3d',ver:1,store:'projects',_db:null};
+const DB={name:'neondepth3d',ver:1,store:'projects',_db:null};
 function idbOpen(){return new Promise((res,rej)=>{
   if(DB._db)return res(DB._db);
   const r=indexedDB.open(DB.name,DB.ver);
@@ -805,9 +748,6 @@ const idbPut=r=>idbReq(idbOpen(),'readwrite',s=>s.put(r));
 const idbDel=id=>idbReq(idbOpen(),'readwrite',s=>s.delete(id));
 
 /* ================= СОСТОЯНИЕ ================= */
-/* Поддерживаются только репозитории с полным набором файлов (включая
-   preprocessor_config.json). «Xenova/depth-anything-small» без суффикса
-   -hf не содержит пресессор и вызывает "Unauthorized access to file". */
 const NN_MODELS=[
   'Xenova/depth-anything-small-hf',
   'onnx-community/depth-anything-v2-small'
@@ -825,9 +765,29 @@ const state={
   img:null,dataUrl:null,
   view:{scale:1,ox:0,oy:0},
   settings:defSettings(),
-  ui:{checker:true,pixgrid:false,tool:'hand'}
+  ui:{checker:true,pixgrid:false,tool:'hand',view:'2d'}
 };
 let sample=null,projCache=[];
+
+/* ================= САЙДБАР ================= */
+function sidebarIsOpen(){
+  const sb=$('#sidebar');
+  return isMobileLayout()? sb.classList.contains('open') : !sb.classList.contains('collapsed');
+}
+function setSidebar(open){
+  const sb=$('#sidebar'),sc=$('#scrim');
+  if(isMobileLayout()){
+    sb.classList.toggle('open',open);
+    sb.classList.remove('collapsed');
+    sc.classList.toggle('show',open);
+  }else{
+    sb.classList.toggle('collapsed',!open);
+    sb.classList.remove('open');
+    sc.classList.remove('show');
+  }
+}
+function toggleSidebar(){setSidebar(!sidebarIsOpen());}
+$('#scrim').addEventListener('click',()=>setSidebar(false));
 
 /* ================= НЕЙРОСЕТЬ (TRANSFORMERS.JS) ================= */
 const nn={pipe:null,loading:null,model:'',cacheKey:null,depthMap:null,w:0,h:0};
@@ -861,21 +821,20 @@ async function nnLoadLib(){
   let lastErr=null;
   for(const url of NN_LIBS){
     try{return await import(url);}
-    catch(err){lastErr=err;console.warn('[NeoDepth] Не удалось загрузить',url,err);}
+    catch(err){lastErr=err;console.warn('[NeonDepth] Не удалось загрузить',url,err);}
   }
   throw new Error('Не удалось загрузить библиотеку ИИ (transformers.js). Проверьте доступ в интернет.');
 }
 async function nnEnsure(model){
   if(nn.pipe&&nn.model===model)return nn.pipe;
   if(nn.loading){
-    try{await nn.loading;}catch(e){/* повторная попытка ниже */}
+    try{await nn.loading;}catch(e){/* повтор ниже */}
     if(nn.pipe&&nn.model===model)return nn.pipe;
   }
   nn.loading=(async()=>{
     nnSetStatus('Загрузка библиотеки ИИ…','load');nnSetProgress(2);
     const mod=await nnLoadLib();
     if(mod.env)mod.env.allowLocalModels=false;
-    /* цепочка кандидатов: выбранная модель, затем резервные */
     const wanted=NN_MODELS.includes(model)?model:NN_MODELS[0];
     const candidates=[wanted,...NN_MODELS.filter(m=>m!==wanted)];
     let lastErr=null;
@@ -897,7 +856,7 @@ async function nnEnsure(model){
         return pipe;
       }catch(err){
         lastErr=err;
-        console.warn('[NeoDepth] Ошибка загрузки модели',cand,err);
+        console.warn('[NeonDepth] Ошибка загрузки модели',cand,err);
       }
     }
     const msg=lastErr&&lastErr.message?lastErr.message:'неизвестная ошибка';
@@ -940,7 +899,7 @@ function updateNNStatus(){
   else nnSetStatus('Модель не загружена — скачается при генерации','');
 }
 
-/* ================= ХОЛСТ ================= */
+/* ================= ХОЛСТ 2D ================= */
 const wrap=$('#stage'),cv=$('#cv'),ctx=cv.getContext('2d');
 let dpr=1,cw=0,chh=0,checkerPat=null,drawReq=false;
 
@@ -1102,13 +1061,14 @@ function loadImageFromUrl(url,name){
     const im=new Image();
     im.onload=()=>{
       state.img=im;state.dataUrl=url;
-      nnInvalidate();
+      nnInvalidate();v3dDirty=true;
       buildSample();
       if(name){state.name=name;$('#proj-name').value=name;$('#st-proj').textContent=name;}
       updateImagePanel();updateEmpty();updateNNStatus();
-      fit('all');
+      if(state.ui.view==='2d')fit('all');
       $('#st-dim').textContent=`${im.naturalWidth}×${im.naturalHeight}`;
       setDirty(true);
+      if(v3d.active)v3dSchedule();
       res(true);
     };
     im.onerror=()=>{
@@ -1129,14 +1089,17 @@ function loadImageFile(file){
 }
 function clearImage(){
   state.img=null;state.dataUrl=null;sample=null;
-  nnInvalidate();
+  nnInvalidate();v3dDirty=true;
+  if(state.ui.view==='3d')setView('2d');
   updateImagePanel();updateEmpty();
   $('#st-dim').textContent='—';$('#st-pos').textContent='x: — y: —';setSwatch(null);
   requestDraw();
 }
 function updateEmpty(){
   $('#empty').style.display=state.img?'none':'flex';
-  $('#float-ctl').style.display=state.img?'flex':'none';
+  const is2d=state.ui.view==='2d';
+  $('#float-ctl').style.display=(state.img&&is2d)?'flex':'none';
+  $('#float-3d-ctl').style.display=(state.img&&!is2d)?'flex':'none';
   $('#btn-img-remove').disabled=!state.img;
 }
 function updateImagePanel(){
@@ -1231,6 +1194,179 @@ async function buildHeightMap(){
   return computeHeightMapLuma(state.img,s.res,s.smooth,s.invert);
 }
 
+/* ================= 3D (THREE.JS) — основной вид ================= */
+const v3d={active:false,ready:false,renderer:null,scene:null,camera:null,controls:null,group:null};
+let v3dDirty=true,v3dToken=0;
+
+function v3dInit(){
+  if(v3d.ready||!window.THREE)return false;
+  const holder=$('#v3d-view');
+  v3d.renderer=new THREE.WebGLRenderer({antialias:true});
+  v3d.renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  holder.appendChild(v3d.renderer.domElement);
+  const sc=new THREE.Scene();
+  sc.background=new THREE.Color('#07080f');
+  sc.fog=new THREE.Fog('#07080f',34,90);
+  v3d.scene=sc;
+  v3d.camera=new THREE.PerspectiveCamera(50,1,.1,400);
+  v3d.camera.position.set(0,4.5,17);
+  v3d.controls=new THREE.OrbitControls(v3d.camera,v3d.renderer.domElement);
+  v3d.controls.enableDamping=true;v3d.controls.dampingFactor=.08;
+  v3d.controls.autoRotateSpeed=1.4;
+  v3d.controls.autoRotate=!!state.settings.spin;
+  v3d.controls.minDistance=3;v3d.controls.maxDistance=70;
+  sc.add(new THREE.AmbientLight(0x99aaff,.5));
+  const key=new THREE.DirectionalLight(0xffffff,.85);key.position.set(6,10,8);sc.add(key);
+  const pc=new THREE.PointLight(0x00e5ff,.9,50);pc.position.set(-9,3,7);sc.add(pc);
+  const pm=new THREE.PointLight(0xff3df2,.8,50);pm.position.set(9,2,-7);sc.add(pm);
+  const grid=new THREE.GridHelper(70,46,0x1e2a4d,0x131a30);grid.position.y=-7;sc.add(grid);
+  v3d.group=new THREE.Group();sc.add(v3d.group);
+  new ResizeObserver(v3dResize).observe(holder);
+  v3d.ready=true;
+  requestAnimationFrame(v3dLoop);
+  return true;
+}
+function v3dResize(){
+  if(!v3d.ready)return;
+  const holder=$('#v3d-view'),w=holder.clientWidth,h=holder.clientHeight;
+  if(w<2||h<2)return;
+  v3d.renderer.setSize(w,h,false);
+  v3d.camera.aspect=w/h;v3d.camera.updateProjectionMatrix();
+}
+function v3dLoop(){
+  requestAnimationFrame(v3dLoop);
+  if(!v3d.active||!v3d.ready)return;
+  v3d.controls.update();
+  v3d.renderer.render(v3d.scene,v3d.camera);
+}
+function v3dClear(){
+  v3d.group.children.slice().forEach(o=>{
+    v3d.group.remove(o);
+    if(o.geometry)o.geometry.dispose();
+    const m=o.material;
+    if(m)(Array.isArray(m)?m:[m]).forEach(mm=>{if(mm.map)mm.map.dispose();mm.dispose();});
+  });
+}
+async function v3dRebuild(){
+  if(!v3d.ready||!state.img)return;
+  const tk=++v3dToken;
+  const s=state.settings;
+  const cachedNN=s.depthSource==='nn'&&nn.depthMap&&nn.cacheKey===nnInputKey();
+  if(s.depthSource==='nn'&&!cachedNN)vlShow();
+  try{
+    const H=await buildHeightMap();
+    if(tk!==v3dToken)return;
+    v3dClear();
+    const{hm,rgb,w,h}=H;
+    const SIZE=12,aspect=w/h;
+    const W=aspect>=1?SIZE:SIZE*aspect,Hh=aspect>=1?SIZE/aspect:SIZE;
+    const zmax=(s.depth/100)*SIZE*.55;
+    const tex=new THREE.Texture(state.img);
+    tex.needsUpdate=true;tex.encoding=THREE.sRGBEncoding;
+    tex.generateMipmaps=false;tex.minFilter=THREE.LinearFilter;
+    tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;
+    let obj,stats;
+    if(s.mode==='points'){
+      const g=new THREE.BufferGeometry();
+      const pos=new Float32Array(w*h*3),col=new Float32Array(w*h*3);
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+        const i=y*w+x,p=i*4;
+        pos[i*3]=(x/(w-1)-.5)*W;
+        pos[i*3+1]=(.5-y/(h-1))*Hh;
+        pos[i*3+2]=hm[i]*zmax;
+        col[i*3]=rgb[p]/255;col[i*3+1]=rgb[p+1]/255;col[i*3+2]=rgb[p+2]/255;
+      }
+      g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+      g.setAttribute('color',new THREE.BufferAttribute(col,3));
+      obj=new THREE.Points(g,new THREE.PointsMaterial({size:Math.max(.03,SIZE/w*1.15),vertexColors:true,sizeAttenuation:true}));
+      stats=`${w}×${h} · ${(w*h).toLocaleString('ru-RU')} точек${s.depthSource==='nn'?' · AI':''}`;
+    }else{
+      const g=new THREE.PlaneGeometry(W,Hh,Math.max(1,w-1),Math.max(1,h-1));
+      const pos=g.attributes.position,uv=g.attributes.uv;
+      for(let i=0;i<pos.count;i++){
+        const px=Math.min(w-1,Math.round(uv.getX(i)*(w-1)));
+        const py=Math.min(h-1,Math.round((1-uv.getY(i))*(h-1)));
+        pos.setZ(i,hm[py*w+px]*zmax);
+      }
+      pos.needsUpdate=true;g.computeVertexNormals();
+      obj=new THREE.Mesh(g,new THREE.MeshStandardMaterial({
+        map:tex,side:THREE.DoubleSide,roughness:.82,metalness:.12,wireframe:!!s.wire
+      }));
+      stats=`${w}×${h} · ${((w-1)*(h-1)*2).toLocaleString('ru-RU')} треуг.${s.depthSource==='nn'?' · AI':''}`;
+    }
+    v3d.group.add(obj);
+    $('#st-dim').textContent=stats;
+    v3dDirty=false;
+  }catch(err){
+    console.error(err);
+    const msg=err&&err.message?err.message:String(err);
+    nnSetStatus('Ошибка: '+msg.slice(0,80),'err');
+    toast('Ошибка оценки глубины: '+msg,'err',7000);
+  }finally{
+    if(tk===v3dToken)vlHide();
+  }
+}
+const v3dSchedule=debounce(v3dRebuild,250);
+function v3dResetCam(){
+  if(!v3d.ready)return;
+  v3d.camera.position.set(0,4.5,17);
+  v3d.controls.target.set(0,0,1.2);
+  v3d.controls.update();
+}
+function v3dShot(){
+  if(!v3d.ready)return;
+  v3d.renderer.render(v3d.scene,v3d.camera);
+  const url=v3d.renderer.domElement.toDataURL('image/png');
+  const a=document.createElement('a');a.href=url;a.download=slug(state.name)+'-3d.png';a.click();
+  toast('PNG-скриншот сохранён','ok');
+}
+function v3dExportObj(){
+  if(!v3d.ready||!v3d.group.children.length){toast('Сцена пуста','err');return;}
+  const o=v3d.group.children[0],g=o.geometry;
+  const pos=g.attributes.position,uv=g.attributes.uv,idx=g.index;
+  const out=['# NeonDepth3D export'];
+  for(let i=0;i<pos.count;i++)out.push(`v ${pos.getX(i).toFixed(4)} ${pos.getY(i).toFixed(4)} ${pos.getZ(i).toFixed(4)}`);
+  if(uv)for(let i=0;i<uv.count;i++)out.push(`vt ${uv.getX(i).toFixed(4)} ${uv.getY(i).toFixed(4)}`);
+  if(idx)for(let i=0;i<idx.count;i+=3){
+    const a=idx.getX(i)+1,b=idx.getX(i+1)+1,c=idx.getX(i+2)+1;
+    out.push(uv?`f ${a}/${a} ${b}/${b} ${c}/${c}`:`f ${a} ${b} ${c}`);
+  }
+  dlBlob(new Blob([out.join('\n')],{type:'text/plain'}),slug(state.name)+'-3d.obj');
+  toast('OBJ-модель экспортирована','ok');
+}
+
+/* ================= ПЕРЕКЛЮЧЕНИЕ ВИДА 2D/3D ================= */
+function updateViewSwitchUI(){
+  $$('#view-switch .vs-btn').forEach(b=>b.classList.toggle('active',b.dataset.cmd==='view-'+state.ui.view));
+  $('#st-view').textContent=state.ui.view.toUpperCase();
+}
+function setView(mode){
+  if(mode==='3d'){
+    if(!state.img){toast('Сначала загрузите 2D-фото','err');return false;}
+    if(!window.THREE){toast('Библиотека Three.js не загружена — проверьте сеть','err');return false;}
+    if(!v3d.ready)v3dInit();
+    if(!v3d.ready)return false;
+  }
+  state.ui.view=mode;
+  $('#cv').hidden=mode!=='2d';
+  $('#v3d-view').hidden=mode!=='3d';
+  updateViewSwitchUI();
+  updateEmpty();
+  if(mode==='3d'){
+    v3d.active=true;
+    if(v3d.controls)v3d.controls.autoRotate=!!state.settings.spin;
+    requestAnimationFrame(()=>{
+      v3dResize();
+      if(v3dDirty)v3dRebuild();
+    });
+  }else{
+    v3d.active=false;
+    requestDraw();
+    onViewport();
+  }
+  return true;
+}
+
 /* ================= НАСТРОЙКИ ================= */
 function valText(k,v){return k==='depth'?v+' %':k==='res'?v+' px':k==='smooth'?v+' px':'';}
 function syncSettingsUI(){
@@ -1250,6 +1386,7 @@ function updateDerivedUI(){
   });
   $$('.nn-block').forEach(b=>b.classList.toggle('show',nnMode));
   $$('.smooth-ctl').forEach(c=>c.classList.toggle('off',nnMode));
+  const sp=$('#btn-spin');if(sp)sp.classList.toggle('active',!!state.settings.spin);
 }
 function bindSettings(){
   $$('[data-set]').forEach(el=>{
@@ -1267,11 +1404,15 @@ function bindSettings(){
         if(nn.model&&nn.model!==v){nn.pipe=null;nn.model='';}
         updateNNStatus();
       }
+      if(k==='spin'&&v3d.controls)v3d.controls.autoRotate=!!v;
+      if(['depth','res','smooth','invert','mode','wire','depthSource','nnModel'].includes(k)){
+        v3dDirty=true;
+        if(v3d.active)v3dSchedule();
+      }
       if(k==='depthSource'&&v==='nn'&&!nnHintShown){
         nnHintShown=true;
         toast('Режим ИИ: при первой генерации модель скачается и закэшируется в браузере','info',5200);
       }
-      if(v3d.open)v3dSchedule();
     });
   });
   $$('[data-ui]').forEach(el=>{
@@ -1285,13 +1426,13 @@ function openModal(id){
   const el=document.getElementById(id);
   if(!el||el.classList.contains('open'))return;
   el.classList.add('open');modalStack.push(id);
+  if(isMobileLayout())setSidebar(false);
 }
 function closeModal(id){
   const el=document.getElementById(id);
   if(!el||!el.classList.contains('open'))return;
   el.classList.remove('open');
   const i=modalStack.indexOf(id);if(i>-1)modalStack.splice(i,1);
-  if(id==='m-3d'){v3d.open=false;}
   if(id==='m-confirm'&&cfResolve){const r=cfResolve;cfResolve=null;r(false);}
 }
 $$('.modal-backdrop').forEach(b=>{
@@ -1305,7 +1446,6 @@ document.addEventListener('click',e=>{
     const isMax=modal.classList.contains('max');
     mb.querySelector('use').setAttribute('href',isMax?'#i-shrink':'#i-expand');
     mb.title=isMax?'Свернуть':'На весь экран';
-    if(modal.closest('#m-3d'))setTimeout(v3dResize,300);
     return;
   }
   const cb=e.target.closest('.close-btn');
@@ -1420,17 +1560,17 @@ async function openById(id){
   }
 }
 function projectJson(rec){
-  return JSON.stringify({app:'NeoDepth3D',version:1,exportedAt:new Date().toISOString(),project:rec},null,2);
+  return JSON.stringify({app:'NeonDepth3D',version:1,exportedAt:new Date().toISOString(),project:rec},null,2);
 }
 function exportById(id){
   const rec=projCache.find(p=>p.id===id);if(!rec)return;
-  dlBlob(new Blob([projectJson(rec)],{type:'application/json'}),slug(rec.name)+'.nd3d.json');
+  dlBlob(new Blob([projectJson(rec)],{type:'application/json'}),slug(rec.name)+'.neon3d.json');
   toast('Проект экспортирован','ok');
 }
 function exportCurrent(){
   if(!state.img){toast('Сначала загрузите изображение','err');return;}
   const rec=currentRec();
-  dlBlob(new Blob([projectJson(rec)],{type:'application/json'}),slug(rec.name)+'.nd3d.json');
+  dlBlob(new Blob([projectJson(rec)],{type:'application/json'}),slug(rec.name)+'.neon3d.json');
   toast('Проект экспортирован в JSON','ok');
 }
 async function dupById(id){
@@ -1498,156 +1638,6 @@ async function updateStorage(){
   }catch(e){}
 }
 
-/* ================= 3D (THREE.JS) ================= */
-const v3d={open:false,ready:false,renderer:null,scene:null,camera:null,controls:null,group:null};
-function v3dInit(){
-  if(v3d.ready||!window.THREE)return false;
-  const holder=$('#v3d-stage');
-  v3d.renderer=new THREE.WebGLRenderer({antialias:true});
-  v3d.renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  holder.appendChild(v3d.renderer.domElement);
-  const sc=new THREE.Scene();
-  sc.background=new THREE.Color('#07080f');
-  sc.fog=new THREE.Fog('#07080f',34,90);
-  v3d.scene=sc;
-  v3d.camera=new THREE.PerspectiveCamera(50,1,.1,400);
-  v3d.camera.position.set(0,4.5,17);
-  v3d.controls=new THREE.OrbitControls(v3d.camera,v3d.renderer.domElement);
-  v3d.controls.enableDamping=true;v3d.controls.dampingFactor=.08;
-  v3d.controls.autoRotateSpeed=1.4;
-  v3d.controls.minDistance=3;v3d.controls.maxDistance=70;
-  sc.add(new THREE.AmbientLight(0x99aaff,.5));
-  const key=new THREE.DirectionalLight(0xffffff,.85);key.position.set(6,10,8);sc.add(key);
-  const pc=new THREE.PointLight(0x00e5ff,.9,50);pc.position.set(-9,3,7);sc.add(pc);
-  const pm=new THREE.PointLight(0xff3df2,.8,50);pm.position.set(9,2,-7);sc.add(pm);
-  const grid=new THREE.GridHelper(70,46,0x1e2a4d,0x131a30);grid.position.y=-7;sc.add(grid);
-  v3d.group=new THREE.Group();sc.add(v3d.group);
-  new ResizeObserver(v3dResize).observe(holder);
-  v3d.ready=true;
-  requestAnimationFrame(v3dLoop);
-  return true;
-}
-function v3dResize(){
-  if(!v3d.ready)return;
-  const holder=$('#v3d-stage'),w=holder.clientWidth,h=holder.clientHeight;
-  if(w<2||h<2)return;
-  v3d.renderer.setSize(w,h,false);
-  v3d.camera.aspect=w/h;v3d.camera.updateProjectionMatrix();
-}
-function v3dLoop(){
-  requestAnimationFrame(v3dLoop);
-  if(!v3d.open||!v3d.ready)return;
-  v3d.controls.update();
-  v3d.renderer.render(v3d.scene,v3d.camera);
-}
-function v3dClear(){
-  v3d.group.children.slice().forEach(o=>{
-    v3d.group.remove(o);
-    if(o.geometry)o.geometry.dispose();
-    const m=o.material;
-    if(m)(Array.isArray(m)?m:[m]).forEach(mm=>{if(mm.map)mm.map.dispose();mm.dispose();});
-  });
-}
-let v3dToken=0;
-async function v3dRebuild(){
-  if(!v3d.ready||!state.img)return;
-  const tk=++v3dToken;
-  const s=state.settings;
-  const cachedNN=s.depthSource==='nn'&&nn.depthMap&&nn.cacheKey===nnInputKey();
-  if(s.depthSource==='nn'&&!cachedNN)vlShow();
-  try{
-    const H=await buildHeightMap();
-    if(tk!==v3dToken)return;
-    v3dClear();
-    const{hm,rgb,w,h}=H;
-    const SIZE=12,aspect=w/h;
-    const W=aspect>=1?SIZE:SIZE*aspect,Hh=aspect>=1?SIZE/aspect:SIZE;
-    const zmax=(s.depth/100)*SIZE*.55;
-    const tex=new THREE.Texture(state.img);
-    tex.needsUpdate=true;tex.encoding=THREE.sRGBEncoding;
-    tex.generateMipmaps=false;tex.minFilter=THREE.LinearFilter;
-    tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;
-    let obj,stats;
-    if(s.mode==='points'){
-      const g=new THREE.BufferGeometry();
-      const pos=new Float32Array(w*h*3),col=new Float32Array(w*h*3);
-      for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-        const i=y*w+x,p=i*4;
-        pos[i*3]=(x/(w-1)-.5)*W;
-        pos[i*3+1]=(.5-y/(h-1))*Hh;
-        pos[i*3+2]=hm[i]*zmax;
-        col[i*3]=rgb[p]/255;col[i*3+1]=rgb[p+1]/255;col[i*3+2]=rgb[p+2]/255;
-      }
-      g.setAttribute('position',new THREE.BufferAttribute(pos,3));
-      g.setAttribute('color',new THREE.BufferAttribute(col,3));
-      obj=new THREE.Points(g,new THREE.PointsMaterial({size:Math.max(.03,SIZE/w*1.15),vertexColors:true,sizeAttenuation:true}));
-      stats=`${w}×${h} · ${(w*h).toLocaleString('ru-RU')} точек${s.depthSource==='nn'?' · AI':''}`;
-    }else{
-      const g=new THREE.PlaneGeometry(W,Hh,Math.max(1,w-1),Math.max(1,h-1));
-      const pos=g.attributes.position,uv=g.attributes.uv;
-      for(let i=0;i<pos.count;i++){
-        const px=Math.min(w-1,Math.round(uv.getX(i)*(w-1)));
-        const py=Math.min(h-1,Math.round((1-uv.getY(i))*(h-1)));
-        pos.setZ(i,hm[py*w+px]*zmax);
-      }
-      pos.needsUpdate=true;g.computeVertexNormals();
-      obj=new THREE.Mesh(g,new THREE.MeshStandardMaterial({
-        map:tex,side:THREE.DoubleSide,roughness:.82,metalness:.12,wireframe:!!s.wire
-      }));
-      stats=`${w}×${h} · ${((w-1)*(h-1)*2).toLocaleString('ru-RU')} треуг.${s.depthSource==='nn'?' · AI':''}`;
-    }
-    v3d.group.add(obj);
-    $('#v3d-stats').textContent=stats;
-  }catch(err){
-    console.error(err);
-    const msg=err&&err.message?err.message:String(err);
-    nnSetStatus('Ошибка: '+msg.slice(0,80),'err');
-    toast('Ошибка оценки глубины: '+msg,'err',7000);
-  }finally{
-    if(tk===v3dToken)vlHide();
-  }
-}
-const v3dSchedule=debounce(v3dRebuild,250);
-function v3dResetCam(){
-  if(!v3d.ready)return;
-  v3d.camera.position.set(0,4.5,17);
-  v3d.controls.target.set(0,0,1.2);
-  v3d.controls.update();
-}
-function open3D(){
-  if(!state.img){toast('Сначала загрузите 2D-фото','err');return;}
-  if(!window.THREE){toast('Библиотека Three.js не загружена — проверьте сеть','err');return;}
-  if(!v3d.ready)v3dInit();
-  if(!v3d.ready)return;
-  $('#v3d-title').textContent='3D-просмотр · '+state.name;
-  openModal('m-3d');
-  v3d.open=true;
-  v3d.controls.autoRotate=!!state.settings.spin;
-  requestAnimationFrame(()=>{v3dResize();v3dResetCam();});
-  v3dRebuild();
-}
-function v3dShot(){
-  if(!v3d.ready)return;
-  v3d.renderer.render(v3d.scene,v3d.camera);
-  const url=v3d.renderer.domElement.toDataURL('image/png');
-  const a=document.createElement('a');a.href=url;a.download=slug(state.name)+'-3d.png';a.click();
-  toast('PNG-скриншот сохранён','ok');
-}
-function v3dExportObj(){
-  if(!v3d.ready||!v3d.group.children.length){toast('Сцена пуста','err');return;}
-  const o=v3d.group.children[0],g=o.geometry;
-  const pos=g.attributes.position,uv=g.attributes.uv,idx=g.index;
-  const out=['# NeoDepth3D export'];
-  for(let i=0;i<pos.count;i++)out.push(`v ${pos.getX(i).toFixed(4)} ${pos.getY(i).toFixed(4)} ${pos.getZ(i).toFixed(4)}`);
-  if(uv)for(let i=0;i<uv.count;i++)out.push(`vt ${uv.getX(i).toFixed(4)} ${uv.getY(i).toFixed(4)}`);
-  if(idx)for(let i=0;i<idx.count;i+=3){
-    const a=idx.getX(i)+1,b=idx.getX(i+1)+1,c=idx.getX(i+2)+1;
-    out.push(uv?`f ${a}/${a} ${b}/${b} ${c}/${c}`:`f ${a} ${b} ${c}`);
-  }
-  dlBlob(new Blob([out.join('\n')],{type:'text/plain'}),slug(state.name)+'-3d.obj');
-  toast('OBJ-модель экспортирована','ok');
-}
-
 /* ================= КОМАНДЫ ================= */
 function setTool(t){
   state.ui.tool=t;
@@ -1660,6 +1650,8 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-cmd]');
   if(!el)return;
   const cmd=el.dataset.cmd;
+  /* действие из боковой панели на мобильном — закрываем шторку */
+  if(cmd!=='sidebar'&&isMobileLayout()&&el.closest('#sidebar'))setSidebar(false);
   switch(cmd){
     case 'new':cmdNew();break;
     case 'proj':case 'open':openProjects();break;
@@ -1677,7 +1669,8 @@ document.addEventListener('click',e=>{
     case 'fit-w':fit('width');closeFit();break;
     case 'fit-h':fit('height');closeFit();break;
     case 'fit-toggle':e.stopPropagation();$('#fit-menu').classList.toggle('open');break;
-    case 'gen3d':open3D();break;
+    case 'gen3d':case 'view-3d':setView('3d');break;
+    case 'view-2d':setView('2d');break;
     case 'help':openModal('m-help');break;
     case 'sidebar':toggleSidebar();break;
     case 'img-replace':case 'pick-file':$('#file-image').click();break;
@@ -1686,7 +1679,11 @@ document.addEventListener('click',e=>{
     case 'v3d-shot':v3dShot();break;
     case 'v3d-obj':v3dExportObj();break;
     case 'v3d-reset':v3dResetCam();break;
-    case 'v3d-panel':$('#v3d-panel').classList.toggle('open');break;
+    case 'v3d-spin':
+      state.settings.spin=!state.settings.spin;
+      syncSettingsUI();setDirty(true);
+      if(v3d.controls)v3d.controls.autoRotate=state.settings.spin;
+      break;
   }
 });
 document.addEventListener('click',e=>{
@@ -1698,16 +1695,6 @@ async function removeImage(){
   clearImage();setDirty(true);
   toast('Изображение удалено','ok');
 }
-function toggleSidebar(){
-  const sb=$('#sidebar'),sc=$('#scrim');
-  const open=!sb.classList.contains('open');
-  sb.classList.toggle('open',open);
-  sc.classList.toggle('show',open);
-}
-$('#scrim').addEventListener('click',()=>{
-  $('#sidebar').classList.remove('open');
-  $('#scrim').classList.remove('show');
-});
 $$('.sec-h').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('closed')));
 
 $('#file-image').addEventListener('change',e=>{const f=e.target.files[0];if(f)loadImageFile(f);e.target.value='';});
@@ -1740,6 +1727,7 @@ document.addEventListener('keydown',e=>{
   const typing=tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||e.target.isContentEditable;
   if(e.key==='Escape'){
     if($('#fit-menu').classList.contains('open')){closeFit();return;}
+    if(isMobileLayout()&&$('#sidebar').classList.contains('open')){setSidebar(false);return;}
     if(modalStack.length){closeModal(modalStack[modalStack.length-1]);return;}
     return;
   }
@@ -1771,6 +1759,19 @@ window.addEventListener('beforeunload',e=>{
   if(state.dirty){e.preventDefault();e.returnValue='';}
 });
 
+/* смена раскладки: синхронизация состояния сайдбара и 3D */
+let lastMobileLayout=isMobileLayout();
+window.addEventListener('resize',()=>{
+  const m=isMobileLayout();
+  if(m!==lastMobileLayout){
+    lastMobileLayout=m;
+    const sb=$('#sidebar');
+    sb.classList.remove('open','collapsed');
+    $('#scrim').classList.remove('show');
+  }
+  if(v3d.active)v3dResize();
+});
+
 /* ================= ИНИЦИАЛИЗАЦИЯ ================= */
 function init(){
   try{
@@ -1778,13 +1779,14 @@ function init(){
     resize();
     setTool('hand');
     syncSettingsUI();
+    updateViewSwitchUI();
     updateEmpty();
     updateImagePanel();
     updateProjInfo(null);
     updateNNStatus();
     setDirty(false);
     $('#st-state').textContent='Готово';
-    toast('Добро пожаловать в NeoDepth 3D! Перетащите фото и выберите метод глубины: яркость или нейросеть','info',5000);
+    toast('Добро пожаловать в NeonDepth 3D! Загрузите фото и переключите вид холста 2D/3D','info',5000);
   }catch(err){
     console.error(err);
     toast('Ошибка инициализации: '+err,'err',8000);
