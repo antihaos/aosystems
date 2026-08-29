@@ -38,6 +38,7 @@ body{
 kbd{font:600 10px var(--fm);background:#181c30;border:1px solid var(--bd2);border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--tx2)}
 .ic{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block;flex:none}
 .flex1{flex:1}
+[hidden]{display:none!important}
 
 /* ============ TOPBAR ============ */
 #topbar{
@@ -290,6 +291,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
 
 /* NN loading overlay in 3d stage */
 .v3d-loading{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;background:rgba(5,6,13,.72);backdrop-filter:blur(5px)}
+.v3d-loading[hidden]{display:none!important}
 .vl-card{width:min(340px,86%);text-align:center;padding:28px 24px;border:1px solid rgba(0,229,255,.35);border-radius:16px;background:rgba(12,15,28,.92);box-shadow:0 0 44px rgba(0,229,255,.12)}
 .vl-spin{width:46px;height:46px;margin:0 auto 16px;border-radius:50%;border:3px solid rgba(0,229,255,.15);border-top-color:var(--cy);animation:spin 1s linear infinite;box-shadow:0 0 18px rgba(0,229,255,.25)}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -507,7 +509,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
             <div class="nn-row"><span class="nn-dot"></span><span class="nn-text">Модель не загружена</span></div>
             <div class="nn-bar"><div class="nn-fill"></div></div>
           </div>
-          <div class="nn-note">При первом запуске модель скачивается с huggingface.co и кэшируется браузером. Если выбранная модель недоступна, приложение автоматически попробует резервную.</div>
+          <div class="nn-note">При первом запуске модель скачивается с huggingface.co и кэшируется браузером. Если выбранная модель недоступна, приложение автоматически попробует резервную. При ошибке нажмите «Создать 3D» повторно.</div>
         </div>
 
         <div class="ctl">
@@ -732,7 +734,7 @@ select:focus,input[type=text]:focus{border-color:rgba(0,229,255,.55);box-shadow:
       </div>
     </div>
     <div class="modal-foot">
-      <span>NeoDepth 3D · v1.2 · сборка 2026.08</span>
+      <span>NeoDepth 3D · v1.3 · сборка 2026.08</span>
       <span>Three.js · transformers.js · IndexedDB</span>
     </div>
   </div>
@@ -803,7 +805,21 @@ const idbPut=r=>idbReq(idbOpen(),'readwrite',s=>s.put(r));
 const idbDel=id=>idbReq(idbOpen(),'readwrite',s=>s.delete(id));
 
 /* ================= СОСТОЯНИЕ ================= */
-function defSettings(){return{depth:35,res:192,smooth:1,invert:false,mode:'mesh',wire:false,spin:true,depthSource:'luma',nnModel:'Xenova/depth-anything-small-hf'};}
+/* Поддерживаются только репозитории с полным набором файлов (включая
+   preprocessor_config.json). «Xenova/depth-anything-small» без суффикса
+   -hf не содержит пресессор и вызывает "Unauthorized access to file". */
+const NN_MODELS=[
+  'Xenova/depth-anything-small-hf',
+  'onnx-community/depth-anything-v2-small'
+];
+function defSettings(){return{depth:35,res:192,smooth:1,invert:false,mode:'mesh',wire:false,spin:true,depthSource:'luma',nnModel:NN_MODELS[0]};}
+function normSettings(s){
+  const m={...defSettings(),...(s||{})};
+  if(!NN_MODELS.includes(m.nnModel))m.nnModel=NN_MODELS[0];
+  if(m.depthSource!=='luma'&&m.depthSource!=='nn')m.depthSource='luma';
+  if(m.mode!=='mesh'&&m.mode!=='points')m.mode='mesh';
+  return m;
+}
 const state={
   id:null,name:'Новый проект',createdAt:0,dirty:false,
   img:null,dataUrl:null,
@@ -814,13 +830,6 @@ const state={
 let sample=null,projCache=[];
 
 /* ================= НЕЙРОСЕТЬ (TRANSFORMERS.JS) ================= */
-/* ВАЖНО: используются репозитории с полным набором файлов (включая
-   preprocessor_config.json). Xenova/depth-anything-small БЕЗ суффикса
-   -hf не содержит пресессор и вызывает ошибку "Unauthorized access to file". */
-const NN_MODELS=[
-  'Xenova/depth-anything-small-hf',
-  'onnx-community/depth-anything-v2-small'
-];
 const nn={pipe:null,loading:null,model:'',cacheKey:null,depthMap:null,w:0,h:0};
 let nnHintShown=false;
 
@@ -830,8 +839,8 @@ function nnSetStatus(text,mode){
   $$('.nn-dot').forEach(e=>e.className='nn-dot'+(mode?' '+mode:''));
 }
 function nnSetProgress(p){$$('.nn-fill').forEach(e=>e.style.width=(p==null?0:p)+'%');}
-function vlShow(){$('#v3d-loading').hidden=false;}
-function vlHide(){$('#v3d-loading').hidden=true;}
+function vlShow(){const el=$('#v3d-loading');if(el)el.hidden=false;}
+function vlHide(){const el=$('#v3d-loading');if(el)el.hidden=true;}
 function nnProgressFactory(files){
   return (p)=>{
     if(!p)return;
@@ -843,26 +852,32 @@ function nnProgressFactory(files){
     nnSetStatus(`Скачивание весов… ${pc}% · ${fmtBytes(L)} / ${fmtBytes(T)}`,'load');
   };
 }
+const NN_LIBS=[
+  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3',
+  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js',
+  'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2'
+];
 async function nnLoadLib(){
-  try{
-    return await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3');
-  }catch(e1){
-    try{
-      return await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-    }catch(e2){
-      throw new Error('Не удалось загрузить библиотеку ИИ (transformers.js). Проверьте доступ в интернет.');
-    }
+  let lastErr=null;
+  for(const url of NN_LIBS){
+    try{return await import(url);}
+    catch(err){lastErr=err;console.warn('[NeoDepth] Не удалось загрузить',url,err);}
   }
+  throw new Error('Не удалось загрузить библиотеку ИИ (transformers.js). Проверьте доступ в интернет.');
 }
 async function nnEnsure(model){
   if(nn.pipe&&nn.model===model)return nn.pipe;
-  if(nn.loading){await nn.loading;if(nn.pipe&&nn.model===model)return nn.pipe;}
+  if(nn.loading){
+    try{await nn.loading;}catch(e){/* повторная попытка ниже */}
+    if(nn.pipe&&nn.model===model)return nn.pipe;
+  }
   nn.loading=(async()=>{
     nnSetStatus('Загрузка библиотеки ИИ…','load');nnSetProgress(2);
     const mod=await nnLoadLib();
     if(mod.env)mod.env.allowLocalModels=false;
     /* цепочка кандидатов: выбранная модель, затем резервные */
-    const candidates=[model,...NN_MODELS.filter(m=>m!==model)];
+    const wanted=NN_MODELS.includes(model)?model:NN_MODELS[0];
+    const candidates=[wanted,...NN_MODELS.filter(m=>m!==wanted)];
     let lastErr=null;
     for(const cand of candidates){
       const short=cand.split('/')[1];
@@ -873,8 +888,8 @@ async function nnEnsure(model){
           progress_callback:nnProgressFactory(files)
         });
         nn.pipe=pipe;nn.model=cand;nn.cacheKey=null;
-        if(cand!==model){
-          toast(`Модель ${model.split('/')[1]} недоступна — использована резервная ${short}`,'info',5200);
+        if(cand!==wanted){
+          toast(`Модель ${wanted.split('/')[1]} недоступна — использована резервная ${short}`,'info',5200);
         }
         nnSetStatus('Модель готова · '+short,'ok');
         nnSetProgress(100);
@@ -886,7 +901,7 @@ async function nnEnsure(model){
       }
     }
     const msg=lastErr&&lastErr.message?lastErr.message:'неизвестная ошибка';
-    throw new Error('Ни одна модель глубины не загрузилась. '+msg+' — проверьте доступ к huggingface.co.');
+    throw new Error('Ни одна модель глубины не загрузилась ('+msg+'). Проверьте доступ к huggingface.co и повторите.');
   })();
   try{return await nn.loading;}
   finally{nn.loading=null;}
@@ -908,7 +923,8 @@ async function nnCompute(img){
   const url=c.toDataURL('image/jpeg',.92);
   nnSetStatus('Нейросеть анализирует фото…','run');nnSetProgress(null);
   const out=await nn.pipe(url);
-  const dep=out.depth; // RawImage {data,width,height,channels}
+  const dep=out&&(out.depth?out.depth:(out[0]&&out[0].depth));
+  if(!dep||!dep.data)throw new Error('неожиданный ответ модели (нет карты глубины)');
   const n=dep.width*dep.height;
   const f=new Float32Array(n);
   let mn=255,mx=0;
@@ -1082,7 +1098,7 @@ function sampleAt(ix,iy){
 
 /* ================= ИЗОБРАЖЕНИЯ ================= */
 function loadImageFromUrl(url,name){
-  return new Promise((res,rej)=>{
+  return new Promise((res)=>{
     const im=new Image();
     im.onload=()=>{
       state.img=im;state.dataUrl=url;
@@ -1093,9 +1109,14 @@ function loadImageFromUrl(url,name){
       fit('all');
       $('#st-dim').textContent=`${im.naturalWidth}×${im.naturalHeight}`;
       setDirty(true);
-      res();
+      res(true);
     };
-    im.onerror=()=>{toast('Не удалось загрузить изображение','err');rej();};
+    im.onerror=()=>{
+      toast('Не удалось загрузить изображение','err');
+      state.img=null;state.dataUrl=null;
+      updateImagePanel();updateEmpty();
+      res(false);
+    };
     im.src=url;
   });
 }
@@ -1103,6 +1124,7 @@ function loadImageFile(file){
   if(!file||!/^image\//.test(file.type)){toast('Файл не является изображением','err');return;}
   const rd=new FileReader();
   rd.onload=()=>loadImageFromUrl(rd.result,file.name.replace(/\.[^.]+$/,''));
+  rd.onerror=()=>toast('Ошибка чтения файла','err');
   rd.readAsDataURL(file);
 }
 function clearImage(){
@@ -1240,7 +1262,11 @@ function bindSettings(){
       else v=el.value;
       state.settings[k]=v;
       syncSettingsUI();setDirty(true);
-      if(k==='nnModel'){nnInvalidate();if(nn.model&&nn.model!==v){nn.pipe=null;nn.model='';}updateNNStatus();}
+      if(k==='nnModel'){
+        nnInvalidate();
+        if(nn.model&&nn.model!==v){nn.pipe=null;nn.model='';}
+        updateNNStatus();
+      }
       if(k==='depthSource'&&v==='nn'&&!nnHintShown){
         nnHintShown=true;
         toast('Режим ИИ: при первой генерации модель скачается и закэшируется в браузере','info',5200);
@@ -1338,7 +1364,7 @@ async function cmdNew(){
 }
 async function loadRecord(rec){
   state.id=rec.id;state.name=rec.name;state.createdAt=rec.createdAt;
-  state.settings={...defSettings(),...(rec.settings||{})};
+  state.settings=normSettings(rec.settings);
   $('#proj-name').value=rec.name;$('#st-proj').textContent=rec.name;
   syncSettingsUI();updateProjInfo(rec);updateNNStatus();
   if(rec.imageDataUrl){await loadImageFromUrl(rec.imageDataUrl);}else{clearImage();}
@@ -1386,8 +1412,12 @@ $('#pj-search').addEventListener('input',renderProjects);
 async function openById(id){
   const rec=projCache.find(p=>p.id===id);if(!rec)return;
   closeModal('m-projects');
-  await loadRecord(rec);
-  toast(`Проект «${rec.name}» открыт`,'ok');
+  try{
+    await loadRecord(rec);
+    toast(`Проект «${rec.name}» открыт`,'ok');
+  }catch(err){
+    toast('Не удалось открыть проект: '+err,'err');
+  }
 }
 function projectJson(rec){
   return JSON.stringify({app:'NeoDepth3D',version:1,exportedAt:new Date().toISOString(),project:rec},null,2);
@@ -1429,7 +1459,7 @@ function startRename(card,id){
     if(done)return;done=true;
     if(ok&&inp.value.trim()){
       rec.name=inp.value.trim();rec.updatedAt=Date.now();
-      await idbPut(rec);
+      try{await idbPut(rec);}catch(err){toast('Ошибка переименования: '+err,'err');}
       if(id===state.id){state.name=rec.name;$('#proj-name').value=rec.name;$('#st-proj').textContent=rec.name;}
       toast('Переименовано','ok');
     }
@@ -1452,7 +1482,7 @@ async function importFile(f){
     if(!p||typeof p!=='object'||(!p.imageDataUrl&&!p.name))throw new Error('bad');
     const rec={id:uid(),name:p.name||'Импортированный проект',createdAt:p.createdAt||Date.now(),
       updatedAt:Date.now(),imageDataUrl:p.imageDataUrl||null,
-      settings:{...defSettings(),...(p.settings||{})}};
+      settings:normSettings(p.settings)};
     await idbPut(rec);
     toast('Проект импортирован','ok');
     await loadRecord(rec);
@@ -1553,7 +1583,7 @@ async function v3dRebuild(){
       obj=new THREE.Points(g,new THREE.PointsMaterial({size:Math.max(.03,SIZE/w*1.15),vertexColors:true,sizeAttenuation:true}));
       stats=`${w}×${h} · ${(w*h).toLocaleString('ru-RU')} точек${s.depthSource==='nn'?' · AI':''}`;
     }else{
-      const g=new THREE.PlaneGeometry(W,Hh,w-1,h-1);
+      const g=new THREE.PlaneGeometry(W,Hh,Math.max(1,w-1),Math.max(1,h-1));
       const pos=g.attributes.position,uv=g.attributes.uv;
       for(let i=0;i<pos.count;i++){
         const px=Math.min(w-1,Math.round(uv.getX(i)*(w-1)));
@@ -1652,7 +1682,7 @@ document.addEventListener('click',e=>{
     case 'sidebar':toggleSidebar();break;
     case 'img-replace':case 'pick-file':$('#file-image').click();break;
     case 'img-remove':removeImage();break;
-    case 'demo':loadImageFromUrl(makeDemoImage(),'Демо: Синтвейв').then(()=>toast('Демо-изображение загружено','ok'));break;
+    case 'demo':loadImageFromUrl(makeDemoImage(),'Демо: Синтвейв').then(ok=>{if(ok)toast('Демо-изображение загружено','ok');});break;
     case 'v3d-shot':v3dShot();break;
     case 'v3d-obj':v3dExportObj();break;
     case 'v3d-reset':v3dResetCam();break;
@@ -1743,17 +1773,22 @@ window.addEventListener('beforeunload',e=>{
 
 /* ================= ИНИЦИАЛИЗАЦИЯ ================= */
 function init(){
-  bindSettings();
-  resize();
-  setTool('hand');
-  syncSettingsUI();
-  updateEmpty();
-  updateImagePanel();
-  updateProjInfo(null);
-  updateNNStatus();
-  setDirty(false);
-  $('#st-state').textContent='Готово';
-  toast('Добро пожаловать в NeoDepth 3D! Перетащите фото и выберите метод глубины: яркость или нейросеть','info',5000);
+  try{
+    bindSettings();
+    resize();
+    setTool('hand');
+    syncSettingsUI();
+    updateEmpty();
+    updateImagePanel();
+    updateProjInfo(null);
+    updateNNStatus();
+    setDirty(false);
+    $('#st-state').textContent='Готово';
+    toast('Добро пожаловать в NeoDepth 3D! Перетащите фото и выберите метод глубины: яркость или нейросеть','info',5000);
+  }catch(err){
+    console.error(err);
+    toast('Ошибка инициализации: '+err,'err',8000);
+  }
 }
 init();
 </script>
