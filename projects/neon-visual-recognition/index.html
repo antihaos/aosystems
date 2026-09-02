@@ -293,7 +293,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
       <circle cx="16" cy="16" r="2.1" fill="#00e5ff"/>
       <path d="M16 3.6v4M16 24.4v4M3.6 16h4M24.4 16h4" stroke="url(#nvlg)" stroke-width="2" stroke-linecap="round"/>
     </svg>
-    <div class="brand">NEON VISUAL RECOGNITION<span class="ver app-ver">v2.1.0</span></div>
+    <div class="brand">NEON VISUAL RECOGNITION<span class="ver app-ver">v2.2.0</span></div>
     <div class="proj-name-wrap">
       <input id="project-name" placeholder="Название проекта" spellcheck="false" autocomplete="off">
     </div>
@@ -373,7 +373,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2l7.5 18 2.3-7.2L23 10.5z"/></svg><span>Выбор</span>
         </button>
         <button class="tbtn" data-tool="pan" title="Перемещение холста (H / Space / ПКМ)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 2l-3 3m-3-3l3 3M12 22l-3-3m3 3l3-3M2 12l3-3m-3 3l3 3M22 12l-3-3m3 3l-3 3"/></svg><span>Рука</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 2l-3 3m3-3l3 3M12 22l-3-3m3 3l3-3M2 12l3-3m-3 3l3 3M22 12l-3-3m3 3l-3 3"/></svg><span>Рука</span>
         </button>
         <div class="tb-sep"></div>
         <button class="tbtn t-text" data-tool="draw-text" title="Область: текст (T)">
@@ -481,9 +481,11 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
         <select id="set-provider">
           <option value="api">VisualLM API (OpenAI-совместимый формат)</option>
           <option value="vllm">Локальный vLLM-сервер (локальная VLM)</option>
+          <option value="browser">Офлайн VLM прямо в браузере (WebLLM / WebGPU)</option>
           <option value="local">Локально в браузере (Tesseract OCR)</option>
         </select>
       </label>
+
       <div id="api-fields">
         <label class="f-label">Base URL API
           <input type="text" id="set-base" placeholder="https://api.openai.com/v1" spellcheck="false">
@@ -496,6 +498,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
         </label>
         <div class="btn-row"><button class="btn" id="btn-test-api">Проверить подключение</button></div>
       </div>
+
       <div id="vllm-fields" hidden>
         <label class="f-label">Адрес локального сервера
           <input type="text" id="set-vllm-base" placeholder="http://localhost:8000/v1" spellcheck="false">
@@ -513,6 +516,23 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
         <div class="btn-row"><button class="btn" id="btn-test-vllm">Проверить подключение</button></div>
         <div class="sb-hint" style="text-align:left">Запустите локальный сервер: <span class="mono" style="color:#9beeff">vllm serve &lt;модель&gt;</span> — OpenAI-совместимый API будет доступен по указанному адресу. Данные не покидают ваш компьютер.</div>
       </div>
+
+      <div id="browser-fields" hidden>
+        <label class="f-label">Модель в браузере (мультимодальные помечены 👁)
+          <input type="text" id="set-wb-model" list="wb-models" placeholder="SmolVLM-2-2.2B-Instruct" spellcheck="false">
+          <datalist id="wb-models">
+            <option value="SmolVLM-2-2.2B-Instruct"></option>
+            <option value="Qwen2.5-VL-3B-Instruct"></option>
+            <option value="Llama-3.2-11B-Vision-Instruct"></option>
+            <option value="gemma-2-2b-it"></option>
+            <option value="Qwen2.5-1.5B-Instruct"></option>
+            <option value="Phi-3.5-mini-instruct"></option>
+          </datalist>
+        </label>
+        <div class="btn-row"><button class="btn" id="btn-test-browser">Скачать и загрузить модель</button></div>
+        <div class="sb-hint" style="text-align:left">Полностью офлайн-распознавание: модель выполняется на вашем GPU прямо в браузере (технология WebLLM / WebGPU). При первом запуске веса модели скачиваются и кэшируются, дальше работает без интернета. Требуется браузер с WebGPU (Chrome / Edge). Для распознавания изображений выбирайте мультимодальные модели (👁).</div>
+      </div>
+
       <div id="local-fields" hidden>
         <label class="f-label">Языки распознавания
           <select id="set-tess">
@@ -522,7 +542,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
             <option value="deu+eng">Немецкий + английский</option>
           </select>
         </label>
-        <div class="sb-hint" style="text-align:left">Локальная модель работает офлайн прямо в браузере (при первой загрузке скачиваются веса). Для формул и таблиц рекомендуется VisualLM API или локальная vLLM — LaTeX и Markdown доступны только через LLM.</div>
+        <div class="sb-hint" style="text-align:left">Классический OCR работает офлайн прямо в браузере (при первой загрузке скачиваются веса). Для формул и таблиц рекомендуется VisualLM API, локальный vLLM или офлайн VLM в браузере — LaTeX и Markdown доступны только через LLM.</div>
       </div>
     </div>
     <div class="m-foot">
@@ -603,7 +623,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
       </div>
     </div>
     <div class="m-body">
-      <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Разметка документов на области (текст, изображения, таблицы, диаграммы, формулы), автоматическая разметка на блоки, распознавание через мультимодальные LLM — внешний или локальный сервер vLLM (OpenAI-совместимый, модели вроде <b style="color:#9beeff">gemma4</b> / <b style="color:#9beeff">qwen3.8</b>) или локальный OCR прямо в браузере, экспорт результата в DOCX. Проекты хранятся в IndexedDB этого браузера.</p>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Разметка документов на области (текст, изображения, таблицы, диаграммы, формулы), автоматическая разметка на блоки, распознавание через мультимодальные LLM: внешний или локальный сервер vLLM (OpenAI-совместимый, модели вроде <b style="color:#9beeff">gemma4</b> / <b style="color:#9beeff">qwen3.8</b>), офлайн-модель прямо в браузере (WebLLM, работает без интернета после загрузки) или классический OCR Tesseract. Экспорт результата в DOCX. Проекты хранятся в IndexedDB этого браузера.</p>
       <div class="help-grid">
         <span><kbd>V</kbd></span><span>Инструмент «Выбор»</span>
         <span><kbd>H</kbd> / <kbd>Space</kbd> / ПКМ</span><span>Перемещение холста</span>
@@ -669,9 +689,10 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
 'use strict';
 /* ============================ CONSTANTS ============================ */
 const APP_NAME='NEON VISUAL RECOGNITION';
-const APP_VERSION='2.1.0';
+const APP_VERSION='2.2.0';
 const DOCX_URL='https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js';
 const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const WLLM_URL='https://esm.run/@mlc-ai/web-llm@0.2.79';
 const TYPES={
   text:{label:'Текст'}, image:{label:'Изображение'}, table:{label:'Таблица'},
   chart:{label:'Диаграмма'}, formula:{label:'Формула'}, other:{label:'Другое'}
@@ -697,10 +718,13 @@ const PROMPTS={
 const state={
   project:null, zoom:1, panX:40, panY:40, tool:'select', selectedId:null, space:false,
   settings:{provider:'api',baseUrl:'https://api.openai.com/v1',apiKey:'',model:'gpt-4o-mini',
-            vllmUrl:'http://localhost:8000/v1',vllmKey:'',vllmModel:'gemma4',tessLang:'rus+eng'},
+            vllmUrl:'http://localhost:8000/v1',vllmKey:'',vllmModel:'gemma4',
+            wbModel:'SmolVLM-2-2.2B-Instruct',tessLang:'rus+eng'},
   saveTimer:null, dirty:false
 };
-let drag=null, confirmResolve=null, editorId=null, tessWorker=null, tessWorkerLang='', npImage=null, plTimer=null, progCancelFlag=false;
+let drag=null, confirmResolve=null, editorId=null, tessWorker=null, tessWorkerLang='',
+    npImage=null, plTimer=null, progCancelFlag=false,
+    webllmModule=null, webllmLoading=null, wllmEngine=null, wllmModelName='';
 const pointers=new Map();
 
 /* ============================ HELPERS ============================ */
@@ -759,21 +783,24 @@ function progOpen(title){$('#prog-title').textContent=title;$('#prog-bar').style
 function progSet(i,total,label){$('#prog-bar').style.width=Math.round(i/total*100)+'%';$('#prog-label').textContent=label;}
 function progBar(v){$('#prog-bar').style.width=Math.round(clamp(v,0,1)*100)+'%';}
 function progLog(m){const el=$('#prog-log');el.textContent+=m+'\n';el.scrollTop=el.scrollHeight;}
-$('#btn-prog-cancel').addEventListener('click',()=>{progCancelFlag=true;$('#btn-prog-cancel').hidden=true;progLog('Ожидание завершения текущего блока…');});
+$('#btn-prog-cancel').addEventListener('click',()=>{progCancelFlag=true;$('#btn-prog-cancel').hidden=true;progLog('Ожидание завершения текущей операции…');});
 
 /* ============================ SETTINGS ============================ */
 function loadSettings(){try{Object.assign(state.settings,JSON.parse(localStorage.getItem('nvr-settings')||'{}'));}catch(e){}}
 function saveSettingsToLS(){localStorage.setItem('nvr-settings',JSON.stringify(state.settings));updateProviderChip();}
 function updateProviderChip(){
   const s=state.settings;
-  $('#st-provider').textContent=s.provider==='api'?('API · '+(s.model||'—'))
-    :s.provider==='vllm'?('vLLM · '+(s.vllmModel||'—'))
-    :'Локальный OCR · Tesseract';
+  $('#st-provider').textContent=
+    s.provider==='api'?('API · '+(s.model||'—')):
+    s.provider==='vllm'?('vLLM · '+(s.vllmModel||'—')):
+    s.provider==='browser'?('Офлайн VLM · '+(s.wbModel||'—')):
+    'Локальный OCR · Tesseract';
 }
 function toggleProviderFields(){
   const v=$('#set-provider').value;
   $('#api-fields').hidden=v!=='api';
   $('#vllm-fields').hidden=v!=='vllm';
+  $('#browser-fields').hidden=v!=='browser';
   $('#local-fields').hidden=v!=='local';
 }
 $('#set-provider').addEventListener('change',toggleProviderFields);
@@ -782,6 +809,7 @@ $('#btn-settings').addEventListener('click',()=>{
   $('#set-provider').value=s.provider;
   $('#set-base').value=s.baseUrl;$('#set-key').value=s.apiKey;$('#set-model').value=s.model;
   $('#set-vllm-base').value=s.vllmUrl;$('#set-vllm-model').value=s.vllmModel;$('#set-vllm-key').value=s.vllmKey;
+  $('#set-wb-model').value=s.wbModel;
   $('#set-tess').value=s.tessLang;
   toggleProviderFields();
   openModal('mw-settings');
@@ -795,6 +823,7 @@ $('#btn-set-save').addEventListener('click',()=>{
   state.settings.vllmUrl=$('#set-vllm-base').value.trim();
   state.settings.vllmModel=$('#set-vllm-model').value.trim();
   state.settings.vllmKey=$('#set-vllm-key').value.trim();
+  state.settings.wbModel=$('#set-wb-model').value.trim()||'SmolVLM-2-2.2B-Instruct';
   state.settings.tessLang=$('#set-tess').value;
   saveSettingsToLS();closeModal('mw-settings');toast('Настройки сохранены');
 });
@@ -815,6 +844,23 @@ $('#btn-test-vllm').addEventListener('click',async()=>{
   try{const ids=await testEndpoint($('#set-vllm-base').value,$('#set-vllm-key').value.trim());
     toast('Локальный сервер доступен'+(ids?'. Модели: '+ids:''));}
   catch(err){toast('Ошибка подключения: '+err.message,'err');}
+});
+$('#btn-test-browser').addEventListener('click',async()=>{
+  const model=($('#set-wb-model').value.trim()||state.settings.wbModel);
+  progOpen('Загрузка офлайн-модели в браузер');
+  progLog('Модель: '+model);
+  progLog('При первом запуске веса скачиваются и кэшируются.');
+  try{
+    await getBrowserEngine(model);
+    progSet(100,100,'Модель готова');
+    progLog('Модель загружена и готова к офлайн-распознаванию.');
+    toast('Офлайн-модель загружена');
+    setTimeout(()=>closeModal('mw-progress'),900);
+  }catch(err){
+    progLog('Ошибка: '+err.message);
+    toast('Ошибка загрузки модели: '+err.message,'err',5000);
+    setTimeout(()=>closeModal('mw-progress'),1600);
+  }
 });
 
 /* ============================ VIEW / ZOOM ============================ */
@@ -907,9 +953,9 @@ function renderProps(){
 }
 $('#prop-type').addEventListener('change',e=>{const r=getRegion(state.selectedId);if(r){r.type=e.target.value;renderRegions();renderBlockList();mutate();}});
 $('#prop-content').addEventListener('input',e=>{const r=getRegion(state.selectedId);if(r){r.content=e.target.value;mutate();renderBlockListSoon();}});
-$('#prop-recognize').addEventListener('click',()=>{const r=getRegion(state.selectedId);if(r)recognizeRegions([r]);});
-$('#prop-editor').addEventListener('click',()=>state.selectedId&&openEditor(state.selectedId));
-$('#prop-delete').addEventListener('click',()=>state.selectedId&&deleteRegion(state.selectedId));
+$('#prop-recognize').addEventListener('click',()=>{const r=getRegion(state.selectedId);if(r)recognizeRegions([r]);else toast('Блок не выбран','err');});
+$('#prop-editor').addEventListener('click',()=>state.selectedId?openEditor(state.selectedId):toast('Блок не выбран','err'));
+$('#prop-delete').addEventListener('click',()=>state.selectedId?deleteRegion(state.selectedId):toast('Блок не выбран','err'));
 let blTimer=null;
 function renderBlockListSoon(){clearTimeout(blTimer);blTimer=setTimeout(renderBlockList,600);}
 
@@ -1080,10 +1126,12 @@ $('#toolbar').addEventListener('click',e=>{
   const btn=e.target.closest('button');if(!btn)return;
   switch(btn.id){
     case 'btn-load-img':$('#file-image').click();break;
-    case 'btn-auto':openModal('mw-auto');break;
+    case 'btn-auto':
+      if(!state.project?.image){toast('Сначала загрузите изображение','err');break;}
+      openModal('mw-auto');break;
     case 'btn-rec-sel':{const r=getRegion(state.selectedId);r?recognizeRegions([r]):toast('Сначала выберите блок','err');break;}
     case 'btn-rec-all':recognizeRegions(state.project?.regions||[]);break;
-    case 'btn-del-sel':state.selectedId&&deleteRegion(state.selectedId);break;
+    case 'btn-del-sel':state.selectedId?deleteRegion(state.selectedId):toast('Блок не выбран','err');break;
     case 'zoom-label':zoom100();break;
   }
 });
@@ -1371,6 +1419,53 @@ async function runAutoMarkup(opts){
   }
 }
 
+/* ============================ OFFLINE BROWSER VLM (WebLLM) ============================ */
+function getWebLLM(){
+  if(webllmModule)return Promise.resolve(webllmModule);
+  if(!webllmLoading){
+    webllmLoading=import(WLLM_URL)
+      .then(m=>{webllmModule=m;return m;})
+      .catch(err=>{webllmLoading=null;throw new Error('Не удалось загрузить модуль WebLLM (нужен интернет для первой загрузки): '+err.message);});
+  }
+  return webllmLoading;
+}
+function onWllmProgress(r){
+  if(r&&typeof r.progress==='number')progBar(r.progress);
+  if(r&&r.text)$('#prog-label').textContent=String(r.text).slice(0,130);
+}
+async function getBrowserEngine(model){
+  if(!('gpu' in navigator))throw new Error('WebGPU недоступен: используйте Chrome/Edge с поддержкой WebGPU');
+  const wllm=await getWebLLM();
+  if(!wllmEngine){
+    if(typeof wllm.CreateMLCEngine==='function'){
+      wllmEngine=await wllm.CreateMLCEngine(model,{initProgressCallback:onWllmProgress});
+    }else{
+      wllmEngine=new wllm.MLCEngine({initProgressCallback:onWllmProgress});
+      await wllmEngine.reload(model);
+    }
+    wllmModelName=model;
+  }else if(wllmModelName!==model){
+    await wllmEngine.reload(model);
+    wllmModelName=model;
+  }
+  return wllmEngine;
+}
+async function webllmRecognize(imgDataUrl,prompt){
+  const engine=await getBrowserEngine(state.settings.wbModel||'SmolVLM-2-2.2B-Instruct');
+  let res;
+  try{
+    res=await engine.chat.completions.create({temperature:0.01,stream:false,
+      messages:[{role:'user',content:[{type:'text',text:prompt},{type:'image_url',image_url:{url:imgDataUrl}}]}]});
+  }catch(err){
+    /* текстовая (не мультимодальная) модель могла отвергнуть изображение — пробуем текстовый запрос */
+    try{
+      res=await engine.chat.completions.create({temperature:0.01,stream:false,
+        messages:[{role:'user',content:prompt+' (Изображение недоступно этой модели: сообщи, что не можешь обработать изображение.)'}]});
+    }catch(_){ throw err; }
+  }
+  return (res.choices?.[0]?.message?.content||'').trim();
+}
+
 /* ============================ OCR ============================ */
 function cropRegion(r,pad=0,maxDim=1400){
   const p=state.project;
@@ -1417,14 +1512,19 @@ async function recognizeOne(r){
   const cv=cropRegion(r,pad);
   if(!cv)throw new Error('Нет изображения');
   const s=state.settings;
+  const dataUrl=cv.toDataURL('image/jpeg',0.92);
+  const prompt=PROMPTS[r.type]||PROMPTS.other;
   if(s.provider==='local'){
     if(r.type==='formula')progLog('  ⚠ локальный OCR вернёт обычный текст (для LaTeX используйте LLM)');
     return await tessRecognize(cv);
   }
+  if(s.provider==='browser'){
+    return await webllmRecognize(dataUrl,prompt);
+  }
   const cfg=s.provider==='vllm'
     ?{base:s.vllmUrl,key:s.vllmKey,model:s.vllmModel}
     :{base:s.baseUrl,key:s.apiKey,model:s.model};
-  return await apiRecognize(cfg.base,cfg.key,cfg.model,cv.toDataURL('image/jpeg',0.92),PROMPTS[r.type]||PROMPTS.other);
+  return await apiRecognize(cfg.base,cfg.key,cfg.model,dataUrl,prompt);
 }
 async function recognizeRegions(list){
   const p=state.project;
@@ -1432,9 +1532,11 @@ async function recognizeRegions(list){
   if(!list.length)return toast('Нет блоков для распознавания','err');
   progOpen('Распознавание: '+list.length+' '+plural(list.length));
   const s=state.settings;
-  const engine=s.provider==='api'?('VisualLM API · '+s.model)
-    :s.provider==='vllm'?('vLLM · '+s.vllmModel+' @ '+s.vllmUrl)
-    :'Tesseract (локально в браузере)';
+  const engine=
+    s.provider==='api'?('VisualLM API · '+s.model):
+    s.provider==='vllm'?('vLLM · '+s.vllmModel+' @ '+s.vllmUrl):
+    s.provider==='browser'?('Офлайн VLM в браузере · '+s.wbModel):
+    'Tesseract (локально в браузере)';
   progLog('Провайдер: '+engine);
   let ok=0,fail=0;
   for(let i=0;i<list.length;i++){
