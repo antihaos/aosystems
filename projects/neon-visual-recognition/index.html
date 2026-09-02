@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEON VISUAL RECOGNITION — разметка и распознавание</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1.5' y='1.5' width='29' height='29' rx='8' fill='%23070a12' stroke='%2300e5ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='6' fill='none' stroke='%23ff2ec4' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%2300e5ff'/%3E%3Cpath d='M16 4v4M16 24v4M4 16h4M24 16h4' stroke='%2300e5ff' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/600.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.1.0/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.20/400.css">
+<style>
+:root{
+  --bg:#070a12; --panel:#0e1524; --panel2:#121a2e; --line:#1b2540; --line2:#26345a;
+  --txt:#dbe4f5; --muted:#8b98b8;
+  --acc:#00e5ff; --vio:#8b5cf6; --pink:#ff2ec4; --grn:#34d399; --amb:#fbbf24; --red:#ff5470;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(900px 420px at 12% -8%, rgba(0,229,255,.07), transparent 60%),
+                   radial-gradient(900px 480px at 92% 108%, rgba(255,46,196,.06), transparent 60%);
+  color:var(--txt);
+  font:400 14px/1.45 Inter,system-ui,"Segoe UI",sans-serif;
+  overflow:hidden;
+}
+::selection{background:rgba(0,229,255,.3)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#20304f;border-radius:6px;border:2px solid #0b1120}
+::-webkit-scrollbar-track{background:transparent}
+body.dragging *{user-select:none!important;cursor:inherit}
+button{font-family:inherit}
+svg{display:block}
+
+#app{height:100dvh;display:flex;flex-direction:column}
+
+/* ================= TOPBAR ================= */
+#topbar{height:54px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;
+  background:linear-gradient(180deg,rgba(15,22,38,.96),rgba(10,15,26,.96));
+  border-bottom:1px solid var(--line);position:relative;z-index:30;
+  box-shadow:0 1px 0 rgba(0,229,255,.12)}
+.logo{width:28px;height:28px;flex:none;filter:drop-shadow(0 0 7px rgba(0,229,255,.55))}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:clamp(11px,1.35vw,15.5px);
+  letter-spacing:1.2px;white-space:nowrap;
+  background:linear-gradient(90deg,#7ef9ff,#c4b5fd 55%,#ff9de2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.ver{font:600 10px "JetBrains Mono";color:#04222b;background:linear-gradient(90deg,var(--acc),#7ef9ff);
+  padding:2px 8px;border-radius:20px;box-shadow:0 0 10px rgba(0,229,255,.45);letter-spacing:.5px;flex:none}
+.proj-name-wrap{display:flex;align-items:center;min-width:0}
+#project-name{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:9px;color:var(--txt);
+  padding:7px 11px;font:600 13px Inter;width:210px;min-width:60px}
+#project-name:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,229,255,.12)}
+.top-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:9px;border:1px solid var(--line2);
+  background:#101a30;color:var(--txt);font:500 13px Inter;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--acc);box-shadow:0 0 12px rgba(0,229,255,.22)}
+.btn.primary{background:linear-gradient(135deg,rgba(0,229,255,.16),rgba(139,92,246,.2));border-color:rgba(0,229,255,.55);color:#c9f9ff}
+.btn.acc{border-color:rgba(0,229,255,.5);color:#a9f1ff;background:rgba(0,229,255,.07)}
+.btn.danger{border-color:rgba(255,84,112,.45);color:#ffb3c0;background:rgba(255,84,112,.06)}
+.btn.danger:hover{box-shadow:0 0 12px rgba(255,84,112,.3);border-color:var(--red)}
+.btn.w100{width:100%;justify-content:center}
+.btn:disabled{opacity:.45;cursor:default;box-shadow:none}
+.btn svg{width:15px;height:15px}
+.ibtn{width:35px;height:35px;flex:none;display:inline-flex;align-items:center;justify-content:center;border-radius:9px;
+  border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;transition:.15s}
+.ibtn:hover{color:var(--acc);border-color:var(--line2);box-shadow:0 0 9px rgba(0,229,255,.25)}
+.ibtn svg{width:18px;height:18px}
+
+/* ================= MAIN ================= */
+#main{flex:1;display:flex;min-height:0;position:relative}
+
+/* ---- sidebar ---- */
+#sidebar{width:304px;flex:none;display:flex;flex-direction:column;background:var(--panel);
+  border-right:1px solid var(--line);z-index:25}
+.sb-tabs{display:flex;border-bottom:1px solid var(--line);flex:none}
+.sb-tabs button{flex:1;padding:11px 4px;background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--muted);font:600 12.5px Inter;cursor:pointer;letter-spacing:.3px;transition:.15s}
+.sb-tabs button.on{color:var(--acc);border-bottom-color:var(--acc);text-shadow:0 0 12px rgba(0,229,255,.6)}
+.sb-body{flex:1;overflow:auto;padding:10px;min-height:0}
+.sb-tab{display:none}.sb-tab.on{display:block}
+.sb-hint{color:var(--muted);font-size:12.5px;line-height:1.55;padding:14px 10px;text-align:center;
+  border:1px dashed var(--line2);border-radius:10px;margin-top:8px}
+
+.pitem{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;
+  margin-top:8px;cursor:pointer;transition:.15s;background:#0d1424}
+.pitem:hover{border-color:var(--line2);background:#101a30}
+.pitem.on{border-color:rgba(0,229,255,.55);box-shadow:0 0 14px rgba(0,229,255,.15)}
+.pinfo{min-width:0}
+.pname{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:168px}
+.pmeta{font-size:11px;color:var(--muted);margin-top:2px}
+.pacts{margin-left:auto;display:flex;gap:2px;opacity:0;transition:.15s;flex:none}
+.pitem:hover .pacts,.pitem.on .pacts{opacity:1}
+.sbtn{width:24px;height:24px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--muted);
+  cursor:pointer;font-size:11px;display:inline-flex;align-items:center;justify-content:center;flex:none;transition:.12s}
+.sbtn:hover{color:var(--acc);border-color:var(--line2)}
+.sbtn.del:hover{color:var(--red)}
+
+.bitem{display:flex;align-items:center;gap:9px;padding:8px 9px;border:1px solid var(--line);border-radius:10px;
+  margin-top:8px;cursor:pointer;background:#0d1424;transition:.15s}
+.bitem:hover{border-color:var(--line2)}
+.bitem.sel{border-color:rgba(0,229,255,.55);box-shadow:0 0 12px rgba(0,229,255,.15)}
+.bico{width:28px;height:28px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  color:var(--rc);border:1px solid color-mix(in srgb,var(--rc) 45%,transparent);
+  background:color-mix(in srgb,var(--rc) 10%,transparent);box-shadow:0 0 9px color-mix(in srgb,var(--rc) 22%,transparent)}
+.bico svg{width:14px;height:14px}
+.bmain{min-width:0;flex:1}
+.bname{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:5px}
+.bprev{font-size:11px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bacts{display:flex;flex-direction:column;gap:1px;flex:none}
+.bacts .sbtn{width:20px;height:17px;font-size:9px}
+.t-text{--rc:#00e5ff}.t-image{--rc:#a78bfa}.t-table{--rc:#34d399}
+.t-chart{--rc:#fbbf24}.t-formula{--rc:#ff2ec4}.t-other{--rc:#94a3b8}
+
+label.f-label{display:block;font-size:12px;color:var(--muted);margin-bottom:12px;font-weight:600}
+input[type=text],input[type=password],input[type=number],select,textarea{
+  width:100%;margin-top:5px;background:#0a101d;border:1px solid var(--line2);border-radius:9px;
+  color:var(--txt);padding:8px 10px;font:400 13px Inter;transition:.15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(0,229,255,.12)}
+textarea{resize:vertical;line-height:1.55}
+input[type=range]{width:100%;margin-top:6px;accent-color:var(--acc)}
+.chk{display:flex;gap:9px;align-items:center;font-size:13px;margin-bottom:11px;color:var(--txt);font-weight:500;cursor:pointer}
+.chk input{width:auto;margin:0;accent-color:var(--acc)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+
+/* ---- workspace ---- */
+#workspace{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+#toolbar{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--panel);
+  border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin;flex:none}
+.tb-sep{width:1px;height:24px;background:var(--line2);flex:none}
+.tbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:8px;border:1px solid transparent;
+  background:transparent;color:var(--muted);font:500 12.5px Inter;cursor:pointer;white-space:nowrap;transition:.15s;flex:none}
+.tbtn:hover{color:var(--txt);border-color:var(--line2)}
+.tbtn.on{color:var(--acc);border-color:rgba(0,229,255,.55);background:rgba(0,229,255,.08);
+  box-shadow:0 0 10px rgba(0,229,255,.25),inset 0 0 10px rgba(0,229,255,.06)}
+.tbtn.on.t-formula{color:var(--pink);border-color:rgba(255,46,196,.55);background:rgba(255,46,196,.07);box-shadow:0 0 10px rgba(255,46,196,.25)}
+.tbtn.on.t-table{color:var(--grn);border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.07)}
+.tbtn.on.t-chart{color:var(--amb);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.07)}
+.tbtn.on.t-image{color:#c4b5fd;border-color:rgba(139,92,246,.55);background:rgba(139,92,246,.08)}
+.tbtn.acc{color:#9beeff}
+.tbtn.danger:hover{color:#ff8fa2;border-color:rgba(255,84,112,.4)}
+.tbtn svg{width:16px;height:16px}
+.zoombox{display:flex;align-items:center;border:1px solid var(--line2);border-radius:8px;overflow:hidden;flex:none}
+.zoombox .tbtn{border:none;border-radius:0}
+#zoom-label{min-width:54px;text-align:center;font:600 12px "JetBrains Mono";color:var(--txt);cursor:pointer}
+#zoom-label:hover{color:var(--acc)}
+
+#viewport{flex:1;position:relative;overflow:hidden;background:#070b14;
+  background-image:radial-gradient(circle,#111c34 1px,transparent 1.4px);background-size:26px 26px;
+  touch-action:none;user-select:none;min-height:0}
+#viewport.tool-pan,#viewport.space-pan{cursor:grab}
+#viewport.grabbing{cursor:grabbing!important}
+#viewport.tool-draw{cursor:crosshair}
+#world{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+#main-img{display:block;pointer-events:none;border-radius:2px;
+  box-shadow:0 0 0 1px rgba(0,229,255,.28),0 0 44px rgba(0,229,255,.14),0 14px 50px rgba(0,0,0,.6)}
+#regions-layer{position:absolute;inset:0}
+
+.region{position:absolute;border:calc(1.6px*var(--inv,1)) solid var(--rc);
+  background:color-mix(in srgb,var(--rc) 13%,transparent);cursor:move;transition:background .15s}
+.region:hover{background:color-mix(in srgb,var(--rc) 22%,transparent)}
+.region.selected{background:color-mix(in srgb,var(--rc) 20%,transparent);
+  box-shadow:0 0 0 calc(1px*var(--inv,1)) rgba(255,255,255,.35),
+             0 0 calc(18px*var(--inv,1)) color-mix(in srgb,var(--rc) 65%,transparent)}
+.region.ghost{border-style:dashed;background:color-mix(in srgb,var(--rc) 10%,transparent)}
+.rlabel{position:absolute;left:0;top:0;transform:translateY(-100%);display:flex;align-items:center;
+  gap:calc(4px*var(--inv,1));padding:calc(2px*var(--inv,1)) calc(6px*var(--inv,1));
+  background:#0b1120;border:calc(1px*var(--inv,1)) solid var(--rc);color:var(--rc);
+  font-size:calc(10.5px*var(--inv,1));font-weight:600;border-radius:calc(5px*var(--inv,1));
+  white-space:nowrap;pointer-events:none;box-shadow:0 0 calc(9px*var(--inv,1)) color-mix(in srgb,var(--rc) 40%,transparent)}
+.rlabel svg{width:calc(11px*var(--inv,1));height:calc(11px*var(--inv,1));flex:none}
+.rdot{width:6px;height:6px;border-radius:50%;display:inline-block;flex:none}
+.rdot.ok{background:var(--grn);box-shadow:0 0 6px var(--grn)}
+.rdot.err{background:var(--red);box-shadow:0 0 6px var(--red)}
+.rh{position:absolute;width:calc(11px*var(--inv,1));height:calc(11px*var(--inv,1));background:#0a101d;
+  border:calc(1.4px*var(--inv,1)) solid var(--rc);border-radius:2px;display:none;transform:translate(-50%,-50%);z-index:5}
+.region.selected .rh{display:block}
+.rh[data-h=nw]{left:0;top:0;cursor:nwse-resize}.rh[data-h=n]{left:50%;top:0;cursor:ns-resize}
+.rh[data-h=ne]{left:100%;top:0;cursor:nesw-resize}.rh[data-h=e]{left:100%;top:50%;cursor:ew-resize}
+.rh[data-h=se]{left:100%;top:100%;cursor:nwse-resize}.rh[data-h=s]{left:50%;top:100%;cursor:ns-resize}
+.rh[data-h=sw]{left:0;top:100%;cursor:nesw-resize}.rh[data-h=w]{left:0;top:50%;cursor:ew-resize}
+
+#dropzone{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6}
+#viewport.has-image #dropzone{display:none}
+.dz-card{display:flex;flex-direction:column;align-items:center;gap:11px;padding:40px 48px;
+  border:1.5px dashed rgba(0,229,255,.45);border-radius:18px;background:rgba(10,16,28,.75);
+  box-shadow:0 0 44px rgba(0,229,255,.1),inset 0 0 34px rgba(0,229,255,.04);backdrop-filter:blur(4px);
+  text-align:center;max-width:92%}
+.dz-ico svg{width:46px;height:46px;color:var(--acc);filter:drop-shadow(0 0 9px rgba(0,229,255,.65));margin:0 auto}
+.dz-title{font-weight:600;font-size:15px}
+.dz-sub{color:var(--muted);font-size:12px}
+.dz-hint{color:var(--muted);font-size:11.5px}
+
+/* ---- statusbar ---- */
+#statusbar{height:30px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:0 12px;background:#0a0f1c;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);z-index:20}
+.st-left,.st-right{display:flex;align-items:center;gap:8px;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border:1px solid var(--line2);
+  border-radius:20px;background:#0d1526;font-size:11px;white-space:nowrap}
+.chip.acc{color:#9beeff;border-color:rgba(0,229,255,.4);box-shadow:0 0 8px rgba(0,229,255,.14)}
+.mono{font-family:"JetBrains Mono",monospace}
+
+/* ================= MODALS ================= */
+.modal-wrap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(4,7,14,.68);backdrop-filter:blur(3px);z-index:100;padding:18px}
+.modal-wrap.show{display:flex}
+.modal{width:min(620px,100%);max-height:min(88vh,920px);display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#0f1626,#0b1120);border:1px solid var(--line2);border-radius:14px;
+  box-shadow:0 0 0 1px rgba(0,229,255,.12),0 0 36px rgba(0,229,255,.15),0 24px 64px rgba(0,0,0,.6);
+  overflow:hidden;animation:mpop .18s ease}
+@keyframes mpop{from{transform:translateY(10px) scale(.98);opacity:.5}}
+.modal.max{width:100%;height:100%;max-height:none;border-radius:10px}
+.modal.wide{width:min(900px,100%)}
+.m-head{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line);flex:none}
+.m-title{font-weight:700;font-size:14.5px;letter-spacing:.3px;color:#cfeaff;text-shadow:0 0 14px rgba(0,229,255,.35)}
+.m-btns{margin-left:auto;display:flex;gap:6px}
+.mbtn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line2);background:#0d1526;color:var(--muted);
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:.12s}
+.mbtn:hover{color:var(--acc);border-color:var(--acc);box-shadow:0 0 9px rgba(0,229,255,.3)}
+.mbtn.on{color:var(--acc);border-color:var(--acc)}
+.mbtn svg{width:15px;height:15px}
+.m-body{padding:16px;overflow:auto}
+.m-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 15px;border-top:1px solid var(--line);flex:none;flex-wrap:wrap}
+
+.ed-grid{display:grid;grid-template-columns:minmax(190px,330px) 1fr;gap:15px}
+.ed-preview{background:#070c16;border:1px solid var(--line2);border-radius:10px;padding:10px;
+  display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;min-height:190px}
+.ed-preview img{max-width:100%;max-height:360px;border:1px solid var(--line2);border-radius:6px}
+.ed-meta{font:11.5px "JetBrains Mono";color:var(--muted)}
+#ed-content{min-height:220px}
+.modal.max #ed-content{min-height:60vh}
+
+.bar{height:10px;border-radius:6px;background:#0a101d;border:1px solid var(--line2);overflow:hidden;margin:12px 0 8px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc),var(--vio));
+  box-shadow:0 0 12px rgba(0,229,255,.7);transition:width .2s}
+#prog-label{font-size:12.5px;color:var(--muted)}
+#prog-log{margin-top:12px;background:#070c16;border:1px solid var(--line);border-radius:8px;padding:9px;
+  font:11px "JetBrains Mono";color:#8fd7e4;max-height:180px;overflow:auto;white-space:pre-wrap}
+
+kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;
+  padding:1px 7px;font:11px "JetBrains Mono";color:#9beeff;white-space:nowrap}
+.help-grid{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:13px;align-items:center}
+.help-grid b{color:#9beeff;font-weight:600}
+
+/* ---- toasts ---- */
+#toasts{position:fixed;right:14px;bottom:42px;display:flex;flex-direction:column;gap:8px;z-index:300}
+.toast{min-width:220px;max-width:360px;padding:10px 14px;border-radius:10px;background:#0d1526;
+  border:1px solid var(--line2);border-left:3px solid var(--acc);color:var(--txt);font-size:13px;
+  box-shadow:0 8px 30px rgba(0,0,0,.5),0 0 14px rgba(0,229,255,.12);opacity:0;transform:translateX(14px);transition:.25s}
+.toast.in{opacity:1;transform:none}
+.toast.err{border-left-color:var(--red);box-shadow:0 8px 30px rgba(0,0,0,.5),0 0 14px rgba(255,84,112,.15)}
+
+#sb-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:24}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width:1080px){ #sidebar{width:272px} .pname{max-width:130px} }
+@media (max-width:860px){
+  #sidebar{position:absolute;top:0;bottom:0;left:0;width:292px;transform:translateX(-105%);
+    transition:transform .25s;box-shadow:22px 0 54px rgba(0,0,0,.55)}
+  body.sb-open #sidebar{transform:none}
+  body.sb-open #sb-backdrop{display:block}
+  .btn .lbl{display:none}
+  .btn{padding:7px 10px}
+  #project-name{width:108px}
+  .hide-sm{display:none!important}
+  .tbtn span{display:none}
+  .tbtn{padding:6px 8px}
+  .brand{letter-spacing:.4px}
+}
+@media (max-width:560px){
+  .dz-card{padding:26px 20px}
+  .ver{display:none}
+  .ed-grid{grid-template-columns:1fr}
+  #statusbar{font-size:10.5px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= TOPBAR ================= -->
+  <header id="topbar">
+    <button class="ibtn" id="btn-sidebar" title="Панели (показать/скрыть)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <svg class="logo" viewBox="0 0 32 32" fill="none">
+      <defs><linearGradient id="nvlg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#00e5ff"/><stop offset="1" stop-color="#ff2ec4"/>
+      </linearGradient></defs>
+      <rect x="1.6" y="1.6" width="28.8" height="28.8" rx="8" stroke="url(#nvlg)" stroke-width="2"/>
+      <circle cx="16" cy="16" r="6.2" stroke="url(#nvlg)" stroke-width="2"/>
+      <circle cx="16" cy="16" r="2.1" fill="#00e5ff"/>
+      <path d="M16 3.6v4M16 24.4v4M3.6 16h4M24.4 16h4" stroke="url(#nvlg)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div class="brand">NEON VISUAL RECOGNITION<span class="ver app-ver">v2.1.0</span></div>
+    <div class="proj-name-wrap">
+      <input id="project-name" placeholder="Название проекта" spellcheck="false" autocomplete="off">
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="btn-import" title="Импорт проекта из JSON">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span class="lbl">Импорт</span>
+      </button>
+      <button class="btn" id="btn-export-json" title="Экспорт проекта в JSON">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V5m0 10l-4-4m4 4l4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        <span class="lbl">Экспорт проекта</span>
+      </button>
+      <button class="btn primary" id="btn-export-docx" title="Экспорт результата в DOCX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6"/></svg>
+        <span class="lbl">DOCX</span>
+      </button>
+      <button class="ibtn" id="btn-settings" title="Настройки распознавания">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2.1 2.1M16.9 16.9L19 19M19 5l-2.1 2.1M7.1 16.9L5 19"/></svg>
+      </button>
+      <button class="ibtn" id="btn-help" title="Справка и горячие клавиши">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.3 9.2a2.8 2.8 0 1 1 3.9 2.8c-.9.4-1.2 1-1.2 2"/><path d="M12 17.2v.1"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN ================= -->
+  <div id="main">
+    <aside id="sidebar">
+      <div class="sb-tabs">
+        <button data-tab="projects" class="on">Проекты</button>
+        <button data-tab="blocks">Блоки</button>
+        <button data-tab="props">Свойства</button>
+      </div>
+      <div class="sb-body">
+        <div id="tab-projects" class="sb-tab on">
+          <button class="btn primary w100" id="btn-new-project">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Новый проект
+          </button>
+          <div id="projects-list"></div>
+        </div>
+        <div id="tab-blocks" class="sb-tab">
+          <div id="blocks-list"></div>
+        </div>
+        <div id="tab-props" class="sb-tab">
+          <div id="props-empty" class="sb-hint">Выберите блок на холсте или в списке «Блоки», чтобы посмотреть и отредактировать его свойства. Кнопка «Авторазметка» на панели инструментов создаст блоки автоматически.</div>
+          <div id="props-form" hidden>
+            <label class="f-label">Тип области
+              <select id="prop-type"></select>
+            </label>
+            <label class="f-label">Область (пиксели изображения)
+              <div class="mono" id="prop-geo" style="margin-top:5px;font-size:12px;color:#9beeff"></div>
+            </label>
+            <label class="f-label">Содержимое блока
+              <textarea id="prop-content" rows="9" placeholder="Результат распознавания или описание…"></textarea>
+            </label>
+            <div class="btn-row">
+              <button class="btn acc" id="prop-recognize">✦ Распознать</button>
+              <button class="btn" id="prop-editor">Редактор</button>
+              <button class="btn danger" id="prop-delete">Удалить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div id="sb-backdrop"></div>
+
+    <div id="workspace">
+      <!-- ============ TOOLBAR ============ -->
+      <div id="toolbar">
+        <button class="tbtn acc" id="btn-load-img" title="Загрузить изображение">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+          <span>Изображение</span>
+        </button>
+        <div class="tb-sep"></div>
+        <button class="tbtn" data-tool="select" title="Выбор / перемещение (V)">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2l7.5 18 2.3-7.2L23 10.5z"/></svg><span>Выбор</span>
+        </button>
+        <button class="tbtn" data-tool="pan" title="Перемещение холста (H / Space / ПКМ)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M2 12h20M12 2l-3 3m-3-3l3 3M12 22l-3-3m3 3l3-3M2 12l3-3m-3 3l3 3M22 12l-3-3m3 3l-3 3"/></svg><span>Рука</span>
+        </button>
+        <div class="tb-sep"></div>
+        <button class="tbtn t-text" data-tool="draw-text" title="Область: текст (T)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 6h14M12 6v13"/></svg><span>Текст</span>
+        </button>
+        <button class="tbtn t-image" data-tool="draw-image" title="Область: изображение (I)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg><span>Изобр.</span>
+        </button>
+        <button class="tbtn t-table" data-tool="draw-table" title="Область: таблица (G)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.3h18M3 14.6h18M9 4v16M15 4v16"/></svg><span>Таблица</span>
+        </button>
+        <button class="tbtn t-chart" data-tool="draw-chart" title="Область: диаграмма (D)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 20v-6M10 20V8M15 20v-9M20 20V4"/><path d="M3 20h18"/></svg><span>Диагр.</span>
+        </button>
+        <button class="tbtn t-formula" data-tool="draw-formula" title="Область: формула (F)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 5H7l6 7-6 7h11"/></svg><span>Формула</span>
+        </button>
+        <button class="tbtn t-other" data-tool="draw-other" title="Область: другое (O)">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg><span>Прочее</span>
+        </button>
+        <div class="tb-sep"></div>
+        <div class="zoombox">
+          <button class="tbtn" data-zoom="0.8" title="Уменьшить (−)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M21 21l-4.5-4.5"/></svg>
+          </button>
+          <span id="zoom-label" title="Клик — масштаб 100%">100%</span>
+          <button class="tbtn" data-zoom="1.25" title="Увеличить (+)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M21 21l-4.5-4.5"/></svg>
+          </button>
+        </div>
+        <button class="tbtn" data-fit="all" title="Вписать в окно (0)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg><span>Вписать</span>
+        </button>
+        <button class="tbtn" data-fit="width" title="По ширине (W)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6v12M21 6v12M7 12h10M7 12l3-3m-3 3l3 3M17 12l-3-3m3 3l-3 3"/></svg><span>Ширина</span>
+        </button>
+        <button class="tbtn" data-fit="height" title="По высоте (S)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12M6 21h12M12 7v10M12 7l-3 3m3-3l3 3M12 17l-3-3m3 3l3-3"/></svg><span>Высота</span>
+        </button>
+        <button class="tbtn" data-fit="cover" title="Заполнить (C)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 15l6-6M9 9v2.5M9 9h2.5M15 15v-2.5M15 15h-2.5"/></svg><span>Заполнить</span>
+        </button>
+        <button class="tbtn" data-fit="one" title="Масштаб 100% (1)"><span class="mono">1:1</span></button>
+        <div class="tb-sep"></div>
+        <button class="tbtn acc" id="btn-auto" title="Автоматическая разметка изображения на блоки">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L14 10l2 2-9 9-2.6.6zM14 10l4.5-4.5M18 3v2M18 7v2M16 5h2M20 5h2"/><path d="M20 12l.7 1.8 1.8.7-1.8.7L20 17l-.7-1.8-1.8-.7 1.8-.7z"/></svg><span>Авторазметка</span>
+        </button>
+        <button class="tbtn acc" id="btn-rec-sel" title="Распознать выбранный блок">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l1.9 5.4L19 10l-5.1 1.6L12 17l-1.9-5.4L5 10l5.1-1.6z"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg><span>Распознать</span>
+        </button>
+        <button class="tbtn acc" id="btn-rec-all" title="Распознать все блоки">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3l1.9 5.4L19 10l-5.1 1.6L12 17l-1.9-5.4L5 10l5.1-1.6z"/><path d="M5 17l.6 1.7L7.3 19l-1.7.6L5 21l-.6-1.4L2.7 19l1.7-.3z"/><path d="M19 15l.6 1.7 1.7.6-1.7.6L19 19.6l-.6-1.7-1.7-.6 1.7-.3z"/></svg><span>Всё</span>
+        </button>
+        <button class="tbtn danger" id="btn-del-sel" title="Удалить выбранный блок (Delete)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6"/></svg>
+        </button>
+      </div>
+
+      <!-- ============ VIEWPORT ============ -->
+      <div id="viewport" class="tool-select">
+        <div id="world">
+          <img id="main-img" alt="" draggable="false">
+          <div id="regions-layer"></div>
+        </div>
+        <div id="dropzone">
+          <div class="dz-card">
+            <div class="dz-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+            </div>
+            <div class="dz-title">Перетащите изображение сюда</div>
+            <div class="dz-sub">— или —</div>
+            <button class="btn primary" id="btn-dz-pick">Выбрать файл</button>
+            <div class="dz-hint">Также можно вставить картинку из буфера обмена (Ctrl+V), затем нажать «Авторазметка»</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= STATUSBAR ================= -->
+  <footer id="statusbar">
+    <div class="st-left">
+      <span class="chip acc" id="st-provider">—</span>
+      <span class="chip" id="st-save">—</span>
+    </div>
+    <div class="st-right">
+      <span class="mono hide-sm" id="st-coords">x:– y:–</span>
+      <span class="mono hide-sm" id="st-img">—</span>
+      <span class="chip" id="st-count">0 блоков</span>
+    </div>
+  </footer>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div class="modal-wrap" id="mw-settings">
+  <div class="modal">
+    <div class="m-head"><div class="m-title">Настройки распознавания</div>
+      <div class="m-btns">
+        <button class="mbtn m-fs" title="Во весь экран"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
+        <button class="mbtn m-x" title="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+    <div class="m-body">
+      <label class="f-label">Провайдер распознавания
+        <select id="set-provider">
+          <option value="api">VisualLM API (OpenAI-совместимый формат)</option>
+          <option value="vllm">Локальный vLLM-сервер (локальная VLM)</option>
+          <option value="local">Локально в браузере (Tesseract OCR)</option>
+        </select>
+      </label>
+      <div id="api-fields">
+        <label class="f-label">Base URL API
+          <input type="text" id="set-base" placeholder="https://api.openai.com/v1" spellcheck="false">
+        </label>
+        <label class="f-label">API-ключ
+          <input type="password" id="set-key" placeholder="sk-…" spellcheck="false" autocomplete="off">
+        </label>
+        <label class="f-label">Модель (мультимодальная)
+          <input type="text" id="set-model" placeholder="gpt-4o-mini, qwen2.5-vl-7b, llava…" spellcheck="false">
+        </label>
+        <div class="btn-row"><button class="btn" id="btn-test-api">Проверить подключение</button></div>
+      </div>
+      <div id="vllm-fields" hidden>
+        <label class="f-label">Адрес локального сервера
+          <input type="text" id="set-vllm-base" placeholder="http://localhost:8000/v1" spellcheck="false">
+        </label>
+        <label class="f-label">Локальная модель
+          <input type="text" id="set-vllm-model" list="vllm-models" placeholder="gemma4 / qwen3.8" spellcheck="false">
+          <datalist id="vllm-models">
+            <option value="gemma4"></option>
+            <option value="qwen3.8"></option>
+          </datalist>
+        </label>
+        <label class="f-label">API-ключ (обычно не требуется)
+          <input type="password" id="set-vllm-key" placeholder="EMPTY" autocomplete="off">
+        </label>
+        <div class="btn-row"><button class="btn" id="btn-test-vllm">Проверить подключение</button></div>
+        <div class="sb-hint" style="text-align:left">Запустите локальный сервер: <span class="mono" style="color:#9beeff">vllm serve &lt;модель&gt;</span> — OpenAI-совместимый API будет доступен по указанному адресу. Данные не покидают ваш компьютер.</div>
+      </div>
+      <div id="local-fields" hidden>
+        <label class="f-label">Языки распознавания
+          <select id="set-tess">
+            <option value="rus+eng">Русский + английский</option>
+            <option value="rus">Только русский</option>
+            <option value="eng">Только английский</option>
+            <option value="deu+eng">Немецкий + английский</option>
+          </select>
+        </label>
+        <div class="sb-hint" style="text-align:left">Локальная модель работает офлайн прямо в браузере (при первой загрузке скачиваются веса). Для формул и таблиц рекомендуется VisualLM API или локальная vLLM — LaTeX и Markdown доступны только через LLM.</div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn" id="btn-set-cancel">Отмена</button>
+      <button class="btn primary" id="btn-set-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="mw-auto">
+  <div class="modal" style="width:min(480px,100%)">
+    <div class="m-head"><div class="m-title">Авторазметка изображения</div>
+      <div class="m-btns">
+        <button class="mbtn m-fs" title="Во весь экран"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
+        <button class="mbtn m-x" title="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+    <div class="m-body">
+      <label class="f-label">Чувствительность (порог контраста): <span class="mono" id="auto-sens-val" style="color:#9beeff">30</span>
+        <input type="range" id="auto-sens" min="12" max="60" value="30">
+      </label>
+      <label class="f-label">Минимальный размер блока, px
+        <input type="number" id="auto-min" value="40" min="10" max="400" step="5">
+      </label>
+      <label class="chk"><input type="checkbox" id="auto-clear" checked> Удалить существующие блоки перед разметкой</label>
+      <label class="chk"><input type="checkbox" id="auto-ocr"> Распознать блоки сразу после разметки</label>
+      <div class="sb-hint" style="text-align:left">Алгоритм анализирует контраст, находит связанные области содержимого и классифицирует их: текст, таблицы (по сетке линий), диаграммы (вертикальные столбцы), изображения (высокая плотность) и формулы (компактные блоки).</div>
+    </div>
+    <div class="m-foot">
+      <button class="btn m-x">Отмена</button>
+      <button class="btn primary" id="btn-auto-run">Выполнить авторазметку</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="mw-editor">
+  <div class="modal wide">
+    <div class="m-head"><div class="m-title">Редактор блока</div>
+      <div class="m-btns">
+        <button class="mbtn m-fs" title="Во весь экран"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
+        <button class="mbtn m-x" title="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+    <div class="m-body">
+      <div class="ed-grid">
+        <div class="ed-preview"><img id="ed-img" alt="Кадрирование блока"><div class="ed-meta" id="ed-meta"></div></div>
+        <div>
+          <label class="f-label">Тип области<select id="ed-type"></select></label>
+          <label class="f-label">Содержимое<textarea id="ed-content" placeholder="Нажмите «Распознать» или введите текст вручную…"></textarea></label>
+        </div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn acc" id="ed-recognize">✦ Распознать</button>
+      <button class="btn primary" id="btn-ed-close">Готово</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="mw-progress" data-static>
+  <div class="modal">
+    <div class="m-head"><div class="m-title" id="prog-title">Распознавание…</div></div>
+    <div class="m-body">
+      <div class="bar"><i id="prog-bar"></i></div>
+      <div id="prog-label"></div>
+      <pre id="prog-log"></pre>
+    </div>
+    <div class="m-foot"><button class="btn danger" id="btn-prog-cancel">Отмена</button></div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="mw-help">
+  <div class="modal">
+    <div class="m-head"><div class="m-title">Справка · NEON VISUAL RECOGNITION</div>
+      <div class="m-btns">
+        <button class="mbtn m-fs" title="Во весь экран"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
+        <button class="mbtn m-x" title="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+    <div class="m-body">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Разметка документов на области (текст, изображения, таблицы, диаграммы, формулы), автоматическая разметка на блоки, распознавание через мультимодальные LLM — внешний или локальный сервер vLLM (OpenAI-совместимый, модели вроде <b style="color:#9beeff">gemma4</b> / <b style="color:#9beeff">qwen3.8</b>) или локальный OCR прямо в браузере, экспорт результата в DOCX. Проекты хранятся в IndexedDB этого браузера.</p>
+      <div class="help-grid">
+        <span><kbd>V</kbd></span><span>Инструмент «Выбор»</span>
+        <span><kbd>H</kbd> / <kbd>Space</kbd> / ПКМ</span><span>Перемещение холста</span>
+        <span><kbd>T</kbd> <kbd>I</kbd> <kbd>G</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>O</kbd></span><span>Рисование областей: текст, изображение, таблица, диаграмма, формула, другое</span>
+        <span><kbd>Колесо мыши</kbd></span><span>Масштабирование (с Ctrl — точное)</span>
+        <span><kbd>0</kbd> <kbd>1</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>C</kbd></span><span>Фит: вписать · 100% · по ширине · по высоте · заполнить</span>
+        <span><kbd>Delete</kbd></span><span>Удалить выбранный блок</span>
+        <span><kbd>Shift</kbd>+рисование</span><span>Остаться в режиме рисования</span>
+        <span><kbd>Ctrl</kbd>+<kbd>S</kbd></span><span>Сохранить проект</span>
+        <span><kbd>Ctrl</kbd>+<kbd>V</kbd></span><span>Вставить изображение из буфера</span>
+        <span><b>Двойной клик</b></span><span>Открыть блок в редакторе</span>
+        <span><b>«Авторазметка»</b></span><span>Кнопка на панели инструментов — автоматическое создание блоков</span>
+      </div>
+      <div class="app-ver-line" style="margin-top:16px;color:var(--muted);font-size:12px"></div>
+    </div>
+    <div class="m-foot"><button class="btn primary m-x">Понятно</button></div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="mw-new">
+  <div class="modal">
+    <div class="m-head"><div class="m-title">Новый проект</div>
+      <div class="m-btns">
+        <button class="mbtn m-fs" title="Во весь экран"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
+        <button class="mbtn m-x" title="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+    <div class="m-body">
+      <label class="f-label">Название проекта
+        <input type="text" id="np-name" placeholder="Например: Договор аренды, стр. 1">
+      </label>
+      <label class="f-label">Изображение (необязательно)
+        <div class="btn-row" style="margin-top:5px">
+          <button class="btn" id="btn-np-image">Выбрать файл…</button>
+          <span class="mono" id="np-image-name" style="align-self:center;font-size:11.5px;color:var(--muted)">файл не выбран</span>
+        </div>
+      </label>
+    </div>
+    <div class="m-foot">
+      <button class="btn m-x">Отмена</button>
+      <button class="btn primary" id="btn-np-create">Создать</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="mw-confirm">
+  <div class="modal" style="width:min(430px,100%)">
+    <div class="m-head"><div class="m-title" id="cf-title">Подтверждение</div></div>
+    <div class="m-body"><div id="cf-text" style="font-size:13.5px;line-height:1.55"></div></div>
+    <div class="m-foot">
+      <button class="btn" id="cf-cancel">Отмена</button>
+      <button class="btn danger" id="cf-ok">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+<input type="file" id="file-image" accept="image/*" hidden>
+<input type="file" id="file-np-image" accept="image/*" hidden>
+<input type="file" id="file-import" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+/* ============================ CONSTANTS ============================ */
+const APP_NAME='NEON VISUAL RECOGNITION';
+const APP_VERSION='2.1.0';
+const DOCX_URL='https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js';
+const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+const TYPES={
+  text:{label:'Текст'}, image:{label:'Изображение'}, table:{label:'Таблица'},
+  chart:{label:'Диаграмма'}, formula:{label:'Формула'}, other:{label:'Другое'}
+};
+const TYPE_ICONS={
+  text:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M12 6v13"/></svg>',
+  image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>',
+  table:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M3 9.3h18M3 14.6h18M9 4v16M15 4v16"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 20v-6M10 20V8M15 20v-9M20 20V4"/><path d="M3 20h18"/></svg>',
+  formula:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 5H7l6 7-6 7h11"/></svg>',
+  other:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>'
+};
+const PROMPTS={
+  text:'Распознай весь текст с этого изображения. Сохрани оригинальную структуру: абзацы, списки, заголовки. Верни ТОЛЬКО распознанный текст, без комментариев.',
+  formula:'На изображении математическая формула (или несколько). Переведи её в формат LaTeX. Верни ТОЛЬКО LaTeX-код, без символов $ и без пояснений.',
+  table:'Распознай таблицу на изображении и верни её в формате Markdown (заголовки и все строки). Верни только Markdown-таблицу.',
+  chart:'На изображении диаграмма или график. Опиши по-русски: тип диаграммы, представленные данные, ключевые значения и выводы.',
+  image:'Кратко и точно опиши содержимое изображения по-русски.',
+  other:'Опиши по-русски, что изображено на этом фрагменте, и распознай имеющийся текст.'
+};
+
+/* ============================ STATE ============================ */
+const state={
+  project:null, zoom:1, panX:40, panY:40, tool:'select', selectedId:null, space:false,
+  settings:{provider:'api',baseUrl:'https://api.openai.com/v1',apiKey:'',model:'gpt-4o-mini',
+            vllmUrl:'http://localhost:8000/v1',vllmKey:'',vllmModel:'gemma4',tessLang:'rus+eng'},
+  saveTimer:null, dirty:false
+};
+let drag=null, confirmResolve=null, editorId=null, tessWorker=null, tessWorkerLang='', npImage=null, plTimer=null, progCancelFlag=false;
+const pointers=new Map();
+
+/* ============================ HELPERS ============================ */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+const tick=()=>new Promise(r=>setTimeout(r,20));
+const sanitize=s=>(String(s||'').replace(/[\\/:*?"<>|]+/g,'_').trim())||'project';
+const fmtDate=t=>new Date(t||Date.now()).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+function plural(n){const m=n%10,c=n%100;if(m===1&&c!==11)return'блок';if(m>=2&&m<=4&&(c<12||c>14))return'блока';return'блоков';}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},900);}
+function toast(msg,type='ok',ms=3400){const t=document.createElement('div');t.className='toast '+type;t.innerHTML=msg;$('#toasts').appendChild(t);requestAnimationFrame(()=>t.classList.add('in'));setTimeout(()=>{t.classList.remove('in');setTimeout(()=>t.remove(),320);},ms);}
+function ensureLib(globalName,url){
+  if(window[globalName])return Promise.resolve();
+  if(window.__libLoading&&window.__libLoading[globalName])return window.__libLoading[globalName];
+  window.__libLoading=window.__libLoading||{};
+  window.__libLoading[globalName]=new Promise((res,rej)=>{
+    const s=document.createElement('script');s.src=url;
+    s.onload=()=>res();s.onerror=()=>{delete window.__libLoading[globalName];rej(new Error('Не удалось загрузить библиотеку '+globalName));};
+    document.head.appendChild(s);
+  });
+  return window.__libLoading[globalName];
+}
+
+/* ============================ DOM REFS ============================ */
+const viewport=$('#viewport'), world=$('#world'), mainImg=$('#main-img'), regionsLayer=$('#regions-layer');
+
+/* ============================ INDEXEDDB ============================ */
+const DBN='neon-visual-recognition',STORE='projects';
+function openDb(){return new Promise((res,rej)=>{const q=indexedDB.open(DBN,1);q.onupgradeneeded=()=>{const d=q.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id'});};q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
+async function dbAll(){const d=await openDb();return new Promise((res,rej)=>{const q=d.transaction(STORE,'readonly').objectStore(STORE).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error);});}
+async function dbGet(id){const d=await openDb();return new Promise((res,rej)=>{const q=d.transaction(STORE,'readonly').objectStore(STORE).get(id);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
+async function dbPut(p){const d=await openDb();return new Promise((res,rej)=>{const tx=d.transaction(STORE,'readwrite');tx.objectStore(STORE).put(p);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
+async function dbDel(id){const d=await openDb();return new Promise((res,rej)=>{const tx=d.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
+
+/* ============================ MODALS ============================ */
+function openModal(id){$('#'+id).classList.add('show');}
+function closeModal(id){$('#'+id).classList.remove('show');if(id==='mw-confirm'&&confirmResolve){confirmResolve(false);confirmResolve=null;}}
+function anyModalOpen(){return !!$('.modal-wrap.show');}
+function confirmDlg(title,text){$('#cf-title').textContent=title;$('#cf-text').textContent=text;openModal('mw-confirm');return new Promise(res=>{confirmResolve=res;});}
+$$('.modal-wrap').forEach(w=>{
+  $$('.m-x',w).forEach(b=>b.addEventListener('click',()=>closeModal(w.id)));
+  const fs=$('.m-fs',w);
+  if(fs)fs.addEventListener('click',()=>{$('.modal',w).classList.toggle('max');fs.classList.toggle('on');});
+  w.addEventListener('pointerdown',e=>{if(e.target===w&&!w.dataset.static)closeModal(w.id);});
+});
+$('#cf-ok').addEventListener('click',()=>{closeModal('mw-confirm');if(confirmResolve){confirmResolve(true);confirmResolve=null;}});
+$('#cf-cancel').addEventListener('click',()=>closeModal('mw-confirm'));
+
+/* progress modal */
+function progOpen(title){$('#prog-title').textContent=title;$('#prog-bar').style.width='0%';$('#prog-label').textContent='';$('#prog-log').textContent='';$('#btn-prog-cancel').hidden=false;progCancelFlag=false;openModal('mw-progress');}
+function progSet(i,total,label){$('#prog-bar').style.width=Math.round(i/total*100)+'%';$('#prog-label').textContent=label;}
+function progBar(v){$('#prog-bar').style.width=Math.round(clamp(v,0,1)*100)+'%';}
+function progLog(m){const el=$('#prog-log');el.textContent+=m+'\n';el.scrollTop=el.scrollHeight;}
+$('#btn-prog-cancel').addEventListener('click',()=>{progCancelFlag=true;$('#btn-prog-cancel').hidden=true;progLog('Ожидание завершения текущего блока…');});
+
+/* ============================ SETTINGS ============================ */
+function loadSettings(){try{Object.assign(state.settings,JSON.parse(localStorage.getItem('nvr-settings')||'{}'));}catch(e){}}
+function saveSettingsToLS(){localStorage.setItem('nvr-settings',JSON.stringify(state.settings));updateProviderChip();}
+function updateProviderChip(){
+  const s=state.settings;
+  $('#st-provider').textContent=s.provider==='api'?('API · '+(s.model||'—'))
+    :s.provider==='vllm'?('vLLM · '+(s.vllmModel||'—'))
+    :'Локальный OCR · Tesseract';
+}
+function toggleProviderFields(){
+  const v=$('#set-provider').value;
+  $('#api-fields').hidden=v!=='api';
+  $('#vllm-fields').hidden=v!=='vllm';
+  $('#local-fields').hidden=v!=='local';
+}
+$('#set-provider').addEventListener('change',toggleProviderFields);
+$('#btn-settings').addEventListener('click',()=>{
+  const s=state.settings;
+  $('#set-provider').value=s.provider;
+  $('#set-base').value=s.baseUrl;$('#set-key').value=s.apiKey;$('#set-model').value=s.model;
+  $('#set-vllm-base').value=s.vllmUrl;$('#set-vllm-model').value=s.vllmModel;$('#set-vllm-key').value=s.vllmKey;
+  $('#set-tess').value=s.tessLang;
+  toggleProviderFields();
+  openModal('mw-settings');
+});
+$('#btn-set-cancel').addEventListener('click',()=>closeModal('mw-settings'));
+$('#btn-set-save').addEventListener('click',()=>{
+  state.settings.provider=$('#set-provider').value;
+  state.settings.baseUrl=$('#set-base').value.trim();
+  state.settings.apiKey=$('#set-key').value.trim();
+  state.settings.model=$('#set-model').value.trim();
+  state.settings.vllmUrl=$('#set-vllm-base').value.trim();
+  state.settings.vllmModel=$('#set-vllm-model').value.trim();
+  state.settings.vllmKey=$('#set-vllm-key').value.trim();
+  state.settings.tessLang=$('#set-tess').value;
+  saveSettingsToLS();closeModal('mw-settings');toast('Настройки сохранены');
+});
+async function testEndpoint(base,key){
+  base=(base||'').trim().replace(/\/+$/,'');
+  if(!base)throw new Error('Не указан адрес сервера');
+  const r=await fetch(base+'/models',{headers:key?{Authorization:'Bearer '+key}:{}});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  return (j.data||[]).map(m=>m.id).slice(0,5).join(', ');
+}
+$('#btn-test-api').addEventListener('click',async()=>{
+  try{const ids=await testEndpoint($('#set-base').value,$('#set-key').value.trim());
+    toast('Подключение установлено'+(ids?'. Модели: '+ids:''));}
+  catch(err){toast('Ошибка подключения: '+err.message,'err');}
+});
+$('#btn-test-vllm').addEventListener('click',async()=>{
+  try{const ids=await testEndpoint($('#set-vllm-base').value,$('#set-vllm-key').value.trim());
+    toast('Локальный сервер доступен'+(ids?'. Модели: '+ids:''));}
+  catch(err){toast('Ошибка подключения: '+err.message,'err');}
+});
+
+/* ============================ VIEW / ZOOM ============================ */
+function applyView(){
+  world.style.transform='translate('+state.panX+'px,'+state.panY+'px) scale('+state.zoom+')';
+  world.style.setProperty('--inv',String(1/state.zoom));
+  $('#zoom-label').textContent=Math.round(state.zoom*100)+'%';
+}
+function toImg(cx,cy){const r=viewport.getBoundingClientRect();return{x:(cx-r.left-state.panX)/state.zoom,y:(cy-r.top-state.panY)/state.zoom};}
+function zoomAt(cx,cy,f){
+  const r=viewport.getBoundingClientRect(),px=cx-r.left,py=cy-r.top;
+  const nz=clamp(state.zoom*f,0.04,16);
+  const wx=(px-state.panX)/state.zoom,wy=(py-state.panY)/state.zoom;
+  state.zoom=nz;state.panX=px-wx*nz;state.panY=py-wy*nz;applyView();
+}
+function zoomAtCenter(f){const r=viewport.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,f);}
+function centerOn(z){const p=state.project;if(!p||!p.w)return;state.zoom=clamp(z,0.04,16);state.panX=(viewport.clientWidth-p.w*state.zoom)/2;state.panY=(viewport.clientHeight-p.h*state.zoom)/2;applyView();}
+function fitAll(){const p=state.project;if(!p||!p.w)return;const vw=viewport.clientWidth-48,vh=viewport.clientHeight-48;centerOn(Math.min(vw/p.w,vh/p.h));}
+function fitWidth(){const p=state.project;if(!p||!p.w)return;centerOn((viewport.clientWidth-32)/p.w);}
+function fitHeight(){const p=state.project;if(!p||!p.w)return;centerOn((viewport.clientHeight-32)/p.h);}
+function fitCover(){const p=state.project;if(!p||!p.w)return;centerOn(Math.max(viewport.clientWidth/p.w,viewport.clientHeight/p.h));}
+function zoom100(){centerOn(1);}
+viewport.addEventListener('wheel',e=>{e.preventDefault();const k=e.ctrlKey?0.008:0.0022;zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*k));},{passive:false});
+viewport.addEventListener('contextmenu',e=>e.preventDefault());
+
+/* ============================ REGIONS RENDER ============================ */
+function getRegion(id){return state.project?.regions.find(r=>r.id===id)||null;}
+function buildRegionEl(r,i){
+  const el=document.createElement('div');
+  el.className='region t-'+r.type+(state.selectedId===r.id?' selected':'');
+  el.dataset.id=r.id;
+  Object.assign(el.style,{left:r.x+'px',top:r.y+'px',width:r.w+'px',height:r.h+'px'});
+  const lab=document.createElement('div');lab.className='rlabel';
+  lab.innerHTML=TYPE_ICONS[r.type]+'<span>'+TYPES[r.type].label+' '+(i+1)+'</span>'+
+    (r.status==='done'?'<i class="rdot ok"></i>':r.status==='error'?'<i class="rdot err"></i>':'');
+  el.appendChild(lab);
+  ['nw','n','ne','e','se','s','sw','w'].forEach(h=>{const d=document.createElement('div');d.className='rh';d.dataset.h=h;el.appendChild(d);});
+  return el;
+}
+function renderRegions(){
+  const p=state.project;regionsLayer.innerHTML='';
+  if(p)p.regions.forEach((r,i)=>regionsLayer.appendChild(buildRegionEl(r,i)));
+  const n=p?p.regions.length:0;
+  $('#st-count').textContent=n+' '+plural(n);
+}
+function syncRegionEl(r){const el=regionsLayer.querySelector('[data-id="'+r.id+'"]');if(el)Object.assign(el.style,{left:r.x+'px',top:r.y+'px',width:r.w+'px',height:r.h+'px'});}
+function selectRegion(id){
+  state.selectedId=id;
+  $$('.region',regionsLayer).forEach(el=>el.classList.toggle('selected',el.dataset.id===id));
+  $$('.bitem').forEach(b=>b.classList.toggle('sel',b.dataset.id===id));
+  renderProps();
+}
+regionsLayer.addEventListener('dblclick',e=>{const el=e.target.closest('.region');if(el)openEditor(el.dataset.id);});
+
+/* ============================ SIDEBAR: BLOCKS ============================ */
+function renderBlockList(){
+  const p=state.project,box=$('#blocks-list');
+  if(!p||!p.regions.length){box.innerHTML='<div class="sb-hint">Блоков пока нет.<br>Нажмите «Авторазметка» или выберите инструмент области и нарисуйте прямоугольник на изображении.</div>';return;}
+  box.innerHTML=p.regions.map((r,i)=>(
+    '<div class="bitem'+(state.selectedId===r.id?' sel':'')+'" data-id="'+r.id+'">'+
+      '<div class="bico t-'+r.type+'">'+TYPE_ICONS[r.type]+'</div>'+
+      '<div class="bmain"><div class="bname">'+TYPES[r.type].label+' '+(i+1)+(r.status==='done'?' <i class="rdot ok"></i>':r.status==='error'?' <i class="rdot err"></i>':'')+'</div>'+
+      '<div class="bprev">'+(esc((r.content||'').replace(/\s+/g,' ').slice(0,70))||'— не распознано —')+'</div></div>'+
+      '<div class="bacts"><button class="sbtn" data-act="up" title="Выше">▲</button><button class="sbtn" data-act="down" title="Ниже">▼</button><button class="sbtn del" data-act="del" title="Удалить">✕</button></div>'+
+    '</div>')).join('');
+}
+$('#blocks-list').addEventListener('click',e=>{
+  const item=e.target.closest('.bitem');if(!item)return;
+  const id=item.dataset.id,act=e.target.closest('button')?.dataset.act;
+  if(act==='del')return deleteRegion(id);
+  if(act==='up'||act==='down')return moveRegion(id,act==='up'?-1:1);
+  selectRegion(id);
+});
+$('#blocks-list').addEventListener('dblclick',e=>{const item=e.target.closest('.bitem');if(item)openEditor(item.dataset.id);});
+function deleteRegion(id){const p=state.project;if(!p)return;const i=p.regions.findIndex(r=>r.id===id);if(i<0)return;p.regions.splice(i,1);if(state.selectedId===id)state.selectedId=null;renderRegions();renderBlockList();renderProps();mutate();toast('Блок удалён');}
+function moveRegion(id,dir){const arr=state.project.regions;const i=arr.findIndex(r=>r.id===id);const j=i+dir;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];renderRegions();renderBlockList();mutate();}
+
+/* ============================ SIDEBAR: PROPS ============================ */
+(function fillTypes(){
+  const opts=Object.entries(TYPES).map(([k,v])=>'<option value="'+k+'">'+v.label+'</option>').join('');
+  $('#prop-type').innerHTML=opts;$('#ed-type').innerHTML=opts;
+})();
+function renderProps(){
+  const r=state.selectedId?getRegion(state.selectedId):null;
+  $('#props-empty').hidden=!!r;$('#props-form').hidden=!r;
+  if(!r)return;
+  $('#prop-type').value=r.type;
+  const ta=$('#prop-content');if(ta.value!==r.content)ta.value=r.content||'';
+  $('#prop-geo').textContent='x:'+Math.round(r.x)+' y:'+Math.round(r.y)+' · '+Math.round(r.w)+'×'+Math.round(r.h)+' px';
+}
+$('#prop-type').addEventListener('change',e=>{const r=getRegion(state.selectedId);if(r){r.type=e.target.value;renderRegions();renderBlockList();mutate();}});
+$('#prop-content').addEventListener('input',e=>{const r=getRegion(state.selectedId);if(r){r.content=e.target.value;mutate();renderBlockListSoon();}});
+$('#prop-recognize').addEventListener('click',()=>{const r=getRegion(state.selectedId);if(r)recognizeRegions([r]);});
+$('#prop-editor').addEventListener('click',()=>state.selectedId&&openEditor(state.selectedId));
+$('#prop-delete').addEventListener('click',()=>state.selectedId&&deleteRegion(state.selectedId));
+let blTimer=null;
+function renderBlockListSoon(){clearTimeout(blTimer);blTimer=setTimeout(renderBlockList,600);}
+
+/* ============================ SIDEBAR: PROJECTS ============================ */
+async function renderProjectsList(){
+  try{
+    const all=(await dbAll()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+    $('#projects-list').innerHTML=all.map(p=>(
+      '<div class="pitem'+(state.project?.id===p.id?' on':'')+'" data-id="'+p.id+'">'+
+        '<div class="pinfo"><div class="pname">'+esc(p.name)+'</div>'+
+        '<div class="pmeta">'+fmtDate(p.updatedAt)+' · '+(p.regions?.length||0)+' блок. '+(p.image?'':'· без изображения')+'</div></div>'+
+        '<div class="pacts"><button class="sbtn" data-act="exp" title="Экспорт в JSON">⇩</button>'+
+        '<button class="sbtn" data-act="dup" title="Дублировать">⧉</button>'+
+        '<button class="sbtn del" data-act="del" title="Удалить">✕</button></div>'+
+      '</div>')).join('')||'<div class="sb-hint">Проектов пока нет</div>';
+  }catch(e){console.error(e);}
+}
+$('#projects-list').addEventListener('click',async e=>{
+  const item=e.target.closest('.pitem');if(!item)return;
+  const id=item.dataset.id,act=e.target.closest('button')?.dataset.act;
+  if(act==='exp')return exportProjectById(id);
+  if(act==='dup')return duplicateProject(id);
+  if(act==='del')return deleteProject(id);
+  await openProjectById(id);closeSidebarIfMobile();
+});
+
+/* ============================ SAVE / MUTATE ============================ */
+function stripView(p){return{id:p.id,name:p.name,createdAt:p.createdAt,updatedAt:p.updatedAt,image:p.image||'',w:p.w||0,h:p.h||0,regions:p.regions||[]};}
+function mutate(){
+  const p=state.project;if(!p)return;
+  p.updatedAt=Date.now();state.dirty=true;
+  $('#st-save').textContent='Сохранение…';
+  clearTimeout(state.saveTimer);state.saveTimer=setTimeout(saveNow,700);
+}
+async function saveNow(){
+  const p=state.project;if(!p)return;clearTimeout(state.saveTimer);
+  try{await dbPut(stripView(p));state.dirty=false;
+    $('#st-save').textContent='Сохранено · '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+    renderProjectsListSoon2();
+  }catch(err){$('#st-save').textContent='Ошибка сохранения';}
+}
+let pl2=null;function renderProjectsListSoon2(){clearTimeout(pl2);pl2=setTimeout(renderProjectsList,1000);}
+
+/* ============================ PROJECT OPS ============================ */
+async function openProjectById(id){
+  const p=await dbGet(id);if(!p)return toast('Проект не найден','err');
+  state.project=p;state.selectedId=null;
+  $('#project-name').value=p.name||'';
+  if(p.image){
+    mainImg.src=p.image;
+    world.style.width=p.w+'px';world.style.height=p.h+'px';mainImg.style.width=p.w+'px';
+    viewport.classList.add('has-image');
+  }else{viewport.classList.remove('has-image');mainImg.removeAttribute('src');}
+  renderRegions();renderBlockList();renderProps();await renderProjectsList();updateStatus();
+  if(p.image)requestAnimationFrame(()=>fitAll());
+}
+async function createProject(name,openNow=true){
+  const p={id:uid(),name:name||'Без названия',createdAt:Date.now(),updatedAt:Date.now(),image:'',w:0,h:0,regions:[]};
+  await dbPut(p);
+  if(openNow){
+    state.project=p;state.selectedId=null;$('#project-name').value=p.name;
+    viewport.classList.remove('has-image');mainImg.removeAttribute('src');
+    renderRegions();renderBlockList();renderProps();await renderProjectsList();updateStatus();
+  }
+  return p;
+}
+async function deleteProject(id){
+  const p=await dbGet(id);if(!p)return;
+  const ok=await confirmDlg('Удалить проект?','«'+p.name+'» будет удалён без возможности восстановления.');
+  if(!ok)return;
+  await dbDel(id);
+  if(state.project?.id===id){
+    const rest=(await dbAll()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+    if(rest.length)await openProjectById(rest[0].id);else await createProject('Новый проект');
+  }else await renderProjectsList();
+  toast('Проект удалён');
+}
+async function duplicateProject(id){
+  const p=await dbGet(id);if(!p)return;
+  const copy=JSON.parse(JSON.stringify(stripView(p)));
+  copy.id=uid();copy.name=(p.name||'Проект')+' (копия)';copy.createdAt=Date.now();copy.updatedAt=Date.now();
+  (copy.regions||[]).forEach(r=>r.id=uid());
+  await dbPut(copy);await renderProjectsList();toast('Проект продублирован');
+}
+async function exportProjectById(id){
+  const p=await dbGet(id);if(!p)return;
+  const payload={app:'neon-visual-recognition',version:APP_VERSION,exportedAt:new Date().toISOString(),project:stripView(p)};
+  download(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}),sanitize(p.name)+'.nvr.json');
+  toast('Проект экспортирован в JSON');
+}
+async function importProjectFile(file){
+  try{
+    const data=JSON.parse(await file.text());
+    const src=data.project||data;
+    if(!src||typeof src!=='object'||!Array.isArray(src.regions))throw new Error('неверный формат файла');
+    const p={id:uid(),name:src.name||'Импортированный проект',createdAt:Date.now(),updatedAt:Date.now(),
+      image:src.image||'',w:src.w||0,h:src.h||0,
+      regions:src.regions.map(r=>({id:r.id||uid(),type:TYPES[r.type]?r.type:'other',x:+r.x||0,y:+r.y||0,w:+r.w||60,h:+r.h||60,content:r.content||'',status:r.status||'new'}))};
+    await dbPut(p);await openProjectById(p.id);toast('Проект импортирован');
+  }catch(err){toast('Импорт не удался: '+err.message,'err');}
+}
+$('#btn-new-project').addEventListener('click',()=>{npImage=null;$('#np-name').value='';$('#np-image-name').textContent='файл не выбран';openModal('mw-new');setTimeout(()=>$('#np-name').focus(),50);});
+$('#btn-np-image').addEventListener('click',()=>$('#file-np-image').click());
+$('#file-np-image').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();rd.onload=()=>{npImage=rd.result;$('#np-image-name').textContent=f.name;};rd.readAsDataURL(f);
+  e.target.value='';
+});
+$('#btn-np-create').addEventListener('click',async()=>{
+  const name=$('#np-name').value.trim()||'Новый проект';
+  await createProject(name,true);
+  closeModal('mw-new');
+  if(npImage){setImage(npImage);npImage=null;}
+  toast('Проект создан');
+});
+$('#btn-import').addEventListener('click',()=>$('#file-import').click());
+$('#file-import').addEventListener('change',e=>{const f=e.target.files[0];if(f)importProjectFile(f);e.target.value='';});
+$('#btn-export-json').addEventListener('click',()=>state.project?exportProjectById(state.project.id):toast('Нет открытого проекта','err'));
+$('#project-name').addEventListener('input',e=>{if(state.project){state.project.name=e.target.value;mutate();}});
+
+/* ============================ IMAGE LOADING ============================ */
+function setImage(dataUrl){
+  const p=state.project;if(!p)return;
+  const im=new Image();
+  im.onload=()=>{
+    p.image=dataUrl;p.w=im.naturalWidth;p.h=im.naturalHeight;p.regions=[];state.selectedId=null;
+    mainImg.src=dataUrl;
+    world.style.width=p.w+'px';world.style.height=p.h+'px';mainImg.style.width=p.w+'px';
+    viewport.classList.add('has-image');
+    renderRegions();renderBlockList();renderProps();updateStatus();
+    requestAnimationFrame(()=>fitAll());
+    mutate();toast('Изображение загружено: '+p.w+'×'+p.h+' px');
+  };
+  im.onerror=()=>toast('Не удалось загрузить изображение','err');
+  im.src=dataUrl;
+}
+function readFileToImage(f){const rd=new FileReader();rd.onload=()=>setImage(rd.result);rd.readAsDataURL(f);}
+$('#btn-load-img').addEventListener('click',()=>$('#file-image').click());
+$('#btn-dz-pick').addEventListener('click',()=>$('#file-image').click());
+$('#file-image').addEventListener('change',e=>{const f=e.target.files[0];if(f)readFileToImage(f);e.target.value='';});
+['dragenter','dragover'].forEach(ev=>viewport.addEventListener(ev,e=>e.preventDefault()));
+viewport.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files?.[0];if(f&&f.type.startsWith('image/'))readFileToImage(f);});
+window.addEventListener('paste',e=>{
+  if(anyModalOpen())return;
+  if(e.target.matches('input,textarea'))return;
+  const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));
+  if(it){const f=it.getAsFile();if(f){readFileToImage(f);toast('Изображение вставлено из буфера');}}
+});
+function updateStatus(){
+  const p=state.project;
+  $('#st-img').textContent=p?.image?(p.w+'×'+p.h+' px'):'нет изображения';
+  updateProviderChip();
+}
+
+/* ============================ TOOLS / TOOLBAR ============================ */
+function setTool(t){
+  state.tool=t;
+  $$('#toolbar [data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===t));
+  viewport.classList.remove('tool-select','tool-pan','tool-draw');
+  viewport.classList.add(t==='select'?'tool-select':t==='pan'?'tool-pan':'tool-draw');
+}
+$('#toolbar').addEventListener('click',e=>{
+  const bt=e.target.closest('[data-tool]');if(bt)return setTool(bt.dataset.tool);
+  const zb=e.target.closest('[data-zoom]');
+  if(zb){const r=viewport.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,parseFloat(zb.dataset.zoom));return;}
+  const fb=e.target.closest('[data-fit]');
+  if(fb){({all:fitAll,width:fitWidth,height:fitHeight,cover:fitCover,one:zoom100})[fb.dataset.fit]();return;}
+  const btn=e.target.closest('button');if(!btn)return;
+  switch(btn.id){
+    case 'btn-load-img':$('#file-image').click();break;
+    case 'btn-auto':openModal('mw-auto');break;
+    case 'btn-rec-sel':{const r=getRegion(state.selectedId);r?recognizeRegions([r]):toast('Сначала выберите блок','err');break;}
+    case 'btn-rec-all':recognizeRegions(state.project?.regions||[]);break;
+    case 'btn-del-sel':state.selectedId&&deleteRegion(state.selectedId);break;
+    case 'zoom-label':zoom100();break;
+  }
+});
+
+/* ============================ SIDEBAR UI ============================ */
+$$('.sb-tabs button').forEach(b=>b.addEventListener('click',()=>{
+  $$('.sb-tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.sb-tab').forEach(t=>t.classList.toggle('on',t.id==='tab-'+b.dataset.tab));
+}));
+$('#btn-sidebar').addEventListener('click',()=>document.body.classList.toggle('sb-open'));
+$('#sb-backdrop').addEventListener('click',()=>document.body.classList.remove('sb-open'));
+function closeSidebarIfMobile(){if(innerWidth<=860)document.body.classList.remove('sb-open');}
+
+/* ============================ POINTER: PAN / ZOOM / DRAW / MOVE ============================ */
+viewport.addEventListener('pointerdown',e=>{
+  if(e.target.closest('#dropzone'))return;
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===2){
+    const pts=[...pointers.values()];
+    drag={mode:'pinch',d0:Math.max(10,dist(pts[0],pts[1])),mid0:mid(pts[0],pts[1]),z0:state.zoom,px0:state.panX,py0:state.panY};
+    if(drag&&drag.el){drag.el.remove();drag.el=null;}
+    return;
+  }
+  if(pointers.size>2)return;
+  const pnt=toImg(e.clientX,e.clientY);
+  const regionEl=e.target.closest('.region');
+  if(state.space||e.button===1||e.button===2||state.tool==='pan'){
+    drag={mode:'pan',sx:e.clientX,sy:e.clientY,px:state.panX,py:state.panY};
+    viewport.classList.add('grabbing');
+  }else if(state.tool.startsWith('draw-')){
+    if(!state.project?.image){toast('Сначала загрузите изображение','err');return;}
+    drag={mode:'draw',type:state.tool.slice(5),x0:pnt.x,y0:pnt.y,el:null};
+  }else if(regionEl){
+    const id=regionEl.dataset.id;selectRegion(id);
+    const r=getRegion(id);if(!r)return;
+    const hEl=e.target.closest('.rh');
+    if(hEl)drag={mode:'resize',id,h:hEl.dataset.h,r:{...r},sx:e.clientX,sy:e.clientY};
+    else drag={mode:'move',id,sx:e.clientX,sy:e.clientY,r:{...r}};
+  }else{
+    selectRegion(null);
+    drag={mode:'pan',sx:e.clientX,sy:e.clientY,px:state.panX,py:state.panY};
+  }
+  document.body.classList.add('dragging');
+  e.preventDefault();
+});
+window.addEventListener('pointermove',e=>{
+  if(pointers.has(e.pointerId))pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(!drag)return;
+  if(drag.mode==='pinch'){
+    if(pointers.size<2)return;
+    const pts=[...pointers.values()];
+    const d=Math.max(10,dist(pts[0],pts[1])),m=mid(pts[0],pts[1]);
+    const rect=viewport.getBoundingClientRect();
+    const nz=clamp(drag.z0*(d/drag.d0),0.04,16);
+    const wx=(drag.mid0.x-rect.left-drag.px0)/drag.z0,wy=(drag.mid0.y-rect.top-drag.py0)/drag.z0;
+    state.zoom=nz;state.panX=m.x-rect.left-wx*nz;state.panY=m.y-rect.top-wy*nz;
+    applyView();return;
+  }
+  if(drag.mode==='pan'){state.panX=drag.px+(e.clientX-drag.sx);state.panY=drag.py+(e.clientY-drag.sy);applyView();return;}
+  if(drag.mode==='draw'){
+    const pnt=toImg(e.clientX,e.clientY);
+    const x=Math.min(drag.x0,pnt.x),y=Math.min(drag.y0,pnt.y),w=Math.abs(pnt.x-drag.x0),h=Math.abs(pnt.y-drag.y0);
+    if(!drag.el){drag.el=document.createElement('div');drag.el.className='region ghost t-'+drag.type;regionsLayer.appendChild(drag.el);}
+    Object.assign(drag.el.style,{left:x+'px',top:y+'px',width:w+'px',height:h+'px'});
+    return;
+  }
+  if(drag.mode==='move'){
+    const r=getRegion(drag.id);if(!r||!state.project)return;
+    const dx=(e.clientX-drag.sx)/state.zoom,dy=(e.clientY-drag.sy)/state.zoom;
+    r.x=clamp(drag.r.x+dx,0,Math.max(0,state.project.w-8));
+    r.y=clamp(drag.r.y+dy,0,Math.max(0,state.project.h-8));
+    syncRegionEl(r);return;
+  }
+  if(drag.mode==='resize'){
+    const r=getRegion(drag.id);if(!r||!state.project)return;
+    const s=drag.r,dx=(e.clientX-drag.sx)/state.zoom,dy=(e.clientY-drag.sy)/state.zoom;
+    let x=s.x,y=s.y,w=s.w,h=s.h;
+    if(drag.h.includes('e'))w=s.w+dx;
+    if(drag.h.includes('s'))h=s.h+dy;
+    if(drag.h.includes('w')){x=s.x+dx;w=s.w-dx;}
+    if(drag.h.includes('n')){y=s.y+dy;h=s.h-dy;}
+    const MIN=12;
+    if(w<MIN){if(drag.h.includes('w'))x-=(MIN-w);w=MIN;}
+    if(h<MIN){if(drag.h.includes('n'))y-=(MIN-h);h=MIN;}
+    x=Math.max(0,x);y=Math.max(0,y);
+    r.x=x;r.y=y;r.w=Math.min(w,state.project.w-x);r.h=Math.min(h,state.project.h-y);
+    syncRegionEl(r);return;
+  }
+});
+function endPointer(e){
+  pointers.delete(e.pointerId);
+  if(drag?.mode==='pinch'){if(pointers.size<2)drag=null;return;}
+  if(!drag)return;
+  if(drag.mode==='draw')finishDraw(e);
+  else if(drag.mode==='move'||drag.mode==='resize')mutate();
+  drag=null;
+  document.body.classList.remove('dragging');viewport.classList.remove('grabbing');
+}
+window.addEventListener('pointerup',endPointer);
+window.addEventListener('pointercancel',endPointer);
+function finishDraw(e){
+  const p=state.project;
+  const pnt=toImg(e.clientX,e.clientY);
+  let x=Math.round(Math.min(drag.x0,pnt.x)),y=Math.round(Math.min(drag.y0,pnt.y));
+  let w=Math.round(Math.abs(pnt.x-drag.x0)),h=Math.round(Math.abs(pnt.y-drag.y0));
+  if(drag.el){drag.el.remove();drag.el=null;}
+  if(w>8&&h>8&&p){
+    x=clamp(x,0,p.w-2);y=clamp(y,0,p.h-2);
+    w=Math.min(w,p.w-x);h=Math.min(h,p.h-y);
+    const r={id:uid(),type:drag.type,x,y,w,h,content:'',status:'new'};
+    p.regions.push(r);selectRegion(r.id);renderRegions();renderBlockList();mutate();
+    if(!e.shiftKey)setTool('select');
+  }
+}
+viewport.addEventListener('pointermove',e=>{
+  const p=state.project,el=$('#st-coords');
+  if(!p?.image){el.textContent='x:– y:–';return;}
+  const pt=toImg(e.clientX,e.clientY);
+  el.textContent='x:'+Math.round(pt.x)+' y:'+Math.round(pt.y);
+});
+
+/* ============================ AUTO MARKUP ============================ */
+$('#auto-sens').addEventListener('input',e=>$('#auto-sens-val').textContent=e.target.value);
+$('#btn-auto-run').addEventListener('click',async()=>{
+  const opts={
+    sens:+$('#auto-sens').value||30,
+    minSize:+$('#auto-min').value||40,
+    clear:$('#auto-clear').checked,
+    ocr:$('#auto-ocr').checked
+  };
+  closeModal('mw-auto');
+  await runAutoMarkup(opts);
+});
+function dilateGrid(grid,gw,gh,rx,ry){
+  const out=new Uint8Array(gw*gh);
+  for(let y=0;y<gh;y++)for(let x=0;x<gw;x++){
+    if(!grid[y*gw+x])continue;
+    for(let dy=-ry;dy<=ry;dy++)for(let dx=-rx;dx<=rx;dx++){
+      const nx=x+dx,ny=y+dy;
+      if(nx>=0&&nx<gw&&ny>=0&&ny<gh)out[ny*gw+nx]=1;
+    }
+  }
+  return out;
+}
+function analyzeBox(b,ink,w,h){
+  const x0=Math.max(0,b.x),y0=Math.max(0,b.y),x1=Math.min(w,b.x+b.w),y1=Math.min(h,b.y+b.h);
+  const bw=x1-x0,bh=y1-y0;
+  if(bw<3||bh<3)return{density:0,hRows:0,vCols:0,lines:0};
+  let inkN=0,hRows=0,vCols=0,lines=0,inLine=false;
+  for(let y=y0;y<y1;y++){
+    let run=0,mr=0,cnt=0;
+    for(let x=x0;x<x1;x++){const v=ink[y*w+x];cnt+=v;if(v){run++;if(run>mr)mr=run;}else run=0;}
+    inkN+=cnt;
+    if(mr>bw*0.6)hRows++;
+    const dens=cnt/bw;
+    if(dens>0.045){if(!inLine){lines++;inLine=true;}}else inLine=false;
+  }
+  for(let x=x0;x<x1;x++){
+    let run=0,mr=0;
+    for(let y=y0;y<y1;y++){const v=ink[y*w+x];if(v){run++;if(run>mr)mr=run;}else run=0;}
+    if(mr>bh*0.6)vCols++;
+  }
+  return{density:inkN/(bw*bh),hRows,vCols,lines};
+}
+function classifyType(f,bhOrig,bwOrig,imgW,medH){
+  if(f.hRows>=3&&f.vCols>=3)return'table';
+  if(f.density>0.45)return'image';
+  if(f.vCols>=2&&bhOrig>bwOrig*0.55&&f.density<0.45)return'chart';
+  if(bhOrig<Math.min(70,medH*1.3)&&bwOrig<imgW*0.5&&f.lines<=2)return'formula';
+  return'text';
+}
+async function runAutoMarkup(opts){
+  const p=state.project;
+  if(!p?.image)return toast('Сначала загрузите изображение','err');
+  progOpen('Авторазметка изображения');
+  await tick();
+  try{
+    progSet(5,100,'Подготовка изображения…');
+    const k=Math.min(1,760/Math.max(p.w,p.h));
+    const w=Math.max(8,Math.round(p.w*k)),h=Math.max(8,Math.round(p.h*k));
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const ctx=c.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(mainImg,0,0,w,h);
+    const data=ctx.getImageData(0,0,w,h).data;
+    const lum=new Float32Array(w*h);
+    for(let i=0;i<w*h;i++){const o=i*4;lum[i]=0.299*data[o]+0.587*data[o+1]+0.114*data[o+2];}
+    let bs=0,bn=0;
+    for(let x=0;x<w;x++){bs+=lum[x]+lum[(h-1)*w+x];bn+=2;}
+    for(let y=1;y<h-1;y++){bs+=lum[y*w]+lum[y*w+w-1];bn+=2;}
+    const bg=bs/bn;
+    let thr=opts.sens,inkTotal=0;
+    const ink=new Uint8Array(w*h);
+    for(let attempt=0;attempt<4;attempt++){
+      inkTotal=0;ink.fill(0);
+      for(let i=0;i<w*h;i++){if(Math.abs(lum[i]-bg)>thr){ink[i]=1;inkTotal++;}}
+      if(inkTotal<w*h*0.42)break;
+      thr+=10;
+    }
+    progLog('Порог контраста: '+thr+', пикселей содержимого: '+inkTotal);
+    if(inkTotal<16){toast('Содержимое не найдено — уменьшите чувствительность (порог ниже)','err');closeModal('mw-progress');return;}
+    progSet(30,100,'Сегментация…');await tick();
+    const cell=3;
+    const gw=Math.ceil(w/cell),gh=Math.ceil(h/cell);
+    const occ=new Uint8Array(gw*gh);
+    for(let gy=0;gy<gh;gy++){
+      for(let gx=0;gx<gw;gx++){
+        let cnt=0,tot=0;
+        const x1=Math.min(w,(gx+1)*cell),y1=Math.min(h,(gy+1)*cell);
+        for(let yy=gy*cell;yy<y1;yy++)for(let xx=gx*cell;xx<x1;xx++){tot++;cnt+=ink[yy*w+xx];}
+        if(cnt>tot*0.14)occ[gy*gw+gx]=1;
+      }
+    }
+    const dil=dilateGrid(occ,gw,gh,2,1);
+    const seen=new Uint8Array(gw*gh);
+    const rawBoxes=[];
+    for(let i=0;i<gw*gh;i++){
+      if(!dil[i]||seen[i])continue;
+      const q=[i];seen[i]=1;let qi=0,minX=gw,minY=gh,maxX=0,maxY=0;
+      while(qi<q.length){
+        const cur=q[qi++];
+        const cx=cur%gw,cy=(cur/gw)|0;
+        if(cx<minX)minX=cx;if(cx>maxX)maxX=cx;
+        if(cy<minY)minY=cy;if(cy>maxY)maxY=cy;
+        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+          const nx=cx+dx,ny=cy+dy;
+          if(nx<0||nx>=gw||ny<0||ny>=gh)continue;
+          const ni=ny*gw+nx;
+          if(dil[ni]&&!seen[ni]){seen[ni]=1;q.push(ni);}
+        }
+      }
+      rawBoxes.push({x:minX*cell,y:minY*cell,w:(maxX-minX+1)*cell,h:(maxY-minY+1)*cell});
+    }
+    const minW=opts.minSize*k,minH=Math.max(5,opts.minSize*k*0.35);
+    const filtered=rawBoxes.filter(b=>b.w>=minW&&b.h>=minH);
+    filtered.sort((a,b)=>b.w*b.h-a.w*a.h);
+    const kept=[];
+    for(const b of filtered){
+      let inside=false;
+      for(const k2 of kept){
+        const ix=Math.max(0,Math.min(b.x+b.w,k2.x+k2.w)-Math.max(b.x,k2.x));
+        const iy=Math.max(0,Math.min(b.y+b.h,k2.y+k2.h)-Math.max(b.y,k2.y));
+        if(ix*iy>b.w*b.h*0.55){inside=true;break;}
+      }
+      if(!inside)kept.push(b);
+    }
+    progSet(60,100,'Классификация блоков…');await tick();
+    const heights=kept.map(b=>b.h/k).sort((a,b)=>a-b);
+    const medH=heights[Math.floor(heights.length/2)]||60;
+    const regions=[];
+    for(const b of kept){
+      const f=analyzeBox(b,ink,w,h);
+      const x=Math.round(clamp(b.x/k-4,0,p.w-12));
+      const y=Math.round(clamp(b.y/k-4,0,p.h-12));
+      const bw=Math.round(Math.min(b.w/k+8,p.w-x));
+      const bh=Math.round(Math.min(b.h/k+8,p.h-y));
+      if(bw<12||bh<12)continue;
+      const type=classifyType(f,bh,bw,p.w,medH);
+      regions.push({id:uid(),type,x,y,w:bw,h:bh,content:'',status:'new'});
+    }
+    if(regions.length>80){
+      regions.sort((a,b)=>(b.w*b.h)-(a.w*a.h));
+      regions.length=80;
+    }
+    regions.sort((a,b)=>{
+      const ca=a.y+a.h/2,cb=b.y+b.h/2;
+      if(Math.abs(ca-cb)>Math.max(24,(a.h+b.h)/4))return ca-cb;
+      return a.x-b.x;
+    });
+    progSet(90,100,'Создание блоков…');
+    if(opts.clear)p.regions=[];
+    p.regions.push(...regions);
+    state.selectedId=null;
+    renderRegions();renderBlockList();renderProps();mutate();
+    const byType={};regions.forEach(r=>byType[r.type]=(byType[r.type]||0)+1);
+    progSet(100,100,'Готово');
+    progLog('Создано блоков: '+regions.length+' — '+Object.entries(byType).map(([t,n])=>TYPES[t].label.toLowerCase()+': '+n).join(', '));
+    toast('Авторазметка: создано '+regions.length+' '+plural(regions.length));
+    setTimeout(()=>closeModal('mw-progress'),800);
+    if(opts.ocr&&regions.length)setTimeout(()=>recognizeRegions(regions),900);
+  }catch(err){
+    console.error(err);
+    toast('Ошибка авторазметки: '+err.message,'err');
+    progLog('Ошибка: '+err.message);
+    setTimeout(()=>closeModal('mw-progress'),1200);
+  }
+}
+
+/* ============================ OCR ============================ */
+function cropRegion(r,pad=0,maxDim=1400){
+  const p=state.project;
+  if(!p?.image||!mainImg.naturalWidth)return null;
+  const sx=clamp(r.x-pad,0,p.w),sy=clamp(r.y-pad,0,p.h);
+  const sw=clamp(r.w+pad*2,1,p.w-sx),sh=clamp(r.h+pad*2,1,p.h-sy);
+  const kk=Math.min(1,maxDim/Math.max(sw,sh));
+  const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(sw*kk));c.height=Math.max(1,Math.round(sh*kk));
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
+  ctx.drawImage(mainImg,sx,sy,sw,sh,0,0,c.width,c.height);
+  return c;
+}
+async function apiRecognize(base,key,model,imgDataUrl,prompt){
+  if(!base)throw new Error('Не указан адрес сервера (см. Настройки)');
+  if(!model)throw new Error('Не указана модель (см. Настройки)');
+  const url=base.replace(/\/+$/,'')+'/chat/completions';
+  const headers={'Content-Type':'application/json'};
+  if(key)headers['Authorization']='Bearer '+key;
+  const res=await fetch(url,{method:'POST',headers,body:JSON.stringify({
+    model,temperature:0,max_tokens:2048,
+    messages:[{role:'user',content:[{type:'text',text:prompt},{type:'image_url',image_url:{url:imgDataUrl}}]}]
+  })});
+  if(!res.ok){let m='HTTP '+res.status;try{m+=': '+(await res.text()).slice(0,180);}catch(_){}throw new Error(m);}
+  const j=await res.json();
+  const c=j.choices?.[0]?.message?.content;
+  if(!c)throw new Error('Пустой ответ модели');
+  return c.trim();
+}
+async function tessRecognize(canvas){
+  await ensureLib('Tesseract',TESS_URL);
+  const lang=state.settings.tessLang||'rus+eng';
+  if(!tessWorker||tessWorkerLang!==lang){
+    if(tessWorker){try{tessWorker.terminate();}catch(_){}}
+    tessWorker=await window.Tesseract.createWorker(lang,1,{logger:m=>{if(m.status==='recognizing text')progBar(m.progress||0);}});
+    tessWorkerLang=lang;
+  }
+  const {data}=await tessWorker.recognize(canvas);
+  return (data.text||'').trim();
+}
+async function recognizeOne(r){
+  const pad=Math.max(4,Math.round(Math.max(r.w,r.h)*0.04));
+  const cv=cropRegion(r,pad);
+  if(!cv)throw new Error('Нет изображения');
+  const s=state.settings;
+  if(s.provider==='local'){
+    if(r.type==='formula')progLog('  ⚠ локальный OCR вернёт обычный текст (для LaTeX используйте LLM)');
+    return await tessRecognize(cv);
+  }
+  const cfg=s.provider==='vllm'
+    ?{base:s.vllmUrl,key:s.vllmKey,model:s.vllmModel}
+    :{base:s.baseUrl,key:s.apiKey,model:s.model};
+  return await apiRecognize(cfg.base,cfg.key,cfg.model,cv.toDataURL('image/jpeg',0.92),PROMPTS[r.type]||PROMPTS.other);
+}
+async function recognizeRegions(list){
+  const p=state.project;
+  if(!p?.image)return toast('Сначала загрузите изображение','err');
+  if(!list.length)return toast('Нет блоков для распознавания','err');
+  progOpen('Распознавание: '+list.length+' '+plural(list.length));
+  const s=state.settings;
+  const engine=s.provider==='api'?('VisualLM API · '+s.model)
+    :s.provider==='vllm'?('vLLM · '+s.vllmModel+' @ '+s.vllmUrl)
+    :'Tesseract (локально в браузере)';
+  progLog('Провайдер: '+engine);
+  let ok=0,fail=0;
+  for(let i=0;i<list.length;i++){
+    if(progCancelFlag){progLog('— Отменено пользователем —');break;}
+    const r=list[i];
+    progSet(i,list.length,'Блок '+(i+1)+'/'+list.length+' · '+TYPES[r.type].label);
+    progLog('→ '+TYPES[r.type].label+' '+(p.regions.indexOf(r)+1)+' …');
+    try{
+      const txt=await recognizeOne(r);
+      r.content=txt;r.status='done';ok++;
+      progLog('  готово ('+txt.length+' симв.)');
+    }catch(err){
+      r.status='error';fail++;
+      progLog('  ошибка: '+err.message);
+    }
+    renderRegions();renderBlockList();
+    if(state.selectedId===r.id)renderProps();
+  }
+  progSet(list.length,list.length,'Готово: '+ok+(fail?', ошибок: '+fail:''));
+  $('#prog-bar').style.width='100%';
+  $('#btn-prog-cancel').hidden=true;
+  mutate();
+  toast('Распознавание завершено: '+ok+(fail?', ошибок: '+fail:''),fail?'err':'ok');
+  setTimeout(()=>closeModal('mw-progress'),fail?2600:900);
+}
+
+/* ============================ BLOCK EDITOR MODAL ============================ */
+function openEditor(id){
+  const r=getRegion(id);if(!r)return;
+  editorId=id;selectRegion(id);
+  const cv=cropRegion(r,4,820);
+  $('#ed-img').src=cv?cv.toDataURL():'';
+  $('#ed-meta').textContent=TYPES[r.type].label+' · '+Math.round(r.w)+'×'+Math.round(r.h)+' px';
+  $('#ed-type').value=r.type;
+  $('#ed-content').value=r.content||'';
+  openModal('mw-editor');
+}
+$('#ed-type').addEventListener('change',e=>{const r=getRegion(editorId);if(r){r.type=e.target.value;renderRegions();renderBlockList();renderProps();mutate();}});
+$('#ed-content').addEventListener('input',e=>{const r=getRegion(editorId);if(r){r.content=e.target.value;renderProps();renderBlockListSoon();mutate();}});
+$('#ed-recognize').addEventListener('click',async()=>{
+  const r=getRegion(editorId);if(!r)return;
+  const btn=$('#ed-recognize');btn.disabled=true;btn.textContent='Распознавание…';
+  try{
+    r.content=await recognizeOne(r);r.status='done';
+    $('#ed-content').value=r.content;
+    renderRegions();renderBlockList();renderProps();mutate();
+    toast('Блок распознан');
+  }catch(err){toast(err.message,'err');}
+  finally{btn.disabled=false;btn.textContent='✦ Распознать';}
+});
+$('#btn-ed-close').addEventListener('click',()=>closeModal('mw-editor'));
+
+/* ============================ DOCX EXPORT ============================ */
+$('#btn-export-docx').addEventListener('click',exportDocx);
+function dataUrlToU8(u){const b=atob(u.split(',')[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+async function exportDocx(){
+  const p=state.project;
+  if(!p)return toast('Нет открытого проекта','err');
+  try{
+    await ensureLib('docx',DOCX_URL);
+    const D=window.docx;
+    const {Document,Packer,Paragraph,TextRun,ImageRun,HeadingLevel,AlignmentType}=D;
+    const children=[];
+    children.push(new Paragraph({heading:HeadingLevel.HEADING_1,alignment:AlignmentType.CENTER,
+      children:[new TextRun({text:p.name||'Документ',bold:true,size:40})]}));
+    children.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:240},
+      children:[new TextRun({text:'Экспортировано из '+APP_NAME+' v'+APP_VERSION+' · '+new Date().toLocaleString('ru-RU'),italics:true,color:'888888',size:18})]}));
+    const regs=p.regions||[];
+    if(!regs.length)children.push(new Paragraph({children:[new TextRun({text:'Блоки не размечены.',italics:true})]}));
+    for(let i=0;i<regs.length;i++){
+      const r=regs[i];
+      children.push(new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:200,after:120},
+        children:[new TextRun({text:(i+1)+'. '+TYPES[r.type].label,bold:true,size:26})]}));
+      children.push(new Paragraph({spacing:{after:120},
+        children:[new TextRun({text:'Область: ['+Math.round(r.x)+', '+Math.round(r.y)+'] · '+Math.round(r.w)+'×'+Math.round(r.h)+' px',color:'999999',size:16})]}));
+      if(p.image){
+        try{
+          const cv=cropRegion(r,6,900);
+          if(cv){
+            const u8=dataUrlToU8(cv.toDataURL('image/png'));
+            const kk=Math.min(1,460/cv.width);
+            children.push(new Paragraph({spacing:{after:140},children:[new ImageRun({data:u8,type:'png',
+              transformation:{width:Math.max(20,Math.round(cv.width*kk)),height:Math.max(20,Math.round(cv.height*kk))}})]}));
+          }
+        }catch(_){}
+      }
+      const content=(r.content||'').trim();
+      if(content){
+        content.split('\n').forEach(line=>children.push(new Paragraph({
+          children:[new TextRun({text:line.length?line:' ',size:22})]})));
+      }else{
+        children.push(new Paragraph({children:[new TextRun({text:'(содержимое не распознано)',italics:true,color:'999999',size:20})]}));
+      }
+      children.push(new Paragraph({spacing:{after:160},children:[]}));
+    }
+    const doc=new Document({creator:APP_NAME,title:p.name||'Документ',sections:[{properties:{},children}]});
+    const blob=await Packer.toBlob(doc);
+    download(blob,sanitize(p.name)+'.docx');
+    toast('DOCX экспортирован');
+  }catch(err){toast('Ошибка экспорта DOCX: '+err.message,'err');}
+}
+
+/* ============================ MISC TOPBAR ============================ */
+$('#btn-help').addEventListener('click',()=>openModal('mw-help'));
+
+/* ============================ KEYBOARD ============================ */
+window.addEventListener('keydown',e=>{
+  const typing=e.target.matches('input,textarea,select')||e.target.isContentEditable;
+  if(e.key==='Escape'){
+    if(anyModalOpen()){const ws=$$('.modal-wrap.show');const w=ws[ws.length-1];if(!w.dataset.static)closeModal(w.id);return;}
+    if(document.body.classList.contains('sb-open')){document.body.classList.remove('sb-open');return;}
+    if(drag&&drag.mode==='draw'){if(drag.el)drag.el.remove();drag=null;document.body.classList.remove('dragging');setTool('select');return;}
+    selectRegion(null);return;
+  }
+  if(typing)return;
+  if(e.code==='Space'){if(!state.space){state.space=true;viewport.classList.add('space-pan');}e.preventDefault();return;}
+  const k=e.key.toLowerCase();
+  if(e.ctrlKey||e.metaKey){
+    if(k==='s'){e.preventDefault();saveNow();toast('Проект сохранён');}
+    return;
+  }
+  if(e.key==='Delete'||e.key==='Backspace'){if(state.selectedId){e.preventDefault();deleteRegion(state.selectedId);}return;}
+  if(e.key==='+'||e.key==='=')return zoomAtCenter(1.25);
+  if(e.key==='-'||e.key===',')return zoomAtCenter(0.8);
+  if(e.key==='0')return fitAll();
+  if(e.key==='1')return zoom100();
+  const toolMap={v:'select',h:'pan',t:'draw-text',i:'draw-image',g:'draw-table',d:'draw-chart',f:'draw-formula',o:'draw-other'};
+  const fitMap={w:fitWidth,s:fitHeight,c:fitCover};
+  if(toolMap[k])setTool(toolMap[k]);
+  if(fitMap[k])fitMap[k]();
+});
+window.addEventListener('keyup',e=>{if(e.code==='Space'){state.space=false;viewport.classList.remove('space-pan');}});
+window.addEventListener('resize',()=>{applyView();});
+
+/* ============================ INIT ============================ */
+(function branding(){
+  document.title=APP_NAME+' v'+APP_VERSION+' — разметка и распознавание';
+  $$('.app-ver').forEach(el=>el.textContent='v'+APP_VERSION);
+  const vl=$('.app-ver-line');if(vl)vl.textContent=APP_NAME+' · v'+APP_VERSION+' · разметка, OCR и экспорт в DOCX';
+})();
+(async function init(){
+  loadSettings();updateProviderChip();
+  setTool('select');applyView();
+  try{
+    await renderProjectsList();
+    const all=(await dbAll()).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+    if(all.length)await openProjectById(all[0].id);
+    else await createProject('Мой проект',true);
+  }catch(err){
+    state.project={id:uid(),name:'Мой проект',createdAt:Date.now(),updatedAt:Date.now(),image:'',w:0,h:0,regions:[]};
+    $('#project-name').value=state.project.name;
+    toast('IndexedDB недоступна: хранение проектов отключено','err');
+  }
+  renderRegions();renderBlockList();renderProps();updateStatus();
+})();
+</script>
+</body>
+</html>
