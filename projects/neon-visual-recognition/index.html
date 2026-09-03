@@ -105,6 +105,7 @@ svg{display:block}
   margin-top:8px;cursor:pointer;background:#0d1424;transition:.15s}
 .pgitem:hover{border-color:var(--line2)}
 .pgitem.on{border-color:rgba(0,229,255,.55);box-shadow:0 0 12px rgba(0,229,255,.15)}
+.pgchk{width:15px;height:15px;flex:none;accent-color:var(--acc);cursor:pointer;margin:0}
 .pgitem img{width:54px;height:auto;border:1px solid var(--line2);border-radius:4px;flex:none;background:#fff}
 .pginfo{min-width:0}
 .pginfo b{font-size:12.5px}
@@ -327,7 +328,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
       <circle cx="16" cy="16" r="2.1" fill="#00e5ff"/>
       <path d="M16 3.6v4M16 24.4v4M3.6 16h4M24.4 16h4" stroke="url(#nvlg)" stroke-width="2" stroke-linecap="round"/>
     </svg>
-    <div class="brand">NEON VISUAL RECOGNITION<span class="ver app-ver">v2.5.0</span></div>
+    <div class="brand">NEON VISUAL RECOGNITION<span class="ver app-ver">v2.7.0</span></div>
     <div class="proj-name-wrap">
       <input id="project-name" placeholder="Название проекта" spellcheck="false" autocomplete="off" title="Название проекта (редактируемое)">
     </div>
@@ -343,6 +344,10 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
       <button class="btn primary" id="btn-export-docx" title="Экспорт в DOCX с сохранением структуры страниц">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6"/></svg>
         <span class="lbl">DOCX</span>
+      </button>
+      <button class="btn" id="btn-export-md" title="Экспорт в Markdown с сохранением структуры">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+        <span class="lbl">Markdown</span>
       </button>
       <button class="ibtn" id="btn-settings" title="Настройки распознавания">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5 5l2.1 2.1M16.9 16.9L19 19M19 5l-2.1 2.1M7.1 16.9L5 19"/></svg>
@@ -375,18 +380,23 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
           <div id="projects-list"></div>
         </div>
         <div id="tab-pages" class="sb-tab">
+          <div class="qa-row" style="grid-template-columns:1fr 1fr">
+            <button class="btn" id="pg-sel-all" title="Отметить все страницы">Выбрать все</button>
+            <button class="btn" id="pg-sel-none" title="Снять отметки со всех страниц">Снять выбор</button>
+          </div>
+          <div id="pg-sel-info" class="sb-hint" style="margin-top:2px;padding:8px;font-size:11.5px">Выбрано страниц: 0 из 0</div>
           <div id="pages-list"></div>
         </div>
         <div id="tab-blocks" class="sb-tab">
           <div class="qa-row">
-            <button class="btn acc" id="qa-auto" title="Автоматическая разметка всех страниц">✦ Авторазметка</button>
+            <button class="btn acc" id="qa-auto" title="Автоматическая разметка страниц">✦ Авторазметка</button>
             <button class="btn" id="qa-rec-all" title="Распознать все блоки">Распознать</button>
             <button class="btn danger" id="qa-clear" title="Удалить все блоки">Очистить</button>
           </div>
           <div id="blocks-list"></div>
         </div>
         <div id="tab-props" class="sb-tab">
-          <div id="props-empty" class="sb-hint">Выберите блок на холсте или в списке «Блоки», чтобы посмотреть и отредактировать его свойства.<br><br>«Авторазметка» создаст блоки автоматически на всех страницах.</div>
+          <div id="props-empty" class="sb-hint">Выберите блок на холсте или в списке «Блоки», чтобы посмотреть и отредактировать его свойства.<br><br>«Авторазметка» создаст блоки автоматически — на всех или только на выбранных страницах.</div>
           <div id="props-form" hidden>
             <label class="f-label">Тип области
               <select id="prop-type"></select>
@@ -465,7 +475,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
         </button>
         <button class="tbtn" data-fit="one" title="Масштаб 100% (1)"><span class="mono">1:1</span></button>
         <div class="tb-sep"></div>
-        <button class="tbtn acc" id="btn-auto" title="Автоматическая разметка всех страниц на блоки">
+        <button class="tbtn acc" id="btn-auto" title="Автоматическая разметка страниц на блоки">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L14 10l2 2-9 9-2.6.6zM14 10l4.5-4.5M18 3v2M18 7v2M16 5h2M20 5h2"/><path d="M20 12l.7 1.8 1.8.7-1.8.7L20 17l-.7-1.8-1.8-.7 1.8-.7z"/></svg><span>Авторазметка</span>
         </button>
         <button class="tbtn acc" id="btn-rec-sel" title="Распознать выбранный блок">
@@ -552,9 +562,13 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
           <input type="password" id="set-key" placeholder="sk-…" spellcheck="false" autocomplete="off">
         </label>
         <label class="f-label">Модель (мультимодальная)
-          <input type="text" id="set-model" placeholder="gpt-4o-mini, qwen2.5-vl-7b, llava…" spellcheck="false">
+          <input type="text" id="set-model" list="model-list-api" placeholder="gpt-4o-mini, qwen2.5-vl-7b, llava…" spellcheck="false">
+          <datalist id="model-list-api"></datalist>
         </label>
-        <div class="btn-row"><button class="btn" id="btn-test-api">Проверить подключение</button></div>
+        <div class="btn-row">
+          <button class="btn" id="btn-test-api">Проверить подключение</button>
+          <button class="btn" id="btn-models-api" title="Запросить список доступных моделей у эндпоинта /models">Список моделей</button>
+        </div>
       </div>
 
       <div id="vllm-fields" hidden>
@@ -562,8 +576,8 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
           <input type="text" id="set-vllm-base" placeholder="http://localhost:8000/v1" spellcheck="false">
         </label>
         <label class="f-label">Локальная модель
-          <input type="text" id="set-vllm-model" list="vllm-models" placeholder="gemma4 / qwen3.8" spellcheck="false">
-          <datalist id="vllm-models">
+          <input type="text" id="set-vllm-model" list="model-list-vllm" placeholder="gemma4 / qwen3.8" spellcheck="false">
+          <datalist id="model-list-vllm">
             <option value="gemma4"></option>
             <option value="qwen3.8"></option>
           </datalist>
@@ -571,7 +585,10 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
         <label class="f-label">API-ключ (обычно не требуется)
           <input type="password" id="set-vllm-key" placeholder="EMPTY" autocomplete="off">
         </label>
-        <div class="btn-row"><button class="btn" id="btn-test-vllm">Проверить подключение</button></div>
+        <div class="btn-row">
+          <button class="btn" id="btn-test-vllm">Проверить подключение</button>
+          <button class="btn" id="btn-models-vllm" title="Запросить список доступных моделей у эндпоинта /models">Список моделей</button>
+        </div>
         <div class="sb-hint" style="text-align:left">Запустите локальный сервер: <span class="mono" style="color:#9beeff">vllm serve &lt;модель&gt;</span> — OpenAI-совместимый API будет доступен по указанному адресу. Данные не покидают ваш компьютер.</div>
       </div>
 
@@ -580,8 +597,8 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
           <input type="text" id="set-ollama-base" placeholder="http://localhost:11434" spellcheck="false">
         </label>
         <label class="f-label">Модель (мультимодальная)
-          <input type="text" id="set-ollama-model" list="ollama-models" placeholder="gemma3:4b" spellcheck="false">
-          <datalist id="ollama-models">
+          <input type="text" id="set-ollama-model" list="model-list-ollama" placeholder="gemma3:4b" spellcheck="false">
+          <datalist id="model-list-ollama">
             <option value="gemma3:4b"></option>
             <option value="gemma3:12b"></option>
             <option value="llava:13b"></option>
@@ -590,7 +607,10 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
             <option value="qwen2.5vl:7b"></option>
           </datalist>
         </label>
-        <div class="btn-row"><button class="btn" id="btn-test-ollama">Проверить подключение</button></div>
+        <div class="btn-row">
+          <button class="btn" id="btn-test-ollama">Проверить подключение</button>
+          <button class="btn" id="btn-models-ollama" title="Запросить список доступных моделей у эндпоинта /v1/models">Список моделей</button>
+        </div>
         <div class="sb-hint" style="text-align:left">Локальный сервер: <span class="mono" style="color:#9beeff">ollama serve</span>. Используется OpenAI-совместимый эндпоинт <span class="mono" style="color:#9beeff">/v1/chat/completions</span>. Данные не покидают ваш компьютер.</div>
       </div>
 
@@ -621,6 +641,14 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
         </label>
         <div class="sb-hint" style="text-align:left">Классический OCR работает офлайн прямо в браузере. Для формул и таблиц рекомендуется LLM (API, vLLM, Ollama или офлайн VLM) — LaTeX и Markdown доступны только через них.</div>
       </div>
+
+      <div style="height:1px;background:var(--line2);margin:4px 0 14px"></div>
+
+      <label class="f-label">Качество рендера PDF (DPR): <span class="mono" id="dpr-val" style="color:#9beeff">2</span>
+        <input type="range" id="set-dpr" min="0.5" max="4" step="0.25" value="2">
+      </label>
+      <div class="btn-row"><button class="btn" id="btn-redraw-pdf" title="Заново отрендерить страницы последнего загруженного PDF с текущим DPR">Перерендерить текущий PDF с новым DPR</button></div>
+      <div class="sb-hint" style="text-align:left;margin-top:10px">DPR применяется при загрузке/перерендере PDF: выше значение — чётче страницы и точнее распознавание, но больше памяти. Перерендер заменяет страницы и очищает их разметку.</div>
     </div>
     <div class="m-foot">
       <button class="btn" id="btn-set-cancel">Отмена</button>
@@ -638,15 +666,22 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
       </div>
     </div>
     <div class="m-body">
-      <label class="f-label">Чувствительность (порог контраста): <span class="mono" id="auto-sens-val" style="color:#9beeff">30</span>
+      <label class="chk"><input type="checkbox" id="auto-llm"> Использовать LLM для поиска блоков (точнее)</label>
+      <label class="f-label">Страницы для обработки
+        <select id="auto-scope">
+          <option value="all">Все страницы</option>
+          <option value="selected">Только выбранные (отметки во вкладке «Страницы»)</option>
+        </select>
+      </label>
+      <label class="f-label">Чувствительность эвристики (порог контраста): <span class="mono" id="auto-sens-val" style="color:#9beeff">30</span>
         <input type="range" id="auto-sens" min="12" max="60" value="30">
       </label>
       <label class="f-label">Минимальный размер блока, px
         <input type="number" id="auto-min" value="40" min="10" max="400" step="5">
       </label>
-      <label class="chk"><input type="checkbox" id="auto-clear" checked> Удалить существующие блоки перед разметкой</label>
+      <label class="chk"><input type="checkbox" id="auto-clear" checked> Удалить существующие блоки обрабатываемых страниц</label>
       <label class="chk"><input type="checkbox" id="auto-ocr"> Распознать блоки сразу после разметки</label>
-      <div class="sb-hint" style="text-align:left">Алгоритм обрабатывает каждую страницу документа: находит связанные области содержимого и классифицирует их — текст, таблицы (по сетке линий), диаграммы, изображения и формулы.</div>
+      <div class="sb-hint" style="text-align:left">Режим <b style="color:#9beeff">LLM</b>: мультимодальная модель анализирует каждую страницу и возвращает координаты блоков (через выбранного провайдера: API, vLLM, Ollama, офлайн VLM в браузере; для Tesseract применяется эвристика).<br>Эвристический режим находит области по контрасту и классифицирует их: текст, таблицы, диаграммы, изображения, формулы.</div>
     </div>
     <div class="m-foot">
       <button class="btn m-x">Отмена</button>
@@ -691,6 +726,26 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
   </div>
 </div>
 
+<div class="modal-wrap" id="mw-md">
+  <div class="modal" style="width:min(460px,100%)">
+    <div class="m-head"><div class="m-title">Экспорт Markdown</div>
+      <div class="m-btns">
+        <button class="mbtn m-fs" title="Во весь экран"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></button>
+        <button class="mbtn m-x" title="Закрыть"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+    </div>
+    <div class="m-body">
+      <label class="chk"><input type="checkbox" id="md-embed"> Встраивать кадры блоков-изображений (base64)</label>
+      <label class="chk"><input type="checkbox" id="md-meta"> Добавлять координаты блоков (комментарии)</label>
+      <div class="sb-hint" style="text-align:left">Документ формируется постранично в порядке чтения с сохранением структуры оригинала: текст — как есть, формулы — в <span class="mono" style="color:#9beeff">$$…$$</span>, таблицы — Markdown-таблицами, диаграммы — цитатами, изображения — подписью (или встроенным кадром).</div>
+    </div>
+    <div class="m-foot">
+      <button class="btn m-x">Отмена</button>
+      <button class="btn primary" id="btn-md-run">Сформировать</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-wrap" id="mw-help">
   <div class="modal">
     <div class="m-head"><div class="m-title">Справка · NEON VISUAL RECOGNITION</div>
@@ -700,7 +755,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
       </div>
     </div>
     <div class="m-body">
-      <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Загрузка изображений и многостраничных PDF, разметка на области (текст, изображения, таблицы, диаграммы, формулы), автоматическая разметка всех страниц, распознавание через мультимодальные LLM: внешний API, локальные серверы <b style="color:#9beeff">vLLM</b> (<b style="color:#9beeff">gemma4</b> / <b style="color:#9beeff">qwen3.8</b>) и <b style="color:#9beeff">Ollama</b>, офлайн-модель прямо в браузере (WebLLM) или OCR Tesseract. Экспорт в DOCX: постраничная реконструкция оригинала, где распознанные блоки заменяются редактируемым текстом в исходных координатах. Проекты хранятся в IndexedDB.</p>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:14px">Загрузка изображений и многостраничных PDF (с настраиваемым DPR рендера), разметка на области, автоматическая разметка всех или выбранных страниц (эвристика или LLM), распознавание через мультимодальные LLM: внешний API, локальные серверы <b style="color:#9beeff">vLLM</b> и <b style="color:#9beeff">Ollama</b> (список моделей запрашивается с эндпоинта), офлайн-модель в браузере (WebLLM) или OCR Tesseract. Экспорт: DOCX с реконструкцией страниц и Markdown с сохранением структуры. Проекты хранятся в IndexedDB.</p>
       <div class="help-grid">
         <span><kbd>V</kbd></span><span>Инструмент «Выбор»</span>
         <span><kbd>H</kbd> / <kbd>Space</kbd> / ПКМ</span><span>Перемещение холста</span>
@@ -708,6 +763,7 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
         <span><kbd>Колесо мыши</kbd></span><span>Масштабирование (с Ctrl — точное)</span>
         <span><kbd>0</kbd> <kbd>1</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>C</kbd></span><span>Фит: вписать документ · 100% · по ширине страницы · по высоте · заполнить</span>
         <span><kbd>PageUp</kbd> / <kbd>PageDown</kbd></span><span>Переход между страницами документа</span>
+        <span><b>Галочки во вкладке «Страницы»</b></span><span>Выбор страниц для выборочной авторазметки</span>
         <span><kbd>Delete</kbd></span><span>Удалить выбранный блок</span>
         <span><kbd>Shift</kbd>+рисование</span><span>Остаться в режиме рисования</span>
         <span><kbd>Ctrl</kbd>+<kbd>S</kbd></span><span>Сохранить проект</span>
@@ -766,19 +822,24 @@ kbd{background:#0a101d;border:1px solid var(--line2);border-bottom-width:2px;bor
 'use strict';
 /* ============================ CONSTANTS ============================ */
 const APP_NAME='NEON VISUAL RECOGNITION';
-const APP_VERSION='2.5.0';
+const APP_VERSION='2.7.0';
 const DOCX_URL='https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js';
 const TESS_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const WLLM_URL='https://esm.run/@mlc-ai/web-llm@0.2.79';
 const PDFJS_URL='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
 const PDFJS_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-const PAGE_GAP=56, EMU=9525;
+const PAGE_GAP=56;
 const TYPES={
   text:{label:'Текст'}, image:{label:'Изображение'}, table:{label:'Таблица'},
   chart:{label:'Диаграмма'}, formula:{label:'Формула'}, other:{label:'Другое'}
 };
 const TOOL_LABELS={select:'Выбор',pan:'Рука','draw-text':'Рисование: текст','draw-image':'Рисование: изображение',
   'draw-table':'Рисование: таблица','draw-chart':'Рисование: диаграмма','draw-formula':'Рисование: формула','draw-other':'Рисование: другое'};
+const MODEL_PRESETS={
+  'model-list-api':[],
+  'model-list-vllm':['gemma4','qwen3.8'],
+  'model-list-ollama':['gemma3:4b','gemma3:12b','llava:13b','llama3.2-vision:11b','minicpm-v','qwen2.5vl:7b']
+};
 const TYPE_ICONS={
   text:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14M12 6v13"/></svg>',
   image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>',
@@ -799,16 +860,18 @@ const PROMPTS={
 /* ============================ STATE ============================ */
 const state={
   project:null, zoom:1, panX:40, panY:40, tool:'select', selectedId:null, space:false, pageIdx:0,
+  selPages:new Set(),
   settings:{provider:'api',baseUrl:'https://api.openai.com/v1',apiKey:'',model:'gpt-4o-mini',
             vllmUrl:'http://localhost:8000/v1',vllmKey:'',vllmModel:'gemma4',
             ollamaUrl:'http://localhost:11434',ollamaModel:'gemma3:4b',
-            wbModel:'SmolVLM-2-2.2B-Instruct',tessLang:'rus+eng'},
+            wbModel:'SmolVLM-2-2.2B-Instruct',tessLang:'rus+eng',dpr:2},
   saveTimer:null, dirty:false
 };
 let drag=null, confirmResolve=null, editorId=null, tessWorker=null, tessWorkerLang='',
     npFile=null, plTimer=null, progCancelFlag=false,
     webllmModule=null, webllmLoading=null, wllmEngine=null, wllmModelName='',
-    layoutCache=null, pageImgs=[];
+    layoutCache=null, pageImgs=[],
+    lastPdfBuf=null, lastPdfName='';
 let regionsLayer=null;
 const pointers=new Map();
 
@@ -901,6 +964,8 @@ $('#btn-settings').addEventListener('click',()=>{
   $('#set-ollama-base').value=s.ollamaUrl;$('#set-ollama-model').value=s.ollamaModel;
   $('#set-wb-model').value=s.wbModel;
   $('#set-tess').value=s.tessLang;
+  $('#set-dpr').value=clamp(+s.dpr||2,0.5,4);
+  $('#dpr-val').textContent=$('#set-dpr').value;
   toggleProviderFields();
   openModal('mw-settings');
 });
@@ -917,7 +982,13 @@ $('#btn-set-save').addEventListener('click',()=>{
   state.settings.ollamaModel=$('#set-ollama-model').value.trim()||'gemma3:4b';
   state.settings.wbModel=$('#set-wb-model').value.trim()||'SmolVLM-2-2.2B-Instruct';
   state.settings.tessLang=$('#set-tess').value;
+  state.settings.dpr=clamp(+$('#set-dpr').value||2,0.5,4);
   saveSettingsToLS();closeModal('mw-settings');toast('Настройки сохранены');
+});
+$('#set-dpr').addEventListener('input',e=>{
+  const v=+e.target.value||2;
+  state.settings.dpr=v;
+  $('#dpr-val').textContent=e.target.value;
 });
 async function testEndpoint(base,key){
   base=(base||'').trim().replace(/\/+$/,'');
@@ -927,6 +998,35 @@ async function testEndpoint(base,key){
   const j=await r.json();
   return (j.data||[]).map(m=>m.id).slice(0,5).join(', ');
 }
+async function fetchModelsList(base,key){
+  base=(base||'').trim().replace(/\/+$/,'');
+  if(!base)throw new Error('Не указан адрес сервера');
+  const r=await fetch(base+'/models',{headers:key?{Authorization:'Bearer '+key}:{}});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  return (j.data||[]).map(m=>m.id||m.name).filter(Boolean);
+}
+function bindModelsBtn(btnId,dlId,inputId,getBase,getKey){
+  $('#'+btnId).addEventListener('click',async()=>{
+    const btn=$('#'+btnId);
+    btn.disabled=true;const old=btn.textContent;btn.textContent='Запрос…';
+    try{
+      const ids=await fetchModelsList(getBase(),getKey());
+      const merged=[...new Set([...(MODEL_PRESETS[dlId]||[]),...ids])];
+      $('#'+dlId).innerHTML=merged.map(v=>'<option value="'+esc(v)+'"></option>').join('');
+      const inp=$('#'+inputId);
+      if(!inp.value.trim()&&ids.length)inp.value=ids[0];
+      toast('Доступно моделей: '+ids.length+(ids.length?' · '+(ids.slice(0,3).join(', ')+(ids.length>3?'…':'')):''));
+    }catch(err){
+      toast('Не удалось получить список моделей: '+err.message,'err');
+    }finally{
+      btn.disabled=false;btn.textContent=old;
+    }
+  });
+}
+bindModelsBtn('btn-models-api','model-list-api','set-model',()=>$('#set-base').value,()=>$('#set-key').value.trim());
+bindModelsBtn('btn-models-vllm','model-list-vllm','set-vllm-model',()=>$('#set-vllm-base').value,()=>$('#set-vllm-key').value.trim());
+bindModelsBtn('btn-models-ollama','model-list-ollama','set-ollama-model',()=>($('#set-ollama-base').value.trim().replace(/\/+$/,'')+'/v1'),'');
 $('#btn-test-api').addEventListener('click',async()=>{
   try{const ids=await testEndpoint($('#set-base').value,$('#set-key').value.trim());
     toast('Подключение установлено'+(ids?'. Модели: '+ids:''));}
@@ -960,6 +1060,16 @@ $('#btn-test-browser').addEventListener('click',async()=>{
     toast('Ошибка загрузки модели: '+err.message,'err',5000);
     setTimeout(()=>closeModal('mw-progress'),1600);
   }
+});
+$('#btn-redraw-pdf').addEventListener('click',async()=>{
+  if(!lastPdfBuf)return toast('PDF ещё не загружался в этой сессии','err');
+  const p=state.project;
+  if(p&&p.regions.length){
+    const ok=await confirmDlg('Перерендерить PDF?','Разметка и результаты распознавания текущих страниц будут удалены.');
+    if(!ok)return;
+  }
+  try{await loadPdfFromBuffer(lastPdfBuf.slice(0),lastPdfName);}
+  catch(err){console.error(err);toast('Ошибка перерендера: '+err.message,'err');}
 });
 
 /* ============================ PAGES LAYOUT ============================ */
@@ -1152,18 +1262,48 @@ $('#sb-backdrop').addEventListener('click',()=>document.body.classList.remove('s
 function closeSidebarIfMobile(){if(innerWidth<=860)document.body.classList.remove('sb-open');}
 
 /* ============================ SIDEBAR: PAGES ============================ */
+function updatePageSelUI(){
+  const n=state.project?.pages?.length||0;
+  $('#pg-sel-info').textContent='Выбрано страниц: '+state.selPages.size+' из '+n+' — отметки используются для выборочной авторазметки';
+}
+function refreshPageChecks(){
+  $$('#pages-list .pgchk').forEach(c=>{c.checked=state.selPages.has(+c.dataset.idx);});
+  updatePageSelUI();
+}
 function renderPagesTab(){
   const p=state.project,box=$('#pages-list');
-  if(!p?.pages?.length){box.innerHTML='<div class="sb-hint">Страниц нет.<br>Загрузите изображение или многостраничный PDF.</div>';return;}
+  for(const i of [...state.selPages]) if(!p||i>=p.pages.length)state.selPages.delete(i);
+  if(!p?.pages?.length){
+    box.innerHTML='<div class="sb-hint">Страниц нет.<br>Загрузите изображение или многостраничный PDF.</div>';
+    updatePageSelUI();return;
+  }
   box.innerHTML=p.pages.map((pg,i)=>(
     '<div class="pgitem'+(i===state.pageIdx?' on':'')+'" data-idx="'+i+'" title="Перейти к странице '+(i+1)+'">'+
+      '<input type="checkbox" class="pgchk" data-idx="'+i+'" '+(state.selPages.has(i)?'checked':'')+' title="Выбрать страницу для авторазметки">'+
       '<img src="'+pg.image+'" alt="Страница '+(i+1)+'" loading="lazy">'+
       '<div class="pginfo"><b>Страница '+(i+1)+'</b><span>'+pg.w+'×'+pg.h+' px</span></div>'+
     '</div>')).join('');
+  updatePageSelUI();
 }
 $('#pages-list').addEventListener('click',e=>{
+  const chk=e.target.closest('.pgchk');
+  if(chk){
+    const i=+chk.dataset.idx;
+    if(chk.checked)state.selPages.add(i);else state.selPages.delete(i);
+    updatePageSelUI();
+    return;
+  }
   const it=e.target.closest('.pgitem');
   if(it){goToPage(+it.dataset.idx,false);closeSidebarIfMobile();}
+});
+$('#pg-sel-all').addEventListener('click',()=>{
+  const p=state.project;if(!p?.pages?.length)return toast('Страниц нет');
+  for(let i=0;i<p.pages.length;i++)state.selPages.add(i);
+  refreshPageChecks();
+});
+$('#pg-sel-none').addEventListener('click',()=>{
+  state.selPages.clear();
+  refreshPageChecks();
 });
 
 /* ============================ SIDEBAR: BLOCKS ============================ */
@@ -1187,10 +1327,7 @@ function renderBlockList(){
 $('#blocks-list').addEventListener('click',e=>{
   const actBtn=e.target.closest('[data-act]');
   const act=actBtn?.dataset.act;
-  if(act==='auto'){
-    if(!state.project?.pages?.length)return toast('Сначала загрузите изображение или PDF','err');
-    return openModal('mw-auto');
-  }
+  if(act==='auto')return openAutoModal();
   const item=e.target.closest('.bitem');
   if(!item)return;
   const id=item.dataset.id;
@@ -1204,7 +1341,12 @@ function moveRegion(id,dir){const arr=state.project.regions;const i=arr.findInde
 
 /* quick actions */
 function requirePages(){if(!state.project?.pages?.length){toast('Сначала загрузите изображение или PDF','err');return false;}return true;}
-$('#qa-auto').addEventListener('click',()=>{if(requirePages())openModal('mw-auto');});
+function openAutoModal(){
+  if(!requirePages())return;
+  $('#auto-scope').value='all';
+  openModal('mw-auto');
+}
+$('#qa-auto').addEventListener('click',openAutoModal);
 $('#qa-rec-all').addEventListener('click',()=>recognizeRegions(state.project?.regions||[]));
 $('#qa-clear').addEventListener('click',async()=>{
   const p=state.project;
@@ -1296,6 +1438,7 @@ async function openProjectById(id){
   let p=await dbGet(id);if(!p)return toast('Проект не найден','err');
   p=migrateProject(p);
   state.project=p;state.selectedId=null;state.pageIdx=0;
+  state.selPages.clear();
   $('#project-name').value=p.name||'';
   renderPages();renderRegions();renderBlockList();renderProps();renderPagesTab();
   await renderProjectsList();updateStatus();
@@ -1305,7 +1448,8 @@ async function createProject(name,openNow=true){
   const p={id:uid(),name:name||'Без названия',createdAt:Date.now(),updatedAt:Date.now(),pages:[],regions:[]};
   await dbPut(p);
   if(openNow){
-    state.project=p;state.selectedId=null;state.pageIdx=0;$('#project-name').value=p.name;
+    state.project=p;state.selectedId=null;state.pageIdx=0;state.selPages.clear();
+    $('#project-name').value=p.name;
     renderPages();renderRegions();renderBlockList();renderProps();renderPagesTab();
     await renderProjectsList();updateStatus();
   }
@@ -1379,6 +1523,7 @@ $('#project-name').addEventListener('input',e=>{if(state.project){state.project.
 function setPages(pages){
   const p=state.project;if(!p||!pages.length)return;
   p.pages=pages;p.regions=[];state.selectedId=null;state.pageIdx=0;
+  state.selPages.clear();
   renderPages();renderRegions();renderBlockList();renderProps();renderPagesTab();updateStatus();
   if(pages.length>1)switchTab('pages');
   requestAnimationFrame(()=>goToPage(0,true));
@@ -1395,48 +1540,56 @@ function setImage(dataUrl){
   im.src=dataUrl;
 }
 async function loadPdfFile(file){
-  const p=state.project;if(!p)return;
   try{
-    await ensureLib('pdfjsLib',PDFJS_URL);
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER;
-    progOpen('Чтение PDF: '+file.name);
-    progLog('Файл: '+file.name+' ('+(file.size/1024/1024).toFixed(1)+' МБ)');
     const buf=await file.arrayBuffer();
-    const doc=await window.pdfjsLib.getDocument({data:buf}).promise;
-    const total=doc.numPages,maxPages=Math.min(total,60);
-    if(total>maxPages)progLog('⚠ В документе '+total+' страниц — обрабатываются первые '+maxPages+'.');
-    progLog('Страниц в документе: '+total);
-    const pages=[];
-    for(let i=1;i<=maxPages;i++){
-      if(progCancelFlag){progLog('— Отменено —');break;}
-      progSet(i,maxPages,'Рендер страницы '+i+'/'+maxPages);
-      progBar(i/maxPages);
-      const page=await doc.getPage(i);
-      const vp1=page.getViewport({scale:1});
-      const scale=Math.min(2.5,1600/vp1.width);
-      const vp=page.getViewport({scale});
-      const c=document.createElement('canvas');
-      c.width=Math.max(1,Math.floor(vp.width));c.height=Math.max(1,Math.floor(vp.height));
-      const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);
-      await page.render({canvasContext:ctx,viewport:vp}).promise;
-      pages.push({id:uid(),image:c.toDataURL('image/jpeg',0.92),w:c.width,h:c.height});
-      await tick();
-    }
-    try{await doc.destroy();}catch(_){}
-    closeModal('mw-progress');
-    if(!pages.length){toast('Не удалось получить страницы PDF','err');return;}
-    setPages(pages);
-    if(p.name==='Мой проект'||p.name==='Новый проект'){
+    await loadPdfFromBuffer(buf,file.name);
+    const p=state.project;
+    if(p&&(p.name==='Мой проект'||p.name==='Новый проект'||!p.name.trim())){
       p.name=file.name.replace(/\.pdf$/i,'');
       $('#project-name').value=p.name;
+      mutate();
     }
-    mutate();
-    toast('PDF загружен: '+pages.length+' '+pluralPages(pages.length));
   }catch(err){
     console.error(err);
     closeModal('mw-progress');
     toast('Ошибка загрузки PDF: '+err.message,'err',5000);
   }
+}
+async function loadPdfFromBuffer(buf,name){
+  const p=state.project;if(!p)throw new Error('Нет проекта');
+  await ensureLib('pdfjsLib',PDFJS_URL);
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_WORKER;
+  progOpen('Чтение PDF: '+name);
+  progLog('Файл: '+name+' ('+(buf.byteLength/1024/1024).toFixed(1)+' МБ)');
+  const dpr=clamp(+state.settings.dpr||2,0.5,4);
+  progLog('DPR рендера: '+dpr);
+  const keep=buf.slice(0);
+  const doc=await window.pdfjsLib.getDocument({data:buf}).promise;
+  const total=doc.numPages,maxPages=Math.min(total,60);
+  if(total>maxPages)progLog('⚠ В документе '+total+' страниц — обрабатываются первые '+maxPages+'.');
+  progLog('Страниц в документе: '+total);
+  const pages=[];
+  for(let i=1;i<=maxPages;i++){
+    if(progCancelFlag){progLog('— Отменено —');break;}
+    progSet(i,maxPages,'Рендер страницы '+i+'/'+maxPages);
+    progBar(i/maxPages);
+    const page=await doc.getPage(i);
+    const vp1=page.getViewport({scale:1});
+    const scale=Math.min(dpr,3200/Math.max(1,vp1.width));
+    const vp=page.getViewport({scale});
+    const c=document.createElement('canvas');
+    c.width=Math.max(1,Math.floor(vp.width));c.height=Math.max(1,Math.floor(vp.height));
+    const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    pages.push({id:uid(),image:c.toDataURL('image/jpeg',0.92),w:c.width,h:c.height});
+    await tick();
+  }
+  try{await doc.destroy();}catch(_){}
+  closeModal('mw-progress');
+  if(!pages.length){if(progCancelFlag)return;throw new Error('Не удалось получить страницы PDF');}
+  lastPdfBuf=keep;lastPdfName=name;
+  setPages(pages);
+  toast('PDF загружен: '+pages.length+' '+pluralPages(pages.length)+' (DPR '+dpr+')');
 }
 function handleIncomingFile(f){
   if(!f)return;
@@ -1479,7 +1632,7 @@ $('#toolbar').addEventListener('click',e=>{
   const btn=e.target.closest('button');if(!btn)return;
   switch(btn.id){
     case 'btn-load-img':$('#file-image').click();break;
-    case 'btn-auto':if(requirePages())openModal('mw-auto');break;
+    case 'btn-auto':openAutoModal();break;
     case 'btn-rec-sel':{const r=getRegion(state.selectedId);r?recognizeRegions([r]):toast('Сначала выберите блок','err');break;}
     case 'btn-rec-all':recognizeRegions(state.project?.regions||[]);break;
     case 'btn-del-sel':state.selectedId?deleteRegion(state.selectedId):toast('Блок не выбран','err');break;
@@ -1607,14 +1760,34 @@ viewport.addEventListener('pointermove',e=>{
   el.textContent=hit?('стр.'+(hit.idx+1)+' x:'+Math.round(hit.lx)+' y:'+Math.round(hit.ly)):'—';
 });
 
+/* ============================ LLM COMMON ============================ */
+async function llmComplete(imgDataUrl,prompt){
+  const s=state.settings;
+  if(s.provider==='local')throw new Error('LLM недоступен при провайдере Tesseract OCR');
+  if(s.provider==='browser')return await webllmRecognize(imgDataUrl,prompt);
+  if(s.provider==='ollama')return await apiRecognize(s.ollamaUrl.replace(/\/+$/,'')+'/v1','',s.ollamaModel,imgDataUrl,prompt);
+  if(s.provider==='vllm')return await apiRecognize(s.vllmUrl,s.vllmKey,s.vllmModel,imgDataUrl,prompt);
+  return await apiRecognize(s.baseUrl,s.apiKey,s.model,imgDataUrl,prompt);
+}
+
 /* ============================ AUTO MARKUP ============================ */
 $('#auto-sens').addEventListener('input',e=>$('#auto-sens-val').textContent=e.target.value);
 $('#btn-auto-run').addEventListener('click',async()=>{
+  const p=state.project;
+  if(!requirePages())return;
+  const scope=$('#auto-scope').value;
+  let idxs=p.pages.map((_,i)=>i);
+  if(scope==='selected'){
+    idxs=[...state.selPages].filter(i=>i<p.pages.length).sort((a,b)=>a-b);
+    if(!idxs.length)return toast('Отметьте страницы галочками в панели «Страницы»','err');
+  }
   const opts={
+    llm:$('#auto-llm').checked,
     sens:+$('#auto-sens').value||30,
     minSize:+$('#auto-min').value||40,
     clear:$('#auto-clear').checked,
-    ocr:$('#auto-ocr').checked
+    ocr:$('#auto-ocr').checked,
+    idxs
   };
   closeModal('mw-auto');
   await runAutoMarkup(opts);
@@ -1735,24 +1908,95 @@ function segmentOnePage(pageIdx,opts){
     const bw=Math.round(Math.min(b.w/k+8,pg.w-x));
     const bh=Math.round(Math.min(b.h/k+8,pg.h-y));
     if(bw<12||bh<12)continue;
-    regions.push({id:uid(),type:classifyType(f,bh,bw,pg.w,medH),page:pageIdx,x,y,w:bw,h:bh,content:'',status:'new'});
+    regions.push({type:classifyType(f,bh,bw,pg.w,medH),x,y,w:bw,h:bh});
   }
   return regions;
+}
+function parseLlmMarkup(raw,dw,dh,realW,realH){
+  let txt=String(raw||'').trim();
+  const m=txt.match(/\[[\s\S]*\]/);
+  if(m)txt=m[0];
+  let arr;
+  try{arr=JSON.parse(txt);}catch(e){throw new Error('Ответ модели не является JSON-массивом');}
+  if(!Array.isArray(arr)||!arr.length)throw new Error('Пустой список блоков');
+  let maxV=0;
+  arr.forEach(b=>{maxV=Math.max(maxV,(+b.x||0)+(+b.w||0),(+b.y||0)+(+b.h||0));});
+  let mode='px';
+  if(maxV<=1.5)mode='frac';
+  else if(maxV<=1005&&Math.max(realW,realH)>1050)mode='k1000';
+  const sx=realW/dw, sy=realH/dh;
+  const out=[];
+  arr.forEach(b=>{
+    let x=+b.x||0,y=+b.y||0,w=+b.w||0,h=+b.h||0;
+    if(mode==='frac'){x*=dw;y*=dh;w*=dw;h*=dh;}
+    else if(mode==='k1000'){x=x/1000*dw;y=y/1000*dh;w=w/1000*dw;h=h/1000*dh;}
+    x*=sx;y*=sy;w*=sx;h*=sy;
+    if(w<6||h<6)return;
+    x=clamp(Math.round(x),0,realW-4);y=clamp(Math.round(y),0,realH-4);
+    w=clamp(Math.round(w),8,realW-x);h=clamp(Math.round(h),8,realH-y);
+    const t=String(b.type||b.label||b.kind||'other').toLowerCase();
+    const type=TYPES[t]?t:
+      (t.includes('tabl')||t.includes('табл'))?'table':
+      (t.includes('formul')||t.includes('math')||t.includes('форму')||t.includes('latex'))?'formula':
+      (t.includes('chart')||t.includes('diagr')||t.includes('graph')||t.includes('plot')||t.includes('диагр')||t.includes('график'))?'chart':
+      (t.includes('image')||t.includes('picture')||t.includes('figure')||t.includes('фото')||t.includes('рисунок')||t.includes('рисун'))?'image':
+      (t.includes('text')||t.includes('paragraph')||t.includes('header')||t.includes('title')||t.includes('текст')||t.includes('загол'))?'text':'other';
+    out.push({type,x,y,w,h});
+  });
+  if(!out.length)throw new Error('Не удалось выделить блоки из ответа модели');
+  return out;
+}
+async function llmSegmentPage(pageIdx){
+  const p=state.project,pg=p.pages[pageIdx],im=pageImgs[pageIdx];
+  if(!pg||!im)throw new Error('Нет изображения страницы');
+  if(im.decode){try{await im.decode();}catch(_){}}
+  const k=Math.min(1,1024/Math.max(pg.w,pg.h));
+  const w=Math.max(8,Math.round(pg.w*k)),h=Math.max(8,Math.round(pg.h*k));
+  const c=document.createElement('canvas');c.width=w;c.height=h;
+  c.getContext('2d').drawImage(im,0,0,w,h);
+  const dataUrl=c.toDataURL('image/jpeg',0.9);
+  const prompt='Ты — система анализа макета страниц документов. На изображении страница документа размером '+w+'×'+h+' пикселей.\n'+
+    'Найди все значимые блоки: заголовки и абзацы текста, таблицы, математические формулы, диаграммы/графики, рисунки/изображения.\n'+
+    'Ответь СТРОГО JSON-массивом объектов без пояснений и без обёрток кода:\n'+
+    '[{"type":"text","x":0,"y":0,"w":100,"h":40}]\n'+
+    'Поля: type — один из: text, table, formula, chart, image, other; x, y — координаты левого верхнего угла в пикселях изображения; w, h — ширина и высота в пикселях (целые числа).\n'+
+    'Требования: блоки не пересекаются; покрывают только значимое содержимое; порядок — сверху вниз, слева направо. Верни только массив.';
+  const raw=await llmComplete(dataUrl,prompt);
+  return parseLlmMarkup(raw,w,h,pg.w,pg.h);
 }
 async function runAutoMarkup(opts){
   const p=state.project;
   if(!p?.pages?.length)return toast('Сначала загрузите изображение или PDF','err');
-  progOpen('Авторазметка документа: '+p.pages.length+' '+pluralPages(p.pages.length));
+  const idxs=(opts.idxs&&opts.idxs.length)?opts.idxs:p.pages.map((_,i)=>i);
+  const idxSet=new Set(idxs);
+  const useLLM=opts.llm&&state.settings.provider!=='local';
+  progOpen('Авторазметка ('+(useLLM?'LLM':'эвристика')+', страниц: '+idxs.length+')');
+  if(opts.llm&&!useLLM)progLog('LLM недоступен для Tesseract — используется эвристическая сегментация');
+  progLog('Обрабатываемые страницы: '+idxs.map(i=>i+1).join(', '));
   await tick();
   try{
     const all=[];
-    for(let pi=0;pi<p.pages.length;pi++){
+    for(let k=0;k<idxs.length;k++){
+      const pi=idxs[k];
       if(progCancelFlag){progLog('— Отменено пользователем —');break;}
-      progSet(pi,p.pages.length,'Страница '+(pi+1)+'/'+p.pages.length);
+      progSet(k,idxs.length,'Страница '+(pi+1)+'/'+p.pages.length);
       await tick();
-      const found=segmentOnePage(pi,opts);
-      progLog('Страница '+(pi+1)+': найдено '+found.length+' '+plural(found.length));
-      all.push(...found);
+      let found=[];
+      if(useLLM){
+        try{
+          progLog('Страница '+(pi+1)+': анализ через LLM…');
+          const boxes=await llmSegmentPage(pi);
+          found=boxes;
+          progLog('Страница '+(pi+1)+': LLM вернул '+found.length+' '+plural(found.length));
+        }catch(err){
+          progLog('Страница '+(pi+1)+': ошибка LLM ('+err.message+') — эвристика');
+        }
+      }
+      if(!found.length){
+        found=segmentOnePage(pi,opts);
+        progLog('Страница '+(pi+1)+': найдено '+found.length+' '+plural(found.length)+(useLLM?' (эвристика)':''));
+      }
+      found.forEach(b=>all.push({id:uid(),type:b.type,page:pi,x:b.x,y:b.y,w:b.w,h:b.h,content:'',status:'new'}));
     }
     let regions=all;
     if(regions.length>150){
@@ -1762,7 +2006,7 @@ async function runAutoMarkup(opts){
     }
     regions.sort((a,b)=>a.page!==b.page?a.page-b.page:((Math.abs(a.y-b.y)>Math.max(24,(a.h+b.h)/4))?a.y-b.y:a.x-b.x));
     progSet(100,100,'Готово');
-    if(opts.clear)p.regions=[];
+    if(opts.clear)p.regions=p.regions.filter(r=>!idxSet.has(r.page||0));
     p.regions.push(...regions);
     state.selectedId=null;
     renderRegions();renderBlockList();renderProps();mutate();
@@ -1879,16 +2123,7 @@ async function recognizeOne(r){
     if(r.type==='formula')progLog('  ⚠ локальный OCR вернёт обычный текст (для LaTeX используйте LLM)');
     return await tessRecognize(cv);
   }
-  if(s.provider==='browser'){
-    return await webllmRecognize(dataUrl,prompt);
-  }
-  if(s.provider==='ollama'){
-    return await apiRecognize(s.ollamaUrl.replace(/\/+$/,'')+'/v1','',s.ollamaModel,dataUrl,prompt);
-  }
-  const cfg=s.provider==='vllm'
-    ?{base:s.vllmUrl,key:s.vllmKey,model:s.vllmModel}
-    :{base:s.baseUrl,key:s.apiKey,model:s.model};
-  return await apiRecognize(cfg.base,cfg.key,cfg.model,dataUrl,prompt);
+  return await llmComplete(dataUrl,prompt);
 }
 async function recognizeRegions(list){
   const p=state.project;
@@ -1955,26 +2190,87 @@ $('#ed-recognize').addEventListener('click',async()=>{
 });
 $('#btn-ed-close').addEventListener('click',()=>closeModal('mw-editor'));
 
-/* ============================ DOCX EXPORT — new page reconstruction ============================ */
+/* ============================ MARKDOWN EXPORT ============================ */
+$('#btn-export-md').addEventListener('click',()=>{
+  if(!state.project?.pages?.length)return toast('Нет страниц для экспорта','err');
+  openModal('mw-md');
+});
+$('#btn-md-run').addEventListener('click',()=>{
+  const embed=$('#md-embed').checked, meta=$('#md-meta').checked;
+  closeModal('mw-md');
+  try{
+    const md=buildMarkdown(embed,meta);
+    download(new Blob([md],{type:'text/markdown;charset=utf-8'}),sanitize(state.project.name)+'.md');
+    toast('Markdown экспортирован');
+  }catch(err){toast('Ошибка экспорта Markdown: '+err.message,'err');}
+});
+function buildMarkdown(embed,meta){
+  const p=state.project;
+  const L=[];
+  L.push('# '+(p.name||'Документ'));
+  L.push('');
+  L.push('> '+APP_NAME+' v'+APP_VERSION+' · страниц: '+p.pages.length+' · блоков: '+p.regions.length+' · '+new Date().toLocaleString('ru-RU'));
+  L.push('');
+  const multi=p.pages.length>1;
+  p.pages.forEach((pg,i)=>{
+    const regs=p.regions.filter(r=>(r.page||0)===i).sort((a,b)=>{
+      if(Math.abs(a.y-b.y)>Math.max(24,(a.h+b.h)/4))return a.y-b.y;
+      return a.x-b.x;
+    });
+    if(multi){L.push('## Страница '+(i+1));L.push('');}
+    if(!regs.length){L.push('*На странице нет размеченных блоков.*');L.push('');return;}
+    regs.forEach(r=>{
+      const content=(r.content||'').trim();
+      if(meta)L.push('<!-- '+TYPES[r.type].label+' ['+Math.round(r.x)+','+Math.round(r.y)+' '+Math.round(r.w)+'×'+Math.round(r.h)+' px] -->');
+      if(!content){
+        L.push('> ⬜ *'+TYPES[r.type].label+': содержимое не распознано*');
+        L.push('');
+        return;
+      }
+      switch(r.type){
+        case 'formula':{
+          if(/^(\$\$|\\\[)/.test(content)){L.push(content);}
+          else{L.push('$$');L.push(content);L.push('$$');}
+          L.push('');
+          break;
+        }
+        case 'table':{
+          L.push(content);
+          L.push('');
+          break;
+        }
+        case 'chart':{
+          const lines=content.split('\n');
+          L.push('> 📈 **Диаграмма:** '+lines[0]);
+          lines.slice(1).forEach(ln=>L.push('> '+ln));
+          L.push('');
+          break;
+        }
+        case 'image':{
+          if(embed){
+            const cv=cropRegion(r,4,700);
+            if(cv)L.push('![Изображение · '+Math.round(r.w)+'×'+Math.round(r.h)+' px]('+cv.toDataURL('image/jpeg',0.85)+')');
+            L.push('');
+          }
+          L.push('*'+content+'*');
+          L.push('');
+          break;
+        }
+        default:{
+          L.push(content);
+          L.push('');
+        }
+      }
+    });
+    if(multi){L.push('---');L.push('');}
+  });
+  return L.join('\n');
+}
+
+/* ============================ DOCX EXPORT — page reconstruction ============================ */
 $('#btn-export-docx').addEventListener('click',exportDocx);
 function dataUrlToU8(u){const b=atob(u.split(',')[1]);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
-
-/* Фоновая страница: оригинал с «забелёнными» распознанными блоками */
-function buildMaskedPage(pageIdx,replaceRegs){
-  const pg=state.project.pages[pageIdx],im=pageImgs[pageIdx];
-  const c=document.createElement('canvas');c.width=pg.w;c.height=pg.h;
-  const ctx=c.getContext('2d');
-  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);
-  ctx.drawImage(im,0,0,pg.w,pg.h);
-  ctx.fillStyle='#ffffff';
-  replaceRegs.forEach(r=>{
-    ctx.fillRect(Math.max(0,Math.round(r.x-2)),Math.max(0,Math.round(r.y-2)),Math.round(r.w+4),Math.round(r.h+4));
-  });
-  return c;
-}
-/* Рендер маскированной страницы как отдельного изображения,
-   где вместо блоков сразу нарисован текст распознавания (пиксель-в-пиксель к оригиналу) */
-function buildCompositedPage(pageIdx,replaceRegs,fontsReady){
+function buildCompositedPage(pageIdx,replaceRegs){
   const pg=state.project.pages[pageIdx],im=pageImgs[pageIdx];
   const c=document.createElement('canvas');c.width=pg.w;c.height=pg.h;
   const ctx=c.getContext('2d');
@@ -2026,10 +2322,6 @@ function buildCompositedPage(pageIdx,replaceRegs,fontsReady){
   });
   return c;
 }
-/* Механика построения: каждая страница документа = точная композиция оригинала,
-   где распознанные блоки заменены текстом в исходных координатах.
-   Страницы вставляются в Word как изображения в натуральную величину (по одной секции на страницу),
-   дополнительно под каждым изображением дублируется редактируемый текст блоков. */
 function buildFaithfulDoc(D){
   const p=state.project;
   const sections=[];
@@ -2071,7 +2363,6 @@ function buildFaithfulDoc(D){
   }
   return new D.Document({creator:APP_NAME,title:p.name||'Документ',sections});
 }
-/* Резервный структурированный экспорт без изображений (ничего не перекрывается) */
 function buildFallbackDoc(D){
   const p=state.project;
   const ch=[];
