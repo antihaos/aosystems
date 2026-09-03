@@ -391,13 +391,31 @@
           </a>
           <a href="projects/neon-depth/index.html" class="card reveal group" target="_blank" rel="noopener">
             <div class="card-icon">
-              <svg class="logo-mark" viewBox="0 0 40 40" fill="none">
+               <svg class="brand-logo" role="img" aria-label="NeonDepth" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
                 <defs>
-                  <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="#00f0ff" />
-                    <stop offset="1" stop-color="#ff2ec4" />
+                  <linearGradient id="ndlg1" x1="6" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="#00e5ff"/>
+                    <stop offset=".55" stop-color="#7c5cff"/>
+                    <stop offset="1" stop-color="#ff3df2"/>
                   </linearGradient>
+                  <linearGradient id="ndlg2" x1="14" y1="56" x2="50" y2="44" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="#22ffb2"/>
+                    <stop offset="1" stop-color="#00e5ff"/>
+                  </linearGradient>
+                  <filter id="ndglow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="1.6" result="b"/>
+                    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
                 </defs>
+                <rect x="1.5" y="1.5" width="61" height="61" rx="15" fill="#0b0d18" stroke="url(#ndlg1)" stroke-width="1.8"/>
+                <g fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#ndglow)">
+                  <path d="M32 8 L48 17.5 V35 L32 44 L16 35 V17.5 Z" stroke="url(#ndlg1)" stroke-width="2.6"/>
+                  <path d="M16 17.5 L32 26.5 L48 17.5" stroke="url(#ndlg1)" stroke-width="2.2" opacity=".9"/>
+                  <path d="M32 26.5 V44" stroke="url(#ndlg1)" stroke-width="2.2" opacity=".9"/>
+                  <path d="M14 48.5 L32 57 L50 48.5" stroke="url(#ndlg2)" stroke-width="2.6"/>
+                  <path d="M21 53 L32 58.5 L43 53" stroke="url(#ndlg2)" stroke-width="2" opacity=".55"/>
+                </g>
+                <circle cx="32" cy="44" r="2.2" fill="#22ffb2" filter="url(#ndglow)"/>
               </svg>
             </div>
             <h3 class="card-title">NEON DEPTH</h3>
