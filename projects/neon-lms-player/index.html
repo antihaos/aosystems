@@ -450,12 +450,8 @@
   /* ---------- ГРАФИК ФУНКЦИИ ---------- */
   .graph-block { margin: 15px 0; }
   .graph-plot {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: rgba(10,12,20,0.5);
-    overflow: hidden;
-    box-shadow: 0 0 12px rgba(0,240,255,0.15);
+    width: 100%; border: 1px solid var(--border); border-radius: 8px;
+    background: rgba(10,12,20,0.5); overflow: hidden; box-shadow: 0 0 12px rgba(0,240,255,0.15);
   }
   .graph-controls { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
   .graph-param { margin: 0; padding: 8px 10px; }
@@ -464,19 +460,127 @@
   /* ---------- 3D ОБЪЕКТ ---------- */
   .model3d-block { margin: 15px 0; }
   .model3d-viewer {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 0 12px rgba(0,240,255,0.2);
-    background: #0a0c14;
+    width: 100%; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 0 12px rgba(0,240,255,0.2); background: #0a0c14;
   }
-  .model3d-panel { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
   .model3d-url-row, .model3d-file-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .model3d-url-row input[type="text"] { flex: 1; min-width: 200px; }
   .model3d-status { color: var(--muted); font-size: 0.85em; min-height: 1.2em; }
   .model3d-status.ok { color: var(--green); }
   .model3d-status.err { color: var(--pink); }
+
+  /* ---------- СВОРАЧИВАЕМАЯ ПАНЕЛЬ ---------- */
+  .collapse-panel { border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; background: rgba(255,255,255,0.02); overflow: hidden; }
+  .collapse-panel-toggle {
+    width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: transparent; border: none; color: var(--muted); cursor: pointer;
+    font-family: inherit; font-size: 0.9em; transition: color .3s, background .3s; text-align: left;
+  }
+  .collapse-panel-toggle:hover, .collapse-panel-toggle.open { color: var(--cyan); background: rgba(0,240,255,0.05); }
+  .collapse-icon { font-size: 0.7em; }
+  .collapse-panel-body { padding: 10px 12px; border-top: 1px solid var(--border); flex-direction: column; gap: 8px; }
+
+  /* ---------- НОВЫЕ ТИПЫ БЛОКОВ ---------- */
+  .flashcards-block { margin: 15px 0; }
+  .flashcards-card { width: 100%; max-width: 480px; height: 220px; }
+  .flashcards-nav { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 10px; }
+  .flashcards-nav .quiz-button { margin-top: 0; }
+  .flashcards-counter { color: var(--cyan); font-weight: bold; min-width: 70px; text-align: center; }
+
+  .checklist-block { margin: 15px 0; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.02); }
+  .checklist-progress-row { display: flex; justify-content: flex-end; margin-bottom: 5px; }
+  .checklist-progress-text { color: var(--muted); font-size: 0.85em; }
+  .checklist-items { margin-top: 10px; }
+  .checklist-item {
+    display: flex; gap: 10px; align-items: center; padding: 8px 10px;
+    border: 1px solid var(--border); border-radius: 6px; margin: 6px 0; cursor: pointer; transition: all .3s;
+  }
+  .checklist-item:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.2); }
+  .checklist-item input { accent-color: var(--cyan); width: 16px; height: 16px; flex: 0 0 auto; }
+  .checklist-item.checked span { color: var(--green); text-decoration: line-through; opacity: 0.8; }
+
+  .quote-block {
+    margin: 15px 0; padding: 15px 20px; border-left: 4px solid var(--purple);
+    background: rgba(185,103,255,0.06); border-radius: 0 8px 8px 0; font-style: italic;
+  }
+  .quote-text { font-size: 1.05em; }
+  .quote-author { margin-top: 8px; color: var(--muted); font-style: normal; text-align: right; }
+
+  .glossary-block { margin: 15px 0; }
+  .glossary-item {
+    display: flex; gap: 15px; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 6px; margin: 6px 0; background: rgba(255,255,255,0.02); transition: all .3s;
+  }
+  .glossary-item:hover { border-color: var(--cyan); }
+  .glossary-term { min-width: 140px; color: var(--cyan); font-weight: bold; }
+  .glossary-def { color: var(--text); }
+
+  .equation-block { margin: 15px 0; text-align: center; }
+  .equation-tex { padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; overflow-x: auto; }
+  .equation-block figcaption { color: var(--muted); font-size: 0.9em; margin-top: 8px; }
+
+  .youtube-wrap {
+    position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;
+    border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 0 12px rgba(0,240,255,0.2);
+  }
+  .youtube-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+  .kanban-board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px; margin-top: 8px; }
+  .kanban-column { min-width: 200px; flex: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .kanban-column-title { color: var(--cyan); font-weight: bold; margin-bottom: 8px; text-align: center; }
+  .kanban-card {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 10px; margin-bottom: 6px; font-size: 0.9em; transition: all .3s;
+  }
+  .kanban-card:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.25); }
+
+  .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .stat-card {
+    flex: 1; min-width: 140px; text-align: center; padding: 15px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px; transition: all .3s;
+  }
+  .stat-card:hover { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,240,255,0.25); transform: translateY(-2px); }
+  .stat-value { font-size: 1.8em; font-weight: bold; color: var(--cyan); text-shadow: 0 0 10px rgba(0,240,255,0.5); }
+  .stat-label { color: var(--muted); font-size: 0.85em; margin-top: 4px; }
+
+  .countdown-block { margin: 15px 0; padding: 20px; text-align: center; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.02); }
+  .countdown-display { font-size: 2.5em; font-family: 'Courier New', monospace; color: var(--cyan); text-shadow: 0 0 15px rgba(0,240,255,0.5); }
+  .countdown-display.finished { color: var(--pink); text-shadow: 0 0 15px rgba(255,42,109,0.6); }
+  .countdown-label { color: var(--muted); margin: 5px 0 0; }
+  .countdown-controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+  .countdown-controls .quiz-button { margin-top: 0; }
+
+  .tree-root, .tree-children { list-style: none; padding-left: 18px; }
+  .tree-root { padding-left: 0; margin: 8px 0; }
+  .tree-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+  .tree-toggle {
+    background: transparent; border: 1px solid var(--border); color: var(--cyan); border-radius: 4px;
+    width: 20px; height: 20px; font-size: 0.6em; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: all .2s; flex: 0 0 auto;
+  }
+  .tree-toggle:hover { background: rgba(0,240,255,0.15); box-shadow: 0 0 6px rgba(0,240,255,0.3); }
+  .tree-leaf { color: var(--cyan); width: 20px; text-align: center; flex: 0 0 auto; }
+  .tree-text.has-kids { color: var(--cyan); font-weight: bold; }
+
+  .truefalse-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .truefalse-btns .quiz-button { margin-top: 0; }
+
+  .divider-block { margin: 20px 0; }
+  .divider-line { height: 1px; background: var(--border); }
+  .divider-dots {
+    height: 6px; opacity: 0.7;
+    background-image: radial-gradient(circle, var(--cyan) 1.5px, transparent 1.5px);
+    background-size: 14px 6px; background-repeat: repeat-x;
+  }
+  .divider-glow { height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); box-shadow: 0 0 10px rgba(0,240,255,0.6); }
+
+  .download-block { margin: 15px 0; }
+  .download-link {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px;
+    border: 1px solid var(--green); color: var(--green); border-radius: 6px; text-decoration: none;
+    transition: all .3s; background: rgba(5,255,161,0.08);
+  }
+  .download-link:hover { box-shadow: 0 0 12px rgba(5,255,161,0.4); transform: translateY(-2px); }
 
   @media (max-width: 600px) {
     .columns { flex-direction: column; }
@@ -487,6 +591,8 @@
     .app-header { flex-direction: column; align-items: flex-start; }
     .app-header .app-info { min-width: 100%; }
     .block-toolbar { opacity: 1; transform: none; pointer-events: auto; }
+    .glossary-item { flex-direction: column; gap: 4px; }
+    .glossary-term { min-width: 0; }
   }
 </style>
 </head>
@@ -774,7 +880,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.5.1' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.6.0' }));
     return header;
   }
 
@@ -1240,7 +1346,7 @@
       { key: 'tMin', label: 'tMin — мин. t (параметрический)', type: 'number', visible: (s) => !!s.parametric },
       { key: 'tMax', label: 'tMax — макс. t (параметрический)', type: 'number', visible: (s) => !!s.parametric },
       { key: 'points', label: 'points — число точек (по умолчанию 300)', type: 'number', min: 2, max: 500 },
-      { key: 'params', label: 'params — интерактивные параметры (слайдеры). Имена чувствительны к регистру и подставляются в уравнения как есть', type: 'array', itemSchema: { kind: 'object', label: 'Параметр', fields: [
+      { key: 'params', label: 'params — интерактивные параметры (слайдеры). Имена чувствительны к регистру', type: 'array', itemSchema: { kind: 'object', label: 'Параметр', fields: [
         { key: 'name', label: 'name — имя параметра (например a или Amp)', type: 'text' },
         { key: 'value', label: 'value — значение по умолчанию', type: 'number' },
         { key: 'min', label: 'min — минимум слайдера', type: 'number' },
@@ -1254,6 +1360,72 @@
       { key: 'height', label: 'height — высота окна просмотра (напр. 450px)', type: 'text' },
       { key: 'background', label: 'background — цвет фона (напр. #0a0c14)', type: 'text' },
       { key: 'autoRotate', label: 'autoRotate — автовращение (по умолчанию включено)', type: 'checkbox', defaultChecked: true, omitTrue: true }
+    ],
+    'flashcards': [
+      { key: 'title', label: 'title — заголовок колоды', type: 'text' },
+      { key: 'cards', label: 'cards — карточки', type: 'array', itemSchema: { kind: 'object', label: 'Карточка', fields: [
+        { key: 'front', label: 'front — лицевая сторона', type: 'textarea' },
+        { key: 'back', label: 'back — обратная сторона', type: 'textarea' }
+      ] } }
+    ],
+    'checklist': [
+      { key: 'title', label: 'title — заголовок чек-листа', type: 'text' },
+      { key: 'items', label: 'items — пункты', type: 'array', itemSchema: { kind: 'string', label: 'Пункт' } }
+    ],
+    'quote': [
+      { key: 'text', label: 'text — текст цитаты', type: 'textarea' },
+      { key: 'author', label: 'author — автор', type: 'text' }
+    ],
+    'glossary': [
+      { key: 'title', label: 'title — заголовок глоссария', type: 'text' },
+      { key: 'items', label: 'items — термины', type: 'array', itemSchema: { kind: 'object', label: 'Термин', fields: [
+        { key: 'term', label: 'term — термин', type: 'text' },
+        { key: 'definition', label: 'definition — определение', type: 'textarea' }
+      ] } }
+    ],
+    'equation': [
+      { key: 'latex', label: 'latex — формула в синтаксисе KaTeX (без ограничителей $$)', type: 'textarea' },
+      { key: 'caption', label: 'caption — подпись', type: 'text' }
+    ],
+    'youtube': [
+      { key: 'videoId', label: 'videoId — ID видео или полная ссылка YouTube', type: 'text' },
+      { key: 'caption', label: 'caption — подпись', type: 'text' }
+    ],
+    'kanban': [
+      { key: 'title', label: 'title — заголовок доски', type: 'text' },
+      { key: 'columns', label: 'columns — колонки', type: 'array', itemSchema: { kind: 'object', label: 'Колонка', fields: [
+        { key: 'title', label: 'title — название колонки', type: 'text' },
+        { key: 'cards', label: 'cards — карточки колонки', type: 'array', itemSchema: { kind: 'string', label: 'Карточка' } }
+      ] } }
+    ],
+    'stats': [
+      { key: 'title', label: 'title — заголовок', type: 'text' },
+      { key: 'items', label: 'items — показатели', type: 'array', itemSchema: { kind: 'object', label: 'Показатель', fields: [
+        { key: 'value', label: 'value — значение (напр. 42%)', type: 'text' },
+        { key: 'label', label: 'label — подпись', type: 'text' }
+      ] } }
+    ],
+    'countdown': [
+      { key: 'title', label: 'title — заголовок таймера', type: 'text' },
+      { key: 'seconds', label: 'seconds — длительность в секундах', type: 'number', min: 1 },
+      { key: 'label', label: 'label — подпись под таймером', type: 'text' }
+    ],
+    'tree': [
+      { key: 'title', label: 'title — заголовок дерева', type: 'text' },
+      { key: 'items', label: 'items — узлы: [ { "text": "...", "children": [ ... ] } ]', type: 'json' }
+    ],
+    'truefalse': [
+      { key: 'question', label: 'question — утверждение', type: 'textarea' },
+      { key: 'answer', label: 'answer — утверждение верное', type: 'checkbox', defaultChecked: true, omitFalse: true },
+      { key: 'explanation', label: 'explanation — пояснение', type: 'textarea' }
+    ],
+    'divider': [
+      { key: 'style', label: 'style — стиль разделителя', type: 'select', options: ['line', 'dots', 'glow'] }
+    ],
+    'download': [
+      { key: 'src', label: 'src — URL файла', type: 'text' },
+      { key: 'label', label: 'label — текст кнопки', type: 'text' },
+      { key: 'fileName', label: 'fileName — имя файла при скачивании', type: 'text' }
     ]
   };
 
@@ -1276,7 +1448,7 @@
   function describeBlock(blk) {
     if (!blk || typeof blk !== 'object') return '?';
     const type = blk.type || '?';
-    const preview = blk.title || blk.text || blk.question || blk.caption || blk.label || blk.equation || blk.src || blk.front || blk.buttonText || blk.instruction || blk.code || '';
+    const preview = blk.title || blk.text || blk.question || blk.caption || blk.label || blk.equation || blk.src || blk.videoId || blk.latex || blk.front || blk.buttonText || blk.instruction || blk.code || '';
     const p = String(preview).substring(0, 50);
     return '[' + type + ']' + (p ? ' ' + p : '');
   }
@@ -1773,7 +1945,7 @@
         if (typeof def.visible === 'function') {
           let vis = true;
           try { vis = !!def.visible(state); } catch (e) { vis = true; }
-          if (!vis) return; // скрытые (неактуальные для текущего режима) поля не сохраняем
+          if (!vis) return;
         }
         const editor = fieldControls[def.key];
         if (!editor) return;
@@ -2166,8 +2338,6 @@
         const nameRaw = readName();
         const nameLower = nameRaw.toLowerCase();
 
-        // Переменная (x, y, t или параметр): сначала точное совпадение регистра,
-        // затем поиск без учёта регистра.
         const matchedVar = findVar(nameRaw);
         if (matchedVar !== null) {
           if (peek() === '(') {
@@ -2406,7 +2576,22 @@
     viewer.style.height = block.height || '450px';
     element.appendChild(viewer);
 
-    const panel = h('div', { class: 'model3d-panel' });
+    // Сворачиваемая панель управления
+    const panel = h('div', { class: 'collapse-panel' });
+    const panelToggle = h('button', { class: 'collapse-panel-toggle', type: 'button' });
+    const toggleIcon = h('span', { class: 'collapse-icon', textContent: '▶' });
+    panelToggle.appendChild(toggleIcon);
+    panelToggle.appendChild(h('span', { textContent: 'Управление моделью: загрузить по URL или открыть файл' }));
+    const panelBody = h('div', { class: 'collapse-panel-body' });
+    panelBody.style.display = 'none';
+    panelToggle.addEventListener('click', () => {
+      const isOpen = panelBody.style.display !== 'none';
+      panelBody.style.display = isOpen ? 'none' : 'flex';
+      toggleIcon.textContent = isOpen ? '▶' : '▼';
+      panelToggle.classList.toggle('open', !isOpen);
+    });
+    panel.appendChild(panelToggle);
+    panel.appendChild(panelBody);
 
     const urlRow = h('div', { class: 'model3d-url-row' });
     const urlInput = h('input', { type: 'text', class: 'fill-blank-input', placeholder: 'URL модели .glb / .gltf' });
@@ -2414,7 +2599,7 @@
     const loadUrlBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Загрузить по URL', style: 'margin-top:0;' });
     urlRow.appendChild(urlInput);
     urlRow.appendChild(loadUrlBtn);
-    panel.appendChild(urlRow);
+    panelBody.appendChild(urlRow);
 
     const fileRow = h('div', { class: 'model3d-file-row' });
     const fileInput = h('input', { type: 'file', accept: '.glb,.gltf,model/gltf-binary,model/gltf+json', style: 'display:none;' });
@@ -2429,10 +2614,11 @@
     });
     fileRow.appendChild(fileInput);
     fileRow.appendChild(fileBtn);
-    panel.appendChild(fileRow);
+    panelBody.appendChild(fileRow);
 
     const statusEl = h('div', { class: 'model3d-status' });
-    panel.appendChild(statusEl);
+    panelBody.appendChild(statusEl);
+
     element.appendChild(panel);
 
     if (block.caption) {
@@ -2591,6 +2777,363 @@
     return element;
   }
 
+  // ---------- НОВЫЕ ТИПЫ БЛОКОВ ----------
+  function renderFlashcardsBlock(block) {
+    const element = h('div', { class: 'flashcards-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+    const cards = Array.isArray(block.cards) ? block.cards.filter(c => c && typeof c === 'object') : [];
+    if (cards.length === 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Карточки не заданы.' }));
+      return element;
+    }
+    let idx = 0;
+
+    const cardEl = h('div', { class: 'flip-card flashcards-card' });
+    const inner = h('div', { class: 'flip-card-inner' });
+    const front = h('div', { class: 'flip-card-front' });
+    const back = h('div', { class: 'flip-card-back' });
+    inner.appendChild(front);
+    inner.appendChild(back);
+    cardEl.appendChild(inner);
+    cardEl.addEventListener('click', () => cardEl.classList.toggle('flipped'));
+    element.appendChild(cardEl);
+
+    const nav = h('div', { class: 'flashcards-nav' });
+    const prevBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '← Назад' });
+    const counter = h('span', { class: 'flashcards-counter' });
+    const nextBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Вперёд →' });
+    nav.appendChild(prevBtn);
+    nav.appendChild(counter);
+    nav.appendChild(nextBtn);
+    element.appendChild(nav);
+    element.appendChild(h('p', { class: 'form-hint', style: 'text-align:center;', textContent: 'Нажмите на карточку, чтобы перевернуть.' }));
+
+    function fillSide(node, value) {
+      node.innerHTML = '';
+      if (typeof value === 'string' || typeof value === 'number') {
+        node.appendChild(document.createTextNode(String(value)));
+      } else if (Array.isArray(value)) {
+        renderBlocks(value, node);
+      } else if (value && value.type) {
+        const el = renderBlock(value, 0);
+        if (el) node.appendChild(el);
+      }
+    }
+
+    function update() {
+      cardEl.classList.remove('flipped');
+      const card = cards[idx];
+      fillSide(front, card.front);
+      fillSide(back, card.back);
+      counter.textContent = (idx + 1) + ' / ' + cards.length;
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = idx === cards.length - 1;
+    }
+    prevBtn.addEventListener('click', () => { if (idx > 0) { idx--; update(); } });
+    nextBtn.addEventListener('click', () => { if (idx < cards.length - 1) { idx++; update(); } });
+    update();
+    return element;
+  }
+
+  function renderChecklistBlock(block) {
+    const element = h('div', { class: 'checklist-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+    const items = Array.isArray(block.items) ? block.items : [];
+    if (items.length === 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Пункты чек-листа не заданы.' }));
+      return element;
+    }
+    const progressRow = h('div', { class: 'checklist-progress-row' });
+    const progressText = h('span', { class: 'checklist-progress-text' });
+    progressRow.appendChild(progressText);
+    element.appendChild(progressRow);
+    const bar = h('div', { class: 'progress-bar' });
+    const fill = h('div', { class: 'progress-fill', style: 'width: 0%' });
+    bar.appendChild(fill);
+    element.appendChild(bar);
+
+    const listEl = h('div', { class: 'checklist-items' });
+    let checkedCount = 0;
+    function updateProgress() {
+      const percent = Math.round((checkedCount / items.length) * 100);
+      progressText.textContent = 'Выполнено: ' + checkedCount + ' из ' + items.length + ' (' + percent + '%)';
+      fill.style.width = percent + '%';
+    }
+    items.forEach(item => {
+      const label = h('label', { class: 'checklist-item' });
+      const input = h('input', { type: 'checkbox' });
+      input.addEventListener('change', () => {
+        checkedCount += input.checked ? 1 : -1;
+        label.classList.toggle('checked', input.checked);
+        updateProgress();
+      });
+      label.appendChild(input);
+      label.appendChild(h('span', { textContent: item != null ? String(item) : '' }));
+      listEl.appendChild(label);
+    });
+    element.appendChild(listEl);
+    updateProgress();
+    return element;
+  }
+
+  function renderQuoteBlock(block) {
+    const element = h('blockquote', { class: 'quote-block' });
+    element.appendChild(h('p', { class: 'quote-text', textContent: block.text != null ? String(block.text) : '' }));
+    if (block.author) {
+      element.appendChild(h('footer', { class: 'quote-author', textContent: '— ' + block.author }));
+    }
+    return element;
+  }
+
+  function renderGlossaryBlock(block) {
+    const element = h('div', { class: 'glossary-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+    const items = Array.isArray(block.items) ? block.items.filter(i => i) : [];
+    if (items.length === 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Термины не заданы.' }));
+      return element;
+    }
+    items.forEach(item => {
+      const row = h('div', { class: 'glossary-item' });
+      row.appendChild(h('div', { class: 'glossary-term', textContent: item.term != null ? String(item.term) : '' }));
+      row.appendChild(h('div', { class: 'glossary-def', textContent: item.definition != null ? String(item.definition) : '' }));
+      element.appendChild(row);
+    });
+    return element;
+  }
+
+  function renderEquationBlock(block) {
+    const element = h('figure', { class: 'equation-block' });
+    const latex = block.latex != null ? String(block.latex) : '';
+    element.appendChild(h('div', { class: 'equation-tex', textContent: '$$' + latex + '$$' }));
+    if (block.caption) element.appendChild(h('figcaption', { textContent: block.caption }));
+    return element;
+  }
+
+  function extractYouTubeId(src) {
+    const s = String(src || '').trim();
+    if (!s) return '';
+    if (/^https?:\/\//i.test(s)) {
+      try {
+        const u = new URL(s);
+        const v = u.searchParams.get('v');
+        if (v) return v;
+        let m = s.match(/youtu\.be\/([\w-]{4,})/i);
+        if (m) return m[1];
+        m = s.match(/\/(embed|shorts)\/([\w-]{4,})/i);
+        if (m) return m[2];
+      } catch (e) {}
+    }
+    return s;
+  }
+
+  function renderYouTubeBlock(block) {
+    const element = h('figure', { class: 'figure' });
+    const id = extractYouTubeId(block.videoId || block.src);
+    if (!id) {
+      element.appendChild(h('p', { class: 'block-note', textContent: '⚠ Укажите videoId или ссылку YouTube.' }));
+      return element;
+    }
+    const wrap = h('div', { class: 'youtube-wrap' });
+    wrap.appendChild(h('iframe', {
+      src: 'https://www.youtube.com/embed/' + encodeURIComponent(id),
+      allowfullscreen: '',
+      allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
+    }));
+    element.appendChild(wrap);
+    if (block.caption) element.appendChild(h('figcaption', { textContent: block.caption }));
+    return element;
+  }
+
+  function renderKanbanBlock(block) {
+    const element = h('div', { class: 'kanban-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+    const columns = Array.isArray(block.columns) ? block.columns.filter(c => c) : [];
+    if (columns.length === 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Колонки не заданы.' }));
+      return element;
+    }
+    const board = h('div', { class: 'kanban-board' });
+    columns.forEach(col => {
+      const colEl = h('div', { class: 'kanban-column' });
+      colEl.appendChild(h('div', { class: 'kanban-column-title', textContent: col.title != null ? String(col.title) : 'Колонка' }));
+      (Array.isArray(col.cards) ? col.cards : []).forEach(card => {
+        colEl.appendChild(h('div', { class: 'kanban-card', textContent: card != null ? String(card) : '' }));
+      });
+      board.appendChild(colEl);
+    });
+    element.appendChild(board);
+    return element;
+  }
+
+  function renderStatsBlock(block) {
+    const element = h('div', { class: 'stats-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+    const items = Array.isArray(block.items) ? block.items.filter(i => i) : [];
+    if (items.length === 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Показатели не заданы.' }));
+      return element;
+    }
+    const row = h('div', { class: 'stats-row' });
+    items.forEach(item => {
+      const card = h('div', { class: 'stat-card' });
+      card.appendChild(h('div', { class: 'stat-value', textContent: item.value != null ? String(item.value) : '' }));
+      card.appendChild(h('div', { class: 'stat-label', textContent: item.label != null ? String(item.label) : '' }));
+      row.appendChild(card);
+    });
+    element.appendChild(row);
+    return element;
+  }
+
+  function renderCountdownBlock(block) {
+    const totalSeconds = Math.max(1, parseInt(block.seconds, 10) || 60);
+    let remaining = totalSeconds;
+    let timerId = null;
+
+    const element = h('div', { class: 'countdown-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+    const display = h('div', { class: 'countdown-display', textContent: formatSeconds(remaining) });
+    element.appendChild(display);
+    if (block.label) element.appendChild(h('p', { class: 'countdown-label', textContent: block.label }));
+
+    const controls = h('div', { class: 'countdown-controls' });
+    const startBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '▶ Старт' });
+    const pauseBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⏸ Пауза' });
+    const resetBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⟲ Сброс' });
+    controls.appendChild(startBtn);
+    controls.appendChild(pauseBtn);
+    controls.appendChild(resetBtn);
+    element.appendChild(controls);
+
+    function formatSeconds(s) {
+      const m = Math.floor(s / 60);
+      const ss = s % 60;
+      return String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+    }
+
+    function renderTime() { display.textContent = formatSeconds(Math.max(0, remaining)); }
+
+    function stopTimer() {
+      if (timerId !== null) { clearInterval(timerId); timerId = null; }
+    }
+
+    function tick() {
+      if (!element.isConnected) { stopTimer(); return; }
+      remaining--;
+      renderTime();
+      if (remaining <= 0) {
+        stopTimer();
+        display.classList.add('finished');
+      }
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (timerId !== null) return;
+      if (remaining <= 0) remaining = totalSeconds;
+      display.classList.remove('finished');
+      timerId = setInterval(tick, 1000);
+    });
+    pauseBtn.addEventListener('click', stopTimer);
+    resetBtn.addEventListener('click', () => {
+      stopTimer();
+      remaining = totalSeconds;
+      display.classList.remove('finished');
+      renderTime();
+    });
+
+    return element;
+  }
+
+  function renderTreeBlock(block) {
+    const element = h('div', { class: 'tree-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+    const items = Array.isArray(block.items) ? block.items.filter(i => i) : [];
+    if (items.length === 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Узлы дерева не заданы.' }));
+      return element;
+    }
+
+    function buildNode(node) {
+      const li = h('li', { class: 'tree-node' });
+      const row = h('div', { class: 'tree-row' });
+      const text = node.text != null ? String(node.text) : (node.title != null ? String(node.title) : '');
+      const children = Array.isArray(node.children) ? node.children.filter(c => c) : [];
+      if (children.length > 0) {
+        const toggle = h('button', { class: 'tree-toggle', type: 'button', textContent: '▶' });
+        const kids = h('ul', { class: 'tree-children' });
+        kids.style.display = 'none';
+        children.forEach(ch => kids.appendChild(buildNode(ch)));
+        toggle.addEventListener('click', () => {
+          const open = kids.style.display !== 'none';
+          kids.style.display = open ? 'none' : 'block';
+          toggle.textContent = open ? '▶' : '▼';
+        });
+        row.appendChild(toggle);
+        row.appendChild(h('span', { class: 'tree-text has-kids', textContent: text }));
+        li.appendChild(row);
+        li.appendChild(kids);
+      } else {
+        row.appendChild(h('span', { class: 'tree-leaf', textContent: '•' }));
+        row.appendChild(h('span', { class: 'tree-text', textContent: text }));
+        li.appendChild(row);
+      }
+      return li;
+    }
+
+    const root = h('ul', { class: 'tree-root' });
+    items.forEach(it => root.appendChild(buildNode(it)));
+    element.appendChild(root);
+    return element;
+  }
+
+  function renderTrueFalseBlock(block) {
+    const element = h('div', { class: 'quiz truefalse-block' });
+    element.appendChild(h('p', { class: 'question', textContent: block.question != null ? String(block.question) : 'Утверждение верно?' }));
+    const answerBool = block.answer === true || block.answer === 'true';
+    const btnRow = h('div', { class: 'truefalse-btns' });
+    const trueBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '✔ Верно' });
+    const falseBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '✘ Неверно' });
+    btnRow.appendChild(trueBtn);
+    btnRow.appendChild(falseBtn);
+    element.appendChild(btnRow);
+    const feedback = h('div', { class: 'quiz-feedback' });
+    element.appendChild(feedback);
+
+    function respond(userSaidTrue) {
+      const correct = userSaidTrue === answerBool;
+      trueBtn.disabled = true;
+      falseBtn.disabled = true;
+      const chosen = userSaidTrue ? trueBtn : falseBtn;
+      const other = userSaidTrue ? falseBtn : trueBtn;
+      chosen.style.borderColor = correct ? 'var(--green)' : 'var(--pink)';
+      if (!correct) other.style.borderColor = 'var(--green)';
+      feedback.textContent = correct ? 'Верно! ' + (block.explanation || '') : 'Неверно. ' + (block.explanation || '');
+      feedback.style.color = correct ? 'var(--green)' : 'var(--pink)';
+    }
+    trueBtn.addEventListener('click', () => respond(true));
+    falseBtn.addEventListener('click', () => respond(false));
+    return element;
+  }
+
+  function renderDividerBlock(block) {
+    const style = block.style === 'dots' ? 'dots' : (block.style === 'glow' ? 'glow' : 'line');
+    return h('div', { class: 'divider-block divider-' + style });
+  }
+
+  function renderDownloadBlock(block) {
+    const element = h('div', { class: 'download-block' });
+    if (!block.src) {
+      element.appendChild(h('p', { class: 'block-note', textContent: '⚠ Укажите URL файла (поле src).' }));
+      return element;
+    }
+    const link = h('a', { class: 'download-link', href: block.src, target: '_blank', rel: 'noopener' });
+    if (block.fileName) link.setAttribute('download', block.fileName);
+    link.appendChild(h('span', { textContent: '⬇' }));
+    link.appendChild(h('span', { textContent: block.label || 'Скачать файл' }));
+    element.appendChild(link);
+    return element;
+  }
+
   // ---------- СПРАВКА И ГЕНЕРАЦИЯ ПРОМПТА ----------
   function openHelpModal() {
     const overlay = h('div', { class: 'modal-overlay' });
@@ -2604,37 +3147,24 @@
     helpDiv.innerHTML = `
       <h4 style="color: #fff; margin-top: 10px;">Общая информация</h4>
       <p>Данный плеер предназначен для отображения интерактивных образовательных курсов в формате JSON. Курс состоит из метаданных и списка уроков. Каждый урок содержит заголовок, описание и набор блоков контента.</p>
-      <p><strong>Поддержка нескольких курсов:</strong> Вы можете загрузить JSON, содержащий один курс, массив курсов, массив URL-адресов на курсы, или объект с полем <code>courses</code>, которое может быть массивом курсов или массивом URL. При загрузке URL каждый адрес должен возвращать JSON одного курса.</p>
+      <p><strong>Поддержка нескольких курсов:</strong> Вы можете загрузить JSON, содержащий один курс, массив курсов, массив URL-адресов на курсы, или объект с полем <code>courses</code>, которое может быть массивом курсов или массивом URL.</p>
       <p><strong>Автозагрузка через URL:</strong> Добавьте параметр <code>?url=ссылка</code> (или <code>?source=</code>, <code>?course=</code>) в адресную строку, и плеер автоматически загрузит данные по этой ссылке при открытии страницы.</p>
       <h4 style="color: #fff; margin-top: 10px;">Режимы работы</h4>
-      <p>Переключатель в верхней панели позволяет выбрать режим: <strong>✏ Режим редактирования</strong> — доступны панели редактирования блоков (наведите курсор на блок), кнопки добавления блоков и редакторы; <strong>👁 Режим просмотра</strong> — чистый просмотр без кнопок редактирования. Выбранный режим запоминается.</p>
+      <p>Переключатель в верхней панели позволяет выбрать режим: <strong>✏ Режим редактирования</strong> — доступны панели редактирования блоков; <strong>👁 Режим просмотра</strong> — чистый просмотр без кнопок редактирования. Выбранный режим запоминается.</p>
       <h4 style="color: #fff; margin-top: 10px;">Структура курса</h4>
       <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>{
-  "meta": {
-    "title": "Название курса",
-    "description": "Описание",
-    "author": "Автор",
-    "duration": "Длительность",
-    "level": "Уровень",
-    "theme": { ... }
-  },
-  "lessons": [
-    {
-      "id": "lesson-1",
-      "title": "Название урока",
-      "description": "Описание урока",
-      "blocks": [ ... ]
-    }
-  ]
+  "meta": { "title": "...", "description": "...", "author": "...", "theme": { ... } },
+  "lessons": [ { "id": "lesson-1", "title": "...", "blocks": [ ... ] } ]
 }</code></pre>
       <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования).</p>
       <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
-      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок.</p>
-      <p>Редактор блока содержит две вкладки: <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты данного типа блока (включая незаполненные). Для блока <code>graph</code> форма показывает только те поля, которые актуальны для выбранного режима (2d/3d) и типа уравнения (обычное/параметрическое). Вложенные массивы редактируются как списки элементов, вложенные блоки — в таком же редакторе. Значения синхронизируются при переключении вкладок.</p>
+      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты типа блока (включая незаполненные), а для блока <code>graph</code> поля скрываются в зависимости от режима (2d/3d, обычное/параметрическое уравнение). Вложенные массивы редактируются как списки элементов, вложенные блоки — в таком же редакторе.</p>
       <h4 style="color: #fff; margin-top: 10px;">График функции (тип <code>graph</code>)</h4>
-      <p>Построение графиков по уравнению: 2D (<code>y = f(x)</code>, например <code>a*sin(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), а также параметрические кривые (<code>parametric: true</code>, поля <code>paramX</code>/<code>paramY</code>/<code>paramZ</code>, диапазоны <code>tMin</code>/<code>tMax</code>). Поддерживаются интерактивные параметры — массив <code>params</code> с полями <code>name</code>, <code>value</code>, <code>min</code>, <code>max</code>, <code>step</code> — они отображаются как слайдеры и подставляются в уравнение. Имена параметров чувствительны к регистру: <code>a</code> и <code>A</code> — разные переменные. Допустимые функции: sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max и др.; константы: pi, e.</p>
+      <p>2D (<code>y = f(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), параметрические кривые (<code>parametric: true</code> + <code>paramX/paramY/paramZ</code>, диапазоны <code>tMin/tMax</code>). Интерактивные параметры — массив <code>params</code> (поля <code>name</code>, <code>value</code>, <code>min</code>, <code>max</code>, <code>step</code>) отображаются как слайдеры. Имена параметров чувствительны к регистру: <code>a</code> и <code>A</code> — разные переменные. Функции: sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max и др.; константы: pi, e.</p>
       <h4 style="color: #fff; margin-top: 10px;">3D объект (тип <code>model3d</code>)</h4>
-      <p>Просмотр 3D-моделей в формате <code>.glb</code>/<code>.gltf</code>: по URL (поле <code>src</code>) или из локального файла (кнопка «Открыть файл»). Управление: вращение мышью, масштаб колёсиком, опция <code>autoRotate</code>. Для внешних URL требуется поддержка CORS; для .gltf с внешними текстурами рекомендуется использовать .glb.</p>
+      <p>Просмотр 3D-моделей <code>.glb</code>/<code>.gltf</code>: по URL (поле <code>src</code>) или из локального файла — панель загрузки сворачивается под окном просмотра. Управление: вращение мышью, масштаб колёсиком, опция <code>autoRotate</code>. Для внешних URL требуется CORS; для .gltf с внешними текстурами рекомендуется .glb.</p>
+      <h4 style="color: #fff; margin-top: 10px;">Дополнительные типы блоков</h4>
+      <p><code>flashcards</code> — колода карточек с перелистыванием; <code>checklist</code> — чек-лист с прогрессом; <code>quote</code> — цитата; <code>glossary</code> — глоссарий терминов; <code>equation</code> — формула KaTeX; <code>youtube</code> — видео YouTube (ID или ссылка); <code>kanban</code> — канбан-доска; <code>stats</code> — карточки показателей; <code>countdown</code> — таймер обратного отсчёта; <code>tree</code> — сворачиваемое дерево; <code>truefalse</code> — вопрос «верно/неверно»; <code>divider</code> — разделитель (line, dots, glow); <code>download</code> — кнопка скачивания файла.</p>
       <p>Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
     `;
     content.appendChild(helpDiv);
@@ -2704,76 +3234,67 @@
     "title": "Название курса",
     "description": "Краткое описание",
     "author": "Автор",
-    "duration": "Длительность (например, 2 часа)",
-    "level": "Уровень (начинающий, средний, продвинутый)",
-    "theme": { 
-      "bg": "#0a0e1a",
-      "panel": "#111627",
-      "text": "#d5e5ff",
-      "muted": "#8b9bbf",
-      "cyan": "#00f0ff",
-      "pink": "#ff2a6d",
-      "green": "#05ffa1",
-      "purple": "#b967ff",
-      "yellow": "#ffd700",
-      "border": "rgba(0, 240, 255, 0.25)",
-      "shadow": "0 0 15px rgba(0,240,255,0.1)"
-    }
+    "duration": "Длительность",
+    "level": "Уровень",
+    "theme": { "bg": "#0a0e1a", "panel": "#111627", "text": "#d5e5ff", "muted": "#8b9bbf", "cyan": "#00f0ff", "pink": "#ff2a6d", "green": "#05ffa1", "purple": "#b967ff", "yellow": "#ffd700", "border": "rgba(0, 240, 255, 0.25)", "shadow": "0 0 15px rgba(0,240,255,0.1)" }
   },
-  "lessons": [
-    {
-      "id": "уникальный идентификатор урока",
-      "title": "Название урока",
-      "description": "Описание урока",
-      "blocks": [
-        // Массив блоков, каждый блок имеет type и свои поля.
-      ]
-    }
-  ]
+  "lessons": [ { "id": "lesson-1", "title": "Урок", "description": "...", "blocks": [ ... ] } ]
 }
 
 ТИПЫ БЛОКОВ:
 1. section: { "type": "section", "title": "Заголовок секции", "children": [ ...блоки... ] }
 2. heading: { "type": "heading", "level": 2, "text": "Текст заголовка" } // level: 1-6
 3. text: { "type": "text", "text": "Текст абзаца" }
-4. image: { "type": "image", "src": "URL изображения", "caption": "Подпись (необязательно)", "previewWidth": "600px", "previewHeight": "400px" }
-5. video: { "type": "video", "src": "URL видео", "poster": "URL постера", "caption": "Подпись", "speedControl": true }
-6. audio: { "type": "audio", "src": "URL аудио", "caption": "Подпись", "speedControl": true }
+4. image: { "type": "image", "src": "URL", "caption": "Подпись", "previewWidth": "600px", "previewHeight": "400px" }
+5. video: { "type": "video", "src": "URL", "poster": "URL постера", "caption": "Подпись", "speedControl": true }
+6. audio: { "type": "audio", "src": "URL", "caption": "Подпись", "speedControl": true }
 7. list: { "type": "list", "ordered": false, "items": ["Элемент 1", "Элемент 2"] }
-8. code: { "type": "code", "language": "javascript", "code": "console.log('Hello');" }
-9. callout: { "type": "callout", "variant": "info", "title": "Заголовок", "text": "Текст" }
-10. tabs: { "type": "tabs", "tabs": [ { "label": "Вкладка 1", "content": [ ...блоки... ] }, { "label": "Вкладка 2", "content": [ ...блоки... ] } ] }
+8. code: { "type": "code", "language": "javascript", "code": "текст кода" }
+9. callout: { "type": "callout", "variant": "info", "title": "Заголовок", "text": "Текст", "children": [ ...блоки... ] }
+10. tabs: { "type": "tabs", "tabs": [ { "label": "Вкладка", "content": [ ...блоки... ] } ] }
 11. accordion: { "type": "accordion", "items": [ { "title": "Заголовок", "content": [ ...блоки... ] } ] }
-12. quiz: { "type": "quiz", "question": "Вопрос", "options": ["Вариант 1", "Вариант 2"], "correct": 0, "explanation": "Пояснение (необязательно)" }
-13. multi-quiz: { "type": "multi-quiz", "question": "Вопрос", "options": ["Вариант A", "Вариант B", "Вариант C"], "correct": [0, 2], "explanation": "Пояснение" }
-14. match: { "type": "match", "instruction": "Сопоставьте", "pairs": [ { "left": "Термин 1", "right": "Определение 1" }, ... ] }
+12. quiz: { "type": "quiz", "question": "Вопрос", "options": ["Вариант 1", "Вариант 2"], "correct": 0, "explanation": "Пояснение" }
+13. multi-quiz: { "type": "multi-quiz", "question": "Вопрос", "options": ["A", "B", "C"], "correct": [0, 2], "explanation": "Пояснение" }
+14. match: { "type": "match", "instruction": "Сопоставьте", "pairs": [ { "left": "Термин", "right": "Определение" } ] }
 15. sort: { "type": "sort", "instruction": "Расставьте по порядку", "items": ["Пункт 1", "Пункт 2"], "correctOrder": ["Пункт 2", "Пункт 1"] }
 16. fill-blank: { "type": "fill-blank", "instruction": "Заполните пропуски", "text": "Текст с {{1}} и {{2}}", "answers": { "1": "ответ1", "2": "ответ2" } }
-17. flip-card: { "type": "flip-card", "front": "Вопрос или текст", "back": "Ответ или пояснение" }
+17. flip-card: { "type": "flip-card", "front": "Вопрос", "back": "Ответ" }
 18. poll: { "type": "poll", "question": "Вопрос опроса", "options": ["Вариант 1", "Вариант 2"] }
 19. compare: { "type": "compare", "left": [ ...блоки... ], "right": [ ...блоки... ] }
 20. slider: { "type": "slider", "label": "Оцените", "min": 0, "max": 10, "default": 5 }
-21. timeline: { "type": "timeline", "items": [ { "title": "Событие 1", "description": "Описание" }, ... ] }
-22. steps: { "type": "steps", "steps": [ { "title": "Шаг 1", "content": [ ...блоки... ] }, ... ] }
+21. timeline: { "type": "timeline", "items": [ { "title": "Событие", "description": "Описание" } ] }
+22. steps: { "type": "steps", "steps": [ { "title": "Шаг 1", "content": [ ...блоки... ] } ] }
 23. embed: { "type": "embed", "src": "URL для iframe" }
-24. columns: { "type": "columns", "columns": [ { "blocks": [ ...блоки... ] }, { "blocks": [ ...блоки... ] } ] }
+24. columns: { "type": "columns", "columns": [ { "blocks": [ ...блоки... ] } ] }
 25. carousel: { "type": "carousel", "items": [ { "image": "URL", "caption": "Подпись" }, { "content": [ ...блоки... ] } ] }
-26. before-after: { "type": "before-after", "before": "URL изображения до", "after": "URL изображения после" }
-27. table: { "type": "table", "headers": ["Колонка 1", "Колонка 2"], "rows": [ ["Ячейка 1", "Ячейка 2"], ... ] }
-28. chart: { "type": "chart", "title": "Заголовок", "labels": ["Метка 1", "Метка 2"], "values": [80, 20] }
-29. pie: { "type": "pie", "title": "Заголовок", "segments": [ { "label": "Сегмент 1", "value": 50, "color": "#ff0000" }, ... ] }
-30. modal: { "type": "modal", "buttonText": "Открыть", "content": [ ...блоки... ] }
+26. before-after: { "type": "before-after", "before": "URL до", "after": "URL после" }
+27. table: { "type": "table", "headers": ["Колонка 1"], "rows": [ ["Ячейка 1", "Ячейка 2"] ] }
+28. chart: { "type": "chart", "title": "Заголовок", "labels": ["Метка 1"], "values": [80, 20] }
+29. pie: { "type": "pie", "title": "Заголовок", "segments": [ { "label": "Сегмент", "value": 50, "color": "#ff0000" } ] }
+30. modal: { "type": "modal", "buttonText": "Открыть", "content": [ ...блоки... ], "text": "или простой текст" }
 31. tooltip: { "type": "tooltip", "text": "Наведите на меня", "tooltipText": "Подсказка" }
 32. mermaid: { "type": "mermaid", "code": "graph TD; A-->B;" }
-33. drag-sort: { "type": "drag-sort", "instruction": "Перетащите", "items": ["Элемент 1", "Элемент 2"], "correctOrder": ["Элемент 2", "Элемент 1"] }
-34. progress-tracker: { "type": "progress-tracker", "tasks": [ { "label": "Задача 1" }, ... ] }
-35. svg: { "type": "svg", "code": "<svg xmlns=\\"http://www.w3.org/2000/svg\\">...</svg>", "caption": "Подпись (необязательно)" }
-36. html: { "type": "html", "code": "<div style=\\"...\\">...</div>" }
+33. drag-sort: { "type": "drag-sort", "instruction": "Перетащите", "items": ["Элемент 1"], "correctOrder": ["Элемент 1"] }
+34. progress-tracker: { "type": "progress-tracker", "tasks": [ { "label": "Задача 1" } ] }
+35. svg: { "type": "svg", "code": "<svg xmlns='http://www.w3.org/2000/svg'>...</svg>", "caption": "Подпись" }
+36. html: { "type": "html", "code": "<div>...</div>" }
 37. graph: { "type": "graph", "title": "График", "mode": "2d", "parametric": false, "equation": "a*sin(x)", "paramX": "cos(t)", "paramY": "sin(t)", "paramZ": "t", "rangeMin": -10, "rangeMax": 10, "rangeYMin": -5, "rangeYMax": 5, "tMin": 0, "tMax": 6.28, "points": 300, "params": [ { "name": "a", "value": 1, "min": 0, "max": 5, "step": 0.1 } ] }
     // mode: "2d" — y = f(x) по полю equation; "3d" — поверхность z = f(x, y) по equation, либо параметрическая 3D-кривая при "parametric": true (нужны paramX, paramY, paramZ).
-    // Уравнения: переменные x, y, t; параметры из массива params (имена чувствительны к регистру); функции sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max, atan2 и др.; константы pi, e; операции + - * / ^.
+    // Уравнения: переменные x, y, t; параметры из массива params (имена чувствительны к регистру); функции sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max, atan2; константы pi, e; операции + - * / ^.
 38. model3d: { "type": "model3d", "src": "https://example.com/model.glb", "caption": "Подпись", "height": "450px", "background": "#0a0c14", "autoRotate": true }
-    // 3D-модель формата .glb/.gltf по URL; локальный файл можно открыть кнопкой в самом блоке.
+39. flashcards: { "type": "flashcards", "title": "Колода карточек", "cards": [ { "front": "Вопрос", "back": "Ответ" } ] }
+40. checklist: { "type": "checklist", "title": "Чек-лист", "items": ["Пункт 1", "Пункт 2"] }
+41. quote: { "type": "quote", "text": "Текст цитаты", "author": "Автор" }
+42. glossary: { "type": "glossary", "title": "Глоссарий", "items": [ { "term": "Термин", "definition": "Определение" } ] }
+43. equation: { "type": "equation", "latex": "x = \\\\frac{-b \\\\pm \\\\sqrt{b^2-4ac}}{2a}", "caption": "Подпись" } // синтаксис KaTeX без ограничителей $$
+44. youtube: { "type": "youtube", "videoId": "ID видео или ссылка", "caption": "Подпись" }
+45. kanban: { "type": "kanban", "title": "Доска", "columns": [ { "title": "Колонка", "cards": ["Карточка 1"] } ] }
+46. stats: { "type": "stats", "title": "Показатели", "items": [ { "value": "42%", "label": "Подпись" } ] }
+47. countdown: { "type": "countdown", "title": "Таймер", "seconds": 300, "label": "Подпись" }
+48. tree: { "type": "tree", "title": "Дерево", "items": [ { "text": "Узел", "children": [ { "text": "Потомок" } ] } ] }
+49. truefalse: { "type": "truefalse", "question": "Утверждение", "answer": true, "explanation": "Пояснение" }
+50. divider: { "type": "divider", "style": "line" } // style: line | dots | glow
+51. download: { "type": "download", "src": "URL файла", "label": "Скачать", "fileName": "file.pdf" }
 `;
 
     const prompt = `Ты — эксперт по созданию интерактивных образовательных курсов. Создай JSON-файл курса на тему "${topic}" для LMS-плеера.
@@ -2782,15 +3303,13 @@
 - Курс должен содержать 10-15 уроков, каждый с несколькими блоками разного типа.
 - В каждом уроке должно быть не менее 30 элементов (блоков).
 - Основной упор — на теоретический материал, практика второстепенна.
-- Наибольшее количество текстовых блоков, но они не должны идти друг за другом; лучше расширять содержание каждого блока (делать блоки крупнее, а не плодить много мелких).
-- Теоретическое повествование — основное, практика менее важна.
-- Используй разнообразные типы блоков: текст, изображения, видео (если возможно), викторины, сопоставления, диаграммы, таблицы, аккордеоны, графики функций (graph) и 3D-модели (model3d), где это уместно.
+- Используй разнообразные типы блоков: текст, изображения, викторины, сопоставления, диаграммы, таблицы, аккордеоны, графики функций (graph), 3D-модели (model3d), карточки (flashcards), глоссарии, канбан-доски, таймеры и другие — где это уместно.
 - Отдавай предпочтение иллюстрациям mermaid и svg для визуализации.
-- Используй формулы KaTeX при необходимости.
+- Используй формулы KaTeX при необходимости (блок equation или синтаксис внутри текста).
 - Блоки кода преимущественно размещай внутри блока modal.
 - JSON должен быть валидным и соответствовать схеме ниже.
 - Не добавляй комментарии в JSON.
-- Обязательно включи блоки quiz, fill-blank, и хотя бы один диаграмму (chart или pie).
+- Обязательно включи блоки quiz, fill-blank и хотя бы одну диаграмму (chart или pie).
 - Метаданные должны быть заполнены реалистично, в качестве автора укажи себя (например, "AI Assistant").
 - Все URL изображений/видео/3D-моделей должны быть рабочими (используй https://picsum.photos для изображений, если нужно).
 - При желании можешь добавить кастомную тему через meta.theme.
@@ -2798,14 +3317,14 @@
 - HTML-код должен быть корректным и не содержать скриптов.
 
 ФОРМУЛЫ:
-- Для вставки математических формул в текстовых блоках (type: "text") используй синтаксис KaTeX: inline формулы заключай в \\(...\\), display формулы — в \\[...\\]. Также можно использовать $...$ для inline и $$...$$ для display.
-- В HTML-блоках (type: "html") формулы можно вставлять внутри HTML-кода, используя те же разделители KaTeX. Например: <p>Скорость равна \\(v = \\frac{s}{t}\\)</p>.
-- Если теоретический материал содержит много абзацев или требует расширенного форматирования (списки, выделение, таблицы), используй блок "html" с соответствующими HTML-тегами, а не множественные блоки "text".
-- Для визуализации математических зависимостей используй блок "graph": задавай уравнения (например "a*sin(x)", "x^2 + y^2") и интерактивные параметры через массив "params".
+- Для вставки формул в текстовых блоках (type: "text") используй KaTeX: inline — \\\\(...\\\\), display — \\\\[...\\\\]. Также допустимы $...$ и $$...$$.
+- Для отдельной формулы используй блок "equation" с полем "latex" (без ограничителей $$).
+- Если теоретический материал требует расширенного форматирования (списки, выделение, таблицы), используй блок "html".
+- Для визуализации математических зависимостей используй блок "graph" с уравнениями и интерактивными параметрами через массив "params".
 
 РАЗМЕРЫ БЛОКОВ:
-- Любой блок может содержать поля width, height, maxWidth, maxHeight, minWidth, minHeight для явного указания размеров (CSS-значения, например "500px", "80%", "auto").
-- Поле autoScale (по умолчанию true) автоматически масштабирует блок под ширину контейнера и сохраняет пропорции для медиаэлементов. Чтобы отключить, установите autoScale: false.
+- Любой блок может содержать поля width, height, maxWidth, maxHeight, minWidth, minHeight (CSS-значения).
+- Поле autoScale (по умолчанию true) автоматически масштабирует блок под ширину контейнера.
 
 Схема:
 ${schema}
@@ -3748,6 +4267,45 @@ ${schema}
         break;
       case 'model3d':
         element = renderModel3DBlock(block);
+        break;
+      case 'flashcards':
+        element = renderFlashcardsBlock(block);
+        break;
+      case 'checklist':
+        element = renderChecklistBlock(block);
+        break;
+      case 'quote':
+        element = renderQuoteBlock(block);
+        break;
+      case 'glossary':
+        element = renderGlossaryBlock(block);
+        break;
+      case 'equation':
+        element = renderEquationBlock(block);
+        break;
+      case 'youtube':
+        element = renderYouTubeBlock(block);
+        break;
+      case 'kanban':
+        element = renderKanbanBlock(block);
+        break;
+      case 'stats':
+        element = renderStatsBlock(block);
+        break;
+      case 'countdown':
+        element = renderCountdownBlock(block);
+        break;
+      case 'tree':
+        element = renderTreeBlock(block);
+        break;
+      case 'truefalse':
+        element = renderTrueFalseBlock(block);
+        break;
+      case 'divider':
+        element = renderDividerBlock(block);
+        break;
+      case 'download':
+        element = renderDownloadBlock(block);
         break;
       default:
         console.warn('Unknown block type:', block.type);
