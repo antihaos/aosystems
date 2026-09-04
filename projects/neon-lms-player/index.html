@@ -460,7 +460,6 @@
   .graph-controls { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
   .graph-param { margin: 0; padding: 8px 10px; }
   .graph-error { color: var(--pink); font-size: 0.85em; margin-top: 6px; white-space: pre-wrap; }
-  .graph-hint { color: var(--muted); font-size: 0.8em; margin-top: 6px; }
 
   /* ---------- 3D ОБЪЕКТ ---------- */
   .model3d-block { margin: 15px 0; }
@@ -775,7 +774,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.5.0' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.5.1' }));
     return header;
   }
 
@@ -1230,19 +1229,19 @@
       { key: 'title', label: 'title — заголовок графика', type: 'text' },
       { key: 'mode', label: 'mode — режим графика', type: 'select', options: ['2d', '3d'] },
       { key: 'parametric', label: 'parametric — параметрическое уравнение', type: 'checkbox', omitFalse: true },
-      { key: 'equation', label: 'equation — уравнение: 2D → y = f(x); 3D → z = f(x, y)', type: 'text' },
-      { key: 'paramX', label: 'paramX — x(t) для параметрического уравнения', type: 'text' },
-      { key: 'paramY', label: 'paramY — y(t) для параметрического уравнения', type: 'text' },
-      { key: 'paramZ', label: 'paramZ — z(t) для параметрической 3D-кривой', type: 'text' },
-      { key: 'rangeMin', label: 'rangeMin — мин. x', type: 'number' },
-      { key: 'rangeMax', label: 'rangeMax — макс. x', type: 'number' },
-      { key: 'rangeYMin', label: 'rangeYMin — мин. y (3D-поверхность)', type: 'number' },
-      { key: 'rangeYMax', label: 'rangeYMax — макс. y (3D-поверхность)', type: 'number' },
-      { key: 'tMin', label: 'tMin — мин. t (параметрический)', type: 'number' },
-      { key: 'tMax', label: 'tMax — макс. t (параметрический)', type: 'number' },
+      { key: 'equation', label: 'equation — уравнение: 2D → y = f(x); 3D → z = f(x, y)', type: 'text', visible: (s) => !s.parametric },
+      { key: 'paramX', label: 'paramX — x(t) для параметрического уравнения', type: 'text', visible: (s) => !!s.parametric },
+      { key: 'paramY', label: 'paramY — y(t) для параметрического уравнения', type: 'text', visible: (s) => !!s.parametric },
+      { key: 'paramZ', label: 'paramZ — z(t) для параметрической 3D-кривой', type: 'text', visible: (s) => !!s.parametric && s.mode === '3d' },
+      { key: 'rangeMin', label: 'rangeMin — мин. x', type: 'number', visible: (s) => !s.parametric },
+      { key: 'rangeMax', label: 'rangeMax — макс. x', type: 'number', visible: (s) => !s.parametric },
+      { key: 'rangeYMin', label: 'rangeYMin — мин. y (3D-поверхность)', type: 'number', visible: (s) => !s.parametric && s.mode === '3d' },
+      { key: 'rangeYMax', label: 'rangeYMax — макс. y (3D-поверхность)', type: 'number', visible: (s) => !s.parametric && s.mode === '3d' },
+      { key: 'tMin', label: 'tMin — мин. t (параметрический)', type: 'number', visible: (s) => !!s.parametric },
+      { key: 'tMax', label: 'tMax — макс. t (параметрический)', type: 'number', visible: (s) => !!s.parametric },
       { key: 'points', label: 'points — число точек (по умолчанию 300)', type: 'number', min: 2, max: 500 },
-      { key: 'params', label: 'params — интерактивные параметры (слайдеры)', type: 'array', itemSchema: { kind: 'object', label: 'Параметр', fields: [
-        { key: 'name', label: 'name — имя параметра (например a)', type: 'text' },
+      { key: 'params', label: 'params — интерактивные параметры (слайдеры). Имена чувствительны к регистру и подставляются в уравнения как есть', type: 'array', itemSchema: { kind: 'object', label: 'Параметр', fields: [
+        { key: 'name', label: 'name — имя параметра (например a или Amp)', type: 'text' },
         { key: 'value', label: 'value — значение по умолчанию', type: 'number' },
         { key: 'min', label: 'min — минимум слайдера', type: 'number' },
         { key: 'max', label: 'max — максимум слайдера', type: 'number' },
@@ -1362,7 +1361,8 @@
         blocksArr.length = 0;
         (Array.isArray(arr) ? arr : []).forEach(b => blocksArr.push(JSON.parse(JSON.stringify(b))));
         renderList();
-      }
+      },
+      getStateValue: () => undefined
     };
   }
 
@@ -1532,7 +1532,8 @@
         itemEditors = [];
         (Array.isArray(arr) ? arr : []).forEach(v => itemEditors.push(createItemEditor(v)));
         renderList();
-      }
+      },
+      getStateValue: () => undefined
     };
   }
 
@@ -1602,14 +1603,14 @@
       const row = h('div', { class: 'form-field' });
       row.appendChild(h('label', { textContent: def.label }));
       row.appendChild(ed.el);
-      return { el: row, getValue: ed.getValue, setValue: ed.setValue };
+      return { el: row, getValue: ed.getValue, setValue: ed.setValue, getStateValue: () => undefined };
     }
     if (def.type === 'blocks') {
       const ed = createBlocksArrayEditor();
       const row = h('div', { class: 'form-field' });
       row.appendChild(h('label', { textContent: def.label }));
       row.appendChild(ed.el);
-      return { el: row, getValue: ed.getValue, setValue: ed.setValue };
+      return { el: row, getValue: ed.getValue, setValue: ed.setValue, getStateValue: () => undefined };
     }
 
     const row = h('div', { class: 'form-field' });
@@ -1644,7 +1645,10 @@
     return {
       el: row,
       getValue: () => readFormField(def, control),
-      setValue: (v) => fillFormField(def, control, v)
+      setValue: (v) => fillFormField(def, control, v),
+      getStateValue: () => {
+        try { return readFormField(def, control); } catch (e) { return undefined; }
+      }
     };
   }
 
@@ -1681,6 +1685,36 @@
     content.appendChild(formPanel);
     content.appendChild(jsonPanel);
 
+    function collectFormState() {
+      const state = {};
+      buildSchemaFor(currentType).forEach(def => {
+        if (def.section || !def.key) return;
+        const editor = fieldControls[def.key];
+        if (!editor || typeof editor.getStateValue !== 'function') return;
+        try { state[def.key] = editor.getStateValue(); } catch (e) { state[def.key] = undefined; }
+      });
+      return state;
+    }
+
+    function updateVisibility() {
+      const state = collectFormState();
+      buildSchemaFor(currentType).forEach(def => {
+        if (def.section || !def.key) return;
+        const editor = fieldControls[def.key];
+        if (!editor) return;
+        if (typeof def.visible === 'function') {
+          let vis = true;
+          try { vis = !!def.visible(state); } catch (e) { vis = true; }
+          editor.el.style.display = vis ? '' : 'none';
+        } else {
+          editor.el.style.display = '';
+        }
+      });
+    }
+
+    formPanel.addEventListener('input', updateVisibility);
+    formPanel.addEventListener('change', updateVisibility);
+
     function buildForm(obj) {
       formPanel.innerHTML = '';
       fieldControls = {};
@@ -1708,6 +1742,8 @@
         fieldControls[def.key] = editor;
         editor.setValue(obj ? obj[def.key] : undefined);
       });
+
+      updateVisibility();
     }
 
     function schemaKeySet(type) {
@@ -1731,8 +1767,14 @@
     function serializeForm() {
       const result = { type: currentType };
       Object.keys(extraData).forEach(k => { result[k] = extraData[k]; });
+      const state = collectFormState();
       buildSchemaFor(currentType).forEach(def => {
-        if (def.section) return;
+        if (def.section || !def.key) return;
+        if (typeof def.visible === 'function') {
+          let vis = true;
+          try { vis = !!def.visible(state); } catch (e) { vis = true; }
+          if (!vis) return; // скрытые (неактуальные для текущего режима) поля не сохраняем
+        }
         const editor = fieldControls[def.key];
         if (!editor) return;
         const v = editor.getValue();
@@ -2013,6 +2055,8 @@
   }
 
   // ---------- ПАРСЕР МАТЕМАТИЧЕСКИХ ВЫРАЖЕНИЙ (ДЛЯ ГРАФИКОВ) ----------
+  // Имена переменных/параметров чувствительны к регистру (a и A — разные переменные).
+  // Функции и константы (sin, cos, pi, e, ...) не зависят от регистра.
   function compileMathExpression(src, allowedVars) {
     const str = String(src).replace(/\s+/g, '');
     if (str === '') throw new Error('пустое выражение');
@@ -2035,7 +2079,16 @@
     function readName() {
       const start = pos;
       while (pos < str.length && /[a-zA-Z_]/.test(str[pos])) pos++;
-      return str.slice(start, pos).toLowerCase();
+      return str.slice(start, pos);
+    }
+
+    function findVar(nameRaw) {
+      if (allowedVars.indexOf(nameRaw) !== -1) return nameRaw;
+      const nameLower = nameRaw.toLowerCase();
+      for (let vi = 0; vi < allowedVars.length; vi++) {
+        if (allowedVars[vi].toLowerCase() === nameLower) return allowedVars[vi];
+      }
+      return null;
     }
 
     function parseExpr() { return parseAdd(); }
@@ -2110,33 +2163,48 @@
         return () => num;
       }
       if (/[a-zA-Z_]/.test(c)) {
-        const name = readName();
+        const nameRaw = readName();
+        const nameLower = nameRaw.toLowerCase();
+
+        // Переменная (x, y, t или параметр): сначала точное совпадение регистра,
+        // затем поиск без учёта регистра.
+        const matchedVar = findVar(nameRaw);
+        if (matchedVar !== null) {
+          if (peek() === '(') {
+            // неявное умножение: переменная * (выражение)
+            const rhs = parseAtom();
+            return (env) => {
+              const v = env[matchedVar];
+              const vv = typeof v === 'number' ? v : NaN;
+              return vv * rhs(env);
+            };
+          }
+          return (env) => {
+            const v = env[matchedVar];
+            return typeof v === 'number' ? v : NaN;
+          };
+        }
+
         if (peek() === '(') {
           pos++;
           const args = [parseExpr()];
           while (peek() === ',') { pos++; args.push(parseExpr()); }
           if (peek() !== ')') throw new Error('ожидается ")" после аргументов функции');
           pos++;
-          if (FUNC2[name]) {
-            if (args.length !== 2) throw new Error('функция ' + name + ' требует 2 аргумента');
-            const f = FUNC2[name], a0 = args[0], a1 = args[1];
+          if (FUNC2[nameLower]) {
+            if (args.length !== 2) throw new Error('функция ' + nameLower + ' требует 2 аргумента');
+            const f = FUNC2[nameLower], a0 = args[0], a1 = args[1];
             return (env) => f(a0(env), a1(env));
           }
-          if (FUNC1[name]) {
-            if (args.length !== 1) throw new Error('функция ' + name + ' требует 1 аргумент');
-            const f = FUNC1[name], a0 = args[0];
+          if (FUNC1[nameLower]) {
+            if (args.length !== 1) throw new Error('функция ' + nameLower + ' требует 1 аргумент');
+            const f = FUNC1[nameLower], a0 = args[0];
             return (env) => f(a0(env));
           }
-          throw new Error('неизвестная функция: ' + name);
+          throw new Error('неизвестная функция: ' + nameLower);
         }
-        if (CONSTS.hasOwnProperty(name)) { const v = CONSTS[name]; return () => v; }
-        if (allowedVars.indexOf(name) !== -1) {
-          return (env) => {
-            const v = env[name];
-            return typeof v === 'number' ? v : NaN;
-          };
-        }
-        throw new Error('неизвестная переменная: ' + name);
+        if (CONSTS.hasOwnProperty(nameLower)) { const v = CONSTS[nameLower]; return () => v; }
+        throw new Error('неизвестная переменная: ' + nameRaw);
       }
       throw new Error('неожиданный символ: ' + c);
     }
@@ -2235,7 +2303,6 @@
 
     const errBox = h('div', { class: 'graph-error' });
     element.appendChild(errBox);
-    element.appendChild(h('p', { class: 'graph-hint', textContent: 'Синтаксис: + − * / ^, скобки; функции sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max …; константы pi, e. Примеры: a*sin(x), x^2 + b, sin(x)*cos(y), { x(t)=cos(t), y(t)=sin(t) }.' }));
 
     function envFor(extra) {
       const env = {};
@@ -2563,9 +2630,9 @@
       <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования).</p>
       <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
       <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок.</p>
-      <p>Редактор блока содержит две вкладки: <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты данного типа блока (включая незаполненные). Вложенные массивы редактируются как списки элементов, вложенные блоки — в таком же редакторе. Значения синхронизируются при переключении вкладок.</p>
+      <p>Редактор блока содержит две вкладки: <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты данного типа блока (включая незаполненные). Для блока <code>graph</code> форма показывает только те поля, которые актуальны для выбранного режима (2d/3d) и типа уравнения (обычное/параметрическое). Вложенные массивы редактируются как списки элементов, вложенные блоки — в таком же редакторе. Значения синхронизируются при переключении вкладок.</p>
       <h4 style="color: #fff; margin-top: 10px;">График функции (тип <code>graph</code>)</h4>
-      <p>Построение графиков по уравнению: 2D (<code>y = f(x)</code>, например <code>a*sin(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), а также параметрические кривые (<code>parametric: true</code>, поля <code>paramX</code>/<code>paramY</code>/<code>paramZ</code>, диапазоны <code>tMin</code>/<code>tMax</code>). Поддерживаются интерактивные параметры — массив <code>params</code> с полями <code>name</code>, <code>value</code>, <code>min</code>, <code>max</code>, <code>step</code> — они отображаются как слайдеры и подставляются в уравнение. Допустимые функции: sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max и др.; константы: pi, e.</p>
+      <p>Построение графиков по уравнению: 2D (<code>y = f(x)</code>, например <code>a*sin(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), а также параметрические кривые (<code>parametric: true</code>, поля <code>paramX</code>/<code>paramY</code>/<code>paramZ</code>, диапазоны <code>tMin</code>/<code>tMax</code>). Поддерживаются интерактивные параметры — массив <code>params</code> с полями <code>name</code>, <code>value</code>, <code>min</code>, <code>max</code>, <code>step</code> — они отображаются как слайдеры и подставляются в уравнение. Имена параметров чувствительны к регистру: <code>a</code> и <code>A</code> — разные переменные. Допустимые функции: sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max и др.; константы: pi, e.</p>
       <h4 style="color: #fff; margin-top: 10px;">3D объект (тип <code>model3d</code>)</h4>
       <p>Просмотр 3D-моделей в формате <code>.glb</code>/<code>.gltf</code>: по URL (поле <code>src</code>) или из локального файла (кнопка «Открыть файл»). Управление: вращение мышью, масштаб колёсиком, опция <code>autoRotate</code>. Для внешних URL требуется поддержка CORS; для .gltf с внешними текстурами рекомендуется использовать .glb.</p>
       <p>Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
@@ -2704,7 +2771,7 @@
 36. html: { "type": "html", "code": "<div style=\\"...\\">...</div>" }
 37. graph: { "type": "graph", "title": "График", "mode": "2d", "parametric": false, "equation": "a*sin(x)", "paramX": "cos(t)", "paramY": "sin(t)", "paramZ": "t", "rangeMin": -10, "rangeMax": 10, "rangeYMin": -5, "rangeYMax": 5, "tMin": 0, "tMax": 6.28, "points": 300, "params": [ { "name": "a", "value": 1, "min": 0, "max": 5, "step": 0.1 } ] }
     // mode: "2d" — y = f(x) по полю equation; "3d" — поверхность z = f(x, y) по equation, либо параметрическая 3D-кривая при "parametric": true (нужны paramX, paramY, paramZ).
-    // Уравнения: переменные x, y, t; параметры из массива params; функции sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max, atan2 и др.; константы pi, e; операции + - * / ^.
+    // Уравнения: переменные x, y, t; параметры из массива params (имена чувствительны к регистру); функции sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max, atan2 и др.; константы pi, e; операции + - * / ^.
 38. model3d: { "type": "model3d", "src": "https://example.com/model.glb", "caption": "Подпись", "height": "450px", "background": "#0a0c14", "autoRotate": true }
     // 3D-модель формата .glb/.gltf по URL; локальный файл можно открыть кнопкой в самом блоке.
 `;
