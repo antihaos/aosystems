@@ -378,6 +378,62 @@
     transform: translateY(-2px);
   }
 
+  /* ---------- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ---------- */
+  .mode-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: all .3s;
+    margin-bottom: 10px;
+    background: var(--panel);
+  }
+  .mode-toggle:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0,240,255,0.25);
+  }
+  .mode-toggle input { display: none; }
+  .mode-toggle .switch {
+    width: 34px;
+    height: 18px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.15);
+    position: relative;
+    transition: background .3s;
+    flex: 0 0 auto;
+  }
+  .mode-toggle .switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: all .3s;
+  }
+  .mode-toggle input:checked + .switch {
+    background: rgba(0,240,255,0.35);
+    box-shadow: inset 0 0 8px rgba(0,240,255,0.4);
+  }
+  .mode-toggle input:checked + .switch::after {
+    left: 18px;
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+  }
+  .mode-toggle .mode-label {
+    font-size: 0.9em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .mode-toggle.view-mode { border-color: rgba(5,255,161,0.4); }
+  .mode-toggle.view-mode:hover { border-color: var(--green); box-shadow: 0 0 10px rgba(5,255,161,0.25); }
+
   .help-content {
     max-height: 70vh;
     overflow-y: auto;
@@ -616,6 +672,13 @@
   let completedLessons = new Set();
   let themeStyleElement = null;
 
+  // Режим редактирования блоков (переключатель)
+  let editMode = true;
+  try {
+    const savedEditMode = localStorage.getItem('lms_edit_mode');
+    if (savedEditMode !== null) editMode = savedEditMode === '1';
+  } catch (e) {}
+
   // ---------- INDEXEDDB ----------
   const DB_NAME = 'lms_courses_db';
   const DB_VERSION = 1;
@@ -837,6 +900,35 @@
     }
   }
 
+  function setEditMode(value) {
+    editMode = !!value;
+    try {
+      localStorage.setItem('lms_edit_mode', editMode ? '1' : '0');
+    } catch (e) {}
+    if (currentLessonId) {
+      showLesson(currentLessonId);
+    } else {
+      renderInitialState();
+    }
+  }
+
+  function renderModeToggle() {
+    const modeToggle = h('label', {
+      class: 'mode-toggle' + (editMode ? '' : ' view-mode'),
+      title: 'Переключить режим редактирования блоков / режим просмотра'
+    });
+    const modeCheckbox = h('input', { type: 'checkbox' });
+    modeCheckbox.checked = editMode;
+    modeCheckbox.addEventListener('change', () => setEditMode(modeCheckbox.checked));
+    modeToggle.appendChild(modeCheckbox);
+    modeToggle.appendChild(h('span', { class: 'switch' }));
+    modeToggle.appendChild(h('span', {
+      class: 'mode-label',
+      textContent: editMode ? '✏ Режим редактирования' : '👁 Режим просмотра'
+    }));
+    return modeToggle;
+  }
+
   // ---------- ЗАГОЛОВОК ПРИЛОЖЕНИЯ ----------
   function renderAppHeader() {
     const header = h('div', { class: 'app-header' });
@@ -845,7 +937,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.1.2' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.2.0' }));
     return header;
   }
 
@@ -857,25 +949,27 @@
     const titleRow = h('div', { class: 'course-title-row' });
     titleRow.appendChild(h('h1', { textContent: course.meta.title || 'Без названия' }));
 
-    const editBtn = h('button', {
-      class: 'edit-course-btn',
-      type: 'button',
-      title: 'Редактор JSON курса',
-      textContent: '✎'
-    });
-    editBtn.addEventListener('click', () => {
-      const recordId = course.meta._recordId || null;
-      openJSONEditor(JSON.stringify(cleanCourseForEditor(course), null, 2), {
+    if (editMode) {
+      const editBtn = h('button', {
+        class: 'edit-course-btn',
+        type: 'button',
         title: 'Редактор JSON курса',
-        onSave: async (data) => {
-          if (Array.isArray(data) || (data && data.courses)) {
-            throw new Error('Редактор поддерживает только один курс. Для загрузки нескольких курсов используйте импорт файла или URL.');
-          }
-          await loadCourseFromObject(data, recordId);
-        }
+        textContent: '✎'
       });
-    });
-    titleRow.appendChild(editBtn);
+      editBtn.addEventListener('click', () => {
+        const recordId = course.meta._recordId || null;
+        openJSONEditor(JSON.stringify(cleanCourseForEditor(course), null, 2), {
+          title: 'Редактор JSON курса',
+          onSave: async (data) => {
+            if (Array.isArray(data) || (data && data.courses)) {
+              throw new Error('Редактор поддерживает только один курс. Для загрузки нескольких курсов используйте импорт файла или URL.');
+            }
+            await loadCourseFromObject(data, recordId);
+          }
+        });
+      });
+      titleRow.appendChild(editBtn);
+    }
     header.appendChild(titleRow);
 
     if (course.meta.description) {
@@ -1308,6 +1402,8 @@
       <p>Данный плеер предназначен для отображения интерактивных образовательных курсов в формате JSON. Курс состоит из метаданных и списка уроков. Каждый урок содержит заголовок, описание и набор блоков контента.</p>
       <p><strong>Поддержка нескольких курсов:</strong> Вы можете загрузить JSON, содержащий один курс, массив курсов, массив URL-адресов на курсы, или объект с полем <code>courses</code>, которое может быть массивом курсов или массивом URL. При загрузке URL каждый адрес должен возвращать JSON одного курса.</p>
       <p><strong>Автозагрузка через URL:</strong> Добавьте параметр <code>?url=ссылка</code> (или <code>?source=</code>, <code>?course=</code>) в адресную строку, и плеер автоматически загрузит данные по этой ссылке при открытии страницы.</p>
+      <h4 style="color: #fff; margin-top: 10px;">Режимы работы</h4>
+      <p>Переключатель в верхней панели позволяет выбрать режим: <strong>✏ Режим редактирования</strong> — доступны панели редактирования блоков (наведите курсор на блок), кнопки добавления блоков и редакторы JSON; <strong>👁 Режим просмотра</strong> — чистый просмотр без кнопок редактирования. Выбранный режим запоминается.</p>
       <h4 style="color: #fff; margin-top: 10px;">Форматы входных данных</h4>
       <ul>
         <li>Одиночный курс: <code>{ "meta": ..., "lessons": ... }</code></li>
@@ -1336,9 +1432,9 @@
   ]
 }</code></pre>
       <p>Полный список типов блоков смотрите в расширенной справке или JSON-схеме.</p>
-      <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс".</p>
+      <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования).</p>
       <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
-      <p>Откройте урок и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать JSON блока, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок. Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
+      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать JSON блока, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок. Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
     `;
     content.appendChild(helpDiv);
     overlay.appendChild(content);
@@ -1516,7 +1612,7 @@ ${schema}
   function renderBaseUI() {
     app.appendChild(renderAppHeader());
 
-    const buttonsContainer = h('div', { style: 'display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;' });
+    const buttonsContainer = h('div', { style: 'display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; align-items:center;' });
 
     const toggleBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Управление курсами', type: 'button' });
     toggleBtn.addEventListener('click', toggleCourseManager);
@@ -1529,6 +1625,9 @@ ${schema}
     const promptBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Генерация промпта', type: 'button' });
     promptBtn.addEventListener('click', openPromptGenerator);
     buttonsContainer.appendChild(promptBtn);
+
+    // Переключатель режима редактирования / просмотра
+    buttonsContainer.appendChild(renderModeToggle());
 
     app.appendChild(buttonsContainer);
 
@@ -1577,28 +1676,35 @@ ${schema}
 
     const lessonContainer = h('div', { class: 'lesson-container' });
 
-    // Заголовок урока + кнопка редактирования всего урока
+    // Заголовок урока (+ кнопка редактирования урока только в режиме редактирования)
     const lessonTitleRow = h('div', { class: 'lesson-title-row' });
     lessonTitleRow.appendChild(h('h2', { class: 'heading', textContent: lesson.title || lesson.id }));
-    const lessonEditBtn = h('button', {
-      class: 'lesson-edit-btn',
-      type: 'button',
-      title: 'Редактировать JSON урока',
-      textContent: '✎'
-    });
-    lessonEditBtn.addEventListener('click', () => openLessonEditor(lesson));
-    lessonTitleRow.appendChild(lessonEditBtn);
+    if (editMode) {
+      const lessonEditBtn = h('button', {
+        class: 'lesson-edit-btn',
+        type: 'button',
+        title: 'Редактировать JSON урока',
+        textContent: '✎'
+      });
+      lessonEditBtn.addEventListener('click', () => openLessonEditor(lesson));
+      lessonTitleRow.appendChild(lessonEditBtn);
+    }
     lessonContainer.appendChild(lessonTitleRow);
 
     if (lesson.description) lessonContainer.appendChild(h('p', { class: 'text', textContent: lesson.description }));
-    lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его JSON, переместить, добавить новый или удалить.' }));
+    if (editMode) {
+      lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его JSON, переместить, добавить новый или удалить.' }));
+    }
 
     const content = h('div', { class: 'lesson-content' });
-    renderLessonBlocksEditable(lesson, content);
-
-    const addBlockBtn = h('button', { class: 'add-block-btn', type: 'button', textContent: '＋ Добавить блок в конец урока' });
-    addBlockBtn.addEventListener('click', () => openAddBlockEditor(lesson, ensureLessonBlocks(lesson).length));
-    content.appendChild(addBlockBtn);
+    if (editMode) {
+      renderLessonBlocksEditable(lesson, content);
+      const addBlockBtn = h('button', { class: 'add-block-btn', type: 'button', textContent: '＋ Добавить блок в конец урока' });
+      addBlockBtn.addEventListener('click', () => openAddBlockEditor(lesson, ensureLessonBlocks(lesson).length));
+      content.appendChild(addBlockBtn);
+    } else {
+      renderBlocks(ensureLessonBlocks(lesson), content);
+    }
 
     lessonContainer.appendChild(content);
 
