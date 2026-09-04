@@ -447,6 +447,21 @@
   .nested-block-info { font-size: 0.83em; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
   .nested-block-btns { display: flex; gap: 4px; flex: 0 0 auto; }
 
+  /* ---------- РЕДАКТОР ДЕРЕВА В ФОРМЕ ---------- */
+  .tree-editor { border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: rgba(255,255,255,0.02); }
+  .tree-editor-list { display: flex; flex-direction: column; gap: 6px; }
+  .tree-editor-row { display: flex; gap: 6px; align-items: center; }
+  .tree-editor-row input[type="text"] {
+    flex: 1; background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 7px; outline: none; font-family: inherit; font-size: 0.9em;
+    transition: border-color .3s, box-shadow .3s; min-width: 0;
+  }
+  .tree-editor-row input[type="text"]:focus { border-color: var(--cyan); box-shadow: 0 0 6px rgba(0,240,255,.3); }
+  .tree-editor-children {
+    margin-left: 14px; padding-left: 12px; border-left: 1px solid var(--border);
+    margin-top: 6px; display: flex; flex-direction: column; gap: 6px;
+  }
+
   /* ---------- ГРАФИК ФУНКЦИИ ---------- */
   .graph-block { margin: 15px 0; }
   .graph-plot {
@@ -880,7 +895,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.6.0' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.6.1' }));
     return header;
   }
 
@@ -1412,7 +1427,7 @@
     ],
     'tree': [
       { key: 'title', label: 'title — заголовок дерева', type: 'text' },
-      { key: 'items', label: 'items — узлы: [ { "text": "...", "children": [ ... ] } ]', type: 'json' }
+      { key: 'items', label: 'items — узлы дерева (с вложенными подузлами)', type: 'treelist' }
     ],
     'truefalse': [
       { key: 'question', label: 'question — утверждение', type: 'textarea' },
@@ -1709,6 +1724,116 @@
     };
   }
 
+  // ---------- РЕДАКТОР ДЕРЕВА (ВЛОЖЕННЫЕ УЗЛЫ) ----------
+  function createTreeListEditor() {
+    const wrap = h('div', { class: 'tree-editor' });
+    let items = []; // каждый узел: { text: '', children: [] }
+
+    function importTree(arr) {
+      return (Array.isArray(arr) ? arr : [])
+        .filter(n => n && typeof n === 'object')
+        .map(n => ({
+          text: n.text != null ? String(n.text) : (n.title != null ? String(n.title) : ''),
+          children: importTree(n.children)
+        }));
+    }
+
+    function cleanTree(nodes) {
+      const out = [];
+      nodes.forEach(n => {
+        const kids = cleanTree(n.children || []);
+        const text = (n.text || '').trim();
+        if (text === '' && kids.length === 0) return;
+        const item = { text: n.text };
+        if (kids.length > 0) item.children = kids;
+        out.push(item);
+      });
+      return out;
+    }
+
+    function buildLevel(nodes) {
+      const levelEl = h('div', { class: 'tree-editor-list' });
+      if (nodes.length === 0) {
+        levelEl.appendChild(h('p', { class: 'form-hint', textContent: 'Нет узлов.' }));
+        return levelEl;
+      }
+      nodes.forEach((node, idx) => {
+        const nodeEl = h('div', { class: 'tree-editor-node' });
+        const row = h('div', { class: 'tree-editor-row' });
+        const input = h('input', { type: 'text', placeholder: 'Текст узла' });
+        input.value = node.text;
+        input.addEventListener('input', () => { node.text = input.value; });
+        row.appendChild(input);
+
+        const controls = h('div', { class: 'array-item-controls' });
+        const upBtn = h('button', { class: 'mini-btn', type: 'button', title: 'Переместить выше', textContent: '↑', disabled: idx === 0 });
+        upBtn.addEventListener('click', () => {
+          const tmp = nodes[idx - 1];
+          nodes[idx - 1] = nodes[idx];
+          nodes[idx] = tmp;
+          render();
+        });
+        const downBtn = h('button', { class: 'mini-btn', type: 'button', title: 'Переместить ниже', textContent: '↓', disabled: idx === nodes.length - 1 });
+        downBtn.addEventListener('click', () => {
+          const tmp = nodes[idx + 1];
+          nodes[idx + 1] = nodes[idx];
+          nodes[idx] = tmp;
+          render();
+        });
+        const addChildBtn = h('button', { class: 'mini-btn', type: 'button', title: 'Добавить подузел', textContent: '＋' });
+        addChildBtn.addEventListener('click', () => {
+          node.children.push({ text: '', children: [] });
+          render();
+        });
+        const delBtn = h('button', { class: 'mini-btn danger', type: 'button', title: 'Удалить узел (с подузлами)', textContent: '🗑' });
+        delBtn.addEventListener('click', () => {
+          nodes.splice(idx, 1);
+          render();
+        });
+        controls.appendChild(upBtn);
+        controls.appendChild(downBtn);
+        controls.appendChild(addChildBtn);
+        controls.appendChild(delBtn);
+        row.appendChild(controls);
+        nodeEl.appendChild(row);
+
+        if (node.children.length > 0) {
+          const kids = h('div', { class: 'tree-editor-children' });
+          kids.appendChild(buildLevel(node.children));
+          nodeEl.appendChild(kids);
+        }
+        levelEl.appendChild(nodeEl);
+      });
+      return levelEl;
+    }
+
+    function render() {
+      wrap.innerHTML = '';
+      wrap.appendChild(buildLevel(items));
+      const addRootBtn = h('button', { class: 'array-add-btn', type: 'button', textContent: '＋ Добавить корневой узел' });
+      addRootBtn.addEventListener('click', () => {
+        items.push({ text: '', children: [] });
+        render();
+      });
+      wrap.appendChild(addRootBtn);
+    }
+
+    render();
+
+    return {
+      el: wrap,
+      getValue: () => {
+        const out = cleanTree(items);
+        return out.length === 0 ? undefined : out;
+      },
+      setValue: (arr) => {
+        items = importTree(arr);
+        render();
+      },
+      getStateValue: () => undefined
+    };
+  }
+
   // ---------- ЧТЕНИЕ/ЗАПОЛНЕНИЕ ПРОСТЫХ ПОЛЕЙ ----------
   function readFormField(def, control) {
     if (def.type === 'checkbox') {
@@ -1779,6 +1904,13 @@
     }
     if (def.type === 'blocks') {
       const ed = createBlocksArrayEditor();
+      const row = h('div', { class: 'form-field' });
+      row.appendChild(h('label', { textContent: def.label }));
+      row.appendChild(ed.el);
+      return { el: row, getValue: ed.getValue, setValue: ed.setValue, getStateValue: () => undefined };
+    }
+    if (def.type === 'treelist') {
+      const ed = createTreeListEditor();
       const row = h('div', { class: 'form-field' });
       row.appendChild(h('label', { textContent: def.label }));
       row.appendChild(ed.el);
@@ -3158,13 +3290,13 @@
 }</code></pre>
       <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования).</p>
       <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
-      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты типа блока (включая незаполненные), а для блока <code>graph</code> поля скрываются в зависимости от режима (2d/3d, обычное/параметрическое уравнение). Вложенные массивы редактируются как списки элементов, вложенные блоки — в таком же редакторе.</p>
+      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты типа блока (включая незаполненные), а для блока <code>graph</code> поля скрываются в зависимости от режима (2d/3d, обычное/параметрическое уравнение). Вложенные массивы редактируются как списки элементов, узлы дерева (<code>tree</code>) — с неограниченной вложенностью подузлов, вложенные блоки — в таком же редакторе.</p>
       <h4 style="color: #fff; margin-top: 10px;">График функции (тип <code>graph</code>)</h4>
       <p>2D (<code>y = f(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), параметрические кривые (<code>parametric: true</code> + <code>paramX/paramY/paramZ</code>, диапазоны <code>tMin/tMax</code>). Интерактивные параметры — массив <code>params</code> (поля <code>name</code>, <code>value</code>, <code>min</code>, <code>max</code>, <code>step</code>) отображаются как слайдеры. Имена параметров чувствительны к регистру: <code>a</code> и <code>A</code> — разные переменные. Функции: sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max и др.; константы: pi, e.</p>
       <h4 style="color: #fff; margin-top: 10px;">3D объект (тип <code>model3d</code>)</h4>
       <p>Просмотр 3D-моделей <code>.glb</code>/<code>.gltf</code>: по URL (поле <code>src</code>) или из локального файла — панель загрузки сворачивается под окном просмотра. Управление: вращение мышью, масштаб колёсиком, опция <code>autoRotate</code>. Для внешних URL требуется CORS; для .gltf с внешними текстурами рекомендуется .glb.</p>
       <h4 style="color: #fff; margin-top: 10px;">Дополнительные типы блоков</h4>
-      <p><code>flashcards</code> — колода карточек с перелистыванием; <code>checklist</code> — чек-лист с прогрессом; <code>quote</code> — цитата; <code>glossary</code> — глоссарий терминов; <code>equation</code> — формула KaTeX; <code>youtube</code> — видео YouTube (ID или ссылка); <code>kanban</code> — канбан-доска; <code>stats</code> — карточки показателей; <code>countdown</code> — таймер обратного отсчёта; <code>tree</code> — сворачиваемое дерево; <code>truefalse</code> — вопрос «верно/неверно»; <code>divider</code> — разделитель (line, dots, glow); <code>download</code> — кнопка скачивания файла.</p>
+      <p><code>flashcards</code> — колода карточек с перелистыванием; <code>checklist</code> — чек-лист с прогрессом; <code>quote</code> — цитата; <code>glossary</code> — глоссарий терминов; <code>equation</code> — формула KaTeX; <code>youtube</code> — видео YouTube (ID или ссылка); <code>kanban</code> — канбан-доска; <code>stats</code> — карточки показателей; <code>countdown</code> — таймер обратного отсчёта; <code>tree</code> — сворачиваемое дерево (вложенные узлы редактируются в форме); <code>truefalse</code> — вопрос «верно/неверно»; <code>divider</code> — разделитель (line, dots, glow); <code>download</code> — кнопка скачивания файла.</p>
       <p>Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
     `;
     content.appendChild(helpDiv);
@@ -3291,7 +3423,7 @@
 45. kanban: { "type": "kanban", "title": "Доска", "columns": [ { "title": "Колонка", "cards": ["Карточка 1"] } ] }
 46. stats: { "type": "stats", "title": "Показатели", "items": [ { "value": "42%", "label": "Подпись" } ] }
 47. countdown: { "type": "countdown", "title": "Таймер", "seconds": 300, "label": "Подпись" }
-48. tree: { "type": "tree", "title": "Дерево", "items": [ { "text": "Узел", "children": [ { "text": "Потомок" } ] } ] }
+48. tree: { "type": "tree", "title": "Дерево", "items": [ { "text": "Узел", "children": [ { "text": "Потомок" } ] } ] } // поле children — рекурсивный массив таких же узлов
 49. truefalse: { "type": "truefalse", "question": "Утверждение", "answer": true, "explanation": "Пояснение" }
 50. divider: { "type": "divider", "style": "line" } // style: line | dots | glow
 51. download: { "type": "download", "src": "URL файла", "label": "Скачать", "fileName": "file.pdf" }
