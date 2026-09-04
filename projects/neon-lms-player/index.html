@@ -12,6 +12,15 @@
 
 <!-- Mermaid -->
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+<!-- Plotly: графики функций 2D/3D -->
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.32.0/plotly.min.js"></script>
+
+<!-- Three.js: 3D-объекты (glb/gltf) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     if (window.mermaid) {
@@ -53,16 +62,8 @@
   #app { max-width: 1200px; margin: 0 auto; }
 
   .app-header {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 15px 20px;
-    margin-bottom: 20px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    flex-wrap: wrap;
+    display: flex; align-items: center; gap: 15px; padding: 15px 20px; margin-bottom: 20px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); flex-wrap: wrap;
   }
   .app-header .app-icon { font-size: 2.5em; line-height: 1; animation: glow 2s infinite alternate; }
   @keyframes glow {
@@ -443,10 +444,40 @@
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.02);
   }
-  .nested-block-info {
-    font-size: 0.83em; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
-  }
+  .nested-block-info { font-size: 0.83em; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
   .nested-block-btns { display: flex; gap: 4px; flex: 0 0 auto; }
+
+  /* ---------- ГРАФИК ФУНКЦИИ ---------- */
+  .graph-block { margin: 15px 0; }
+  .graph-plot {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(10,12,20,0.5);
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(0,240,255,0.15);
+  }
+  .graph-controls { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .graph-param { margin: 0; padding: 8px 10px; }
+  .graph-error { color: var(--pink); font-size: 0.85em; margin-top: 6px; white-space: pre-wrap; }
+  .graph-hint { color: var(--muted); font-size: 0.8em; margin-top: 6px; }
+
+  /* ---------- 3D ОБЪЕКТ ---------- */
+  .model3d-block { margin: 15px 0; }
+  .model3d-viewer {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(0,240,255,0.2);
+    background: #0a0c14;
+  }
+  .model3d-panel { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .model3d-url-row, .model3d-file-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .model3d-url-row input[type="text"] { flex: 1; min-width: 200px; }
+  .model3d-status { color: var(--muted); font-size: 0.85em; min-height: 1.2em; }
+  .model3d-status.ok { color: var(--green); }
+  .model3d-status.err { color: var(--pink); }
 
   @media (max-width: 600px) {
     .columns { flex-direction: column; }
@@ -744,7 +775,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.4.0' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.5.0' }));
     return header;
   }
 
@@ -1194,6 +1225,36 @@
     ],
     'html': [
       { key: 'code', label: 'code — произвольный HTML', type: 'textarea' }
+    ],
+    'graph': [
+      { key: 'title', label: 'title — заголовок графика', type: 'text' },
+      { key: 'mode', label: 'mode — режим графика', type: 'select', options: ['2d', '3d'] },
+      { key: 'parametric', label: 'parametric — параметрическое уравнение', type: 'checkbox', omitFalse: true },
+      { key: 'equation', label: 'equation — уравнение: 2D → y = f(x); 3D → z = f(x, y)', type: 'text' },
+      { key: 'paramX', label: 'paramX — x(t) для параметрического уравнения', type: 'text' },
+      { key: 'paramY', label: 'paramY — y(t) для параметрического уравнения', type: 'text' },
+      { key: 'paramZ', label: 'paramZ — z(t) для параметрической 3D-кривой', type: 'text' },
+      { key: 'rangeMin', label: 'rangeMin — мин. x', type: 'number' },
+      { key: 'rangeMax', label: 'rangeMax — макс. x', type: 'number' },
+      { key: 'rangeYMin', label: 'rangeYMin — мин. y (3D-поверхность)', type: 'number' },
+      { key: 'rangeYMax', label: 'rangeYMax — макс. y (3D-поверхность)', type: 'number' },
+      { key: 'tMin', label: 'tMin — мин. t (параметрический)', type: 'number' },
+      { key: 'tMax', label: 'tMax — макс. t (параметрический)', type: 'number' },
+      { key: 'points', label: 'points — число точек (по умолчанию 300)', type: 'number', min: 2, max: 500 },
+      { key: 'params', label: 'params — интерактивные параметры (слайдеры)', type: 'array', itemSchema: { kind: 'object', label: 'Параметр', fields: [
+        { key: 'name', label: 'name — имя параметра (например a)', type: 'text' },
+        { key: 'value', label: 'value — значение по умолчанию', type: 'number' },
+        { key: 'min', label: 'min — минимум слайдера', type: 'number' },
+        { key: 'max', label: 'max — максимум слайдера', type: 'number' },
+        { key: 'step', label: 'step — шаг слайдера', type: 'number' }
+      ] } }
+    ],
+    'model3d': [
+      { key: 'src', label: 'src — URL 3D-модели (.glb / .gltf)', type: 'text' },
+      { key: 'caption', label: 'caption — подпись', type: 'text' },
+      { key: 'height', label: 'height — высота окна просмотра (напр. 450px)', type: 'text' },
+      { key: 'background', label: 'background — цвет фона (напр. #0a0c14)', type: 'text' },
+      { key: 'autoRotate', label: 'autoRotate — автовращение (по умолчанию включено)', type: 'checkbox', defaultChecked: true, omitTrue: true }
     ]
   };
 
@@ -1216,7 +1277,7 @@
   function describeBlock(blk) {
     if (!blk || typeof blk !== 'object') return '?';
     const type = blk.type || '?';
-    const preview = blk.title || blk.text || blk.question || blk.caption || blk.label || blk.src || blk.front || blk.buttonText || blk.instruction || blk.code || '';
+    const preview = blk.title || blk.text || blk.question || blk.caption || blk.label || blk.equation || blk.src || blk.front || blk.buttonText || blk.instruction || blk.code || '';
     const p = String(preview).substring(0, 50);
     return '[' + type + ']' + (p ? ' ' + p : '');
   }
@@ -1606,7 +1667,6 @@
     let fieldControls = {};
     let formActive = true;
 
-    // Вкладки
     const tabsRow = h('div', { class: 'editor-tabs' });
     const formTabBtn = h('button', { class: 'editor-tab-btn active', type: 'button', textContent: '📋 Форма' });
     const jsonTabBtn = h('button', { class: 'editor-tab-btn', type: 'button', textContent: '{ } JSON' });
@@ -1625,7 +1685,6 @@
       formPanel.innerHTML = '';
       fieldControls = {};
 
-      // Поле типа (только чтение; тип можно поменять во вкладке JSON)
       const typeRow = h('div', { class: 'form-field' });
       typeRow.appendChild(h('label', { textContent: 'type — тип блока (изменяется во вкладке JSON)' }));
       const typeInput = h('input', { type: 'text' });
@@ -1726,7 +1785,6 @@
       showJsonTab();
     });
 
-    // Начальное состояние
     stateFromParsed(JSON.parse(JSON.stringify(initial)));
     textarea.value = JSON.stringify(initial, null, 2);
 
@@ -1954,6 +2012,518 @@
     });
   }
 
+  // ---------- ПАРСЕР МАТЕМАТИЧЕСКИХ ВЫРАЖЕНИЙ (ДЛЯ ГРАФИКОВ) ----------
+  function compileMathExpression(src, allowedVars) {
+    const str = String(src).replace(/\s+/g, '');
+    if (str === '') throw new Error('пустое выражение');
+    let pos = 0;
+
+    const FUNC1 = {
+      sin: Math.sin, cos: Math.cos, tan: Math.tan,
+      asin: Math.asin, acos: Math.acos, atan: Math.atan,
+      sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh,
+      sqrt: Math.sqrt, abs: Math.abs, exp: Math.exp,
+      floor: Math.floor, ceil: Math.ceil, round: Math.round, sign: Math.sign,
+      ln: (v) => Math.log(v),
+      log: (v) => Math.log(v) / Math.LN10
+    };
+    const FUNC2 = { pow: Math.pow, atan2: Math.atan2, min: Math.min, max: Math.max };
+    const CONSTS = { pi: Math.PI, e: Math.E };
+
+    function peek() { return str[pos]; }
+
+    function readName() {
+      const start = pos;
+      while (pos < str.length && /[a-zA-Z_]/.test(str[pos])) pos++;
+      return str.slice(start, pos).toLowerCase();
+    }
+
+    function parseExpr() { return parseAdd(); }
+
+    function parseAdd() {
+      let node = parseMul();
+      while (peek() === '+' || peek() === '-') {
+        const op = str[pos++];
+        const rhs = parseMul();
+        const l = node, r = rhs, o = op;
+        node = (env) => o === '+' ? l(env) + r(env) : l(env) - r(env);
+      }
+      return node;
+    }
+
+    function isImplicitMulStart() {
+      const c = peek();
+      return c !== undefined && /[0-9a-zA-Z_(]/.test(c);
+    }
+
+    function parseMul() {
+      let node = parseUnary();
+      for (;;) {
+        const c = peek();
+        if (c === '*' || c === '/') {
+          const op = str[pos++];
+          const rhs = parseUnary();
+          const l = node, r = rhs, o = op;
+          node = (env) => o === '*' ? l(env) * r(env) : l(env) / r(env);
+        } else if (isImplicitMulStart()) {
+          const rhs = parseUnary();
+          const l = node, r = rhs;
+          node = (env) => l(env) * r(env);
+        } else {
+          break;
+        }
+      }
+      return node;
+    }
+
+    function parseUnary() {
+      if (peek() === '-') { pos++; const n = parseUnary(); return (env) => -n(env); }
+      if (peek() === '+') { pos++; return parseUnary(); }
+      return parsePower();
+    }
+
+    function parsePower() {
+      const base = parseAtom();
+      if (peek() === '^') {
+        pos++;
+        const exp = parseUnary();
+        return (env) => Math.pow(base(env), exp(env));
+      }
+      return base;
+    }
+
+    function parseAtom() {
+      const c = peek();
+      if (c === undefined) throw new Error('неожиданный конец выражения');
+      if (c === '(') {
+        pos++;
+        const node = parseExpr();
+        if (peek() !== ')') throw new Error('ожидается ")"');
+        pos++;
+        return node;
+      }
+      if (/[0-9.]/.test(c)) {
+        const start = pos;
+        while (pos < str.length && /[0-9.]/.test(str[pos])) pos++;
+        const num = parseFloat(str.slice(start, pos));
+        if (isNaN(num)) throw new Error('некорректное число');
+        return () => num;
+      }
+      if (/[a-zA-Z_]/.test(c)) {
+        const name = readName();
+        if (peek() === '(') {
+          pos++;
+          const args = [parseExpr()];
+          while (peek() === ',') { pos++; args.push(parseExpr()); }
+          if (peek() !== ')') throw new Error('ожидается ")" после аргументов функции');
+          pos++;
+          if (FUNC2[name]) {
+            if (args.length !== 2) throw new Error('функция ' + name + ' требует 2 аргумента');
+            const f = FUNC2[name], a0 = args[0], a1 = args[1];
+            return (env) => f(a0(env), a1(env));
+          }
+          if (FUNC1[name]) {
+            if (args.length !== 1) throw new Error('функция ' + name + ' требует 1 аргумент');
+            const f = FUNC1[name], a0 = args[0];
+            return (env) => f(a0(env));
+          }
+          throw new Error('неизвестная функция: ' + name);
+        }
+        if (CONSTS.hasOwnProperty(name)) { const v = CONSTS[name]; return () => v; }
+        if (allowedVars.indexOf(name) !== -1) {
+          return (env) => {
+            const v = env[name];
+            return typeof v === 'number' ? v : NaN;
+          };
+        }
+        throw new Error('неизвестная переменная: ' + name);
+      }
+      throw new Error('неожиданный символ: ' + c);
+    }
+
+    const compiled = parseExpr();
+    if (pos < str.length) throw new Error('лишние символы в конце выражения');
+    return compiled;
+  }
+
+  function toNum(v, def) {
+    const n = Number(v);
+    return isNaN(n) ? def : n;
+  }
+
+  function toPointCount(v, def) {
+    const n = parseInt(v, 10);
+    if (isNaN(n) || n < 2) return def;
+    return Math.min(n, 500);
+  }
+
+  const PLOTLY_CONFIG = { responsive: true, displaylogo: false };
+
+  function plotlyLayout2d() {
+    return {
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      plot_bgcolor: 'rgba(10,12,20,0.6)',
+      font: { color: '#d5e5ff' },
+      margin: { l: 50, r: 15, t: 15, b: 40 },
+      height: 380,
+      xaxis: { gridcolor: 'rgba(0,240,255,0.15)', zerolinecolor: 'rgba(0,240,255,0.4)' },
+      yaxis: { gridcolor: 'rgba(0,240,255,0.15)', zerolinecolor: 'rgba(0,240,255,0.4)' }
+    };
+  }
+
+  function plotlyLayout3d() {
+    return {
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      font: { color: '#d5e5ff' },
+      margin: { l: 0, r: 0, t: 0, b: 0 },
+      height: 440,
+      scene: {
+        bgcolor: 'rgba(10,12,20,0.9)',
+        xaxis: { gridcolor: 'rgba(0,240,255,0.2)', color: '#d5e5ff' },
+        yaxis: { gridcolor: 'rgba(0,240,255,0.2)', color: '#d5e5ff' },
+        zaxis: { gridcolor: 'rgba(0,240,255,0.2)', color: '#d5e5ff' }
+      }
+    };
+  }
+
+  // ---------- БЛОК: ГРАФИК ФУНКЦИИ (2D/3D) ----------
+  function renderGraphBlock(block) {
+    const element = h('div', { class: 'graph-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+
+    if (!window.Plotly) {
+      element.appendChild(h('p', { class: 'block-note', textContent: '⚠ Библиотека Plotly не загрузилась — график недоступен.' }));
+      return element;
+    }
+
+    const mode = block.mode === '3d' ? '3d' : '2d';
+    const parametric = !!block.parametric;
+    const params = Array.isArray(block.params) ? block.params.filter(p => p && p.name) : [];
+    const paramValues = {};
+    params.forEach(p => { paramValues[p.name] = toNum(p.value, 0); });
+    const varNames = Object.keys(paramValues);
+
+    const plotDiv = h('div', { class: 'graph-plot' });
+    element.appendChild(plotDiv);
+
+    if (params.length > 0) {
+      const controls = h('div', { class: 'graph-controls' });
+      params.forEach(p => {
+        const row = h('div', { class: 'slider-container graph-param' });
+        const labelRow = h('div', { class: 'slider-label' });
+        labelRow.appendChild(h('span', { textContent: 'Параметр ' + p.name }));
+        const valueSpan = h('span', { class: 'slider-value', textContent: String(paramValues[p.name]) });
+        labelRow.appendChild(valueSpan);
+        row.appendChild(labelRow);
+        const input = h('input', {
+          type: 'range', class: 'slider-input',
+          min: toNum(p.min, -10),
+          max: toNum(p.max, 10),
+          step: toNum(p.step, 0.1),
+          value: paramValues[p.name]
+        });
+        input.addEventListener('input', () => {
+          paramValues[p.name] = parseFloat(input.value);
+          valueSpan.textContent = input.value;
+          redraw();
+        });
+        row.appendChild(input);
+        controls.appendChild(row);
+      });
+      element.appendChild(controls);
+    }
+
+    const errBox = h('div', { class: 'graph-error' });
+    element.appendChild(errBox);
+    element.appendChild(h('p', { class: 'graph-hint', textContent: 'Синтаксис: + − * / ^, скобки; функции sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max …; константы pi, e. Примеры: a*sin(x), x^2 + b, sin(x)*cos(y), { x(t)=cos(t), y(t)=sin(t) }.' }));
+
+    function envFor(extra) {
+      const env = {};
+      varNames.forEach(k => { env[k] = paramValues[k]; });
+      if (extra) Object.keys(extra).forEach(k => { env[k] = extra[k]; });
+      return env;
+    }
+
+    function redraw() {
+      errBox.textContent = '';
+      try {
+        if (mode === '2d') {
+          if (parametric) {
+            const fx = compileMathExpression(block.paramX || 't', ['t'].concat(varNames));
+            const fy = compileMathExpression(block.paramY || 't', ['t'].concat(varNames));
+            const tMin = toNum(block.tMin, 0);
+            const tMax = toNum(block.tMax, 2 * Math.PI);
+            const n = toPointCount(block.points, 300);
+            const xs = [], ys = [];
+            for (let i = 0; i <= n; i++) {
+              const t = tMin + (tMax - tMin) * i / n;
+              xs.push(fx(envFor({ t: t })));
+              ys.push(fy(envFor({ t: t })));
+            }
+            Plotly.react(plotDiv, [{ x: xs, y: ys, type: 'scatter', mode: 'lines', line: { color: '#00f0ff', width: 3 } }], plotlyLayout2d(), PLOTLY_CONFIG);
+          } else {
+            const f = compileMathExpression(block.equation || 'x', ['x'].concat(varNames));
+            const xMin = toNum(block.rangeMin, -10);
+            const xMax = toNum(block.rangeMax, 10);
+            const n = toPointCount(block.points, 300);
+            const xs = [], ys = [];
+            for (let i = 0; i <= n; i++) {
+              const x = xMin + (xMax - xMin) * i / n;
+              xs.push(x);
+              ys.push(f(envFor({ x: x })));
+            }
+            Plotly.react(plotDiv, [{ x: xs, y: ys, type: 'scatter', mode: 'lines', line: { color: '#00f0ff', width: 3 } }], plotlyLayout2d(), PLOTLY_CONFIG);
+          }
+        } else {
+          if (parametric) {
+            if (!block.paramX || !block.paramY || !block.paramZ) {
+              throw new Error('для параметрической 3D-кривой задайте paramX, paramY и paramZ');
+            }
+            const fx = compileMathExpression(block.paramX, ['t'].concat(varNames));
+            const fy = compileMathExpression(block.paramY, ['t'].concat(varNames));
+            const fz = compileMathExpression(block.paramZ, ['t'].concat(varNames));
+            const tMin = toNum(block.tMin, 0);
+            const tMax = toNum(block.tMax, 4 * Math.PI);
+            const n = toPointCount(block.points, 300);
+            const xs = [], ys = [], zs = [];
+            for (let i = 0; i <= n; i++) {
+              const t = tMin + (tMax - tMin) * i / n;
+              xs.push(fx(envFor({ t: t })));
+              ys.push(fy(envFor({ t: t })));
+              zs.push(fz(envFor({ t: t })));
+            }
+            Plotly.react(plotDiv, [{ x: xs, y: ys, z: zs, type: 'scatter3d', mode: 'lines', line: { color: '#00f0ff', width: 4 } }], plotlyLayout3d(), PLOTLY_CONFIG);
+          } else {
+            const f = compileMathExpression(block.equation || 'sin(x)*cos(y)', ['x', 'y'].concat(varNames));
+            const xMin = toNum(block.rangeMin, -5);
+            const xMax = toNum(block.rangeMax, 5);
+            const yMin = toNum(block.rangeYMin, -5);
+            const yMax = toNum(block.rangeYMax, 5);
+            const g = Math.min(toPointCount(block.points, 40), 80);
+            const xArr = [], yArr = [], zGrid = [];
+            for (let i = 0; i <= g; i++) xArr.push(xMin + (xMax - xMin) * i / g);
+            for (let j = 0; j <= g; j++) yArr.push(yMin + (yMax - yMin) * j / g);
+            for (let j = 0; j <= g; j++) {
+              const rowArr = [];
+              for (let i = 0; i <= g; i++) {
+                rowArr.push(f(envFor({ x: xArr[i], y: yArr[j] })));
+              }
+              zGrid.push(rowArr);
+            }
+            Plotly.react(plotDiv, [{ x: xArr, y: yArr, z: zGrid, type: 'surface', colorscale: 'Viridis' }], plotlyLayout3d(), PLOTLY_CONFIG);
+          }
+        }
+      } catch (e) {
+        errBox.textContent = 'Ошибка построения графика: ' + e.message;
+      }
+    }
+
+    // Первая отрисовка — только когда элемент появится в DOM
+    function initialDraw() {
+      if (plotDiv.isConnected) {
+        redraw();
+      } else {
+        requestAnimationFrame(initialDraw);
+      }
+    }
+    requestAnimationFrame(initialDraw);
+
+    return element;
+  }
+
+  // ---------- БЛОК: 3D ОБЪЕКТ (GLB/GLTF) ----------
+  function renderModel3DBlock(block) {
+    const element = h('div', { class: 'model3d-block' });
+
+    const viewer = h('div', { class: 'model3d-viewer' });
+    viewer.style.height = block.height || '450px';
+    element.appendChild(viewer);
+
+    const panel = h('div', { class: 'model3d-panel' });
+
+    const urlRow = h('div', { class: 'model3d-url-row' });
+    const urlInput = h('input', { type: 'text', class: 'fill-blank-input', placeholder: 'URL модели .glb / .gltf' });
+    urlInput.value = block.src || '';
+    const loadUrlBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Загрузить по URL', style: 'margin-top:0;' });
+    urlRow.appendChild(urlInput);
+    urlRow.appendChild(loadUrlBtn);
+    panel.appendChild(urlRow);
+
+    const fileRow = h('div', { class: 'model3d-file-row' });
+    const fileInput = h('input', { type: 'file', accept: '.glb,.gltf,model/gltf-binary,model/gltf+json', style: 'display:none;' });
+    const fileBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '📁 Открыть файл .glb / .gltf', style: 'margin-top:0;' });
+    fileBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const objectUrl = URL.createObjectURL(file);
+      loadModel(objectUrl, file.name, true);
+      fileInput.value = '';
+    });
+    fileRow.appendChild(fileInput);
+    fileRow.appendChild(fileBtn);
+    panel.appendChild(fileRow);
+
+    const statusEl = h('div', { class: 'model3d-status' });
+    panel.appendChild(statusEl);
+    element.appendChild(panel);
+
+    if (block.caption) {
+      element.appendChild(h('div', { class: 'svg-caption', textContent: block.caption }));
+    }
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text || '';
+      statusEl.classList.remove('ok', 'err');
+      if (kind) statusEl.classList.add(kind);
+    }
+
+    if (!window.THREE || !window.THREE.GLTFLoader || !window.THREE.OrbitControls) {
+      setStatus('⚠ Библиотека Three.js не загрузилась — 3D-просмотр недоступен.', 'err');
+      return element;
+    }
+
+    let scene, camera, renderer, controls;
+    try {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(block.background || '#0a0c14');
+
+      camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000);
+      camera.position.set(3, 2, 5);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio || 1);
+      renderer.domElement.style.display = 'block';
+      viewer.appendChild(renderer.domElement);
+
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x223344, 1.0));
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+      dirLight.position.set(5, 10, 7);
+      scene.add(dirLight);
+
+      const grid = new THREE.GridHelper(10, 20, 0x00f0ff, 0x113344);
+      grid.material.opacity = 0.25;
+      grid.material.transparent = true;
+      scene.add(grid);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.autoRotate = block.autoRotate !== false;
+    } catch (e) {
+      setStatus('⚠ Не удалось инициализировать WebGL: ' + e.message, 'err');
+      return element;
+    }
+
+    function resize() {
+      const w = viewer.clientWidth;
+      const hh = viewer.clientHeight;
+      if (w === 0 || hh === 0) return;
+      camera.aspect = w / hh;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, hh);
+    }
+    resize();
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(resize);
+      ro.observe(viewer);
+    }
+
+    let currentModel = null;
+    let lastObjectUrl = null;
+
+    function clearModel() {
+      if (currentModel) {
+        scene.remove(currentModel);
+        currentModel.traverse(obj => {
+          if (obj.geometry) obj.geometry.dispose();
+          if (obj.material) {
+            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+            mats.forEach(m => m.dispose());
+          }
+        });
+        currentModel = null;
+      }
+      if (lastObjectUrl) {
+        URL.revokeObjectURL(lastObjectUrl);
+        lastObjectUrl = null;
+      }
+    }
+
+    function fitCameraToObject() {
+      const box = new THREE.Box3().setFromObject(currentModel);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z) || 1;
+      currentModel.position.sub(center);
+      const dist = maxDim * 1.8;
+      camera.position.set(dist, dist * 0.6, dist);
+      camera.near = maxDim / 100;
+      camera.far = maxDim * 100;
+      camera.updateProjectionMatrix();
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+
+    const loader = new THREE.GLTFLoader();
+
+    function loadModel(url, name, isObjectUrl) {
+      setStatus('Загрузка: ' + (name || url) + ' …');
+      loader.load(url, (gltf) => {
+        clearModel();
+        if (isObjectUrl) lastObjectUrl = url;
+        currentModel = gltf.scene || (gltf.scenes && gltf.scenes[0]);
+        if (!currentModel) {
+          setStatus('✖ В файле не найдено 3D-сцены.', 'err');
+          return;
+        }
+        scene.add(currentModel);
+        fitCameraToObject();
+        setStatus('✔ Модель загружена: ' + (name || url), 'ok');
+      }, undefined, (err) => {
+        console.error('GLTF load error:', err);
+        setStatus('✖ Ошибка загрузки модели. Проверьте URL/файл (для .gltf с внешними ресурсами используйте .glb, для внешних URL требуется CORS).', 'err');
+      });
+    }
+
+    loadUrlBtn.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (!url) {
+        setStatus('Укажите URL модели.', 'err');
+        return;
+      }
+      loadModel(url, null, false);
+    });
+
+    function animate() {
+      if (!viewer.isConnected) {
+        renderer.dispose();
+        return;
+      }
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    function waitConnected() {
+      if (viewer.isConnected) {
+        resize();
+        animate();
+      } else {
+        requestAnimationFrame(waitConnected);
+      }
+    }
+    requestAnimationFrame(waitConnected);
+
+    if (block.src) {
+      loadModel(block.src, null, false);
+    } else {
+      setStatus('Укажите URL модели или откройте локальный файл .glb / .gltf.');
+    }
+
+    return element;
+  }
+
   // ---------- СПРАВКА И ГЕНЕРАЦИЯ ПРОМПТА ----------
   function openHelpModal() {
     const overlay = h('div', { class: 'modal-overlay' });
@@ -1971,14 +2541,6 @@
       <p><strong>Автозагрузка через URL:</strong> Добавьте параметр <code>?url=ссылка</code> (или <code>?source=</code>, <code>?course=</code>) в адресную строку, и плеер автоматически загрузит данные по этой ссылке при открытии страницы.</p>
       <h4 style="color: #fff; margin-top: 10px;">Режимы работы</h4>
       <p>Переключатель в верхней панели позволяет выбрать режим: <strong>✏ Режим редактирования</strong> — доступны панели редактирования блоков (наведите курсор на блок), кнопки добавления блоков и редакторы; <strong>👁 Режим просмотра</strong> — чистый просмотр без кнопок редактирования. Выбранный режим запоминается.</p>
-      <h4 style="color: #fff; margin-top: 10px;">Форматы входных данных</h4>
-      <ul>
-        <li>Одиночный курс: <code>{ "meta": ..., "lessons": ... }</code></li>
-        <li>Массив курсов: <code>[ {курс1}, {курс2}, ... ]</code></li>
-        <li>Массив URL: <code>[ "url1", "url2", ... ]</code></li>
-        <li>Объект с курсами: <code>{ "courses": [ {курс1}, {курс2}, ... ] }</code></li>
-        <li>Объект с URL: <code>{ "courses": [ "url1", "url2", ... ] }</code></li>
-      </ul>
       <h4 style="color: #fff; margin-top: 10px;">Структура курса</h4>
       <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>{
   "meta": {
@@ -1998,11 +2560,14 @@
     }
   ]
 }</code></pre>
-      <p>Полный список типов блоков смотрите в расширенной справке или JSON-схеме.</p>
       <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования).</p>
       <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
       <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок.</p>
-      <p>Редактор блока содержит две вкладки: <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты данного типа блока (включая незаполненные). Вложенные массивы (items, options, pairs, tabs, segments и др.) редактируются как списки элементов с кнопками добавления, удаления и перемещения. Вложенные массивы блоков (content, children, left, right и др.) редактируются по одному: каждый вложенный блок открывается в таком же редакторе «Форма/JSON». Значения синхронизируются при переключении вкладок. Атрибуты, не входящие в стандартную схему, сохраняются автоматически.</p>
+      <p>Редактор блока содержит две вкладки: <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты данного типа блока (включая незаполненные). Вложенные массивы редактируются как списки элементов, вложенные блоки — в таком же редакторе. Значения синхронизируются при переключении вкладок.</p>
+      <h4 style="color: #fff; margin-top: 10px;">График функции (тип <code>graph</code>)</h4>
+      <p>Построение графиков по уравнению: 2D (<code>y = f(x)</code>, например <code>a*sin(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), а также параметрические кривые (<code>parametric: true</code>, поля <code>paramX</code>/<code>paramY</code>/<code>paramZ</code>, диапазоны <code>tMin</code>/<code>tMax</code>). Поддерживаются интерактивные параметры — массив <code>params</code> с полями <code>name</code>, <code>value</code>, <code>min</code>, <code>max</code>, <code>step</code> — они отображаются как слайдеры и подставляются в уравнение. Допустимые функции: sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max и др.; константы: pi, e.</p>
+      <h4 style="color: #fff; margin-top: 10px;">3D объект (тип <code>model3d</code>)</h4>
+      <p>Просмотр 3D-моделей в формате <code>.glb</code>/<code>.gltf</code>: по URL (поле <code>src</code>) или из локального файла (кнопка «Открыть файл»). Управление: вращение мышью, масштаб колёсиком, опция <code>autoRotate</code>. Для внешних URL требуется поддержка CORS; для .gltf с внешними текстурами рекомендуется использовать .glb.</p>
       <p>Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
     `;
     content.appendChild(helpDiv);
@@ -2137,6 +2702,11 @@
 34. progress-tracker: { "type": "progress-tracker", "tasks": [ { "label": "Задача 1" }, ... ] }
 35. svg: { "type": "svg", "code": "<svg xmlns=\\"http://www.w3.org/2000/svg\\">...</svg>", "caption": "Подпись (необязательно)" }
 36. html: { "type": "html", "code": "<div style=\\"...\\">...</div>" }
+37. graph: { "type": "graph", "title": "График", "mode": "2d", "parametric": false, "equation": "a*sin(x)", "paramX": "cos(t)", "paramY": "sin(t)", "paramZ": "t", "rangeMin": -10, "rangeMax": 10, "rangeYMin": -5, "rangeYMax": 5, "tMin": 0, "tMax": 6.28, "points": 300, "params": [ { "name": "a", "value": 1, "min": 0, "max": 5, "step": 0.1 } ] }
+    // mode: "2d" — y = f(x) по полю equation; "3d" — поверхность z = f(x, y) по equation, либо параметрическая 3D-кривая при "parametric": true (нужны paramX, paramY, paramZ).
+    // Уравнения: переменные x, y, t; параметры из массива params; функции sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max, atan2 и др.; константы pi, e; операции + - * / ^.
+38. model3d: { "type": "model3d", "src": "https://example.com/model.glb", "caption": "Подпись", "height": "450px", "background": "#0a0c14", "autoRotate": true }
+    // 3D-модель формата .glb/.gltf по URL; локальный файл можно открыть кнопкой в самом блоке.
 `;
 
     const prompt = `Ты — эксперт по созданию интерактивных образовательных курсов. Создай JSON-файл курса на тему "${topic}" для LMS-плеера.
@@ -2147,7 +2717,7 @@
 - Основной упор — на теоретический материал, практика второстепенна.
 - Наибольшее количество текстовых блоков, но они не должны идти друг за другом; лучше расширять содержание каждого блока (делать блоки крупнее, а не плодить много мелких).
 - Теоретическое повествование — основное, практика менее важна.
-- Используй разнообразные типы блоков: текст, изображения, видео (если возможно), викторины, сопоставления, диаграммы, таблицы, аккордеоны и т.д.
+- Используй разнообразные типы блоков: текст, изображения, видео (если возможно), викторины, сопоставления, диаграммы, таблицы, аккордеоны, графики функций (graph) и 3D-модели (model3d), где это уместно.
 - Отдавай предпочтение иллюстрациям mermaid и svg для визуализации.
 - Используй формулы KaTeX при необходимости.
 - Блоки кода преимущественно размещай внутри блока modal.
@@ -2155,7 +2725,7 @@
 - Не добавляй комментарии в JSON.
 - Обязательно включи блоки quiz, fill-blank, и хотя бы один диаграмму (chart или pie).
 - Метаданные должны быть заполнены реалистично, в качестве автора укажи себя (например, "AI Assistant").
-- Все URL изображений/видео должны быть рабочими (используй https://picsum.photos для изображений, если нужно).
+- Все URL изображений/видео/3D-моделей должны быть рабочими (используй https://picsum.photos для изображений, если нужно).
 - При желании можешь добавить кастомную тему через meta.theme.
 - SVG-код должен быть валидным и не содержать скриптов (безопасность).
 - HTML-код должен быть корректным и не содержать скриптов.
@@ -2164,6 +2734,7 @@
 - Для вставки математических формул в текстовых блоках (type: "text") используй синтаксис KaTeX: inline формулы заключай в \\(...\\), display формулы — в \\[...\\]. Также можно использовать $...$ для inline и $$...$$ для display.
 - В HTML-блоках (type: "html") формулы можно вставлять внутри HTML-кода, используя те же разделители KaTeX. Например: <p>Скорость равна \\(v = \\frac{s}{t}\\)</p>.
 - Если теоретический материал содержит много абзацев или требует расширенного форматирования (списки, выделение, таблицы), используй блок "html" с соответствующими HTML-тегами, а не множественные блоки "text".
+- Для визуализации математических зависимостей используй блок "graph": задавай уравнения (например "a*sin(x)", "x^2 + y^2") и интерактивные параметры через массив "params".
 
 РАЗМЕРЫ БЛОКОВ:
 - Любой блок может содержать поля width, height, maxWidth, maxHeight, minWidth, minHeight для явного указания размеров (CSS-значения, например "500px", "80%", "auto").
@@ -2195,7 +2766,6 @@ ${schema}
     promptBtn.addEventListener('click', openPromptGenerator);
     buttonsContainer.appendChild(promptBtn);
 
-    // Переключатель режима редактирования / просмотра
     buttonsContainer.appendChild(renderModeToggle());
 
     app.appendChild(buttonsContainer);
@@ -3105,6 +3675,12 @@ ${schema}
           step.addEventListener('click', () => step.classList.toggle('done'));
           element.appendChild(step);
         });
+        break;
+      case 'graph':
+        element = renderGraphBlock(block);
+        break;
+      case 'model3d':
+        element = renderModel3DBlock(block);
         break;
       default:
         console.warn('Unknown block type:', block.type);
