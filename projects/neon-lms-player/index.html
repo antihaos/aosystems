@@ -64,79 +64,35 @@
     box-shadow: var(--shadow);
     flex-wrap: wrap;
   }
-  .app-header .app-icon {
-    font-size: 2.5em;
-    line-height: 1;
-    animation: glow 2s infinite alternate;
-  }
+  .app-header .app-icon { font-size: 2.5em; line-height: 1; animation: glow 2s infinite alternate; }
   @keyframes glow {
     from { text-shadow: 0 0 5px var(--cyan), 0 0 10px var(--cyan); }
     to { text-shadow: 0 0 15px var(--cyan), 0 0 30px var(--cyan); }
   }
   .app-header .app-info { flex: 1; min-width: 200px; }
-  .app-header .app-name {
-    font-size: 1.5em;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 0 0 10px var(--cyan);
-  }
+  .app-header .app-name { font-size: 1.5em; font-weight: bold; color: #fff; text-shadow: 0 0 10px var(--cyan); }
   .app-header .app-description { color: var(--muted); font-size: 0.9em; }
   .app-header .app-version {
-    padding: 4px 10px;
-    border: 1px solid var(--cyan);
-    border-radius: 20px;
-    background: rgba(0,240,255,0.1);
-    color: var(--cyan);
-    font-size: 0.85em;
-    white-space: nowrap;
+    padding: 4px 10px; border: 1px solid var(--cyan); border-radius: 20px;
+    background: rgba(0,240,255,0.1); color: var(--cyan); font-size: 0.85em; white-space: nowrap;
   }
 
   .course-header {
-    text-align: center;
-    padding: 40px 20px 30px;
-    margin-bottom: 30px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    text-align: center; padding: 40px 20px 30px; margin-bottom: 30px;
+    border-bottom: 1px solid var(--border); display: flex; flex-direction: column; align-items: center;
   }
-  .course-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-  }
-  .course-header h1 {
-    font-size: 2.5em;
-    color: #fff;
-    text-shadow: 0 0 15px var(--cyan), 0 0 30px var(--cyan);
-  }
+  .course-title-row { display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; }
+  .course-header h1 { font-size: 2.5em; color: #fff; text-shadow: 0 0 15px var(--cyan), 0 0 30px var(--cyan); }
   .course-header .description { color: var(--muted); margin: 10px 0; }
   .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
   .badge { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: rgba(0,240,255,0.1); color: var(--cyan); font-size: 0.9em; }
 
   .edit-course-btn {
-    background: rgba(0,240,255,0.1);
-    border: 1px solid var(--cyan);
-    color: var(--cyan);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 1.5em;
-    line-height: 1;
-    padding: 6px 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
+    background: rgba(0,240,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); border-radius: 6px;
+    cursor: pointer; transition: all 0.3s; font-size: 1.5em; line-height: 1; padding: 6px 10px;
+    display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px;
   }
-  .edit-course-btn:hover {
-    background: rgba(0,240,255,0.2);
-    box-shadow: 0 0 10px rgba(0,240,255,0.3);
-    transform: translateY(-2px);
-  }
+  .edit-course-btn:hover { background: rgba(0,240,255,0.2); box-shadow: 0 0 10px rgba(0,240,255,0.3); transform: translateY(-2px); }
 
   .lessons-nav { display: flex; gap: 10px; flex-wrap: wrap; margin: 20px 0; padding: 15px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); }
   .lesson-btn { padding: 8px 16px; border: 1px solid var(--border); border-radius: 20px; background: transparent; color: var(--text); cursor: pointer; transition: all 0.3s; font-size: 0.95em; }
@@ -184,10 +140,7 @@
   .tab-panel { display: none; padding: 15px; border: 1px solid var(--border); border-radius: 0 0 6px 6px; background: rgba(255,255,255,0.02); }
   .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
   .accordion { margin: 15px 0; }
   .accordion-item { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; overflow: hidden; transition: border-color 0.3s; }
@@ -213,14 +166,8 @@
 
   .match-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
   .match-item .term { min-width: 120px; }
-  .match-item select {
-    background: #0a0c14; color: var(--text); border: 1px solid var(--border);
-    border-radius: 4px; padding: 4px 8px; cursor: pointer; outline: none;
-    transition: border-color 0.3s, box-shadow 0.3s;
-  }
-  .match-item select:hover, .match-item select:focus {
-    border-color: var(--cyan); box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
-  }
+  .match-item select { background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 4px 8px; cursor: pointer; outline: none; transition: border-color 0.3s, box-shadow 0.3s; }
+  .match-item select:hover, .match-item select:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0, 240, 255, 0.3); }
   .sort-list { list-style: none; padding: 0; margin: 10px 0; }
   .sort-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 6px; margin: 5px 0; transition: all 0.2s; }
   .sort-item:hover { background: rgba(255,255,255,0.05); }
@@ -274,22 +221,11 @@
 
   .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; }
   .modal-content {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    max-width: 600px;
-    width: 90%;
-    position: relative;
-    box-shadow: 0 0 30px rgba(0,240,255,0.3);
-    animation: slideUp 0.3s ease;
-    max-height: 80vh;
-    overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px;
+    max-width: 600px; width: 90%; position: relative; box-shadow: 0 0 30px rgba(0,240,255,0.3);
+    animation: slideUp 0.3s ease; max-height: 80vh; overflow-y: auto;
   }
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   .modal-close { position: absolute; top: 10px; right: 15px; background: none; border: none; color: var(--text); font-size: 1.5em; cursor: pointer; transition: color 0.3s; }
   .modal-close:hover { color: var(--pink); }
   .modal-open-btn { padding: 8px 16px; background: rgba(0,240,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); border-radius: 6px; cursor: pointer; transition: all 0.3s; }
@@ -318,18 +254,7 @@
 
   .mermaid { background: #0a0c14; padding: 10px; border-radius: 8px; overflow-x: auto; }
 
-  .speed-control {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: 10px auto;
-    padding: 4px 8px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    width: fit-content;
-  }
+  .speed-control { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 10px auto; padding: 4px 8px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); border-radius: 20px; width: fit-content; }
   .speed-control label { font-size: 0.85em; color: var(--muted); }
   .speed-control select { background: #0a0c14; color: var(--text); border: none; border-radius: 12px; padding: 4px 8px; cursor: pointer; outline: none; font-size: 0.9em; transition: box-shadow 0.3s; }
   .speed-control select:hover, .speed-control select:focus { box-shadow: 0 0 8px rgba(0, 240, 255, 0.4); }
@@ -345,14 +270,7 @@
   .svg-wrapper svg { width: 100%; height: auto; display: block; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 0 12px rgba(0,240,255,0.2); cursor: zoom-in; }
   .svg-caption { color: var(--muted); font-size: 0.9em; margin-top: 8px; }
 
-  .html-block {
-    margin: 15px 0;
-    padding: 15px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: rgba(255,255,255,0.02);
-    overflow-x: auto;
-  }
+  .html-block { margin: 15px 0; padding: 15px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.02); overflow-x: auto; }
   .html-block > *:first-child { margin-top: 0; }
   .html-block > *:last-child { margin-bottom: 0; }
 
@@ -360,167 +278,49 @@
   .saved-course-item { display: flex; gap: 10px; align-items: center; margin: 5px 0; }
 
   .toggle-manager-btn {
-    display: inline-block;
-    padding: 8px 16px;
-    background: transparent;
-    border: 1px solid var(--cyan);
-    color: var(--cyan);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-bottom: 10px;
-    font-family: inherit;
-    font-size: 0.95em;
+    display: inline-block; padding: 8px 16px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan);
+    border-radius: 6px; cursor: pointer; transition: all 0.3s; margin-bottom: 10px; font-family: inherit; font-size: 0.95em;
   }
-  .toggle-manager-btn:hover {
-    background: rgba(0,240,255,0.1);
-    box-shadow: 0 0 10px rgba(0,240,255,0.3);
-    transform: translateY(-2px);
-  }
+  .toggle-manager-btn:hover { background: rgba(0,240,255,0.1); box-shadow: 0 0 10px rgba(0,240,255,0.3); transform: translateY(-2px); }
 
   /* ---------- ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМА ---------- */
   .mode-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    cursor: pointer;
-    user-select: none;
-    transition: all .3s;
-    margin-bottom: 10px;
-    background: var(--panel);
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+    border: 1px solid var(--border); border-radius: 20px; cursor: pointer; user-select: none;
+    transition: all .3s; margin-bottom: 10px; background: var(--panel);
   }
-  .mode-toggle:hover {
-    border-color: var(--cyan);
-    box-shadow: 0 0 10px rgba(0,240,255,0.25);
-  }
+  .mode-toggle:hover { border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.25); }
   .mode-toggle input { display: none; }
-  .mode-toggle .switch {
-    width: 34px;
-    height: 18px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.15);
-    position: relative;
-    transition: background .3s;
-    flex: 0 0 auto;
-  }
-  .mode-toggle .switch::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: all .3s;
-  }
-  .mode-toggle input:checked + .switch {
-    background: rgba(0,240,255,0.35);
-    box-shadow: inset 0 0 8px rgba(0,240,255,0.4);
-  }
-  .mode-toggle input:checked + .switch::after {
-    left: 18px;
-    background: var(--cyan);
-    box-shadow: 0 0 6px var(--cyan);
-  }
-  .mode-toggle .mode-label {
-    font-size: 0.9em;
-    color: var(--text);
-    white-space: nowrap;
-  }
+  .mode-toggle .switch { width: 34px; height: 18px; border-radius: 10px; background: rgba(255,255,255,0.15); position: relative; transition: background .3s; flex: 0 0 auto; }
+  .mode-toggle .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: all .3s; }
+  .mode-toggle input:checked + .switch { background: rgba(0,240,255,0.35); box-shadow: inset 0 0 8px rgba(0,240,255,0.4); }
+  .mode-toggle input:checked + .switch::after { left: 18px; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+  .mode-toggle .mode-label { font-size: 0.9em; color: var(--text); white-space: nowrap; }
   .mode-toggle.view-mode { border-color: rgba(5,255,161,0.4); }
   .mode-toggle.view-mode:hover { border-color: var(--green); box-shadow: 0 0 10px rgba(5,255,161,0.25); }
 
-  .help-content {
-    max-height: 70vh;
-    overflow-y: auto;
-    margin-top: 10px;
-    padding-right: 5px;
-  }
-  .prompt-textarea {
-    width: 100%;
-    height: 250px;
-    background: #0a0c14;
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px;
-    font-family: monospace;
-    margin: 10px 0;
-    resize: vertical;
-  }
-  .copy-btn {
-    padding: 8px 16px;
-    background: rgba(0,240,255,0.1);
-    border: 1px solid var(--cyan);
-    color: var(--cyan);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.3s;
-    margin-left: 10px;
-  }
-  .copy-btn:hover {
-    background: rgba(0,240,255,0.2);
-    box-shadow: 0 0 10px rgba(0,240,255,0.3);
-  }
+  .help-content { max-height: 70vh; overflow-y: auto; margin-top: 10px; padding-right: 5px; }
+  .prompt-textarea { width: 100%; height: 250px; background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-family: monospace; margin: 10px 0; resize: vertical; }
+  .copy-btn { padding: 8px 16px; background: rgba(0,240,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); border-radius: 6px; cursor: pointer; transition: all 0.3s; margin-left: 10px; }
+  .copy-btn:hover { background: rgba(0,240,255,0.2); box-shadow: 0 0 10px rgba(0,240,255,0.3); }
 
-  .flip-card {
-    background-color: transparent;
-    width: 300px;
-    height: 200px;
-    perspective: 1000px;
-    margin: 15px auto;
-    cursor: pointer;
-  }
-  .flip-card-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    transition: transform 0.6s;
-    transform-style: preserve-3d;
-  }
+  .flip-card { background-color: transparent; width: 300px; height: 200px; perspective: 1000px; margin: 15px auto; cursor: pointer; }
+  .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
   .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
   .flip-card-front, .flip-card-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    padding: 20px;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
-    overflow: auto;
-    box-sizing: border-box;
+    position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+    display: flex; align-items: center; justify-content: center; border-radius: 10px; padding: 20px;
+    border: 1px solid var(--border); background: var(--panel); box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    overflow: auto; box-sizing: border-box;
   }
-  .flip-card-back {
-    transform: rotateY(180deg);
-    background: rgba(0, 240, 255, 0.05);
-  }
+  .flip-card-back { transform: rotateY(180deg); background: rgba(0, 240, 255, 0.05); }
 
   .poll-option.selected { border-color: var(--cyan); background: rgba(0,240,255,0.1); }
   .poll-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 5px 0 10px 0; overflow: hidden; }
   .poll-bar-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); transition: width 0.5s; }
   .timeline { position: relative; margin: 20px 0; padding-left: 30px; border-left: 2px solid var(--border); }
   .timeline-item { margin-bottom: 20px; position: relative; }
-  .timeline-item::before {
-    content: '';
-    position: absolute;
-    left: -37px;
-    top: 5px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--cyan);
-    box-shadow: 0 0 8px var(--cyan);
-  }
+  .timeline-item::before { content: ''; position: absolute; left: -37px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
   .timeline-title { font-weight: bold; color: #fff; text-shadow: 0 0 5px var(--cyan); }
   .timeline-desc { color: var(--muted); }
   .slider-container { margin: 15px 0; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.02); }
@@ -530,16 +330,9 @@
 
   .image-preview-overlay { display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); }
   .image-preview-content {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow: auto;
-    position: relative;
-    box-shadow: 0 0 30px rgba(0,240,255,0.3);
-    animation: slideUp 0.3s ease;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px;
+    max-width: 90vw; max-height: 90vh; overflow: auto; position: relative;
+    box-shadow: 0 0 30px rgba(0,240,255,0.3); animation: slideUp 0.3s ease;
   }
   .image-preview-content img { max-width: 100%; max-height: 80vh; display: block; margin: 0 auto; border-radius: 6px; }
   .svg-preview-wrapper { max-width: 100%; overflow: auto; }
@@ -548,174 +341,112 @@
   /* ---------- РЕДАКТИРОВАНИЕ БЛОКОВ ---------- */
   .block-wrapper { position: relative; }
   .block-toolbar {
-    position: absolute;
-    top: -13px;
-    right: 8px;
-    z-index: 60;
-    display: flex;
-    gap: 4px;
-    padding: 3px 5px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    box-shadow: 0 0 10px rgba(0,240,255,0.25);
-    opacity: 0;
-    transform: translateY(4px);
-    transition: opacity .2s ease, transform .2s ease;
-    pointer-events: none;
+    position: absolute; top: -13px; right: 8px; z-index: 60; display: flex; gap: 4px; padding: 3px 5px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0,240,255,0.25); opacity: 0; transform: translateY(4px);
+    transition: opacity .2s ease, transform .2s ease; pointer-events: none;
   }
-  .block-wrapper:hover .block-toolbar,
-  .block-toolbar:focus-within {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
+  .block-wrapper:hover .block-toolbar, .block-toolbar:focus-within { opacity: 1; transform: translateY(0); pointer-events: auto; }
   .block-tool-btn {
-    width: 26px;
-    height: 26px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--cyan);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85em;
-    line-height: 1;
-    padding: 0;
-    transition: all .2s;
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--border); color: var(--cyan); border-radius: 4px;
+    cursor: pointer; font-size: 0.85em; line-height: 1; padding: 0; transition: all .2s;
   }
-  .block-tool-btn:hover:not(:disabled) {
-    background: rgba(0,240,255,0.15);
-    box-shadow: 0 0 8px rgba(0,240,255,0.4);
-    transform: translateY(-1px);
-  }
+  .block-tool-btn:hover:not(:disabled) { background: rgba(0,240,255,0.15); box-shadow: 0 0 8px rgba(0,240,255,0.4); transform: translateY(-1px); }
   .block-tool-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.5); }
-  .block-tool-btn.danger:hover:not(:disabled) {
-    background: rgba(255,42,109,0.15);
-    box-shadow: 0 0 8px rgba(255,42,109,0.4);
-  }
+  .block-tool-btn.danger:hover:not(:disabled) { background: rgba(255,42,109,0.15); box-shadow: 0 0 8px rgba(255,42,109,0.4); }
   .block-tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .add-block-btn {
-    width: 100%;
-    margin: 18px 0 5px;
-    padding: 10px;
-    border: 1px dashed var(--border);
-    background: transparent;
-    color: var(--muted);
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all .3s;
-    font-family: inherit;
-    font-size: 0.95em;
+    width: 100%; margin: 18px 0 5px; padding: 10px; border: 1px dashed var(--border); background: transparent;
+    color: var(--muted); border-radius: 8px; cursor: pointer; transition: all .3s; font-family: inherit; font-size: 0.95em;
   }
-  .add-block-btn:hover {
-    color: var(--cyan);
-    border-color: var(--cyan);
-    box-shadow: 0 0 10px rgba(0,240,255,0.2);
-    background: rgba(0,240,255,0.05);
-  }
+  .add-block-btn:hover { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.2); background: rgba(0,240,255,0.05); }
   .lesson-title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .lesson-title-row h2 { margin: 0; }
   .lesson-edit-btn {
-    background: rgba(0,240,255,0.1);
-    border: 1px solid var(--cyan);
-    color: var(--cyan);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all .3s;
-    font-size: 1em;
-    padding: 4px 8px;
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(0,240,255,0.1); border: 1px solid var(--cyan); color: var(--cyan); border-radius: 6px;
+    cursor: pointer; transition: all .3s; font-size: 1em; padding: 4px 8px; width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
   }
-  .lesson-edit-btn:hover {
-    background: rgba(0,240,255,0.2);
-    box-shadow: 0 0 10px rgba(0,240,255,0.3);
-    transform: translateY(-2px);
-  }
+  .lesson-edit-btn:hover { background: rgba(0,240,255,0.2); box-shadow: 0 0 10px rgba(0,240,255,0.3); transform: translateY(-2px); }
   .editor-hint { color: var(--muted); font-size: 0.85em; margin: 5px 0 15px; }
 
   /* ---------- РЕДАКТОР БЛОКА: ФОРМА + JSON ---------- */
-  .block-editor-modal { max-width: 720px; }
+  .block-editor-modal { max-width: 760px; }
   .editor-tabs { display: flex; gap: 6px; margin: 12px 0 14px 0; flex-wrap: wrap; }
   .editor-tab-btn {
-    padding: 6px 16px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text);
-    cursor: pointer;
-    transition: all .3s;
-    font-family: inherit;
-    font-size: 0.9em;
+    padding: 6px 16px; background: transparent; border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); cursor: pointer; transition: all .3s; font-family: inherit; font-size: 0.9em;
   }
   .editor-tab-btn:hover { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
   .editor-tab-btn.active { background: rgba(0,240,255,.15); color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,.35); }
-  .block-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 52vh;
-    overflow-y: auto;
-    padding-right: 6px;
-  }
+  .block-form { display: flex; flex-direction: column; gap: 10px; max-height: 52vh; overflow-y: auto; padding-right: 6px; }
   .form-field { display: flex; flex-direction: column; gap: 4px; }
   .form-field > label { color: var(--muted); font-size: 0.85em; }
   .form-field input[type="text"],
   .form-field input[type="number"],
   .form-field textarea,
   .form-field select {
-    background: #0a0c14;
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 8px;
-    outline: none;
-    font-family: inherit;
-    font-size: 0.95em;
-    transition: border-color .3s, box-shadow .3s;
-    width: 100%;
+    background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 8px; outline: none; font-family: inherit; font-size: 0.95em;
+    transition: border-color .3s, box-shadow .3s; width: 100%;
   }
-  .form-field input:focus,
-  .form-field textarea:focus,
-  .form-field select:focus {
-    border-color: var(--cyan);
-    box-shadow: 0 0 8px rgba(0,240,255,.3);
-  }
+  .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
   .form-field textarea { min-height: 70px; resize: vertical; }
   .form-field textarea.json-field { min-height: 100px; font-family: 'Courier New', monospace; font-size: 0.9em; }
   .form-field input[readonly] { opacity: 0.6; cursor: not-allowed; }
   .checkbox-label { display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer; font-size: 0.95em; }
   .checkbox-label input { accent-color: var(--cyan); width: 16px; height: 16px; cursor: pointer; }
-  .form-section-title {
-    color: var(--cyan);
-    font-size: 0.78em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 4px;
-    margin-top: 8px;
-  }
+  .form-section-title { color: var(--cyan); font-size: 0.78em; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-top: 8px; }
   .form-hint { color: var(--muted); font-size: 0.85em; }
   .block-json-area {
-    width: 100%;
-    height: 340px;
-    background: #0a0c14;
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px;
-    font-family: monospace;
-    font-size: 0.9em;
-    outline: none;
-    resize: vertical;
+    width: 100%; height: 340px; background: #0a0c14; color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+    font-family: monospace; font-size: 0.9em; outline: none; resize: vertical;
   }
   .block-json-area:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
+
+  /* ---------- ВЛОЖЕННЫЕ МАССИВЫ В ФОРМЕ ---------- */
+  .array-editor { border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: rgba(255,255,255,0.02); }
+  .array-editor-list { display: flex; flex-direction: column; gap: 6px; }
+  .array-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px; background: rgba(0,240,255,0.03); }
+  .array-item-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+  .array-item-title { color: var(--cyan); font-size: 0.85em; font-weight: bold; }
+  .array-item-controls { display: flex; gap: 4px; }
+  .array-item-body { display: flex; flex-direction: column; gap: 6px; }
+  .array-item-body input[type="text"],
+  .array-item-body input[type="number"],
+  .array-item-body textarea,
+  .array-item-body select {
+    background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 7px; outline: none; font-family: inherit; font-size: 0.9em;
+    transition: border-color .3s, box-shadow .3s; width: 100%;
+  }
+  .array-item-body input:focus, .array-item-body textarea:focus, .array-item-body select:focus { border-color: var(--cyan); box-shadow: 0 0 6px rgba(0,240,255,.3); }
+  .array-add-btn {
+    margin-top: 8px; width: 100%; padding: 6px; border: 1px dashed var(--border); background: transparent;
+    color: var(--muted); border-radius: 6px; cursor: pointer; transition: all .3s; font-size: .85em; font-family: inherit;
+  }
+  .array-add-btn:hover { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.25); }
+  .mini-btn {
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--border); color: var(--cyan); border-radius: 4px;
+    cursor: pointer; font-size: 0.72em; line-height: 1; padding: 0; transition: all .2s;
+  }
+  .mini-btn:hover:not(:disabled) { background: rgba(0,240,255,0.15); box-shadow: 0 0 6px rgba(0,240,255,0.4); }
+  .mini-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.5); }
+  .mini-btn.danger:hover:not(:disabled) { background: rgba(255,42,109,0.15); box-shadow: 0 0 6px rgba(255,42,109,0.4); }
+  .mini-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .blocks-array-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .blocks-array-list { display: flex; flex-direction: column; gap: 4px; }
+  .nested-block-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.02);
+  }
+  .nested-block-info {
+    font-size: 0.83em; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  }
+  .nested-block-btns { display: flex; gap: 4px; flex: 0 0 auto; }
 
   @media (max-width: 600px) {
     .columns { flex-direction: column; }
@@ -1013,7 +744,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.3.0' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.4.0' }));
     return header;
   }
 
@@ -1284,7 +1015,7 @@
     'section': [
       { key: 'title', label: 'title — заголовок секции', type: 'text' },
       { key: 'id', label: 'id — идентификатор (якорь)', type: 'text' },
-      { key: 'children', label: 'children — вложенные блоки (массив блоков)', type: 'json' }
+      { key: 'children', label: 'children — вложенные блоки', type: 'blocks' }
     ],
     'heading': [
       { key: 'level', label: 'level — уровень заголовка (1–6)', type: 'number', min: 1, max: 6 },
@@ -1314,7 +1045,7 @@
     ],
     'list': [
       { key: 'ordered', label: 'ordered — нумерованный список', type: 'checkbox', omitFalse: true },
-      { key: 'items', label: 'items — элементы списка (массив строк)', type: 'json' }
+      { key: 'items', label: 'items — элементы списка', type: 'array', itemSchema: { kind: 'string', label: 'Элемент' } }
     ],
     'code': [
       { key: 'language', label: 'language — язык кода', type: 'text' },
@@ -1324,34 +1055,43 @@
       { key: 'variant', label: 'variant — тип выноски', type: 'select', options: ['info', 'warning', 'success'] },
       { key: 'title', label: 'title — заголовок', type: 'text' },
       { key: 'text', label: 'text — текст', type: 'textarea' },
-      { key: 'children', label: 'children — вложенные блоки (массив)', type: 'json' }
+      { key: 'children', label: 'children — вложенные блоки', type: 'blocks' }
     ],
     'tabs': [
-      { key: 'tabs', label: 'tabs — вкладки: [ { "label": "...", "content": [ ...блоки... ] } ]', type: 'json' }
+      { key: 'tabs', label: 'tabs — вкладки', type: 'array', itemSchema: { kind: 'object', label: 'Вкладка', fields: [
+        { key: 'label', label: 'label — название вкладки', type: 'text' },
+        { key: 'content', label: 'content — блоки вкладки', type: 'blocks' }
+      ] } }
     ],
     'accordion': [
-      { key: 'items', label: 'items — элементы: [ { "title": "...", "content": [ ...блоки... ] } ]', type: 'json' }
+      { key: 'items', label: 'items — элементы аккордеона', type: 'array', itemSchema: { kind: 'object', label: 'Элемент', fields: [
+        { key: 'title', label: 'title — заголовок', type: 'text' },
+        { key: 'content', label: 'content — блоки', type: 'blocks' }
+      ] } }
     ],
     'quiz': [
       { key: 'question', label: 'question — вопрос', type: 'textarea' },
-      { key: 'options', label: 'options — варианты ответов (массив строк)', type: 'json' },
+      { key: 'options', label: 'options — варианты ответов', type: 'array', itemSchema: { kind: 'string', label: 'Вариант' } },
       { key: 'correct', label: 'correct — индекс правильного варианта (с 0)', type: 'number', min: 0 },
       { key: 'explanation', label: 'explanation — пояснение', type: 'textarea' }
     ],
     'multi-quiz': [
       { key: 'question', label: 'question — вопрос', type: 'textarea' },
-      { key: 'options', label: 'options — варианты ответов (массив строк)', type: 'json' },
-      { key: 'correct', label: 'correct — индексы правильных вариантов (массив чисел)', type: 'json' },
+      { key: 'options', label: 'options — варианты ответов', type: 'array', itemSchema: { kind: 'string', label: 'Вариант' } },
+      { key: 'correct', label: 'correct — индексы правильных вариантов', type: 'array', itemSchema: { kind: 'number', label: 'Индекс' } },
       { key: 'explanation', label: 'explanation — пояснение', type: 'textarea' }
     ],
     'match': [
       { key: 'instruction', label: 'instruction — инструкция', type: 'text' },
-      { key: 'pairs', label: 'pairs — пары: [ { "left": "...", "right": "..." } ]', type: 'json' }
+      { key: 'pairs', label: 'pairs — пары для сопоставления', type: 'array', itemSchema: { kind: 'object', label: 'Пара', fields: [
+        { key: 'left', label: 'left — термин', type: 'text' },
+        { key: 'right', label: 'right — определение', type: 'text' }
+      ] } }
     ],
     'sort': [
       { key: 'instruction', label: 'instruction — инструкция', type: 'text' },
-      { key: 'items', label: 'items — перемешанные пункты (массив строк)', type: 'json' },
-      { key: 'correctOrder', label: 'correctOrder — правильный порядок (массив строк)', type: 'json' }
+      { key: 'items', label: 'items — перемешанные пункты', type: 'array', itemSchema: { kind: 'string', label: 'Пункт' } },
+      { key: 'correctOrder', label: 'correctOrder — правильный порядок', type: 'array', itemSchema: { kind: 'string', label: 'Пункт' } }
     ],
     'fill-blank': [
       { key: 'instruction', label: 'instruction — инструкция', type: 'text' },
@@ -1359,16 +1099,16 @@
       { key: 'answers', label: 'answers — ответы: { "1": "ответ1", "2": "ответ2" }', type: 'json' }
     ],
     'flip-card': [
-      { key: 'front', label: 'front — лицевая сторона (текст или блоки)', type: 'textarea' },
-      { key: 'back', label: 'back — обратная сторона (текст или блоки)', type: 'textarea' }
+      { key: 'front', label: 'front — лицевая сторона (текст)', type: 'textarea' },
+      { key: 'back', label: 'back — обратная сторона (текст)', type: 'textarea' }
     ],
     'poll': [
       { key: 'question', label: 'question — вопрос опроса', type: 'textarea' },
-      { key: 'options', label: 'options — варианты (массив строк)', type: 'json' }
+      { key: 'options', label: 'options — варианты', type: 'array', itemSchema: { kind: 'string', label: 'Вариант' } }
     ],
     'compare': [
-      { key: 'left', label: 'left — блоки левой панели (массив)', type: 'json' },
-      { key: 'right', label: 'right — блоки правой панели (массив)', type: 'json' }
+      { key: 'left', label: 'left — блоки левой панели', type: 'blocks' },
+      { key: 'right', label: 'right — блоки правой панели', type: 'blocks' }
     ],
     'slider': [
       { key: 'label', label: 'label — подпись', type: 'text' },
@@ -1377,41 +1117,57 @@
       { key: 'default', label: 'default — значение по умолчанию', type: 'number' }
     ],
     'timeline': [
-      { key: 'items', label: 'items — события: [ { "title": "...", "description": "..." } ]', type: 'json' }
+      { key: 'items', label: 'items — события', type: 'array', itemSchema: { kind: 'object', label: 'Событие', fields: [
+        { key: 'title', label: 'title — название события', type: 'text' },
+        { key: 'description', label: 'description — описание', type: 'textarea' }
+      ] } }
     ],
     'steps': [
-      { key: 'steps', label: 'steps — шаги: [ { "title": "...", "content": [ ...блоки... ] } ]', type: 'json' }
+      { key: 'steps', label: 'steps — шаги', type: 'array', itemSchema: { kind: 'object', label: 'Шаг', fields: [
+        { key: 'title', label: 'title — название шага', type: 'text' },
+        { key: 'content', label: 'content — блоки шага', type: 'blocks' }
+      ] } }
     ],
     'embed': [
       { key: 'src', label: 'src — URL для iframe', type: 'text' }
     ],
     'columns': [
-      { key: 'columns', label: 'columns — колонки: [ { "blocks": [ ...блоки... ] } ]', type: 'json' }
+      { key: 'columns', label: 'columns — колонки', type: 'array', itemSchema: { kind: 'object', label: 'Колонка', fields: [
+        { key: 'blocks', label: 'blocks — блоки колонки', type: 'blocks' }
+      ] } }
     ],
     'carousel': [
-      { key: 'items', label: 'items — слайды: [ { "image": "URL", "caption": "..." } или { "content": [...] } ]', type: 'json' }
+      { key: 'items', label: 'items — слайды карусели', type: 'array', itemSchema: { kind: 'object', label: 'Слайд', fields: [
+        { key: 'image', label: 'image — URL изображения слайда', type: 'text' },
+        { key: 'caption', label: 'caption — подпись', type: 'text' },
+        { key: 'content', label: 'content — блоки слайда (вместо изображения)', type: 'blocks' }
+      ] } }
     ],
     'before-after': [
       { key: 'before', label: 'before — URL изображения "до"', type: 'text' },
       { key: 'after', label: 'after — URL изображения "после"', type: 'text' }
     ],
     'table': [
-      { key: 'headers', label: 'headers — заголовки колонок (массив строк)', type: 'json' },
-      { key: 'rows', label: 'rows — строки: [ ["ячейка", ...], ... ]', type: 'json' }
+      { key: 'headers', label: 'headers — заголовки колонок', type: 'array', itemSchema: { kind: 'string', label: 'Заголовок' } },
+      { key: 'rows', label: 'rows — строки таблицы', type: 'array', itemSchema: { kind: 'array', label: 'Строка', itemSchema: { kind: 'string', label: 'Ячейка' } } }
     ],
     'chart': [
       { key: 'title', label: 'title — заголовок диаграммы', type: 'text' },
-      { key: 'labels', label: 'labels — метки (массив строк)', type: 'json' },
-      { key: 'values', label: 'values — значения (массив чисел)', type: 'json' }
+      { key: 'labels', label: 'labels — метки', type: 'array', itemSchema: { kind: 'string', label: 'Метка' } },
+      { key: 'values', label: 'values — значения', type: 'array', itemSchema: { kind: 'number', label: 'Значение' } }
     ],
     'pie': [
       { key: 'title', label: 'title — заголовок диаграммы', type: 'text' },
-      { key: 'segments', label: 'segments — сегменты: [ { "label": "...", "value": 50, "color": "#ff0000" } ]', type: 'json' }
+      { key: 'segments', label: 'segments — сегменты', type: 'array', itemSchema: { kind: 'object', label: 'Сегмент', fields: [
+        { key: 'label', label: 'label — название сегмента', type: 'text' },
+        { key: 'value', label: 'value — значение (доля)', type: 'number' },
+        { key: 'color', label: 'color — цвет (напр. #ff0000)', type: 'text' }
+      ] } }
     ],
     'modal': [
       { key: 'buttonText', label: 'buttonText — текст кнопки открытия', type: 'text' },
       { key: 'text', label: 'text — простой текст содержимого', type: 'textarea' },
-      { key: 'content', label: 'content — блоки содержимого (массив)', type: 'json' }
+      { key: 'content', label: 'content — блоки содержимого', type: 'blocks' }
     ],
     'tooltip': [
       { key: 'text', label: 'text — видимый текст', type: 'text' },
@@ -1422,11 +1178,13 @@
     ],
     'drag-sort': [
       { key: 'instruction', label: 'instruction — инструкция', type: 'text' },
-      { key: 'items', label: 'items — перемешанные элементы (массив строк)', type: 'json' },
-      { key: 'correctOrder', label: 'correctOrder — правильный порядок (массив строк)', type: 'json' }
+      { key: 'items', label: 'items — перемешанные элементы', type: 'array', itemSchema: { kind: 'string', label: 'Элемент' } },
+      { key: 'correctOrder', label: 'correctOrder — правильный порядок', type: 'array', itemSchema: { kind: 'string', label: 'Элемент' } }
     ],
     'progress-tracker': [
-      { key: 'tasks', label: 'tasks — задачи: [ { "label": "..." } ]', type: 'json' }
+      { key: 'tasks', label: 'tasks — задачи', type: 'array', itemSchema: { kind: 'object', label: 'Задача', fields: [
+        { key: 'label', label: 'label — название задачи', type: 'text' }
+      ] } }
     ],
     'svg': [
       { key: 'code', label: 'code — SVG-разметка', type: 'textarea' },
@@ -1455,6 +1213,269 @@
     return base.concat(COMMON_SIZE_FIELDS);
   }
 
+  function describeBlock(blk) {
+    if (!blk || typeof blk !== 'object') return '?';
+    const type = blk.type || '?';
+    const preview = blk.title || blk.text || blk.question || blk.caption || blk.label || blk.src || blk.front || blk.buttonText || blk.instruction || blk.code || '';
+    const p = String(preview).substring(0, 50);
+    return '[' + type + ']' + (p ? ' ' + p : '');
+  }
+
+  // ---------- РЕДАКТОР МАССИВА ВЛОЖЕННЫХ БЛОКОВ ----------
+  function createBlocksArrayEditor() {
+    const blocksArr = [];
+    const wrap = h('div', { class: 'blocks-array-wrap' });
+    const listEl = h('div', { class: 'blocks-array-list' });
+    const addBtn = h('button', { class: 'array-add-btn', type: 'button', textContent: '＋ Добавить блок' });
+    wrap.appendChild(listEl);
+    wrap.appendChild(addBtn);
+
+    addBtn.addEventListener('click', () => {
+      openBlockFormModal({
+        title: 'Новый вложенный блок',
+        block: { type: 'text', text: '' },
+        onSave: (data) => {
+          validateBlockData(data);
+          blocksArr.push(JSON.parse(JSON.stringify(data)));
+          renderList();
+        }
+      });
+    });
+
+    function renderList() {
+      listEl.innerHTML = '';
+      if (blocksArr.length === 0) {
+        listEl.appendChild(h('p', { class: 'form-hint', textContent: 'Блоки не заданы.' }));
+        return;
+      }
+      blocksArr.forEach((blk, idx) => {
+        const row = h('div', { class: 'nested-block-row' });
+        row.appendChild(h('span', { class: 'nested-block-info', textContent: (idx + 1) + '. ' + describeBlock(blk) }));
+        const btns = h('div', { class: 'nested-block-btns' });
+        const editBtn = h('button', { class: 'mini-btn', type: 'button', title: 'Редактировать блок', textContent: '✎' });
+        editBtn.addEventListener('click', () => {
+          openBlockFormModal({
+            title: 'Вложенный блок ' + (idx + 1) + ' (' + (blk.type || 'без типа') + ')',
+            block: blk,
+            onSave: (data) => {
+              validateBlockData(data);
+              blocksArr[idx] = JSON.parse(JSON.stringify(data));
+              renderList();
+            }
+          });
+        });
+        const upBtn = h('button', { class: 'mini-btn', type: 'button', title: 'Переместить выше', textContent: '↑', disabled: idx === 0 });
+        upBtn.addEventListener('click', () => {
+          const tmp = blocksArr[idx - 1];
+          blocksArr[idx - 1] = blocksArr[idx];
+          blocksArr[idx] = tmp;
+          renderList();
+        });
+        const downBtn = h('button', { class: 'mini-btn', type: 'button', title: 'Переместить ниже', textContent: '↓', disabled: idx === blocksArr.length - 1 });
+        downBtn.addEventListener('click', () => {
+          const tmp = blocksArr[idx + 1];
+          blocksArr[idx + 1] = blocksArr[idx];
+          blocksArr[idx] = tmp;
+          renderList();
+        });
+        const delBtn = h('button', { class: 'mini-btn danger', type: 'button', title: 'Удалить блок', textContent: '🗑' });
+        delBtn.addEventListener('click', () => {
+          blocksArr.splice(idx, 1);
+          renderList();
+        });
+        btns.appendChild(editBtn);
+        btns.appendChild(upBtn);
+        btns.appendChild(downBtn);
+        btns.appendChild(delBtn);
+        row.appendChild(btns);
+        listEl.appendChild(row);
+      });
+    }
+
+    renderList();
+
+    return {
+      el: wrap,
+      getValue: () => blocksArr.length === 0 ? undefined : blocksArr.map(b => JSON.parse(JSON.stringify(b))),
+      setValue: (arr) => {
+        blocksArr.length = 0;
+        (Array.isArray(arr) ? arr : []).forEach(b => blocksArr.push(JSON.parse(JSON.stringify(b))));
+        renderList();
+      }
+    };
+  }
+
+  // ---------- РЕДАКТОР МАССИВА ЭЛЕМЕНТОВ ----------
+  function createArrayEditor(def) {
+    const itemSchema = def.itemSchema || { kind: 'string', label: 'Элемент' };
+    const wrapperEl = h('div', { class: 'array-editor' });
+    const listEl = h('div', { class: 'array-editor-list' });
+    wrapperEl.appendChild(listEl);
+    const addBtn = h('button', {
+      class: 'array-add-btn', type: 'button',
+      textContent: '＋ Добавить (' + (itemSchema.label || 'элемент').toLowerCase() + ')'
+    });
+    wrapperEl.appendChild(addBtn);
+
+    let itemEditors = [];
+
+    function createItemEditor(value) {
+      const kind = itemSchema.kind || 'string';
+
+      if (kind === 'number') {
+        const input = h('input', { type: 'number' });
+        const body = h('div', { class: 'array-item-body' });
+        body.appendChild(input);
+        const ed = {
+          el: body,
+          getValue: () => {
+            const raw = String(input.value).trim();
+            if (raw === '') return undefined;
+            const num = Number(raw);
+            if (isNaN(num)) throw new Error('ожидается число');
+            return num;
+          },
+          setValue: (v) => { input.value = (v === undefined || v === null) ? '' : String(v); }
+        };
+        ed.setValue(value);
+        return ed;
+      }
+
+      if (kind === 'array') {
+        const nested = createArrayEditor({
+          key: def.key,
+          label: itemSchema.label || 'Список',
+          itemSchema: itemSchema.itemSchema || { kind: 'string', label: 'Элемент' }
+        });
+        nested.setValue((value === undefined || value === null) ? [] : value);
+        return nested;
+      }
+
+      if (kind === 'blocks') {
+        const ed = createBlocksArrayEditor();
+        ed.setValue((value === undefined || value === null) ? [] : value);
+        return ed;
+      }
+
+      if (kind === 'object') {
+        const body = h('div', { class: 'array-item-body' });
+        const subEditors = {};
+        const fields = itemSchema.fields || [];
+        fields.forEach(f => {
+          const ed = createFieldEditor(f);
+          body.appendChild(ed.el);
+          subEditors[f.key] = ed;
+        });
+        const ed = {
+          el: body,
+          getValue: () => {
+            const objOut = {};
+            fields.forEach(f => {
+              const v = subEditors[f.key].getValue();
+              if (v !== undefined) objOut[f.key] = v;
+            });
+            return objOut;
+          },
+          setValue: (v) => {
+            const src = (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+            fields.forEach(f => subEditors[f.key].setValue(src[f.key]));
+          }
+        };
+        ed.setValue(value);
+        return ed;
+      }
+
+      // string (по умолчанию)
+      const input = h('input', { type: 'text' });
+      const body = h('div', { class: 'array-item-body' });
+      body.appendChild(input);
+      const ed = {
+        el: body,
+        getValue: () => input.value,
+        setValue: (v) => {
+          if (v === undefined || v === null) input.value = '';
+          else if (typeof v === 'object') input.value = JSON.stringify(v);
+          else input.value = String(v);
+        }
+      };
+      ed.setValue(value);
+      return ed;
+    }
+
+    function renderList() {
+      listEl.innerHTML = '';
+      if (itemEditors.length === 0) {
+        listEl.appendChild(h('p', { class: 'form-hint', textContent: 'Список пуст — добавьте элементы кнопкой ниже.' }));
+      }
+      itemEditors.forEach((ed, idx) => {
+        const itemEl = h('div', { class: 'array-item' });
+        const head = h('div', { class: 'array-item-header' });
+        head.appendChild(h('span', { class: 'array-item-title', textContent: (itemSchema.label || 'Элемент') + ' ' + (idx + 1) }));
+        const controls = h('div', { class: 'array-item-controls' });
+        const upBtn = h('button', { class: 'mini-btn', type: 'button', title: 'Переместить выше', textContent: '↑', disabled: idx === 0 });
+        upBtn.addEventListener('click', () => {
+          const tmp = itemEditors[idx - 1];
+          itemEditors[idx - 1] = itemEditors[idx];
+          itemEditors[idx] = tmp;
+          renderList();
+        });
+        const downBtn = h('button', { class: 'mini-btn', type: 'button', title: 'Переместить ниже', textContent: '↓', disabled: idx === itemEditors.length - 1 });
+        downBtn.addEventListener('click', () => {
+          const tmp = itemEditors[idx + 1];
+          itemEditors[idx + 1] = itemEditors[idx];
+          itemEditors[idx] = tmp;
+          renderList();
+        });
+        const delBtn = h('button', { class: 'mini-btn danger', type: 'button', title: 'Удалить элемент', textContent: '🗑' });
+        delBtn.addEventListener('click', () => {
+          itemEditors.splice(idx, 1);
+          renderList();
+        });
+        controls.appendChild(upBtn);
+        controls.appendChild(downBtn);
+        controls.appendChild(delBtn);
+        head.appendChild(controls);
+        itemEl.appendChild(head);
+        itemEl.appendChild(ed.el);
+        listEl.appendChild(itemEl);
+      });
+    }
+
+    addBtn.addEventListener('click', () => {
+      const kind = itemSchema.kind || 'string';
+      const emptyVal = (kind === 'string') ? '' : ((kind === 'number') ? undefined : []);
+      itemEditors.push(createItemEditor(emptyVal));
+      renderList();
+    });
+
+    return {
+      el: wrapperEl,
+      getValue: () => {
+        const out = [];
+        for (let i = 0; i < itemEditors.length; i++) {
+          let v;
+          try {
+            v = itemEditors[i].getValue();
+          } catch (e) {
+            throw new Error((itemSchema.label || 'Элемент') + ' ' + (i + 1) + ': ' + e.message);
+          }
+          if (v === undefined || v === null) continue;
+          if (typeof v === 'string' && v.trim() === '') continue;
+          if (Array.isArray(v) && v.length === 0) continue;
+          if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) continue;
+          out.push(v);
+        }
+        return out.length === 0 ? undefined : out;
+      },
+      setValue: (arr) => {
+        itemEditors = [];
+        (Array.isArray(arr) ? arr : []).forEach(v => itemEditors.push(createItemEditor(v)));
+        renderList();
+      }
+    };
+  }
+
+  // ---------- ЧТЕНИЕ/ЗАПОЛНЕНИЕ ПРОСТЫХ ПОЛЕЙ ----------
   function readFormField(def, control) {
     if (def.type === 'checkbox') {
       const val = control.checked;
@@ -1511,6 +1532,59 @@
         control.value = String(value);
       }
     }
+  }
+
+  // ---------- ФАБРИКА РЕДАКТОРОВ ПОЛЕЙ ФОРМЫ ----------
+  function createFieldEditor(def) {
+    if (def.type === 'array') {
+      const ed = createArrayEditor(def);
+      const row = h('div', { class: 'form-field' });
+      row.appendChild(h('label', { textContent: def.label }));
+      row.appendChild(ed.el);
+      return { el: row, getValue: ed.getValue, setValue: ed.setValue };
+    }
+    if (def.type === 'blocks') {
+      const ed = createBlocksArrayEditor();
+      const row = h('div', { class: 'form-field' });
+      row.appendChild(h('label', { textContent: def.label }));
+      row.appendChild(ed.el);
+      return { el: row, getValue: ed.getValue, setValue: ed.setValue };
+    }
+
+    const row = h('div', { class: 'form-field' });
+    let control;
+    if (def.type === 'checkbox') {
+      const labelRow = h('label', { class: 'checkbox-label' });
+      control = h('input', { type: 'checkbox' });
+      labelRow.appendChild(control);
+      labelRow.appendChild(h('span', { textContent: def.label }));
+      row.appendChild(labelRow);
+    } else if (def.type === 'select') {
+      row.appendChild(h('label', { textContent: def.label }));
+      control = h('select');
+      control.appendChild(h('option', { value: '', textContent: '(не задано)' }));
+      (def.options || []).forEach(o => control.appendChild(h('option', { value: o, textContent: o })));
+      row.appendChild(control);
+    } else if (def.type === 'textarea' || def.type === 'json') {
+      row.appendChild(h('label', { textContent: def.label }));
+      control = h('textarea', def.type === 'json' ? { class: 'json-field' } : {});
+      row.appendChild(control);
+    } else if (def.type === 'number') {
+      row.appendChild(h('label', { textContent: def.label }));
+      control = h('input', { type: 'number' });
+      if (def.min !== undefined) control.min = def.min;
+      if (def.max !== undefined) control.max = def.max;
+      row.appendChild(control);
+    } else {
+      row.appendChild(h('label', { textContent: def.label }));
+      control = h('input', { type: 'text' });
+      row.appendChild(control);
+    }
+    return {
+      el: row,
+      getValue: () => readFormField(def, control),
+      setValue: (v) => fillFormField(def, control, v)
+    };
   }
 
   // ---------- РЕДАКТОР БЛОКА: ФОРМА + JSON ----------
@@ -1570,38 +1644,10 @@
           formPanel.appendChild(h('div', { class: 'form-section-title', textContent: def.section }));
           return;
         }
-        const row = h('div', { class: 'form-field' });
-        let control;
-        if (def.type === 'checkbox') {
-          const labelRow = h('label', { class: 'checkbox-label' });
-          control = h('input', { type: 'checkbox' });
-          labelRow.appendChild(control);
-          labelRow.appendChild(h('span', { textContent: def.label }));
-          row.appendChild(labelRow);
-        } else if (def.type === 'select') {
-          row.appendChild(h('label', { textContent: def.label }));
-          control = h('select');
-          control.appendChild(h('option', { value: '', textContent: '(не задано)' }));
-          (def.options || []).forEach(o => control.appendChild(h('option', { value: o, textContent: o })));
-          row.appendChild(control);
-        } else if (def.type === 'textarea' || def.type === 'json') {
-          row.appendChild(h('label', { textContent: def.label }));
-          control = h('textarea', def.type === 'json' ? { class: 'json-field' } : {});
-          row.appendChild(control);
-        } else if (def.type === 'number') {
-          row.appendChild(h('label', { textContent: def.label }));
-          control = h('input', { type: 'number' });
-          if (def.min !== undefined) control.min = def.min;
-          if (def.max !== undefined) control.max = def.max;
-          row.appendChild(control);
-        } else {
-          row.appendChild(h('label', { textContent: def.label }));
-          control = h('input', { type: 'text' });
-          row.appendChild(control);
-        }
-        formPanel.appendChild(row);
-        fieldControls[def.key] = { def: def, control: control };
-        fillFormField(def, control, obj ? obj[def.key] : undefined);
+        const editor = createFieldEditor(def);
+        formPanel.appendChild(editor.el);
+        fieldControls[def.key] = editor;
+        editor.setValue(obj ? obj[def.key] : undefined);
       });
     }
 
@@ -1628,9 +1674,9 @@
       Object.keys(extraData).forEach(k => { result[k] = extraData[k]; });
       buildSchemaFor(currentType).forEach(def => {
         if (def.section) return;
-        const entry = fieldControls[def.key];
-        if (!entry) return;
-        const v = readFormField(def, entry.control);
+        const editor = fieldControls[def.key];
+        if (!editor) return;
+        const v = editor.getValue();
         if (v !== undefined) result[def.key] = v;
       });
       return result;
@@ -1956,7 +2002,7 @@
       <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования).</p>
       <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
       <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок.</p>
-      <p>Редактор блока содержит две вкладки: <strong>«Форма»</strong> — все атрибуты данного типа блока (включая незаполненные) с удобными полями ввода, и <strong>«JSON»</strong> — исходный JSON блока. Значения синхронизируются при переключении вкладок. Атрибуты, не входящие в стандартную схему, сохраняются автоматически.</p>
+      <p>Редактор блока содержит две вкладки: <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты данного типа блока (включая незаполненные). Вложенные массивы (items, options, pairs, tabs, segments и др.) редактируются как списки элементов с кнопками добавления, удаления и перемещения. Вложенные массивы блоков (content, children, left, right и др.) редактируются по одному: каждый вложенный блок открывается в таком же редакторе «Форма/JSON». Значения синхронизируются при переключении вкладок. Атрибуты, не входящие в стандартную схему, сохраняются автоматически.</p>
       <p>Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
     `;
     content.appendChild(helpDiv);
