@@ -640,6 +640,83 @@
   }
   .editor-hint { color: var(--muted); font-size: 0.85em; margin: 5px 0 15px; }
 
+  /* ---------- РЕДАКТОР БЛОКА: ФОРМА + JSON ---------- */
+  .block-editor-modal { max-width: 720px; }
+  .editor-tabs { display: flex; gap: 6px; margin: 12px 0 14px 0; flex-wrap: wrap; }
+  .editor-tab-btn {
+    padding: 6px 16px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .3s;
+    font-family: inherit;
+    font-size: 0.9em;
+  }
+  .editor-tab-btn:hover { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
+  .editor-tab-btn.active { background: rgba(0,240,255,.15); color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,.35); }
+  .block-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 52vh;
+    overflow-y: auto;
+    padding-right: 6px;
+  }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field > label { color: var(--muted); font-size: 0.85em; }
+  .form-field input[type="text"],
+  .form-field input[type="number"],
+  .form-field textarea,
+  .form-field select {
+    background: #0a0c14;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.95em;
+    transition: border-color .3s, box-shadow .3s;
+    width: 100%;
+  }
+  .form-field input:focus,
+  .form-field textarea:focus,
+  .form-field select:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 8px rgba(0,240,255,.3);
+  }
+  .form-field textarea { min-height: 70px; resize: vertical; }
+  .form-field textarea.json-field { min-height: 100px; font-family: 'Courier New', monospace; font-size: 0.9em; }
+  .form-field input[readonly] { opacity: 0.6; cursor: not-allowed; }
+  .checkbox-label { display: flex; align-items: center; gap: 8px; color: var(--text); cursor: pointer; font-size: 0.95em; }
+  .checkbox-label input { accent-color: var(--cyan); width: 16px; height: 16px; cursor: pointer; }
+  .form-section-title {
+    color: var(--cyan);
+    font-size: 0.78em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+    margin-top: 8px;
+  }
+  .form-hint { color: var(--muted); font-size: 0.85em; }
+  .block-json-area {
+    width: 100%;
+    height: 340px;
+    background: #0a0c14;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 0.9em;
+    outline: none;
+    resize: vertical;
+  }
+  .block-json-area:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
+
   @media (max-width: 600px) {
     .columns { flex-direction: column; }
     .carousel-btn { font-size: 1.5em; padding: 0 8px; }
@@ -835,7 +912,6 @@
     setCourse(courseData);
   }
 
-  // Функция загрузки данных (один курс, массив курсов/URL или объект с courses)
   async function loadCoursesFromData(data) {
     let items = [];
 
@@ -937,7 +1013,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.2.0' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.3.0' }));
     return header;
   }
 
@@ -1154,8 +1230,7 @@
     }
   }
 
-  // ---------- УНИВЕРСАЛЬНЫЙ РЕДАКТОР JSON ----------
-  // options: { title, height, onSave(parsedData) }
+  // ---------- УНИВЕРСАЛЬНЫЙ РЕДАКТОР JSON (курс/урок) ----------
   function openJSONEditor(initialValue, options = {}) {
     const title = options.title || 'Редактор JSON';
     const editorHeight = options.height || '300px';
@@ -1181,6 +1256,452 @@
       } catch (e) {
         alert('Ошибка JSON: ' + e.message);
         return;
+      }
+      try {
+        if (typeof onSave === 'function') {
+          await onSave(data);
+        }
+        overlay.remove();
+      } catch (e) {
+        alert('Ошибка сохранения: ' + e.message);
+      }
+    });
+    const cancelBtn = h('button', { class: 'quiz-button', textContent: 'Отмена', type: 'button' });
+    cancelBtn.addEventListener('click', () => overlay.remove());
+    buttonRow.appendChild(saveBtn);
+    buttonRow.appendChild(cancelBtn);
+    content.appendChild(buttonRow);
+
+    overlay.appendChild(content);
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.remove();
+    });
+  }
+
+  // ---------- СХЕМЫ АТРИБУТОВ БЛОКОВ ДЛЯ ФОРМЫ ----------
+  const BLOCK_SCHEMAS = {
+    'section': [
+      { key: 'title', label: 'title — заголовок секции', type: 'text' },
+      { key: 'id', label: 'id — идентификатор (якорь)', type: 'text' },
+      { key: 'children', label: 'children — вложенные блоки (массив блоков)', type: 'json' }
+    ],
+    'heading': [
+      { key: 'level', label: 'level — уровень заголовка (1–6)', type: 'number', min: 1, max: 6 },
+      { key: 'text', label: 'text — текст заголовка', type: 'text' }
+    ],
+    'text': [
+      { key: 'text', label: 'text — текст абзаца (поддерживается KaTeX)', type: 'textarea' }
+    ],
+    'image': [
+      { key: 'src', label: 'src — URL изображения', type: 'text' },
+      { key: 'caption', label: 'caption — подпись', type: 'text' },
+      { key: 'previewWidth', label: 'previewWidth — ширина окна превью (напр. 600px)', type: 'text' },
+      { key: 'previewHeight', label: 'previewHeight — высота окна превью', type: 'text' }
+    ],
+    'video': [
+      { key: 'src', label: 'src — URL видео', type: 'text' },
+      { key: 'poster', label: 'poster — URL постера', type: 'text' },
+      { key: 'caption', label: 'caption — подпись', type: 'text' },
+      { key: 'mimeType', label: 'mimeType — тип (напр. video/mp4)', type: 'text' },
+      { key: 'speedControl', label: 'speedControl — показать переключатель скорости', type: 'checkbox', omitFalse: true }
+    ],
+    'audio': [
+      { key: 'src', label: 'src — URL аудио', type: 'text' },
+      { key: 'caption', label: 'caption — подпись', type: 'text' },
+      { key: 'mimeType', label: 'mimeType — тип (напр. audio/mpeg)', type: 'text' },
+      { key: 'speedControl', label: 'speedControl — показать переключатель скорости', type: 'checkbox', omitFalse: true }
+    ],
+    'list': [
+      { key: 'ordered', label: 'ordered — нумерованный список', type: 'checkbox', omitFalse: true },
+      { key: 'items', label: 'items — элементы списка (массив строк)', type: 'json' }
+    ],
+    'code': [
+      { key: 'language', label: 'language — язык кода', type: 'text' },
+      { key: 'code', label: 'code — текст кода', type: 'textarea' }
+    ],
+    'callout': [
+      { key: 'variant', label: 'variant — тип выноски', type: 'select', options: ['info', 'warning', 'success'] },
+      { key: 'title', label: 'title — заголовок', type: 'text' },
+      { key: 'text', label: 'text — текст', type: 'textarea' },
+      { key: 'children', label: 'children — вложенные блоки (массив)', type: 'json' }
+    ],
+    'tabs': [
+      { key: 'tabs', label: 'tabs — вкладки: [ { "label": "...", "content": [ ...блоки... ] } ]', type: 'json' }
+    ],
+    'accordion': [
+      { key: 'items', label: 'items — элементы: [ { "title": "...", "content": [ ...блоки... ] } ]', type: 'json' }
+    ],
+    'quiz': [
+      { key: 'question', label: 'question — вопрос', type: 'textarea' },
+      { key: 'options', label: 'options — варианты ответов (массив строк)', type: 'json' },
+      { key: 'correct', label: 'correct — индекс правильного варианта (с 0)', type: 'number', min: 0 },
+      { key: 'explanation', label: 'explanation — пояснение', type: 'textarea' }
+    ],
+    'multi-quiz': [
+      { key: 'question', label: 'question — вопрос', type: 'textarea' },
+      { key: 'options', label: 'options — варианты ответов (массив строк)', type: 'json' },
+      { key: 'correct', label: 'correct — индексы правильных вариантов (массив чисел)', type: 'json' },
+      { key: 'explanation', label: 'explanation — пояснение', type: 'textarea' }
+    ],
+    'match': [
+      { key: 'instruction', label: 'instruction — инструкция', type: 'text' },
+      { key: 'pairs', label: 'pairs — пары: [ { "left": "...", "right": "..." } ]', type: 'json' }
+    ],
+    'sort': [
+      { key: 'instruction', label: 'instruction — инструкция', type: 'text' },
+      { key: 'items', label: 'items — перемешанные пункты (массив строк)', type: 'json' },
+      { key: 'correctOrder', label: 'correctOrder — правильный порядок (массив строк)', type: 'json' }
+    ],
+    'fill-blank': [
+      { key: 'instruction', label: 'instruction — инструкция', type: 'text' },
+      { key: 'text', label: 'text — текст с пропусками вида {{1}}, {{2}}', type: 'textarea' },
+      { key: 'answers', label: 'answers — ответы: { "1": "ответ1", "2": "ответ2" }', type: 'json' }
+    ],
+    'flip-card': [
+      { key: 'front', label: 'front — лицевая сторона (текст или блоки)', type: 'textarea' },
+      { key: 'back', label: 'back — обратная сторона (текст или блоки)', type: 'textarea' }
+    ],
+    'poll': [
+      { key: 'question', label: 'question — вопрос опроса', type: 'textarea' },
+      { key: 'options', label: 'options — варианты (массив строк)', type: 'json' }
+    ],
+    'compare': [
+      { key: 'left', label: 'left — блоки левой панели (массив)', type: 'json' },
+      { key: 'right', label: 'right — блоки правой панели (массив)', type: 'json' }
+    ],
+    'slider': [
+      { key: 'label', label: 'label — подпись', type: 'text' },
+      { key: 'min', label: 'min — минимальное значение', type: 'number' },
+      { key: 'max', label: 'max — максимальное значение', type: 'number' },
+      { key: 'default', label: 'default — значение по умолчанию', type: 'number' }
+    ],
+    'timeline': [
+      { key: 'items', label: 'items — события: [ { "title": "...", "description": "..." } ]', type: 'json' }
+    ],
+    'steps': [
+      { key: 'steps', label: 'steps — шаги: [ { "title": "...", "content": [ ...блоки... ] } ]', type: 'json' }
+    ],
+    'embed': [
+      { key: 'src', label: 'src — URL для iframe', type: 'text' }
+    ],
+    'columns': [
+      { key: 'columns', label: 'columns — колонки: [ { "blocks": [ ...блоки... ] } ]', type: 'json' }
+    ],
+    'carousel': [
+      { key: 'items', label: 'items — слайды: [ { "image": "URL", "caption": "..." } или { "content": [...] } ]', type: 'json' }
+    ],
+    'before-after': [
+      { key: 'before', label: 'before — URL изображения "до"', type: 'text' },
+      { key: 'after', label: 'after — URL изображения "после"', type: 'text' }
+    ],
+    'table': [
+      { key: 'headers', label: 'headers — заголовки колонок (массив строк)', type: 'json' },
+      { key: 'rows', label: 'rows — строки: [ ["ячейка", ...], ... ]', type: 'json' }
+    ],
+    'chart': [
+      { key: 'title', label: 'title — заголовок диаграммы', type: 'text' },
+      { key: 'labels', label: 'labels — метки (массив строк)', type: 'json' },
+      { key: 'values', label: 'values — значения (массив чисел)', type: 'json' }
+    ],
+    'pie': [
+      { key: 'title', label: 'title — заголовок диаграммы', type: 'text' },
+      { key: 'segments', label: 'segments — сегменты: [ { "label": "...", "value": 50, "color": "#ff0000" } ]', type: 'json' }
+    ],
+    'modal': [
+      { key: 'buttonText', label: 'buttonText — текст кнопки открытия', type: 'text' },
+      { key: 'text', label: 'text — простой текст содержимого', type: 'textarea' },
+      { key: 'content', label: 'content — блоки содержимого (массив)', type: 'json' }
+    ],
+    'tooltip': [
+      { key: 'text', label: 'text — видимый текст', type: 'text' },
+      { key: 'tooltipText', label: 'tooltipText — текст подсказки', type: 'textarea' }
+    ],
+    'mermaid': [
+      { key: 'code', label: 'code — код диаграммы Mermaid', type: 'textarea' }
+    ],
+    'drag-sort': [
+      { key: 'instruction', label: 'instruction — инструкция', type: 'text' },
+      { key: 'items', label: 'items — перемешанные элементы (массив строк)', type: 'json' },
+      { key: 'correctOrder', label: 'correctOrder — правильный порядок (массив строк)', type: 'json' }
+    ],
+    'progress-tracker': [
+      { key: 'tasks', label: 'tasks — задачи: [ { "label": "..." } ]', type: 'json' }
+    ],
+    'svg': [
+      { key: 'code', label: 'code — SVG-разметка', type: 'textarea' },
+      { key: 'caption', label: 'caption — подпись', type: 'text' },
+      { key: 'previewWidth', label: 'previewWidth — ширина окна превью', type: 'text' },
+      { key: 'previewHeight', label: 'previewHeight — высота окна превью', type: 'text' }
+    ],
+    'html': [
+      { key: 'code', label: 'code — произвольный HTML', type: 'textarea' }
+    ]
+  };
+
+  const COMMON_SIZE_FIELDS = [
+    { section: 'Размеры и масштабирование (необязательные поля)' },
+    { key: 'width', label: 'width — ширина (напр. 500px, 80%)', type: 'text' },
+    { key: 'height', label: 'height — высота', type: 'text' },
+    { key: 'maxWidth', label: 'maxWidth — максимальная ширина', type: 'text' },
+    { key: 'maxHeight', label: 'maxHeight — максимальная высота', type: 'text' },
+    { key: 'minWidth', label: 'minWidth — минимальная ширина', type: 'text' },
+    { key: 'minHeight', label: 'minHeight — минимальная высота', type: 'text' },
+    { key: 'autoScale', label: 'autoScale — автомасштабирование (по умолчанию включено)', type: 'checkbox', defaultChecked: true, omitTrue: true }
+  ];
+
+  function buildSchemaFor(type) {
+    const base = BLOCK_SCHEMAS[type] ? BLOCK_SCHEMAS[type].slice() : [];
+    return base.concat(COMMON_SIZE_FIELDS);
+  }
+
+  function readFormField(def, control) {
+    if (def.type === 'checkbox') {
+      const val = control.checked;
+      if (def.omitTrue && val) return undefined;
+      if (def.omitFalse && !val) return undefined;
+      return val;
+    }
+    if (def.type === 'number') {
+      const raw = String(control.value).trim();
+      if (raw === '') return undefined;
+      const num = Number(raw);
+      if (isNaN(num)) throw new Error('Поле "' + def.key + '": ожидается число');
+      return num;
+    }
+    if (def.type === 'select') {
+      return control.value === '' ? undefined : control.value;
+    }
+    if (def.type === 'json') {
+      const raw = String(control.value).trim();
+      if (raw === '') return undefined;
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        throw new Error('Поле "' + def.key + '": некорректный JSON — ' + e.message);
+      }
+    }
+    const val = control.value;
+    return val === '' ? undefined : val;
+  }
+
+  function fillFormField(def, control, value) {
+    const isEmpty = (value === undefined || value === null);
+    if (def.type === 'checkbox') {
+      control.checked = isEmpty ? !!def.defaultChecked : !!value;
+    } else if (def.type === 'number') {
+      control.value = isEmpty ? '' : String(value);
+    } else if (def.type === 'select') {
+      control.value = isEmpty ? '' : String(value);
+      if (!isEmpty && control.value === '') {
+        const opt = document.createElement('option');
+        opt.value = String(value);
+        opt.textContent = String(value);
+        control.appendChild(opt);
+        control.value = String(value);
+      }
+    } else if (def.type === 'json') {
+      control.value = isEmpty ? '' : JSON.stringify(value, null, 2);
+    } else {
+      if (isEmpty) {
+        control.value = '';
+      } else if (typeof value === 'object') {
+        control.value = JSON.stringify(value);
+      } else {
+        control.value = String(value);
+      }
+    }
+  }
+
+  // ---------- РЕДАКТОР БЛОКА: ФОРМА + JSON ----------
+  function openBlockFormModal(options) {
+    options = options || {};
+    const title = options.title || 'Редактор блока';
+    const initial = (options.block && typeof options.block === 'object') ? options.block : { type: 'text', text: '' };
+    const onSave = options.onSave;
+
+    const overlay = h('div', { class: 'modal-overlay' });
+    const content = h('div', { class: 'modal-content block-editor-modal' });
+    const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
+    closeBtn.addEventListener('click', () => overlay.remove());
+    content.appendChild(closeBtn);
+    content.appendChild(h('h3', { textContent: title, class: 'heading' }));
+
+    let currentType = (typeof initial.type === 'string' && initial.type) ? initial.type : 'text';
+    let extraData = {};
+    let fieldControls = {};
+    let formActive = true;
+
+    // Вкладки
+    const tabsRow = h('div', { class: 'editor-tabs' });
+    const formTabBtn = h('button', { class: 'editor-tab-btn active', type: 'button', textContent: '📋 Форма' });
+    const jsonTabBtn = h('button', { class: 'editor-tab-btn', type: 'button', textContent: '{ } JSON' });
+    tabsRow.appendChild(formTabBtn);
+    tabsRow.appendChild(jsonTabBtn);
+    content.appendChild(tabsRow);
+
+    const formPanel = h('div', { class: 'block-form' });
+    const jsonPanel = h('div', { style: 'display:none' });
+    const textarea = h('textarea', { class: 'block-json-area', spellcheck: 'false' });
+    jsonPanel.appendChild(textarea);
+    content.appendChild(formPanel);
+    content.appendChild(jsonPanel);
+
+    function buildForm(obj) {
+      formPanel.innerHTML = '';
+      fieldControls = {};
+
+      // Поле типа (только чтение; тип можно поменять во вкладке JSON)
+      const typeRow = h('div', { class: 'form-field' });
+      typeRow.appendChild(h('label', { textContent: 'type — тип блока (изменяется во вкладке JSON)' }));
+      const typeInput = h('input', { type: 'text' });
+      typeInput.value = currentType;
+      typeInput.readOnly = true;
+      typeRow.appendChild(typeInput);
+      formPanel.appendChild(typeRow);
+
+      const schema = buildSchemaFor(currentType);
+      if (!BLOCK_SCHEMAS[currentType]) {
+        formPanel.appendChild(h('p', { class: 'form-hint', textContent: 'Для типа "' + currentType + '" стандартная схема не определена — доступны только общие поля размеров. Остальные атрибуты задайте во вкладке JSON.' }));
+      }
+
+      schema.forEach(def => {
+        if (def.section) {
+          formPanel.appendChild(h('div', { class: 'form-section-title', textContent: def.section }));
+          return;
+        }
+        const row = h('div', { class: 'form-field' });
+        let control;
+        if (def.type === 'checkbox') {
+          const labelRow = h('label', { class: 'checkbox-label' });
+          control = h('input', { type: 'checkbox' });
+          labelRow.appendChild(control);
+          labelRow.appendChild(h('span', { textContent: def.label }));
+          row.appendChild(labelRow);
+        } else if (def.type === 'select') {
+          row.appendChild(h('label', { textContent: def.label }));
+          control = h('select');
+          control.appendChild(h('option', { value: '', textContent: '(не задано)' }));
+          (def.options || []).forEach(o => control.appendChild(h('option', { value: o, textContent: o })));
+          row.appendChild(control);
+        } else if (def.type === 'textarea' || def.type === 'json') {
+          row.appendChild(h('label', { textContent: def.label }));
+          control = h('textarea', def.type === 'json' ? { class: 'json-field' } : {});
+          row.appendChild(control);
+        } else if (def.type === 'number') {
+          row.appendChild(h('label', { textContent: def.label }));
+          control = h('input', { type: 'number' });
+          if (def.min !== undefined) control.min = def.min;
+          if (def.max !== undefined) control.max = def.max;
+          row.appendChild(control);
+        } else {
+          row.appendChild(h('label', { textContent: def.label }));
+          control = h('input', { type: 'text' });
+          row.appendChild(control);
+        }
+        formPanel.appendChild(row);
+        fieldControls[def.key] = { def: def, control: control };
+        fillFormField(def, control, obj ? obj[def.key] : undefined);
+      });
+    }
+
+    function schemaKeySet(type) {
+      const set = new Set();
+      buildSchemaFor(type).forEach(d => { if (d.key) set.add(d.key); });
+      return set;
+    }
+
+    function stateFromParsed(parsed) {
+      if (parsed && typeof parsed.type === 'string' && parsed.type) {
+        currentType = parsed.type;
+      }
+      const keys = schemaKeySet(currentType);
+      extraData = {};
+      Object.keys(parsed).forEach(k => {
+        if (k !== 'type' && !keys.has(k)) extraData[k] = parsed[k];
+      });
+      buildForm(parsed);
+    }
+
+    function serializeForm() {
+      const result = { type: currentType };
+      Object.keys(extraData).forEach(k => { result[k] = extraData[k]; });
+      buildSchemaFor(currentType).forEach(def => {
+        if (def.section) return;
+        const entry = fieldControls[def.key];
+        if (!entry) return;
+        const v = readFormField(def, entry.control);
+        if (v !== undefined) result[def.key] = v;
+      });
+      return result;
+    }
+
+    function showFormTab() {
+      formActive = true;
+      formPanel.style.display = '';
+      jsonPanel.style.display = 'none';
+      formTabBtn.classList.add('active');
+      jsonTabBtn.classList.remove('active');
+    }
+
+    function showJsonTab() {
+      formActive = false;
+      formPanel.style.display = 'none';
+      jsonPanel.style.display = '';
+      jsonTabBtn.classList.add('active');
+      formTabBtn.classList.remove('active');
+    }
+
+    formTabBtn.addEventListener('click', () => {
+      if (formActive) return;
+      try {
+        const parsed = JSON.parse(textarea.value);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          throw new Error('ожидается объект блока');
+        }
+        stateFromParsed(parsed);
+      } catch (e) {
+        alert('Не удалось разобрать JSON: ' + e.message + '\nИсправьте JSON, прежде чем переходить к форме.');
+        return;
+      }
+      showFormTab();
+    });
+
+    jsonTabBtn.addEventListener('click', () => {
+      if (!formActive) return;
+      let obj;
+      try {
+        obj = serializeForm();
+      } catch (e) {
+        alert('Ошибка в полях формы: ' + e.message);
+        return;
+      }
+      textarea.value = JSON.stringify(obj, null, 2);
+      showJsonTab();
+    });
+
+    // Начальное состояние
+    stateFromParsed(JSON.parse(JSON.stringify(initial)));
+    textarea.value = JSON.stringify(initial, null, 2);
+
+    const buttonRow = h('div', { style: 'display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;' });
+    const saveBtn = h('button', { class: 'quiz-button', textContent: 'Сохранить', type: 'button' });
+    saveBtn.addEventListener('click', async () => {
+      let data;
+      if (formActive) {
+        try {
+          data = serializeForm();
+        } catch (e) {
+          alert('Ошибка в полях формы: ' + e.message);
+          return;
+        }
+      } else {
+        try {
+          data = JSON.parse(textarea.value);
+        } catch (e) {
+          alert('Ошибка JSON: ' + e.message);
+          return;
+        }
       }
       try {
         if (typeof onSave === 'function') {
@@ -1236,9 +1757,9 @@
     const blocks = ensureLessonBlocks(lesson);
     const block = blocks[blockIndex];
     if (!block) { alert('Блок не найден'); return; }
-    openJSONEditor(JSON.stringify(block, null, 2), {
+    openBlockFormModal({
       title: 'Блок ' + (blockIndex + 1) + ' из ' + blocks.length + ' (' + (block.type || 'без типа') + ')',
-      height: '350px',
+      block: block,
       onSave: async (data) => {
         validateBlockData(data);
         blocks[blockIndex] = data;
@@ -1251,9 +1772,9 @@
   function openAddBlockEditor(lesson, insertIndex) {
     const blocks = ensureLessonBlocks(lesson);
     const template = { type: 'text', text: 'Новый текст блока. Отредактируйте меня.' };
-    openJSONEditor(JSON.stringify(template, null, 2), {
+    openBlockFormModal({
       title: 'Новый блок (позиция ' + (insertIndex + 1) + ')',
-      height: '350px',
+      block: template,
       onSave: async (data) => {
         validateBlockData(data);
         blocks.splice(insertIndex, 0, data);
@@ -1315,7 +1836,7 @@
     const total = ensureLessonBlocks(lesson).length;
     const toolbar = h('div', { class: 'block-toolbar' });
 
-    const editBtn = h('button', { class: 'block-tool-btn', type: 'button', title: 'Редактировать JSON блока', textContent: '✎' });
+    const editBtn = h('button', { class: 'block-tool-btn', type: 'button', title: 'Редактировать блок', textContent: '✎' });
     editBtn.addEventListener('click', (e) => { e.stopPropagation(); openBlockEditor(lesson, blockIndex); });
     toolbar.appendChild(editBtn);
 
@@ -1403,7 +1924,7 @@
       <p><strong>Поддержка нескольких курсов:</strong> Вы можете загрузить JSON, содержащий один курс, массив курсов, массив URL-адресов на курсы, или объект с полем <code>courses</code>, которое может быть массивом курсов или массивом URL. При загрузке URL каждый адрес должен возвращать JSON одного курса.</p>
       <p><strong>Автозагрузка через URL:</strong> Добавьте параметр <code>?url=ссылка</code> (или <code>?source=</code>, <code>?course=</code>) в адресную строку, и плеер автоматически загрузит данные по этой ссылке при открытии страницы.</p>
       <h4 style="color: #fff; margin-top: 10px;">Режимы работы</h4>
-      <p>Переключатель в верхней панели позволяет выбрать режим: <strong>✏ Режим редактирования</strong> — доступны панели редактирования блоков (наведите курсор на блок), кнопки добавления блоков и редакторы JSON; <strong>👁 Режим просмотра</strong> — чистый просмотр без кнопок редактирования. Выбранный режим запоминается.</p>
+      <p>Переключатель в верхней панели позволяет выбрать режим: <strong>✏ Режим редактирования</strong> — доступны панели редактирования блоков (наведите курсор на блок), кнопки добавления блоков и редакторы; <strong>👁 Режим просмотра</strong> — чистый просмотр без кнопок редактирования. Выбранный режим запоминается.</p>
       <h4 style="color: #fff; margin-top: 10px;">Форматы входных данных</h4>
       <ul>
         <li>Одиночный курс: <code>{ "meta": ..., "lessons": ... }</code></li>
@@ -1434,7 +1955,9 @@
       <p>Полный список типов блоков смотрите в расширенной справке или JSON-схеме.</p>
       <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования).</p>
       <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
-      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать JSON блока, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок. Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
+      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок.</p>
+      <p>Редактор блока содержит две вкладки: <strong>«Форма»</strong> — все атрибуты данного типа блока (включая незаполненные) с удобными полями ввода, и <strong>«JSON»</strong> — исходный JSON блока. Значения синхронизируются при переключении вкладок. Атрибуты, не входящие в стандартную схему, сохраняются автоматически.</p>
+      <p>Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
     `;
     content.appendChild(helpDiv);
     overlay.appendChild(content);
@@ -1676,7 +2199,6 @@ ${schema}
 
     const lessonContainer = h('div', { class: 'lesson-container' });
 
-    // Заголовок урока (+ кнопка редактирования урока только в режиме редактирования)
     const lessonTitleRow = h('div', { class: 'lesson-title-row' });
     lessonTitleRow.appendChild(h('h2', { class: 'heading', textContent: lesson.title || lesson.id }));
     if (editMode) {
@@ -1693,7 +2215,7 @@ ${schema}
 
     if (lesson.description) lessonContainer.appendChild(h('p', { class: 'text', textContent: lesson.description }));
     if (editMode) {
-      lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его JSON, переместить, добавить новый или удалить.' }));
+      lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его, переместить, добавить новый или удалить.' }));
     }
 
     const content = h('div', { class: 'lesson-content' });
@@ -2557,7 +3079,6 @@ ${schema}
     await openDB().catch(e => console.warn('IndexedDB не доступна', e));
     renderInitialState();
 
-    // Проверяем GET-параметры для автозагрузки
     const urlParams = new URLSearchParams(window.location.search);
     const autoUrl = urlParams.get('url') || urlParams.get('source') || urlParams.get('course');
     if (autoUrl) {
