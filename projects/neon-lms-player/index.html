@@ -14,7 +14,15 @@
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    if (window.mermaid) {
+      mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+    }
+  });
+  window.addEventListener('error', function (ev) {
+    var errBox = document.getElementById('app');
+    if (errBox && errBox.innerHTML.trim() === '') {
+      errBox.innerHTML = '<div style="color:#ff2a6d;padding:20px;border:1px solid #ff2a6d;border-radius:8px;font-family:monospace;">Ошибка скрипта: ' + (ev.message || 'неизвестная ошибка') + '</div>';
+    }
   });
 </script>
 
@@ -44,7 +52,6 @@
   }
   #app { max-width: 1200px; margin: 0 auto; }
 
-  /* Заголовок приложения */
   .app-header {
     display: flex;
     align-items: center;
@@ -66,20 +73,14 @@
     from { text-shadow: 0 0 5px var(--cyan), 0 0 10px var(--cyan); }
     to { text-shadow: 0 0 15px var(--cyan), 0 0 30px var(--cyan); }
   }
-  .app-header .app-info {
-    flex: 1;
-    min-width: 200px;
-  }
+  .app-header .app-info { flex: 1; min-width: 200px; }
   .app-header .app-name {
     font-size: 1.5em;
     font-weight: bold;
     color: #fff;
     text-shadow: 0 0 10px var(--cyan);
   }
-  .app-header .app-description {
-    color: var(--muted);
-    font-size: 0.9em;
-  }
+  .app-header .app-description { color: var(--muted); font-size: 0.9em; }
   .app-header .app-version {
     padding: 4px 10px;
     border: 1px solid var(--cyan);
@@ -125,7 +126,6 @@
     font-size: 1.5em;
     line-height: 1;
     padding: 6px 10px;
-    text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -273,18 +273,18 @@
   .pie-legend-color { width: 15px; height: 15px; border-radius: 3px; }
 
   .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; animation: fadeIn 0.2s ease; }
-  .modal-content { 
-    background: var(--panel); 
-    border: 1px solid var(--border); 
-    border-radius: 10px; 
-    padding: 20px; 
-    max-width: 600px; 
-    width: 90%; 
-    position: relative; 
-    box-shadow: 0 0 30px rgba(0,240,255,0.3); 
+  .modal-content {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0,240,255,0.3);
     animation: slideUp 0.3s ease;
-    max-height: 80vh;      
-    overflow-y: auto;      
+    max-height: 80vh;
+    overflow-y: auto;
   }
   @keyframes slideUp {
     from { transform: translateY(20px); opacity: 0; }
@@ -305,7 +305,7 @@
   .drag-sort-item.dragging { opacity: 0.5; border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.5); }
 
   .steps-container { margin: 20px 0; }
-  .steps-header { display: flex; gap: 10px; margin-bottom: 15px; }
+  .steps-header { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
   .step-btn { padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text); cursor: pointer; transition: all 0.3s; }
   .step-btn:hover { border-color: var(--cyan); color: var(--cyan); }
   .step-btn.active { background: rgba(0,240,255,0.15); border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.3); }
@@ -318,16 +318,16 @@
 
   .mermaid { background: #0a0c14; padding: 10px; border-radius: 8px; overflow-x: auto; }
 
-  .speed-control { 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 6px; 
-    margin: 10px auto; 
-    padding: 4px 8px; 
-    background: rgba(0, 0, 0, 0.4); 
-    border: 1px solid var(--border); 
-    border-radius: 20px; 
+  .speed-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 10px auto;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 20px;
     width: fit-content;
   }
   .speed-control label { font-size: 0.85em; color: var(--muted); }
@@ -427,9 +427,7 @@
     transition: transform 0.6s;
     transform-style: preserve-3d;
   }
-  .flip-card.flipped .flip-card-inner {
-    transform: rotateY(180deg);
-  }
+  .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
   .flip-card-front, .flip-card-back {
     position: absolute;
     width: 100%;
@@ -451,32 +449,11 @@
     background: rgba(0, 240, 255, 0.05);
   }
 
-  .poll-option.selected {
-    border-color: var(--cyan);
-    background: rgba(0,240,255,0.1);
-  }
-  .poll-bar {
-    height: 8px;
-    background: rgba(255,255,255,0.1);
-    border-radius: 4px;
-    margin: 5px 0 10px 0;
-    overflow: hidden;
-  }
-  .poll-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--cyan), var(--green));
-    transition: width 0.5s;
-  }
-  .timeline {
-    position: relative;
-    margin: 20px 0;
-    padding-left: 30px;
-    border-left: 2px solid var(--border);
-  }
-  .timeline-item {
-    margin-bottom: 20px;
-    position: relative;
-  }
+  .poll-option.selected { border-color: var(--cyan); background: rgba(0,240,255,0.1); }
+  .poll-bar { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin: 5px 0 10px 0; overflow: hidden; }
+  .poll-bar-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); transition: width 0.5s; }
+  .timeline { position: relative; margin: 20px 0; padding-left: 30px; border-left: 2px solid var(--border); }
+  .timeline-item { margin-bottom: 20px; position: relative; }
   .timeline-item::before {
     content: '';
     position: absolute;
@@ -488,43 +465,14 @@
     background: var(--cyan);
     box-shadow: 0 0 8px var(--cyan);
   }
-  .timeline-title {
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 0 0 5px var(--cyan);
-  }
-  .timeline-desc {
-    color: var(--muted);
-  }
-  .slider-container {
-    margin: 15px 0;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: rgba(255,255,255,0.02);
-  }
-  .slider-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    color: var(--text);
-  }
-  .slider-value {
-    color: var(--cyan);
-    font-weight: bold;
-  }
-  .slider-input {
-    width: 100%;
-    accent-color: var(--cyan);
-    cursor: pointer;
-  }
+  .timeline-title { font-weight: bold; color: #fff; text-shadow: 0 0 5px var(--cyan); }
+  .timeline-desc { color: var(--muted); }
+  .slider-container { margin: 15px 0; padding: 10px; border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.02); }
+  .slider-label { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--text); }
+  .slider-value { color: var(--cyan); font-weight: bold; }
+  .slider-input { width: 100%; accent-color: var(--cyan); cursor: pointer; }
 
-  .image-preview-overlay {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.8);
-  }
+  .image-preview-overlay { display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.8); }
   .image-preview-content {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -537,23 +485,104 @@
     box-shadow: 0 0 30px rgba(0,240,255,0.3);
     animation: slideUp 0.3s ease;
   }
-  .image-preview-content img {
-    max-width: 100%;
-    max-height: 80vh;
-    display: block;
-    margin: 0 auto;
+  .image-preview-content img { max-width: 100%; max-height: 80vh; display: block; margin: 0 auto; border-radius: 6px; }
+  .svg-preview-wrapper { max-width: 100%; overflow: auto; }
+  .preview-caption { text-align: center; margin-top: 10px; color: var(--muted); font-size: 0.9em; }
+
+  /* ---------- РЕДАКТИРОВАНИЕ БЛОКОВ ---------- */
+  .block-wrapper { position: relative; }
+  .block-toolbar {
+    position: absolute;
+    top: -13px;
+    right: 8px;
+    z-index: 60;
+    display: flex;
+    gap: 4px;
+    padding: 3px 5px;
+    background: var(--panel);
+    border: 1px solid var(--border);
     border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0,240,255,0.25);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .2s ease, transform .2s ease;
+    pointer-events: none;
   }
-  .svg-preview-wrapper {
-    max-width: 100%;
-    overflow: auto;
+  .block-wrapper:hover .block-toolbar,
+  .block-toolbar:focus-within {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
   }
-  .preview-caption {
-    text-align: center;
-    margin-top: 10px;
+  .block-tool-btn {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    line-height: 1;
+    padding: 0;
+    transition: all .2s;
+  }
+  .block-tool-btn:hover:not(:disabled) {
+    background: rgba(0,240,255,0.15);
+    box-shadow: 0 0 8px rgba(0,240,255,0.4);
+    transform: translateY(-1px);
+  }
+  .block-tool-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.5); }
+  .block-tool-btn.danger:hover:not(:disabled) {
+    background: rgba(255,42,109,0.15);
+    box-shadow: 0 0 8px rgba(255,42,109,0.4);
+  }
+  .block-tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .add-block-btn {
+    width: 100%;
+    margin: 18px 0 5px;
+    padding: 10px;
+    border: 1px dashed var(--border);
+    background: transparent;
     color: var(--muted);
-    font-size: 0.9em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .3s;
+    font-family: inherit;
+    font-size: 0.95em;
   }
+  .add-block-btn:hover {
+    color: var(--cyan);
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(0,240,255,0.2);
+    background: rgba(0,240,255,0.05);
+  }
+  .lesson-title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .lesson-title-row h2 { margin: 0; }
+  .lesson-edit-btn {
+    background: rgba(0,240,255,0.1);
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .3s;
+    font-size: 1em;
+    padding: 4px 8px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lesson-edit-btn:hover {
+    background: rgba(0,240,255,0.2);
+    box-shadow: 0 0 10px rgba(0,240,255,0.3);
+    transform: translateY(-2px);
+  }
+  .editor-hint { color: var(--muted); font-size: 0.85em; margin: 5px 0 15px; }
 
   @media (max-width: 600px) {
     .columns { flex-direction: column; }
@@ -563,6 +592,7 @@
     .compare-divider { display: none; }
     .app-header { flex-direction: column; align-items: flex-start; }
     .app-header .app-info { min-width: 100%; }
+    .block-toolbar { opacity: 1; transform: none; pointer-events: auto; }
   }
 </style>
 </head>
@@ -576,7 +606,13 @@
   // ---------- СОСТОЯНИЕ ----------
   let course = null;
   let currentLessonId = null;
-  const courseProgress = JSON.parse(localStorage.getItem('lms_course_progress') || '{}');
+  let courseProgress = {};
+  try {
+    courseProgress = JSON.parse(localStorage.getItem('lms_course_progress') || '{}');
+    if (!courseProgress || typeof courseProgress !== 'object') courseProgress = {};
+  } catch (e) {
+    courseProgress = {};
+  }
   let completedLessons = new Set();
   let themeStyleElement = null;
 
@@ -587,6 +623,7 @@
 
   function openDB() {
     return new Promise((resolve, reject) => {
+      if (!window.indexedDB) { reject(new Error('IndexedDB недоступна')); return; }
       const request = indexedDB.open(DB_NAME, DB_VERSION);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
@@ -611,7 +648,7 @@
       const id = recordId || generateRecordId();
       const record = {
         id: id,
-        title: courseData.meta?.title || 'Без названия',
+        title: (courseData.meta && courseData.meta.title) || 'Без названия',
         course: courseData
       };
       store.put(record);
@@ -633,7 +670,7 @@
       const tx = db.transaction(['courses'], 'readonly');
       const store = tx.objectStore('courses');
       const request = store.getAll();
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => resolve(request.result || []);
       request.onerror = () => reject(request.error);
     });
   }
@@ -673,11 +710,11 @@
   }
 
   function slugify(text) {
-    return text.toLowerCase().trim().replace(/[^\wа-яё]+/gi, '-').replace(/^-+|-+$/g, '');
+    return String(text == null ? '' : text).toLowerCase().trim().replace(/[^\wа-яё]+/gi, '-').replace(/^-+|-+$/g, '');
   }
 
-  function getCourseKey(course) {
-    return course.meta.id || slugify(course.meta.title) || 'default';
+  function getCourseKey(courseObj) {
+    return (courseObj.meta && courseObj.meta.id) || slugify(courseObj.meta && courseObj.meta.title) || 'default';
   }
 
   // ---------- ТЕМЫ ----------
@@ -700,8 +737,8 @@
       themeStyleElement = document.createElement('style');
       document.head.appendChild(themeStyleElement);
     }
+    const source = (theme && typeof theme === 'object' && Object.keys(theme).length > 0) ? theme : defaultTheme;
     const vars = {};
-    const source = theme || defaultTheme;
     for (const [key, value] of Object.entries(source)) {
       vars[`--${key}`] = value;
     }
@@ -712,6 +749,8 @@
   // ---------- ОБРАБОТКА КУРСА ----------
   function setCourse(newCourse) {
     course = newCourse;
+    if (!course.meta) course.meta = {};
+    if (!Array.isArray(course.lessons)) course.lessons = [];
     currentLessonId = null;
     const key = getCourseKey(course);
     completedLessons = new Set(courseProgress[key] || []);
@@ -724,15 +763,13 @@
   }
 
   async function loadCourseFromObject(courseData, recordId) {
-    try {
-      if (!courseData.meta || !courseData.lessons) {
-        throw new Error('Неверный формат курса');
-      }
-      await saveCourseToDB(courseData, recordId);
-      setCourse(courseData);
-    } catch (e) {
-      alert('Ошибка загрузки курса: ' + e.message);
+    if (!courseData || typeof courseData !== 'object' || Array.isArray(courseData) || !courseData.meta || !courseData.lessons) {
+      throw new Error('Неверный формат курса: требуются поля meta и lessons');
     }
+    const id = recordId || generateRecordId();
+    courseData.meta._recordId = id;
+    await saveCourseToDB(courseData, id);
+    setCourse(courseData);
   }
 
   // Функция загрузки данных (один курс, массив курсов/URL или объект с courses)
@@ -778,7 +815,10 @@
     }
 
     for (const courseData of coursesArray) {
-      await saveCourseToDB(courseData);
+      const id = generateRecordId();
+      if (!courseData.meta) courseData.meta = {};
+      courseData.meta._recordId = id;
+      await saveCourseToDB(courseData, id);
     }
 
     updateSavedCoursesList();
@@ -805,7 +845,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.0.2' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.1.2' }));
     return header;
   }
 
@@ -815,22 +855,32 @@
     const header = h('header', { class: 'course-header' });
 
     const titleRow = h('div', { class: 'course-title-row' });
-    titleRow.appendChild(h('h1', { textContent: course.meta.title }));
+    titleRow.appendChild(h('h1', { textContent: course.meta.title || 'Без названия' }));
 
     const editBtn = h('button', {
       class: 'edit-course-btn',
       type: 'button',
-      title: 'Редактор JSON',
+      title: 'Редактор JSON курса',
       textContent: '✎'
     });
     editBtn.addEventListener('click', () => {
-      const recordId = course.meta._recordId;
-      openJSONEditor(JSON.stringify(course, null, 2), recordId);
+      const recordId = course.meta._recordId || null;
+      openJSONEditor(JSON.stringify(cleanCourseForEditor(course), null, 2), {
+        title: 'Редактор JSON курса',
+        onSave: async (data) => {
+          if (Array.isArray(data) || (data && data.courses)) {
+            throw new Error('Редактор поддерживает только один курс. Для загрузки нескольких курсов используйте импорт файла или URL.');
+          }
+          await loadCourseFromObject(data, recordId);
+        }
+      });
     });
     titleRow.appendChild(editBtn);
     header.appendChild(titleRow);
 
-    header.appendChild(h('p', { class: 'description', textContent: course.meta.description }));
+    if (course.meta.description) {
+      header.appendChild(h('p', { class: 'description', textContent: course.meta.description }));
+    }
     const badges = h('div', { class: 'badges' });
     if (course.meta.author) badges.appendChild(h('span', { class: 'badge', textContent: 'Автор: ' + course.meta.author }));
     if (course.meta.duration) badges.appendChild(h('span', { class: 'badge', textContent: 'Длительность: ' + course.meta.duration }));
@@ -846,7 +896,7 @@
     course.lessons.forEach(lesson => {
       const btn = h('button', {
         class: 'lesson-btn' + (lesson.id === currentLessonId ? ' active' : '') + (completedLessons.has(lesson.id) ? ' completed' : ''),
-        textContent: lesson.title,
+        textContent: lesson.title || lesson.id,
         type: 'button'
       });
       btn.addEventListener('click', () => showLesson(lesson.id));
@@ -859,7 +909,7 @@
     if (!course) return null;
     const total = course.lessons.length;
     const done = [...completedLessons].filter(id => course.lessons.some(l => l.id === id)).length;
-    const percent = Math.round((done / total) * 100);
+    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
     const container = h('div', { class: 'progress-container' });
     const label = h('div', { class: 'progress-label' });
     label.appendChild(h('span', { textContent: 'Прогресс курса' }));
@@ -882,8 +932,8 @@
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      const text = await file.text();
       try {
+        const text = await file.text();
         const data = JSON.parse(text);
         const result = await loadCoursesFromData(data);
         if (result.errors.length > 0) {
@@ -922,7 +972,15 @@
           }
         ]
       };
-      openJSONEditor(JSON.stringify(emptyCourse, null, 2), null);
+      openJSONEditor(JSON.stringify(emptyCourse, null, 2), {
+        title: 'Новый курс (редактор JSON)',
+        onSave: async (data) => {
+          if (Array.isArray(data) || (data && data.courses)) {
+            throw new Error('Редактор поддерживает только один курс.');
+          }
+          await loadCourseFromObject(data, null);
+        }
+      });
     });
     buttonRow.appendChild(newCourseBtn);
 
@@ -936,7 +994,7 @@
       if (!url) return;
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Сетевая ошибка');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         const result = await loadCoursesFromData(data);
         if (result.errors.length > 0) {
@@ -966,6 +1024,7 @@
     listEl.innerHTML = '<p class="text">Загрузка списка...</p>';
     try {
       const courses = await getAllCoursesFromDB();
+      if (!document.body.contains(listEl)) return;
       if (courses.length === 0) {
         listEl.innerHTML = '<p class="text">Сохранённых курсов нет.</p>';
         return;
@@ -973,7 +1032,7 @@
       listEl.innerHTML = '';
       courses.forEach(record => {
         const item = h('div', { class: 'saved-course-item' });
-        item.appendChild(h('span', { textContent: record.title, style: 'flex:1;' }));
+        item.appendChild(h('span', { textContent: record.title || 'Без названия', style: 'flex:1;' }));
         const loadBtn = h('button', { class: 'quiz-button', textContent: 'Загрузить', type: 'button' });
         loadBtn.addEventListener('click', () => {
           if (!record.course.meta) record.course.meta = {};
@@ -982,9 +1041,13 @@
         });
         const delBtn = h('button', { class: 'quiz-button', textContent: 'Удалить', type: 'button', style: 'background: rgba(255,42,109,0.1); border-color: var(--pink); color: var(--pink);' });
         delBtn.addEventListener('click', async () => {
-          if (confirm('Удалить курс "' + record.title + '"?')) {
-            await deleteCourseFromDB(record.id);
-            updateSavedCoursesList();
+          if (confirm('Удалить курс "' + (record.title || 'Без названия') + '"?')) {
+            try {
+              await deleteCourseFromDB(record.id);
+              updateSavedCoursesList();
+            } catch (e) {
+              alert('Ошибка удаления: ' + e.message);
+            }
           }
         });
         item.appendChild(loadBtn);
@@ -997,31 +1060,41 @@
     }
   }
 
-  function openJSONEditor(initialValue, recordId) {
+  // ---------- УНИВЕРСАЛЬНЫЙ РЕДАКТОР JSON ----------
+  // options: { title, height, onSave(parsedData) }
+  function openJSONEditor(initialValue, options = {}) {
+    const title = options.title || 'Редактор JSON';
+    const editorHeight = options.height || '300px';
+    const onSave = options.onSave;
+
     const overlay = h('div', { class: 'modal-overlay' });
     const content = h('div', { class: 'modal-content' });
     const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
     closeBtn.addEventListener('click', () => overlay.remove());
     content.appendChild(closeBtn);
-    content.appendChild(h('h3', { textContent: 'Редактор JSON курса', class: 'heading' }));
+    content.appendChild(h('h3', { textContent: title, class: 'heading' }));
 
-    const textarea = h('textarea', { style: 'width:100%; height:300px; background:#0a0c14; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:10px; font-family:monospace;' });
+    const textarea = h('textarea', { style: 'width:100%; height:' + editorHeight + '; background:#0a0c14; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:10px; font-family:monospace;' });
     textarea.value = initialValue || '';
     content.appendChild(textarea);
 
-    const buttonRow = h('div', { style: 'display:flex; gap:10px; margin-top:10px;' });
+    const buttonRow = h('div', { style: 'display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;' });
     const saveBtn = h('button', { class: 'quiz-button', textContent: 'Сохранить', type: 'button' });
     saveBtn.addEventListener('click', async () => {
+      let data;
       try {
-        const data = JSON.parse(textarea.value);
-        if (Array.isArray(data) || (data && data.courses)) {
-          alert('Редактор поддерживает только один курс. Для загрузки нескольких курсов используйте импорт файла или URL.');
-          return;
-        }
-        await loadCourseFromObject(data, recordId);
-        overlay.remove();
+        data = JSON.parse(textarea.value);
       } catch (e) {
         alert('Ошибка JSON: ' + e.message);
+        return;
+      }
+      try {
+        if (typeof onSave === 'function') {
+          await onSave(data);
+        }
+        overlay.remove();
+      } catch (e) {
+        alert('Ошибка сохранения: ' + e.message);
       }
     });
     const cancelBtn = h('button', { class: 'quiz-button', textContent: 'Отмена', type: 'button' });
@@ -1034,6 +1107,152 @@
     document.body.appendChild(overlay);
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) overlay.remove();
+    });
+  }
+
+  // ---------- РЕДАКТИРОВАНИЕ ОТДЕЛЬНЫХ БЛОКОВ УРОКА ----------
+  function cleanCourseForEditor(courseData) {
+    const clone = JSON.parse(JSON.stringify(courseData));
+    if (clone.meta && clone.meta._recordId) delete clone.meta._recordId;
+    return clone;
+  }
+
+  async function persistCourse() {
+    if (!course.meta) course.meta = {};
+    if (!course.meta._recordId) course.meta._recordId = generateRecordId();
+    await saveCourseToDB(course, course.meta._recordId);
+    updateSavedCoursesList();
+  }
+
+  function validateBlockData(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('Блок должен быть JSON-объектом');
+    }
+    if (!data.type || typeof data.type !== 'string') {
+      throw new Error('У блока обязательно поле "type"');
+    }
+  }
+
+  function ensureLessonBlocks(lesson) {
+    if (!Array.isArray(lesson.blocks)) lesson.blocks = [];
+    return lesson.blocks;
+  }
+
+  function openBlockEditor(lesson, blockIndex) {
+    const blocks = ensureLessonBlocks(lesson);
+    const block = blocks[blockIndex];
+    if (!block) { alert('Блок не найден'); return; }
+    openJSONEditor(JSON.stringify(block, null, 2), {
+      title: 'Блок ' + (blockIndex + 1) + ' из ' + blocks.length + ' (' + (block.type || 'без типа') + ')',
+      height: '350px',
+      onSave: async (data) => {
+        validateBlockData(data);
+        blocks[blockIndex] = data;
+        await persistCourse();
+        showLesson(lesson.id);
+      }
+    });
+  }
+
+  function openAddBlockEditor(lesson, insertIndex) {
+    const blocks = ensureLessonBlocks(lesson);
+    const template = { type: 'text', text: 'Новый текст блока. Отредактируйте меня.' };
+    openJSONEditor(JSON.stringify(template, null, 2), {
+      title: 'Новый блок (позиция ' + (insertIndex + 1) + ')',
+      height: '350px',
+      onSave: async (data) => {
+        validateBlockData(data);
+        blocks.splice(insertIndex, 0, data);
+        await persistCourse();
+        showLesson(lesson.id);
+      }
+    });
+  }
+
+  function openLessonEditor(lesson) {
+    const lessonCopy = JSON.parse(JSON.stringify(lesson));
+    openJSONEditor(JSON.stringify(lessonCopy, null, 2), {
+      title: 'Редактор урока: ' + (lesson.title || lesson.id),
+      height: '350px',
+      onSave: async (data) => {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+          throw new Error('Урок должен быть JSON-объектом');
+        }
+        if (!data.id) throw new Error('У урока обязательно поле "id"');
+        if (!Array.isArray(data.blocks)) throw new Error('У урока обязательно поле "blocks" (массив)');
+        const lessonIdx = course.lessons.findIndex(l => l.id === lesson.id);
+        if (lessonIdx === -1) throw new Error('Урок не найден в курсе');
+        course.lessons[lessonIdx] = data;
+        await persistCourse();
+        showLesson(data.id);
+      }
+    });
+  }
+
+  async function moveLessonBlock(lesson, fromIndex, toIndex) {
+    const blocks = ensureLessonBlocks(lesson);
+    if (toIndex < 0 || toIndex >= blocks.length || fromIndex === toIndex) return;
+    const moved = blocks.splice(fromIndex, 1)[0];
+    blocks.splice(toIndex, 0, moved);
+    try {
+      await persistCourse();
+    } catch (e) {
+      alert('Ошибка сохранения: ' + e.message);
+    }
+    showLesson(lesson.id);
+  }
+
+  async function deleteLessonBlock(lesson, blockIndex) {
+    const blocks = ensureLessonBlocks(lesson);
+    const block = blocks[blockIndex];
+    if (!block) return;
+    const label = (block.type || 'блок') + (block.text ? ': "' + String(block.text).substring(0, 40) + '"' : '');
+    if (!confirm(`Удалить блок ${blockIndex + 1} (${label})?`)) return;
+    blocks.splice(blockIndex, 1);
+    try {
+      await persistCourse();
+    } catch (e) {
+      alert('Ошибка сохранения: ' + e.message);
+    }
+    showLesson(lesson.id);
+  }
+
+  function createBlockToolbar(lesson, blockIndex) {
+    const total = ensureLessonBlocks(lesson).length;
+    const toolbar = h('div', { class: 'block-toolbar' });
+
+    const editBtn = h('button', { class: 'block-tool-btn', type: 'button', title: 'Редактировать JSON блока', textContent: '✎' });
+    editBtn.addEventListener('click', (e) => { e.stopPropagation(); openBlockEditor(lesson, blockIndex); });
+    toolbar.appendChild(editBtn);
+
+    const upBtn = h('button', { class: 'block-tool-btn', type: 'button', title: 'Переместить выше', textContent: '↑', disabled: blockIndex === 0 });
+    upBtn.addEventListener('click', (e) => { e.stopPropagation(); moveLessonBlock(lesson, blockIndex, blockIndex - 1); });
+    toolbar.appendChild(upBtn);
+
+    const downBtn = h('button', { class: 'block-tool-btn', type: 'button', title: 'Переместить ниже', textContent: '↓', disabled: blockIndex === total - 1 });
+    downBtn.addEventListener('click', (e) => { e.stopPropagation(); moveLessonBlock(lesson, blockIndex, blockIndex + 1); });
+    toolbar.appendChild(downBtn);
+
+    const addBtn = h('button', { class: 'block-tool-btn', type: 'button', title: 'Добавить блок после этого', textContent: '＋' });
+    addBtn.addEventListener('click', (e) => { e.stopPropagation(); openAddBlockEditor(lesson, blockIndex + 1); });
+    toolbar.appendChild(addBtn);
+
+    const delBtn = h('button', { class: 'block-tool-btn danger', type: 'button', title: 'Удалить блок', textContent: '🗑' });
+    delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteLessonBlock(lesson, blockIndex); });
+    toolbar.appendChild(delBtn);
+
+    return toolbar;
+  }
+
+  function renderLessonBlocksEditable(lesson, container) {
+    const blocks = ensureLessonBlocks(lesson);
+    blocks.forEach((block, idx) => {
+      const rendered = renderBlock(block, idx);
+      if (!rendered) return;
+      const wrapper = h('div', { class: 'block-wrapper' });
+      wrapper.appendChild(createBlockToolbar(lesson, idx));
+      wrapper.appendChild(rendered);
+      container.appendChild(wrapper);
     });
   }
 
@@ -1118,6 +1337,8 @@
 }</code></pre>
       <p>Полный список типов блоков смотрите в расширенной справке или JSON-схеме.</p>
       <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс".</p>
+      <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
+      <p>Откройте урок и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать JSON блока, <code>↑</code>/<code>↓</code> — переместить блок, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить блок. Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
     `;
     content.appendChild(helpDiv);
     overlay.appendChild(content);
@@ -1153,7 +1374,12 @@
         return;
       }
       try {
-        await navigator.clipboard.writeText(promptArea.value);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(promptArea.value);
+        } else {
+          promptArea.select();
+          document.execCommand('copy');
+        }
         alert('Промпт скопирован в буфер обмена!');
       } catch (e) {
         alert('Не удалось скопировать: ' + e.message);
@@ -1213,22 +1439,22 @@
 1. section: { "type": "section", "title": "Заголовок секции", "children": [ ...блоки... ] }
 2. heading: { "type": "heading", "level": 2, "text": "Текст заголовка" } // level: 1-6
 3. text: { "type": "text", "text": "Текст абзаца" }
-4. image: { "type": "image", "src": "URL изображения", "caption": "Подпись (необязательно)", "previewWidth": "600px", "previewHeight": "400px" } // previewWidth/Height - размер окна превью (необязательно)
-5. video: { "type": "video", "src": "URL видео", "poster": "URL постера", "caption": "Подпись", "speedControl": true } // speedControl - показать переключатель скорости
+4. image: { "type": "image", "src": "URL изображения", "caption": "Подпись (необязательно)", "previewWidth": "600px", "previewHeight": "400px" }
+5. video: { "type": "video", "src": "URL видео", "poster": "URL постера", "caption": "Подпись", "speedControl": true }
 6. audio: { "type": "audio", "src": "URL аудио", "caption": "Подпись", "speedControl": true }
-7. list: { "type": "list", "ordered": false, "items": ["Элемент 1", "Элемент 2"] } // ordered - true для нумерованного
+7. list: { "type": "list", "ordered": false, "items": ["Элемент 1", "Элемент 2"] }
 8. code: { "type": "code", "language": "javascript", "code": "console.log('Hello');" }
-9. callout: { "type": "callout", "variant": "info", "title": "Заголовок", "text": "Текст" } // variant: info, warning, success
+9. callout: { "type": "callout", "variant": "info", "title": "Заголовок", "text": "Текст" }
 10. tabs: { "type": "tabs", "tabs": [ { "label": "Вкладка 1", "content": [ ...блоки... ] }, { "label": "Вкладка 2", "content": [ ...блоки... ] } ] }
 11. accordion: { "type": "accordion", "items": [ { "title": "Заголовок", "content": [ ...блоки... ] } ] }
-12. quiz: { "type": "quiz", "question": "Вопрос", "options": ["Вариант 1", "Вариант 2"], "correct": 0, "explanation": "Пояснение (необязательно)" } // correct - индекс правильного варианта
+12. quiz: { "type": "quiz", "question": "Вопрос", "options": ["Вариант 1", "Вариант 2"], "correct": 0, "explanation": "Пояснение (необязательно)" }
 13. multi-quiz: { "type": "multi-quiz", "question": "Вопрос", "options": ["Вариант A", "Вариант B", "Вариант C"], "correct": [0, 2], "explanation": "Пояснение" }
 14. match: { "type": "match", "instruction": "Сопоставьте", "pairs": [ { "left": "Термин 1", "right": "Определение 1" }, ... ] }
 15. sort: { "type": "sort", "instruction": "Расставьте по порядку", "items": ["Пункт 1", "Пункт 2"], "correctOrder": ["Пункт 2", "Пункт 1"] }
 16. fill-blank: { "type": "fill-blank", "instruction": "Заполните пропуски", "text": "Текст с {{1}} и {{2}}", "answers": { "1": "ответ1", "2": "ответ2" } }
 17. flip-card: { "type": "flip-card", "front": "Вопрос или текст", "back": "Ответ или пояснение" }
-18. poll: { "type": "poll", "question": "Вопрос опроса", "options": ["Вариант 1", "Вариант 2"] } // Результаты генерируются случайно
-19. compare: { "type": "compare", "left": [ ...блоки... ], "right": [ ...блоки... ] } // два контента, перетаскиваемый разделитель
+18. poll: { "type": "poll", "question": "Вопрос опроса", "options": ["Вариант 1", "Вариант 2"] }
+19. compare: { "type": "compare", "left": [ ...блоки... ], "right": [ ...блоки... ] }
 20. slider: { "type": "slider", "label": "Оцените", "min": 0, "max": 10, "default": 5 }
 21. timeline: { "type": "timeline", "items": [ { "title": "Событие 1", "description": "Описание" }, ... ] }
 22. steps: { "type": "steps", "steps": [ { "title": "Шаг 1", "content": [ ...блоки... ] }, ... ] }
@@ -1238,14 +1464,14 @@
 26. before-after: { "type": "before-after", "before": "URL изображения до", "after": "URL изображения после" }
 27. table: { "type": "table", "headers": ["Колонка 1", "Колонка 2"], "rows": [ ["Ячейка 1", "Ячейка 2"], ... ] }
 28. chart: { "type": "chart", "title": "Заголовок", "labels": ["Метка 1", "Метка 2"], "values": [80, 20] }
-29. pie: { "type": "pie", "title": "Заголовок", "segments": [ { "label": "Сегмент 1", "value": 50, "color": "#ff0000" }, ... ] } // value - процент или доля
+29. pie: { "type": "pie", "title": "Заголовок", "segments": [ { "label": "Сегмент 1", "value": 50, "color": "#ff0000" }, ... ] }
 30. modal: { "type": "modal", "buttonText": "Открыть", "content": [ ...блоки... ] }
 31. tooltip: { "type": "tooltip", "text": "Наведите на меня", "tooltipText": "Подсказка" }
 32. mermaid: { "type": "mermaid", "code": "graph TD; A-->B;" }
 33. drag-sort: { "type": "drag-sort", "instruction": "Перетащите", "items": ["Элемент 1", "Элемент 2"], "correctOrder": ["Элемент 2", "Элемент 1"] }
 34. progress-tracker: { "type": "progress-tracker", "tasks": [ { "label": "Задача 1" }, ... ] }
-35. svg: { "type": "svg", "code": "<svg xmlns=\"http://www.w3.org/2000/svg\">...</svg>", "caption": "Подпись (необязательно)", "previewWidth": "600px", "previewHeight": "400px" } // Встраиваемый SVG-код
-36. html: { "type": "html", "code": "<div style=\"...\">...</div>" } // Произвольный HTML-код
+35. svg: { "type": "svg", "code": "<svg xmlns=\\"http://www.w3.org/2000/svg\\">...</svg>", "caption": "Подпись (необязательно)" }
+36. html: { "type": "html", "code": "<div style=\\"...\\">...</div>" }
 `;
 
     const prompt = `Ты — эксперт по созданию интерактивных образовательных курсов. Создай JSON-файл курса на тему "${topic}" для LMS-плеера.
@@ -1270,8 +1496,8 @@
 - HTML-код должен быть корректным и не содержать скриптов.
 
 ФОРМУЛЫ:
-- Для вставки математических формул в текстовых блоках (type: "text") используй синтаксис KaTeX: inline формулы заключай в \(...\), display формулы — в \[...\]. Также можно использовать $...$ для inline и $$...$$ для display.
-- В HTML-блоках (type: "html") формулы можно вставлять внутри HTML-кода, используя те же разделители KaTeX. Например: <p>Скорость равна \(v = \frac{s}{t}\)</p>.
+- Для вставки математических формул в текстовых блоках (type: "text") используй синтаксис KaTeX: inline формулы заключай в \\(...\\), display формулы — в \\[...\\]. Также можно использовать $...$ для inline и $$...$$ для display.
+- В HTML-блоках (type: "html") формулы можно вставлять внутри HTML-кода, используя те же разделители KaTeX. Например: <p>Скорость равна \\(v = \\frac{s}{t}\\)</p>.
 - Если теоретический материал содержит много абзацев или требует расширенного форматирования (списки, выделение, таблицы), используй блок "html" с соответствующими HTML-тегами, а не множественные блоки "text".
 
 РАЗМЕРЫ БЛОКОВ:
@@ -1350,11 +1576,30 @@ ${schema}
     if (!lesson) return;
 
     const lessonContainer = h('div', { class: 'lesson-container' });
-    lessonContainer.appendChild(h('h2', { class: 'heading', textContent: lesson.title }));
+
+    // Заголовок урока + кнопка редактирования всего урока
+    const lessonTitleRow = h('div', { class: 'lesson-title-row' });
+    lessonTitleRow.appendChild(h('h2', { class: 'heading', textContent: lesson.title || lesson.id }));
+    const lessonEditBtn = h('button', {
+      class: 'lesson-edit-btn',
+      type: 'button',
+      title: 'Редактировать JSON урока',
+      textContent: '✎'
+    });
+    lessonEditBtn.addEventListener('click', () => openLessonEditor(lesson));
+    lessonTitleRow.appendChild(lessonEditBtn);
+    lessonContainer.appendChild(lessonTitleRow);
+
     if (lesson.description) lessonContainer.appendChild(h('p', { class: 'text', textContent: lesson.description }));
+    lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его JSON, переместить, добавить новый или удалить.' }));
 
     const content = h('div', { class: 'lesson-content' });
-    renderBlocks(lesson.blocks, content);
+    renderLessonBlocksEditable(lesson, content);
+
+    const addBlockBtn = h('button', { class: 'add-block-btn', type: 'button', textContent: '＋ Добавить блок в конец урока' });
+    addBlockBtn.addEventListener('click', () => openAddBlockEditor(lesson, ensureLessonBlocks(lesson).length));
+    content.appendChild(addBlockBtn);
+
     lessonContainer.appendChild(content);
 
     const completeBtn = h('button', {
@@ -1371,7 +1616,11 @@ ${schema}
         completedLessons.add(lessonId);
       }
       courseProgress[key] = [...completedLessons];
-      localStorage.setItem('lms_course_progress', JSON.stringify(courseProgress));
+      try {
+        localStorage.setItem('lms_course_progress', JSON.stringify(courseProgress));
+      } catch (e) {
+        console.warn('Не удалось сохранить прогресс', e);
+      }
       showLesson(lessonId);
       setTimeout(() => {
         const nav = document.querySelector('.lessons-nav');
@@ -1382,13 +1631,13 @@ ${schema}
 
     // ----- НАВИГАЦИЯ МЕЖДУ УРОКАМИ -----
     const lessonIndex = course.lessons.findIndex(l => l.id === lessonId);
-    const navContainer = h('div', { style: 'display: flex; gap: 10px; margin-top: 20px; justify-content: space-between;' });
+    const navContainer = h('div', { style: 'display: flex; gap: 10px; margin-top: 20px; justify-content: space-between; flex-wrap: wrap;' });
 
     const prevBtn = h('button', {
       class: 'quiz-button',
       textContent: '← Предыдущий урок',
       type: 'button',
-      disabled: lessonIndex === 0
+      disabled: lessonIndex <= 0
     });
     prevBtn.addEventListener('click', () => {
       if (lessonIndex > 0) {
@@ -1402,7 +1651,7 @@ ${schema}
       class: 'quiz-button',
       textContent: 'Следующий урок →',
       type: 'button',
-      disabled: lessonIndex === course.lessons.length - 1
+      disabled: lessonIndex >= course.lessons.length - 1
     });
     nextBtn.addEventListener('click', () => {
       if (lessonIndex < course.lessons.length - 1) {
@@ -1440,7 +1689,7 @@ ${schema}
 
   function renderMermaidDiagrams(element) {
     const mermaidElements = element.querySelectorAll('.mermaid');
-    if (mermaidElements.length && window.mermaid) {
+    if (mermaidElements.length && window.mermaid && window.mermaid.run) {
       mermaidElements.forEach(el => {
         const code = el.textContent;
         el.removeAttribute('data-processed');
@@ -1458,6 +1707,7 @@ ${schema}
   }
 
   function renderBlocks(blocks, container) {
+    if (!Array.isArray(blocks)) return;
     blocks.forEach((block, idx) => {
       const element = renderBlock(block, idx);
       if (element) container.appendChild(element);
@@ -1465,8 +1715,8 @@ ${schema}
   }
 
   function renderContentOrText(value, container) {
-    if (typeof value === 'string') {
-      container.appendChild(document.createTextNode(value));
+    if (typeof value === 'string' || typeof value === 'number') {
+      container.appendChild(document.createTextNode(String(value)));
     } else if (Array.isArray(value)) {
       renderBlocks(value, container);
     } else if (value && value.type) {
@@ -1557,11 +1807,12 @@ ${schema}
   }
 
   function renderBlock(block, idx) {
+    if (!block || typeof block !== 'object') return null;
     let element;
     switch (block.type) {
       case 'section':
-        element = h('section', { class: 'block-section', id: block.id || slugify(block.title) });
-        element.appendChild(h('h2', { class: 'section-title', textContent: block.title }));
+        element = h('section', { class: 'block-section', id: block.id || slugify(block.title) || ('section-' + idx) });
+        element.appendChild(h('h2', { class: 'section-title', textContent: block.title != null ? String(block.title) : 'Секция' }));
         if (block.children) {
           const content = h('div', { class: 'section-content' });
           renderBlocks(block.children, content);
@@ -1569,10 +1820,10 @@ ${schema}
         }
         break;
       case 'heading':
-        element = h(`h${block.level || 2}`, { class: 'heading', textContent: block.text });
+        element = h(`h${Math.min(6, Math.max(1, parseInt(block.level, 10) || 2))}`, { class: 'heading', textContent: block.text != null ? String(block.text) : '' });
         break;
       case 'text':
-        element = h('p', { class: 'text', textContent: block.text });
+        element = h('p', { class: 'text', textContent: block.text != null ? String(block.text) : '' });
         break;
       case 'image':
         element = h('figure', { class: 'figure' });
@@ -1606,26 +1857,26 @@ ${schema}
         audio.appendChild(h('source', { src: block.src, type: block.mimeType || 'audio/mpeg' }));
         element.appendChild(audio);
         if (block.speedControl) {
-          const speedControl = h('div', { class: 'speed-control' });
-          speedControl.appendChild(h('label', { textContent: 'Скорость:' }));
-          const speedSelect = h('select');
-          [0.5, 1, 1.5, 2].forEach(s => speedSelect.appendChild(h('option', { value: s, textContent: s + 'x' })));
-          speedSelect.value = '1';
-          speedSelect.addEventListener('change', () => audio.playbackRate = parseFloat(speedSelect.value));
-          speedControl.appendChild(speedSelect);
-          element.appendChild(speedControl);
+          const audioSpeedControl = h('div', { class: 'speed-control' });
+          audioSpeedControl.appendChild(h('label', { textContent: 'Скорость:' }));
+          const audioSpeedSelect = h('select');
+          [0.5, 1, 1.5, 2].forEach(s => audioSpeedSelect.appendChild(h('option', { value: s, textContent: s + 'x' })));
+          audioSpeedSelect.value = '1';
+          audioSpeedSelect.addEventListener('change', () => audio.playbackRate = parseFloat(audioSpeedSelect.value));
+          audioSpeedControl.appendChild(audioSpeedSelect);
+          element.appendChild(audioSpeedControl);
         }
         if (block.caption) element.appendChild(h('figcaption', { textContent: block.caption }));
         break;
       case 'list':
         element = h(block.ordered ? 'ol' : 'ul', { class: 'list' });
-        block.items.forEach(item => element.appendChild(h('li', { textContent: item })));
+        (Array.isArray(block.items) ? block.items : []).forEach(item => element.appendChild(h('li', { textContent: item != null ? String(item) : '' })));
         break;
       case 'code':
         element = h('div', { class: 'code-block' });
         element.appendChild(h('div', { class: 'code-header', textContent: block.language || 'code' }));
         const pre = h('pre');
-        pre.appendChild(h('code', { textContent: block.code }));
+        pre.appendChild(h('code', { textContent: block.code != null ? String(block.code) : '' }));
         element.appendChild(pre);
         break;
       case 'callout':
@@ -1643,7 +1894,7 @@ ${schema}
         element = h('div', { class: 'tabs' });
         const btnContainer = h('div', { class: 'tab-buttons' });
         const panelContainer = h('div', { class: 'tab-panels' });
-        block.tabs.forEach((tab, tabIdx) => {
+        (Array.isArray(block.tabs) ? block.tabs : []).forEach((tab, tabIdx) => {
           const btn = h('button', { class: 'tab-button' + (tabIdx === 0 ? ' active' : ''), textContent: tab.label, type: 'button' });
           const panel = h('div', { class: 'tab-panel' + (tabIdx === 0 ? ' active' : '') });
           renderBlocks(tab.content || [], panel);
@@ -1661,10 +1912,10 @@ ${schema}
         break;
       case 'accordion':
         element = h('div', { class: 'accordion' });
-        block.items.forEach((item) => {
+        (Array.isArray(block.items) ? block.items : []).forEach((item) => {
           const itemEl = h('div', { class: 'accordion-item' });
           const header = h('button', { class: 'accordion-header', type: 'button' });
-          header.appendChild(h('span', { textContent: item.title }));
+          header.appendChild(h('span', { textContent: item.title != null ? String(item.title) : '' }));
           header.appendChild(h('span', { class: 'icon', textContent: '+' }));
           const body = h('div', { class: 'accordion-body' });
           const inner = h('div', { class: 'accordion-body-inner' });
@@ -1688,16 +1939,16 @@ ${schema}
         break;
       case 'quiz':
         element = h('div', { class: 'quiz' });
-        element.appendChild(h('p', { class: 'question', textContent: block.question }));
+        element.appendChild(h('p', { class: 'question', textContent: block.question != null ? String(block.question) : 'Вопрос' }));
         const optionsContainer = h('div', { class: 'quiz-options' });
         const radioName = `quiz-${idx}-${Math.random().toString(36).substring(2, 11)}`;
         let selected = null;
-        block.options.forEach((opt, optIdx) => {
+        (Array.isArray(block.options) ? block.options : []).forEach((opt, optIdx) => {
           const label = h('label', { class: 'quiz-option' });
           const input = h('input', { type: 'radio', name: radioName, value: optIdx });
           input.addEventListener('change', () => { selected = optIdx; });
           label.appendChild(input);
-          label.appendChild(document.createTextNode(opt));
+          label.appendChild(document.createTextNode(opt != null ? String(opt) : ''));
           optionsContainer.appendChild(label);
         });
         element.appendChild(optionsContainer);
@@ -1722,23 +1973,23 @@ ${schema}
         break;
       case 'multi-quiz':
         element = h('div', { class: 'quiz multi-quiz' });
-        element.appendChild(h('p', { class: 'question', textContent: block.question }));
+        element.appendChild(h('p', { class: 'question', textContent: block.question != null ? String(block.question) : 'Вопрос' }));
         const multiOptionsContainer = h('div', { class: 'multi-quiz-options' });
-        block.options.forEach((opt, i) => {
+        (Array.isArray(block.options) ? block.options : []).forEach((opt, i) => {
           const label = h('label', { class: 'option' });
           const input = h('input', { type: 'checkbox', value: i });
           label.appendChild(input);
-          label.appendChild(document.createTextNode(opt));
+          label.appendChild(document.createTextNode(opt != null ? String(opt) : ''));
           multiOptionsContainer.appendChild(label);
         });
         element.appendChild(multiOptionsContainer);
         const multiButton = h('button', { class: 'quiz-button', textContent: 'Проверить', type: 'button' });
         const multiFeedback = h('div', { class: 'feedback' });
         multiButton.addEventListener('click', () => {
-          const selected = [];
-          multiOptionsContainer.querySelectorAll('input:checked').forEach(inp => selected.push(parseInt(inp.value)));
-          const correct = block.correct;
-          const isCorrect = selected.length === correct.length && selected.every(v => correct.includes(v));
+          const selectedArr = [];
+          multiOptionsContainer.querySelectorAll('input:checked').forEach(inp => selectedArr.push(parseInt(inp.value, 10)));
+          const correctArr = Array.isArray(block.correct) ? block.correct : ((block.correct === undefined || block.correct === null) ? [] : [block.correct]);
+          const isCorrect = selectedArr.length === correctArr.length && selectedArr.every(v => correctArr.includes(v));
           multiFeedback.textContent = isCorrect ? 'Верно! ' + (block.explanation || '') : 'Неверно. ' + (block.explanation || '');
           multiFeedback.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
           multiOptionsContainer.querySelectorAll('input').forEach(inp => inp.disabled = true);
@@ -1750,17 +2001,18 @@ ${schema}
       case 'match':
         element = h('div', { class: 'match-container' });
         if (block.instruction) element.appendChild(h('p', { class: 'text', textContent: block.instruction }));
-        const rightOptions = [...new Set(block.pairs.map(p => p.right))];
+        const pairsArr = Array.isArray(block.pairs) ? block.pairs : [];
+        const rightOptions = [...new Set(pairsArr.map(p => p.right).filter(v => v !== undefined && v !== null))];
         const selects = [];
-        block.pairs.forEach((pair, i) => {
+        pairsArr.forEach((pair) => {
           const item = h('div', { class: 'match-item' });
-          item.appendChild(h('span', { class: 'term', textContent: pair.left + ' →' }));
+          item.appendChild(h('span', { class: 'term', textContent: (pair.left != null ? String(pair.left) : '') + ' →' }));
           const select = h('select');
           select.appendChild(h('option', { value: '', textContent: 'Выберите...' }));
-          rightOptions.forEach(opt => select.appendChild(h('option', { value: opt, textContent: opt })));
+          rightOptions.forEach(opt => select.appendChild(h('option', { value: opt, textContent: String(opt) })));
           item.appendChild(select);
           element.appendChild(item);
-          selects.push({ select, correct: pair.right });
+          selects.push({ select, correct: String(pair.right) });
         });
         const matchCheckBtn = h('button', { class: 'match-check-btn', textContent: 'Проверить', type: 'button' });
         const matchResult = h('div', { class: 'match-result' });
@@ -1780,12 +2032,12 @@ ${schema}
         element = h('div', { class: 'sort-container' });
         if (block.instruction) element.appendChild(h('p', { class: 'text', textContent: block.instruction }));
         const sortList = h('ul', { class: 'sort-list' });
-        let items = [...block.items];
+        let items = [...(Array.isArray(block.items) ? block.items : [])];
         const renderSortList = () => {
           sortList.innerHTML = '';
           items.forEach((item, i) => {
             const li = h('li', { class: 'sort-item' });
-            li.appendChild(h('span', { textContent: item }));
+            li.appendChild(h('span', { textContent: item != null ? String(item) : '' }));
             const controls = h('div', { class: 'sort-controls' });
             if (i > 0) controls.appendChild(h('button', { class: 'sort-btn', textContent: '↑', type: 'button', onclick: () => { [items[i-1], items[i]] = [items[i], items[i-1]]; renderSortList(); }}));
             if (i < items.length - 1) controls.appendChild(h('button', { class: 'sort-btn', textContent: '↓', type: 'button', onclick: () => { [items[i], items[i+1]] = [items[i+1], items[i]]; renderSortList(); }}));
@@ -1798,6 +2050,11 @@ ${schema}
         const sortCheckBtn = h('button', { class: 'sort-check-btn', textContent: 'Проверить', type: 'button' });
         const sortResult = h('div', { class: 'match-result' });
         sortCheckBtn.addEventListener('click', () => {
+          if (!Array.isArray(block.correctOrder)) {
+            sortResult.textContent = 'Правильный порядок не задан.';
+            sortResult.style.color = 'var(--yellow)';
+            return;
+          }
           const isCorrect = JSON.stringify(items) === JSON.stringify(block.correctOrder);
           sortResult.textContent = isCorrect ? 'Правильный порядок!' : 'Неправильно.';
           sortResult.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
@@ -1808,19 +2065,20 @@ ${schema}
       case 'fill-blank':
         element = h('div', { class: 'fill-blank' });
         if (block.instruction) element.appendChild(h('p', { class: 'text', textContent: block.instruction }));
+        const fillText = String(block.text != null ? block.text : '');
         const regex = /\{\{(\d+)\}\}/g;
         const parts = [];
         let lastIndex = 0, match;
         const inputs = {};
-        while ((match = regex.exec(block.text)) !== null) {
-          if (match.index > lastIndex) parts.push(block.text.substring(lastIndex, match.index));
+        while ((match = regex.exec(fillText)) !== null) {
+          if (match.index > lastIndex) parts.push(fillText.substring(lastIndex, match.index));
           const key = match[1];
           const input = h('input', { type: 'text', class: 'fill-blank-input', placeholder: key });
           inputs[key] = input;
           parts.push(input);
           lastIndex = regex.lastIndex;
         }
-        if (lastIndex < block.text.length) parts.push(block.text.substring(lastIndex));
+        if (lastIndex < fillText.length) parts.push(fillText.substring(lastIndex));
         parts.forEach(part => {
           if (typeof part === 'string') {
             element.appendChild(document.createTextNode(part));
@@ -1832,9 +2090,19 @@ ${schema}
         const fillFeedback = h('div', { class: 'fill-blank-feedback' });
         fillCheckBtn.addEventListener('click', () => {
           let allCorrect = true;
-          for (const key in block.answers) {
-            if (inputs[key].value.trim().toLowerCase() !== block.answers[key].toLowerCase()) { allCorrect = false; inputs[key].style.borderColor = 'var(--pink)'; }
-            else inputs[key].style.borderColor = 'var(--green)';
+          let checkedCount = 0;
+          const answersMap = (block.answers && typeof block.answers === 'object') ? block.answers : {};
+          for (const key in answersMap) {
+            const inputEl = inputs[key];
+            if (!inputEl) continue;
+            checkedCount++;
+            if (inputEl.value.trim().toLowerCase() !== String(answersMap[key]).toLowerCase()) { allCorrect = false; inputEl.style.borderColor = 'var(--pink)'; }
+            else inputEl.style.borderColor = 'var(--green)';
+          }
+          if (checkedCount === 0) {
+            fillFeedback.textContent = 'Нет пропусков для проверки.';
+            fillFeedback.style.color = 'var(--yellow)';
+            return;
           }
           fillFeedback.textContent = allCorrect ? 'Верно!' : 'Есть ошибки.';
           fillFeedback.style.color = allCorrect ? 'var(--green)' : 'var(--pink)';
@@ -1846,29 +2114,29 @@ ${schema}
         element = h('div', { class: 'flip-card' });
         const inner = h('div', { class: 'flip-card-inner' });
         const front = h('div', { class: 'flip-card-front' });
-        renderContentOrText(block.front, front);
+        renderContentOrText(block.front != null ? block.front : '?', front);
         inner.appendChild(front);
         const back = h('div', { class: 'flip-card-back' });
-        renderContentOrText(block.back, back);
+        renderContentOrText(block.back != null ? block.back : '?', back);
         inner.appendChild(back);
         element.appendChild(inner);
         element.addEventListener('click', () => element.classList.toggle('flipped'));
         break;
       case 'poll':
         element = h('div', { class: 'poll' });
-        element.appendChild(h('p', { class: 'question', textContent: block.question }));
+        element.appendChild(h('p', { class: 'question', textContent: block.question != null ? String(block.question) : 'Опрос' }));
         const pollOptionsContainer = h('div', { class: 'poll-options' });
         const pollResultsContainer = h('div', { class: 'poll-results' });
         let pollSelected = null;
-        block.options.forEach((opt, i) => {
-          const optionEl = h('div', { class: 'poll-option', textContent: opt });
+        (Array.isArray(block.options) ? block.options : []).forEach((opt, i) => {
+          const optionEl = h('div', { class: 'poll-option', textContent: opt != null ? String(opt) : '' });
           optionEl.addEventListener('click', () => {
             pollSelected = i;
             pollOptionsContainer.querySelectorAll('.poll-option').forEach(el => el.classList.remove('selected'));
             optionEl.classList.add('selected');
             pollResultsContainer.innerHTML = '';
-            block.options.forEach((o, idx) => {
-              const percent = idx === i ? 60 : Math.floor(Math.random() * 30 + 5);
+            block.options.forEach((o, pollIdx) => {
+              const percent = pollIdx === i ? 60 : Math.floor(Math.random() * 30 + 5);
               const bar = h('div', { class: 'poll-bar' });
               bar.appendChild(h('div', { class: 'poll-bar-fill', style: `width: ${percent}%` }));
               pollResultsContainer.appendChild(h('div', { textContent: `${o}: ${percent}%` }));
@@ -1897,19 +2165,19 @@ ${schema}
         element = h('div', { class: 'slider-container' });
         const sliderLabelRow = h('div', { class: 'slider-label' });
         sliderLabelRow.appendChild(h('span', { textContent: block.label || 'Значение:' }));
-        const sliderValue = h('span', { class: 'slider-value', textContent: block.default || 0 });
+        const sliderValue = h('span', { class: 'slider-value', textContent: block.default != null ? String(block.default) : '0' });
         sliderLabelRow.appendChild(sliderValue);
         element.appendChild(sliderLabelRow);
-        const sliderInput = h('input', { type: 'range', class: 'slider-input', min: block.min || 0, max: block.max || 100, value: block.default || 0 });
+        const sliderInput = h('input', { type: 'range', class: 'slider-input', min: block.min != null ? block.min : 0, max: block.max != null ? block.max : 100, value: block.default != null ? block.default : 0 });
         sliderInput.addEventListener('input', () => sliderValue.textContent = sliderInput.value);
         element.appendChild(sliderInput);
         break;
       case 'timeline':
         element = h('div', { class: 'timeline' });
-        block.items.forEach(item => {
+        (Array.isArray(block.items) ? block.items : []).forEach(item => {
           const itemEl = h('div', { class: 'timeline-item' });
-          itemEl.appendChild(h('div', { class: 'timeline-title', textContent: item.title }));
-          itemEl.appendChild(h('div', { class: 'timeline-desc', textContent: item.description }));
+          itemEl.appendChild(h('div', { class: 'timeline-title', textContent: item.title != null ? String(item.title) : '' }));
+          itemEl.appendChild(h('div', { class: 'timeline-desc', textContent: item.description != null ? String(item.description) : '' }));
           element.appendChild(itemEl);
         });
         break;
@@ -1918,17 +2186,22 @@ ${schema}
         const stepsHeader = h('div', { class: 'steps-header' });
         const stepsContent = h('div', { class: 'step-content' });
         let currentStep = 0;
+        const stepsArr = Array.isArray(block.steps) ? block.steps : [];
         const renderSteps = () => {
           stepsHeader.innerHTML = '';
-          block.steps.forEach((step, i) => {
+          stepsArr.forEach((step, i) => {
             const btn = h('button', { class: 'step-btn' + (i === currentStep ? ' active' : ''), textContent: step.title, type: 'button' });
             btn.addEventListener('click', () => { currentStep = i; renderSteps(); });
             stepsHeader.appendChild(btn);
           });
           stepsContent.innerHTML = '';
-          renderBlocks(block.steps[currentStep].content || [], stepsContent);
+          if (stepsArr[currentStep]) {
+            renderBlocks(stepsArr[currentStep].content || [], stepsContent);
+          }
         };
-        renderSteps();
+        if (stepsArr.length > 0) {
+          renderSteps();
+        }
         element.appendChild(stepsHeader);
         element.appendChild(stepsContent);
         break;
@@ -1938,7 +2211,7 @@ ${schema}
         break;
       case 'columns':
         element = h('div', { class: 'columns' });
-        block.columns.forEach(col => {
+        (Array.isArray(block.columns) ? block.columns : []).forEach(col => {
           const colDiv = h('div', { class: 'column' });
           renderBlocks(col.blocks || [], colDiv);
           element.appendChild(colDiv);
@@ -1946,8 +2219,9 @@ ${schema}
         break;
       case 'carousel':
         element = h('div', { class: 'carousel' });
+        const carouselItems = Array.isArray(block.items) ? block.items : [];
         const track = h('div', { class: 'carousel-track' });
-        const slides = block.items.map(item => {
+        const slides = carouselItems.map(item => {
           const slide = h('div', { class: 'carousel-slide' });
           if (item.content) {
             renderBlocks(item.content, slide);
@@ -1960,21 +2234,30 @@ ${schema}
         slides.forEach(s => track.appendChild(s));
         element.appendChild(track);
         let currentSlide = 0;
+        const carouselDots = slides.map((s, i) => h('span', { class: 'carousel-dot' + (i === 0 ? ' active' : '') }));
         const updateCarousel = () => {
+          if (slides.length === 0) return;
           track.style.transform = `translateX(-${currentSlide * 100}%)`;
           carouselDots.forEach((dot, i) => dot.classList.toggle('active', i === currentSlide));
         };
-        const prevBtn = h('button', { class: 'carousel-btn prev', textContent: '‹', type: 'button' });
-        prevBtn.addEventListener('click', () => { currentSlide = (currentSlide - 1 + slides.length) % slides.length; updateCarousel(); });
-        element.appendChild(prevBtn);
-        const nextBtn = h('button', { class: 'carousel-btn next', textContent: '›', type: 'button' });
-        nextBtn.addEventListener('click', () => { currentSlide = (currentSlide + 1) % slides.length; updateCarousel(); });
-        element.appendChild(nextBtn);
+        const carouselPrevBtn = h('button', { class: 'carousel-btn prev', textContent: '‹', type: 'button' });
+        carouselPrevBtn.addEventListener('click', () => {
+          if (slides.length === 0) return;
+          currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+          updateCarousel();
+        });
+        element.appendChild(carouselPrevBtn);
+        const carouselNextBtn = h('button', { class: 'carousel-btn next', textContent: '›', type: 'button' });
+        carouselNextBtn.addEventListener('click', () => {
+          if (slides.length === 0) return;
+          currentSlide = (currentSlide + 1) % slides.length;
+          updateCarousel();
+        });
+        element.appendChild(carouselNextBtn);
         const dotsContainer = h('div', { class: 'carousel-dots' });
-        const carouselDots = slides.map((_, i) => h('span', { class: 'carousel-dot' + (i === 0 ? ' active' : '') }));
-        carouselDots.forEach(dot => {
+        carouselDots.forEach((dot, dotIdx) => {
           dot.addEventListener('click', () => {
-            currentSlide = carouselDots.indexOf(dot);
+            currentSlide = dotIdx;
             updateCarousel();
           });
           dotsContainer.appendChild(dot);
@@ -2002,13 +2285,13 @@ ${schema}
         const table = h('table');
         const thead = h('thead');
         const headerRow = h('tr');
-        block.headers.forEach(hd => headerRow.appendChild(h('th', { textContent: hd })));
+        (Array.isArray(block.headers) ? block.headers : []).forEach(hd => headerRow.appendChild(h('th', { textContent: hd != null ? String(hd) : '' })));
         thead.appendChild(headerRow);
         table.appendChild(thead);
         const tbody = h('tbody');
-        block.rows.forEach(row => {
+        (Array.isArray(block.rows) ? block.rows : []).forEach(row => {
           const tr = h('tr');
-          row.forEach(cell => tr.appendChild(h('td', { textContent: cell })));
+          (Array.isArray(row) ? row : []).forEach(cell => tr.appendChild(h('td', { textContent: cell != null ? String(cell) : '' })));
           tbody.appendChild(tr);
         });
         table.appendChild(tbody);
@@ -2018,13 +2301,15 @@ ${schema}
         element = h('div', { class: 'chart-block' });
         if (block.title) element.appendChild(h('h4', { textContent: block.title, class: 'heading' }));
         const chart = h('div', { class: 'chart-container' });
-        const max = Math.max(...block.values);
-        block.values.forEach((val, i) => {
+        const chartValues = Array.isArray(block.values) ? block.values : [];
+        const chartLabels = Array.isArray(block.labels) ? block.labels : [];
+        const max = Math.max(...chartValues, 1);
+        chartValues.forEach((val, i) => {
           const barWrap = h('div', { style: 'display: flex; flex-direction: column; align-items: center; flex: 1;' });
-          const bar = h('div', { class: 'chart-bar', style: `height: ${(val / max) * 150}px;` });
-          bar.appendChild(h('span', { textContent: val + '%' }));
+          const bar = h('div', { class: 'chart-bar', style: `height: ${Math.max(2, (val / max) * 150)}px;` });
+          bar.appendChild(h('span', { textContent: String(val) }));
           barWrap.appendChild(bar);
-          barWrap.appendChild(h('div', { class: 'chart-bar-label', textContent: block.labels[i] }));
+          barWrap.appendChild(h('div', { class: 'chart-bar-label', textContent: chartLabels[i] != null ? String(chartLabels[i]) : '' }));
           chart.appendChild(barWrap);
         });
         element.appendChild(chart);
@@ -2032,21 +2317,23 @@ ${schema}
       case 'pie':
         element = h('div', { class: 'pie-block' });
         if (block.title) element.appendChild(h('h4', { textContent: block.title, class: 'heading' }));
-        const total = block.segments.reduce((sum, seg) => sum + seg.value, 0);
+        const pieSegments = Array.isArray(block.segments) ? block.segments : [];
+        const total = pieSegments.reduce((sum, seg) => sum + (Number(seg.value) || 0), 0) || 1;
         let cumulative = 0;
-        const gradientStops = block.segments.map(seg => {
+        const gradientStops = pieSegments.map(seg => {
+          const segValue = Number(seg.value) || 0;
           const start = (cumulative / total) * 100;
-          cumulative += seg.value;
+          cumulative += segValue;
           const end = (cumulative / total) * 100;
-          return `${seg.color} ${start}% ${end}%`;
+          return `${seg.color || '#00f0ff'} ${start}% ${end}%`;
         }).join(', ');
         const pie = h('div', { class: 'pie-chart', style: `background: conic-gradient(${gradientStops});` });
         element.appendChild(pie);
         const legend = h('div', { class: 'pie-legend' });
-        block.segments.forEach(seg => {
+        pieSegments.forEach(seg => {
           const item = h('div', { class: 'pie-legend-item' });
-          item.appendChild(h('div', { class: 'pie-legend-color', style: `background: ${seg.color};` }));
-          item.appendChild(h('span', { textContent: `${seg.label} (${seg.value}%)` }));
+          item.appendChild(h('div', { class: 'pie-legend-color', style: `background: ${seg.color || '#00f0ff'};` }));
+          item.appendChild(h('span', { textContent: `${seg.label || 'Без названия'} (${seg.value}%)` }));
           legend.appendChild(item);
         });
         element.appendChild(legend);
@@ -2070,16 +2357,16 @@ ${schema}
         });
         break;
       case 'tooltip':
-        element = h('span', { class: 'tooltip', textContent: block.text });
-        element.appendChild(h('span', { class: 'tooltip-text', textContent: block.tooltipText }));
+        element = h('span', { class: 'tooltip', textContent: block.text != null ? String(block.text) : '' });
+        element.appendChild(h('span', { class: 'tooltip-text', textContent: block.tooltipText != null ? String(block.tooltipText) : '' }));
         break;
       case 'mermaid':
-        element = h('div', { class: 'mermaid', textContent: block.code });
+        element = h('div', { class: 'mermaid', textContent: block.code != null ? String(block.code) : '' });
         break;
       case 'svg':
         element = h('div', { class: 'svg-container' });
         const svgWrapper = h('div', { class: 'svg-wrapper' });
-        svgWrapper.innerHTML = block.code;
+        svgWrapper.innerHTML = block.code != null ? String(block.code) : '';
         const svgElement = svgWrapper.querySelector('svg');
         if (svgElement) {
           svgElement.style.cursor = 'zoom-in';
@@ -2090,17 +2377,17 @@ ${schema}
         break;
       case 'html':
         element = h('div', { class: 'html-block' });
-        element.innerHTML = block.code;
+        element.innerHTML = block.code != null ? String(block.code) : '';
         break;
       case 'drag-sort':
         element = h('div', { class: 'drag-sort' });
         if (block.instruction) element.appendChild(h('p', { class: 'text', textContent: block.instruction }));
         const dragList = h('ul', { class: 'drag-sort-list' });
-        let dragItems = [...block.items];
+        let dragItems = [...(Array.isArray(block.items) ? block.items : [])];
         const renderDragList = () => {
           dragList.innerHTML = '';
           dragItems.forEach((item, index) => {
-            const li = h('li', { class: 'drag-sort-item', draggable: 'true', textContent: item, dataset: { index: index } });
+            const li = h('li', { class: 'drag-sort-item', draggable: 'true', textContent: item != null ? String(item) : '', dataset: { index: index } });
             li.addEventListener('dragstart', (e) => {
               li.classList.add('dragging');
               e.dataTransfer.setData('text/plain', index.toString());
@@ -2109,9 +2396,9 @@ ${schema}
             li.addEventListener('dragover', (e) => e.preventDefault());
             li.addEventListener('drop', (e) => {
               e.preventDefault();
-              const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+              const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
               const toIndex = index;
-              if (fromIndex !== toIndex) {
+              if (!isNaN(fromIndex) && fromIndex !== toIndex && fromIndex >= 0 && fromIndex < dragItems.length) {
                 const [moved] = dragItems.splice(fromIndex, 1);
                 dragItems.splice(toIndex, 0, moved);
                 renderDragList();
@@ -2125,6 +2412,11 @@ ${schema}
         const dragCheckBtn = h('button', { class: 'sort-check-btn', textContent: 'Проверить', type: 'button' });
         const dragResult = h('div', { class: 'match-result' });
         dragCheckBtn.addEventListener('click', () => {
+          if (!Array.isArray(block.correctOrder)) {
+            dragResult.textContent = 'Правильный порядок не задан.';
+            dragResult.style.color = 'var(--yellow)';
+            return;
+          }
           const isCorrect = JSON.stringify(dragItems) === JSON.stringify(block.correctOrder);
           dragResult.textContent = isCorrect ? 'Правильный порядок!' : 'Неправильно.';
           dragResult.style.color = isCorrect ? 'var(--green)' : 'var(--pink)';
@@ -2134,8 +2426,8 @@ ${schema}
         break;
       case 'progress-tracker':
         element = h('div', { class: 'progress-tracker' });
-        block.tasks.forEach(task => {
-          const step = h('div', { class: 'progress-step', textContent: task.label });
+        (Array.isArray(block.tasks) ? block.tasks : []).forEach(task => {
+          const step = h('div', { class: 'progress-step', textContent: task.label != null ? String(task.label) : '' });
           step.addEventListener('click', () => step.classList.toggle('done'));
           element.appendChild(step);
         });
@@ -2165,7 +2457,7 @@ ${schema}
     if (autoUrl) {
       try {
         const response = await fetch(autoUrl);
-        if (!response.ok) throw new Error('Сетевая ошибка');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         const result = await loadCoursesFromData(data);
         console.log(`Автозагрузка: загружено курсов ${result.count}`);
@@ -2179,7 +2471,12 @@ ${schema}
     }
   }
 
-  init();
+  init().catch(e => {
+    console.error('Критическая ошибка инициализации:', e);
+    if (app && app.innerHTML.trim() === '') {
+      app.innerHTML = '<div style="color:#ff2a6d;padding:20px;border:1px solid #ff2a6d;border-radius:8px;font-family:monospace;">Критическая ошибка: ' + (e && e.message ? e.message : String(e)) + '</div>';
+    }
+  });
 })();
 </script>
 </body>
