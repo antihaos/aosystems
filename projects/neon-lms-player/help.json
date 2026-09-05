@@ -1,9 +1,9 @@
 {
   "meta": {
     "title": "Справка по блокам LMS Player",
-    "description": "Подробное руководство по всем типам блоков и их параметрам с живыми примерами",
+    "description": "Подробное руководство по всем типам блоков (53 типа) и их параметрам с живыми примерами",
     "author": "AI Assistant",
-    "duration": "2 часа",
+    "duration": "3 часа",
     "level": "Начинающий",
     "theme": {}
   },
@@ -527,8 +527,8 @@
               ["previewWidth", "string", "Ширина предпросмотра", "Нет"],
               ["previewHeight", "string", "Высота предпросмотра", "Нет"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"svg\",\n  \"code\": \"<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='40' fill='red'/></svg>\",\n  \"caption\": \"Красный круг\"\n}" },
-            { "type": "svg", "code": "<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='40' fill='red'/></svg>", "caption": "Красный круг" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"svg\",\n  \"code\": \"\",\n  \"caption\": \"Красный круг\"\n}" },
+            { "type": "svg", "code": "", "caption": "Красный круг" }
           ]
         },
         {
@@ -539,8 +539,8 @@
             { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
               ["code", "string", "HTML-код", "Да"]
             ]},
-            { "type": "code", "language": "json", "code": "{\n  \"type\": \"html\",\n  \"code\": \"<p style='color: red;'>Красный текст</p>\"\n}" },
-            { "type": "html", "code": "<p style='color: red;'>Красный текст</p>" }
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"html\",\n  \"code\": \"Красный текст\"\n}" },
+            { "type": "html", "code": "Красный текст" }
           ]
         },
         {
@@ -554,6 +554,332 @@
             ]},
             { "type": "code", "language": "json", "code": "{\n  \"type\": \"tooltip\",\n  \"text\": \"Наведите на меня\",\n  \"tooltipText\": \"Подсказка\"\n}" },
             { "type": "tooltip", "text": "Наведите на меня", "tooltipText": "Подсказка" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-6",
+      "title": "Графики функций и 3D-модели",
+      "description": "Интерактивные графики функций (2D/3D, параметрические) и просмотр 3D-моделей.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: graph — 2D график с параметрами",
+          "children": [
+            { "type": "text", "text": "Построение графиков функций. В режиме 2D строится график y = f(x). Поддерживаются интерактивные параметры (слайдеры), встроенные в поле params: их имена используются в уравнении и чувствительны к регистру." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок графика", "Нет"],
+              ["mode", "string", "\"2d\" (по умолчанию) или \"3d\"", "Нет"],
+              ["parametric", "boolean", "Параметрический режим (кривая по t)", "Нет"],
+              ["equation", "string", "Уравнение: 2D → y = f(x); 3D → z = f(x, y)", "Да (если не параметрический)"],
+              ["paramX / paramY / paramZ", "string", "Параметрические уравнения x(t), y(t), z(t)", "Да (для параметрических)"],
+              ["rangeMin / rangeMax", "number", "Диапазон по x (по умолчанию −10…10)", "Нет"],
+              ["rangeYMin / rangeYMax", "number", "Диапазон по y (для 3D-поверхности)", "Нет"],
+              ["tMin / tMax", "number", "Диапазон параметра t", "Нет"],
+              ["points", "number", "Число точек (по умолчанию 300, максимум 500)", "Нет"],
+              ["params", "array", "Интерактивные параметры: {name, value, min, max, step}", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"graph\",\n  \"title\": \"y = a·sin(x)\",\n  \"mode\": \"2d\",\n  \"equation\": \"a*sin(x)\",\n  \"rangeMin\": -6.28,\n  \"rangeMax\": 6.28,\n  \"points\": 300,\n  \"params\": [\n    { \"name\": \"a\", \"value\": 1, \"min\": 0.5, \"max\": 3, \"step\": 0.1 }\n  ]\n}" },
+            { "type": "callout", "variant": "info", "title": "Поддерживаемый синтаксис уравнений", "text": "Переменные: x, y, t и параметры из поля params. Функции: sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max, atan2 и др. Константы: pi, e. Операции: + − * / ^ (неявное умножение допустимо: 2x, a sin(x))." },
+            { "type": "graph", "title": "y = a·sin(x) — меняйте параметр a", "mode": "2d", "equation": "a*sin(x)", "rangeMin": -6.28, "rangeMax": 6.28, "points": 300, "params": [ { "name": "a", "value": 1, "min": 0.5, "max": 3, "step": 0.1 } ] }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: graph — 3D-поверхность и параметрические кривые",
+          "children": [
+            { "type": "text", "text": "В режиме 3D без параметризации строится поверхность z = f(x, y). При \"parametric\": true задаются три уравнения paramX, paramY, paramZ — получается пространственная кривая." },
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"graph\",\n  \"title\": \"z = sin(x)·cos(y)\",\n  \"mode\": \"3d\",\n  \"equation\": \"sin(x)*cos(y)\",\n  \"rangeMin\": -5, \"rangeMax\": 5,\n  \"rangeYMin\": -5, \"rangeYMax\": 5,\n  \"points\": 40\n}" },
+            { "type": "graph", "title": "Поверхность z = sin(x)·cos(y)", "mode": "3d", "equation": "sin(x)*cos(y)", "rangeMin": -5, "rangeMax": 5, "rangeYMin": -5, "rangeYMax": 5, "points": 40 },
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"graph\",\n  \"title\": \"Спираль (параметрическая кривая)\",\n  \"mode\": \"3d\",\n  \"parametric\": true,\n  \"paramX\": \"cos(t)\",\n  \"paramY\": \"sin(t)\",\n  \"paramZ\": \"t/5\",\n  \"tMin\": 0,\n  \"tMax\": 25\n}" },
+            { "type": "graph", "title": "Спираль: x=cos(t), y=sin(t), z=t/5", "mode": "3d", "parametric": true, "paramX": "cos(t)", "paramY": "sin(t)", "paramZ": "t/5", "tMin": 0, "tMax": 25 }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: model3d",
+          "children": [
+            { "type": "text", "text": "Просмотр 3D-моделей в формате .glb / .gltf. Модель можно задать через URL (поле src) или открыть локальным файлом через сворачивающуюся панель под окном просмотра. Управление: вращение мышью, масштаб колёсиком, опциональное автовращение." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["src", "string", "URL модели .glb / .gltf", "Нет (можно открыть файлом)"],
+              ["caption", "string", "Подпись", "Нет"],
+              ["height", "string", "Высота окна просмотра (по умолчанию 450px)", "Нет"],
+              ["background", "string", "Цвет фона сцены (по умолчанию #0a0c14)", "Нет"],
+              ["autoRotate", "boolean", "Автовращение (по умолчанию включено)", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"model3d\",\n  \"src\": \"https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb\",\n  \"caption\": \"Damaged Helmet — образец Khronos glTF\",\n  \"height\": \"450px\",\n  \"autoRotate\": true\n}" },
+            { "type": "callout", "variant": "warning", "title": "Требования к моделям", "text": "Внешние URL должны поддерживать CORS. Формат .gltf с внешними текстурами может не загрузиться — используйте самодостаточный формат .glb." },
+            { "type": "model3d", "src": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/DamagedHelmet/glTF-Binary/DamagedHelmet.glb", "caption": "Damaged Helmet — образец Khronos glTF", "height": "450px", "autoRotate": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-7",
+      "title": "Обучающие блоки и самопроверка",
+      "description": "Карточки-колоды, верно/неверно, чек-листы, глоссарии и формулы.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: flashcards",
+          "children": [
+            { "type": "text", "text": "Колода переворачивающихся карточек с навигацией «назад/вперёд». Нажмите на карточку, чтобы увидеть ответ." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок колоды", "Нет"],
+              ["cards", "array", "Массив карточек {front, back}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"flashcards\",\n  \"title\": \"Столицы мира\",\n  \"cards\": [\n    { \"front\": \"Столица Франции?\", \"back\": \"Париж\" },\n    { \"front\": \"Столица Японии?\", \"back\": \"Токио\" },\n    { \"front\": \"Столица Бразилии?\", \"back\": \"Бразилиа\" }\n  ]\n}" },
+            { "type": "flashcards", "title": "Столицы мира", "cards": [
+              { "front": "Столица Франции?", "back": "Париж" },
+              { "front": "Столица Японии?", "back": "Токио" },
+              { "front": "Столица Бразилии?", "back": "Бразилиа" }
+            ]}
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: truefalse",
+          "children": [
+            { "type": "text", "text": "Вопрос формата «верно/неверно» с мгновенной проверкой и пояснением." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["question", "string", "Утверждение", "Да"],
+              ["answer", "boolean", "true — утверждение верное, false — неверное", "Да"],
+              ["explanation", "string", "Пояснение после ответа", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"truefalse\",\n  \"question\": \"Земля вращается вокруг Солнца.\",\n  \"answer\": true,\n  \"explanation\": \"Земля обращается вокруг Солнца примерно за 365 дней.\"\n}" },
+            { "type": "truefalse", "question": "Земля вращается вокруг Солнца.", "answer": true, "explanation": "Земля обращается вокруг Солнца примерно за 365 дней." }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: checklist",
+          "children": [
+            { "type": "text", "text": "Чек-лист с автоматическим подсчётом прогресса выполнения." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок чек-листа", "Нет"],
+              ["items", "array", "Массив строк — пунктов списка", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"checklist\",\n  \"title\": \"Чек-лист урока\",\n  \"items\": [\n    \"Прочитать теорию\",\n    \"Разобрать примеры\",\n    \"Пройти тесты\",\n    \"Выполнить практику\"\n  ]\n}" },
+            { "type": "checklist", "title": "Чек-лист урока", "items": [
+              "Прочитать теорию",
+              "Разобрать примеры",
+              "Пройти тесты",
+              "Выполнить практику"
+            ]}
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: glossary",
+          "children": [
+            { "type": "text", "text": "Глоссарий: список терминов с определениями." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок глоссария", "Нет"],
+              ["items", "array", "Массив объектов {term, definition}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"glossary\",\n  \"title\": \"Глоссарий веб-технологий\",\n  \"items\": [\n    { \"term\": \"HTML\", \"definition\": \"Язык гипертекстовой разметки документов.\" },\n    { \"term\": \"CSS\", \"definition\": \"Язык каскадных таблиц стилей.\" },\n    { \"term\": \"DOM\", \"definition\": \"Объектная модель документа.\" }\n  ]\n}" },
+            { "type": "glossary", "title": "Глоссарий веб-технологий", "items": [
+              { "term": "HTML", "definition": "Язык гипертекстовой разметки документов." },
+              { "term": "CSS", "definition": "Язык каскадных таблиц стилей." },
+              { "term": "DOM", "definition": "Объектная модель документа." }
+            ]}
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: equation",
+          "children": [
+            { "type": "text", "text": "Отдельно отображаемая формула в синтаксисе KaTeX (ограничители $$ в поле указывать не нужно)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["latex", "string", "Формула в синтаксисе KaTeX", "Да"],
+              ["caption", "string", "Подпись под формулой", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"equation\",\n  \"latex\": \"x = \\\\frac{-b \\\\pm \\\\sqrt{b^2-4ac}}{2a}\",\n  \"caption\": \"Формула корней квадратного уравнения\"\n}" },
+            { "type": "equation", "latex": "x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}", "caption": "Формула корней квадратного уравнения" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-8",
+      "title": "Интерактивные изображения, кроссворды и медиа",
+      "description": "Изображения с маркерами, кроссворды, YouTube, таймеры и скачивание файлов.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: hotspots — интерактивное изображение",
+          "children": [
+            { "type": "text", "text": "Изображение с кликабельными маркерами. Координаты маркеров задаются в процентах (0–100) от размеров изображения. Клик по маркеру показывает название и описание точки (в описании поддерживается KaTeX)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["src", "string", "URL изображения", "Да"],
+              ["caption", "string", "Подпись изображения", "Нет"],
+              ["hotspots", "array", "Массив точек {x, y, label, text, color}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"hotspots\",\n  \"src\": \"https://picsum.photos/600/400\",\n  \"caption\": \"Интерактивное изображение\",\n  \"hotspots\": [\n    { \"x\": 25, \"y\": 30, \"label\": \"Точка 1\", \"text\": \"Описание первой точки.\" },\n    { \"x\": 70, \"y\": 60, \"label\": \"Точка 2\", \"text\": \"Описание с формулой $E=mc^2$.\" }\n  ]\n}" },
+            { "type": "hotspots", "src": "https://picsum.photos/600/400", "caption": "Интерактивное изображение", "hotspots": [
+              { "x": 25, "y": 30, "label": "Точка 1", "text": "Описание первой точки." },
+              { "x": 70, "y": 60, "label": "Точка 2", "text": "Описание с формулой $E=mc^2$." }
+            ]}
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: crossword — кроссворд",
+          "children": [
+            { "type": "text", "text": "Кроссворд с вводом букв в клетки и проверкой. Слова размещаются на общей сетке: направление \"across\" (по горизонтали) или \"down\" (по вертикали), координаты первой буквы — поля row и col (с нуля, сетка строится автоматически с любым смещением). Слова записываются заглавными буквами; в клетках пересечения должна быть одинаковая буква." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок кроссворда", "Нет"],
+              ["words", "array", "Массив слов", "Да"],
+              ["words[].word", "string", "Слово (заглавными буквами)", "Да"],
+              ["words[].hint", "string", "Подсказка / определение", "Нет"],
+              ["words[].direction", "string", "\"across\" или \"down\"", "Да"],
+              ["words[].row / col", "number", "Координаты первой буквы (с 0)", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"crossword\",\n  \"title\": \"Мини-кроссворд\",\n  \"words\": [\n    { \"word\": \"КОД\", \"hint\": \"Набор инструкций для компьютера\", \"direction\": \"across\", \"row\": 0, \"col\": 0 },\n    { \"word\": \"КИТ\", \"hint\": \"Морское млекопитающее\", \"direction\": \"down\", \"row\": 0, \"col\": 0 }\n  ]\n}" },
+            { "type": "crossword", "title": "Мини-кроссворд (пересечение на букве К)", "words": [
+              { "word": "КОД", "hint": "Набор инструкций для компьютера (3 буквы)", "direction": "across", "row": 0, "col": 0 },
+              { "word": "КИТ", "hint": "Морское млекопитающее (3 буквы)", "direction": "down", "row": 0, "col": 0 }
+            ]}
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: youtube",
+          "children": [
+            { "type": "text", "text": "Видео с YouTube. В поле videoId можно передать как идентификатор видео, так и полную ссылку (идентификатор будет извлечён автоматически)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["videoId", "string", "ID видео или полная ссылка YouTube", "Да"],
+              ["caption", "string", "Подпись", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"youtube\",\n  \"videoId\": \"jNQXAC9IVRw\",\n  \"caption\": \"Me at the zoo — первое видео на YouTube\"\n}" },
+            { "type": "youtube", "videoId": "jNQXAC9IVRw", "caption": "Me at the zoo — первое видео на YouTube" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: countdown — таймер обратного отсчёта",
+          "children": [
+            { "type": "text", "text": "Таймер обратного отсчёта с кнопками «Старт», «Пауза» и «Сброс». Удобно для ограничения времени на выполнение заданий." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок таймера", "Нет"],
+              ["seconds", "number", "Длительность отсчёта в секундах (по умолчанию 60)", "Нет"],
+              ["label", "string", "Подпись под таймером", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"countdown\",\n  \"title\": \"Время на задание\",\n  \"seconds\": 120,\n  \"label\": \"Успейте выполнить задание за 2 минуты!\"\n}" },
+            { "type": "countdown", "title": "Время на задание", "seconds": 120, "label": "Успейте выполнить задание за 2 минуты!" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: download — скачивание файла",
+          "children": [
+            { "type": "text", "text": "Кнопка-ссылка для скачивания файла (учебные материалы, шаблоны, методички)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["src", "string", "URL файла", "Да"],
+              ["label", "string", "Текст кнопки (по умолчанию «Скачать файл»)", "Нет"],
+              ["fileName", "string", "Имя файла при скачивании", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"download\",\n  \"src\": \"https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf\",\n  \"label\": \"Скачать учебный PDF\",\n  \"fileName\": \"sample.pdf\"\n}" },
+            { "type": "download", "src": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", "label": "Скачать учебный PDF", "fileName": "sample.pdf" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lesson-9",
+      "title": "Оформление и организация контента",
+      "description": "Цитаты, канбан-доски, карточки показателей, деревья и разделители.",
+      "blocks": [
+        {
+          "type": "section",
+          "title": "Блок: quote — цитата",
+          "children": [
+            { "type": "text", "text": "Оформленная цитата с указанием автора." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["text", "string", "Текст цитаты", "Да"],
+              ["author", "string", "Автор цитаты", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"quote\",\n  \"text\": \"Образование — самое мощное оружие, которым можно изменить мир.\",\n  \"author\": \"Нельсон Мандела\"\n}" },
+            { "type": "quote", "text": "Образование — самое мощное оружие, которым можно изменить мир.", "author": "Нельсон Мандела" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: kanban — канбан-доска",
+          "children": [
+            { "type": "text", "text": "Канбан-доска с колонками и карточками задач. Подходит для визуализации рабочих процессов и планов." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок доски", "Нет"],
+              ["columns", "array", "Массив колонок {title, cards: [строки]}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"kanban\",\n  \"title\": \"Канбан-доска проекта\",\n  \"columns\": [\n    { \"title\": \"К выполнению\", \"cards\": [\"Изучить теорию\", \"Составить план\"] },\n    { \"title\": \"В работе\", \"cards\": [\"Практическое задание\"] },\n    { \"title\": \"Готово\", \"cards\": [\"Вводный урок\"] }\n  ]\n}" },
+            { "type": "kanban", "title": "Канбан-доска проекта", "columns": [
+              { "title": "К выполнению", "cards": ["Изучить теорию", "Составить план"] },
+              { "title": "В работе", "cards": ["Практическое задание"] },
+              { "title": "Готово", "cards": ["Вводный урок"] }
+            ]}
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: stats — карточки показателей",
+          "children": [
+            { "type": "text", "text": "Ряд карточек с крупными значениями и подписями — для ключевых цифр, статистики, итогов." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок блока", "Нет"],
+              ["items", "array", "Массив объектов {value, label}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"stats\",\n  \"title\": \"Этот курс в цифрах\",\n  \"items\": [\n    { \"value\": \"9\", \"label\": \"уроков\" },\n    { \"value\": \"53\", \"label\": \"типа блоков\" },\n    { \"value\": \"100%\", \"label\": \"интерактивность\" }\n  ]\n}" },
+            { "type": "stats", "title": "Этот курс в цифрах", "items": [
+              { "value": "9", "label": "уроков" },
+              { "value": "53", "label": "типа блоков" },
+              { "value": "100%", "label": "интерактивность" }
+            ]}
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: tree — дерево со сворачиванием",
+          "children": [
+            { "type": "text", "text": "Иерархическое дерево с раскрывающимися подузлами (поле children — рекурсивный массив таких же узлов)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["title", "string", "Заголовок дерева", "Нет"],
+              ["items", "array", "Массив узлов {text, children: [...]}", "Да"]
+            ]},
+            { "type": "code", "language": "json", "code": "{\n  \"type\": \"tree\",\n  \"title\": \"Структура курса\",\n  \"items\": [\n    { \"text\": \"Модуль 1. Основы\", \"children\": [\n      { \"text\": \"Тема 1.1. Введение\" },\n      { \"text\": \"Тема 1.2. Базовые понятия\" }\n    ]},\n    { \"text\": \"Модуль 2. Практика\", \"children\": [\n      { \"text\": \"Тема 2.1. Упражнения\" }\n    ]}\n  ]\n}" },
+            { "type": "tree", "title": "Структура курса", "items": [
+              { "text": "Модуль 1. Основы", "children": [
+                { "text": "Тема 1.1. Введение" },
+                { "text": "Тема 1.2. Базовые понятия" }
+              ]},
+              { "text": "Модуль 2. Практика", "children": [
+                { "text": "Тема 2.1. Упражнения" }
+              ]}
+            ]}
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Блок: divider — разделитель",
+          "children": [
+            { "type": "text", "text": "Горизонтальный разделитель между частями контента. Три стиля: line (линия), dots (точки), glow (светящаяся линия)." },
+            { "type": "table", "headers": ["Параметр", "Тип", "Описание", "Обязательный"], "rows": [
+              ["style", "string", "line | dots | glow (по умолчанию line)", "Нет"]
+            ]},
+            { "type": "code", "language": "json", "code": "{ \"type\": \"divider\", \"style\": \"dots\" }" },
+            { "type": "divider", "style": "line" },
+            { "type": "divider", "style": "dots" },
+            { "type": "divider", "style": "glow" }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Итоги",
+          "children": [
+            { "type": "text", "text": "В этом курсе-справочнике рассмотрены все типы блоков плеера: текстовые и структурные, медиа, интерактивные (с проверкой знаний), составные, специализированные, графики и 3D, обучающие и оформительские." },
+            { "type": "callout", "variant": "success", "title": "Курс пройден", "text": "Теперь вы знаете все типы блоков и их параметры. Используйте блок «Справка» и редактор блоков (вкладка «Форма») для быстрого создания собственных курсов." },
+            { "type": "divider", "style": "glow" }
           ]
         }
       ]
