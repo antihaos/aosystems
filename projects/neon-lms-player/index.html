@@ -148,6 +148,7 @@
   .accordion-item:hover { border-color: var(--cyan); }
   .accordion-header { width: 100%; padding: 12px 18px; background: transparent; color: var(--text); text-align: left; cursor: pointer; font-size: 1em; display: flex; justify-content: space-between; align-items: center; border: none; transition: color 0.3s; }
   .accordion-header:hover { color: var(--cyan); }
+  .accordion-header:hover { color: var(--cyan); }
   .accordion-header .icon { transition: transform 0.3s; }
   .accordion-item.open .icon { transform: rotate(45deg); }
   .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; background: rgba(255,255,255,0.02); }
@@ -597,6 +598,53 @@
   }
   .download-link:hover { box-shadow: 0 0 12px rgba(5,255,161,0.4); transform: translateY(-2px); }
 
+  /* ---------- ИНТЕРАКТИВНОЕ ИЗОБРАЖЕНИЕ ---------- */
+  .hotspots-block { margin: 15px 0; }
+  .hotspots-figure { position: relative; display: inline-block; max-width: 100%; }
+  .hotspots-figure img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 0 12px rgba(0,240,255,0.2); display: block; }
+  .hotspots-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .hotspot-marker {
+    position: absolute; transform: translate(-50%, -50%);
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(10,14,26,0.75); border: 2px solid var(--cyan); color: var(--cyan);
+    font-size: 0.8em; font-weight: bold; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .25s; box-shadow: 0 0 8px rgba(0,240,255,0.5);
+    font-family: inherit;
+  }
+  .hotspot-marker:hover { transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 14px rgba(0,240,255,0.8); }
+  .hotspot-marker.active { background: var(--cyan); color: #0a0e1a; box-shadow: 0 0 16px rgba(0,240,255,0.9); }
+  .hotspots-info { margin-top: 10px; }
+  .hotspots-hint { color: var(--muted); font-size: 0.9em; }
+  .hotspot-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 15px; background: rgba(0,240,255,0.05); animation: fadeIn .3s ease; }
+  .hotspot-card-title { color: var(--cyan); font-weight: bold; margin-bottom: 6px; }
+  .hotspot-card-text { color: var(--text); }
+
+  /* ---------- КРОССВОРД ---------- */
+  .crossword-block { margin: 15px 0; }
+  .crossword-grid {
+    display: grid; gap: 3px; margin: 12px 0; width: max-content; max-width: 100%;
+    overflow-x: auto; padding: 4px;
+  }
+  .crossword-cell { position: relative; width: 34px; height: 34px; }
+  .crossword-cell.empty { background: transparent; }
+  .crossword-input {
+    width: 100%; height: 100%; text-align: center; text-transform: uppercase;
+    background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 4px;
+    font-size: 1.05em; font-weight: bold; font-family: inherit; outline: none; padding: 0;
+    transition: border-color .3s, box-shadow .3s;
+  }
+  .crossword-input:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.4); }
+  .crossword-input.correct { border-color: var(--green); background: rgba(5,255,161,0.1); color: var(--green); }
+  .crossword-input.wrong { border-color: var(--pink); background: rgba(255,42,109,0.1); color: var(--pink); }
+  .crossword-number { position: absolute; top: 1px; left: 2px; font-size: 0.55em; color: var(--muted); z-index: 2; pointer-events: none; }
+  .crossword-hints { margin-top: 10px; }
+  .crossword-hints-title { color: var(--cyan); font-weight: bold; margin: 8px 0 4px; }
+  .crossword-hint { color: var(--text); font-size: 0.92em; margin: 3px 0; }
+  .crossword-feedback { margin-top: 10px; font-weight: bold; }
+  .crossword-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .crossword-controls .quiz-button { margin-top: 0; }
+
   @media (max-width: 600px) {
     .columns { flex-direction: column; }
     .carousel-btn { font-size: 1.5em; padding: 0 8px; }
@@ -608,6 +656,7 @@
     .block-toolbar { opacity: 1; transform: none; pointer-events: auto; }
     .glossary-item { flex-direction: column; gap: 4px; }
     .glossary-term { min-width: 0; }
+    .crossword-cell { width: 28px; height: 28px; }
   }
 </style>
 </head>
@@ -895,7 +944,7 @@
     info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
     info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
     header.appendChild(info);
-    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.6.2' }));
+    header.appendChild(h('span', { class: 'app-version', textContent: 'v1.7.0' }));
     return header;
   }
 
@@ -1441,6 +1490,27 @@
       { key: 'src', label: 'src — URL файла', type: 'text' },
       { key: 'label', label: 'label — текст кнопки', type: 'text' },
       { key: 'fileName', label: 'fileName — имя файла при скачивании', type: 'text' }
+    ],
+    'hotspots': [
+      { key: 'src', label: 'src — URL изображения', type: 'text' },
+      { key: 'caption', label: 'caption — подпись', type: 'text' },
+      { key: 'hotspots', label: 'hotspots — точки (координаты в % от размеров изображения)', type: 'array', itemSchema: { kind: 'object', label: 'Точка', fields: [
+        { key: 'x', label: 'x — координата по горизонтали, %', type: 'number', min: 0, max: 100 },
+        { key: 'y', label: 'y — координата по вертикали, %', type: 'number', min: 0, max: 100 },
+        { key: 'label', label: 'label — название точки', type: 'text' },
+        { key: 'text', label: 'text — описание точки (поддерживается KaTeX)', type: 'textarea' },
+        { key: 'color', label: 'color — цвет маркера (напр. #00f0ff)', type: 'text' }
+      ] } }
+    ],
+    'crossword': [
+      { key: 'title', label: 'title — заголовок кроссворда', type: 'text' },
+      { key: 'words', label: 'words — слова кроссворда (размещаются на общей сетке)', type: 'array', itemSchema: { kind: 'object', label: 'Слово', fields: [
+        { key: 'word', label: 'word — слово (буквы)', type: 'text' },
+        { key: 'hint', label: 'hint — подсказка / определение', type: 'textarea' },
+        { key: 'direction', label: 'direction — направление', type: 'select', options: ['across', 'down'] },
+        { key: 'row', label: 'row — строка начальной буквы (с 0)', type: 'number', min: 0 },
+        { key: 'col', label: 'col — столбец начальной буквы (с 0)', type: 'number', min: 0 }
+      ] } }
     ]
   };
 
@@ -1727,7 +1797,7 @@
   // ---------- РЕДАКТОР ДЕРЕВА (ВЛОЖЕННЫЕ УЗЛЫ) ----------
   function createTreeListEditor() {
     const wrap = h('div', { class: 'tree-editor' });
-    let items = []; // каждый узел: { text: '', children: [] }
+    let items = [];
 
     function importTree(arr) {
       return (Array.isArray(arr) ? arr : [])
@@ -2359,8 +2429,6 @@
   }
 
   // ---------- ПАРСЕР МАТЕМАТИЧЕСКИХ ВЫРАЖЕНИЙ (ДЛЯ ГРАФИКОВ) ----------
-  // Имена переменных/параметров чувствительны к регистру (a и A — разные переменные).
-  // Функции и константы (sin, cos, pi, e, ...) не зависят от регистра.
   function compileMathExpression(src, allowedVars) {
     const str = String(src).replace(/\s+/g, '');
     if (str === '') throw new Error('пустое выражение');
@@ -3263,6 +3331,244 @@
     return element;
   }
 
+  // ---------- ИНТЕРАКТИВНОЕ ИЗОБРАЖЕНИЕ ----------
+  function renderHotspotsBlock(block) {
+    const element = h('div', { class: 'hotspots-block' });
+    if (!block.src) {
+      element.appendChild(h('p', { class: 'block-note', textContent: '⚠ Укажите URL изображения (поле src).' }));
+      return element;
+    }
+
+    const figureWrap = h('div', { class: 'hotspots-figure' });
+    const img = h('img', { src: block.src, alt: block.caption || '' });
+    figureWrap.appendChild(img);
+    const markersWrap = h('div', { class: 'hotspots-layer' });
+    figureWrap.appendChild(markersWrap);
+    element.appendChild(figureWrap);
+
+    const infoPanel = h('div', { class: 'hotspots-info' });
+    infoPanel.appendChild(h('p', { class: 'hotspots-hint', textContent: 'Нажмите на маркер на изображении, чтобы увидеть описание.' }));
+    element.appendChild(infoPanel);
+
+    const hotspots = Array.isArray(block.hotspots) ? block.hotspots.filter(s => s && typeof s === 'object') : [];
+    let selectedMarker = null;
+
+    hotspots.forEach((spot, idx) => {
+      const x = Math.max(0, Math.min(100, toNum(spot.x, 50)));
+      const y = Math.max(0, Math.min(100, toNum(spot.y, 50)));
+      const marker = h('button', {
+        class: 'hotspot-marker',
+        type: 'button',
+        title: spot.label || ('Точка ' + (idx + 1)),
+        textContent: String(idx + 1)
+      });
+      marker.style.left = x + '%';
+      marker.style.top = y + '%';
+      if (spot.color) {
+        marker.style.borderColor = spot.color;
+        marker.style.color = spot.color;
+      }
+      marker.addEventListener('click', () => {
+        if (selectedMarker) selectedMarker.classList.remove('active');
+        marker.classList.add('active');
+        selectedMarker = marker;
+        infoPanel.innerHTML = '';
+        const card = h('div', { class: 'hotspot-card' });
+        card.appendChild(h('div', { class: 'hotspot-card-title', textContent: spot.label || ('Точка ' + (idx + 1)) }));
+        if (spot.text) card.appendChild(h('div', { class: 'hotspot-card-text', textContent: spot.text }));
+        infoPanel.appendChild(card);
+        postProcess(card);
+      });
+      markersWrap.appendChild(marker);
+    });
+
+    if (hotspots.length === 0) {
+      infoPanel.innerHTML = '';
+      infoPanel.appendChild(h('p', { class: 'hotspots-hint', textContent: 'Точки на изображении не заданы.' }));
+    }
+
+    if (block.caption) element.appendChild(h('div', { class: 'svg-caption', textContent: block.caption }));
+    return element;
+  }
+
+  // ---------- КРОССВОРД ----------
+  function renderCrosswordBlock(block) {
+    const element = h('div', { class: 'crossword-block' });
+    if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
+
+    const rawWords = Array.isArray(block.words) ? block.words.filter(w => w && w.word) : [];
+    if (rawWords.length === 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Слова кроссворда не заданы.' }));
+      return element;
+    }
+
+    // Нормализация слов
+    const normWords = rawWords.map(w => ({
+      word: String(w.word).toUpperCase().replace(/[\s-]+/g, ''),
+      hint: w.hint != null ? String(w.hint) : '',
+      direction: w.direction === 'down' ? 'down' : 'across',
+      row: toNum(w.row, 0),
+      col: toNum(w.col, 0)
+    })).filter(w => w.word.length > 0);
+
+    if (normWords.length === 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Слова кроссворда не заданы.' }));
+      return element;
+    }
+
+    // Габариты сетки (с учётом возможного смещения)
+    let minRow = Infinity, minCol = Infinity, maxRow = -Infinity, maxCol = -Infinity;
+    normWords.forEach(w => {
+      const dRow = w.direction === 'down' ? w.word.length - 1 : 0;
+      const dCol = w.direction === 'across' ? w.word.length - 1 : 0;
+      minRow = Math.min(minRow, w.row);
+      minCol = Math.min(minCol, w.col);
+      maxRow = Math.max(maxRow, w.row + dRow);
+      maxCol = Math.max(maxCol, w.col + dCol);
+    });
+    const offR = minRow === Infinity ? 0 : minRow;
+    const offC = minCol === Infinity ? 0 : minCol;
+    const rows = maxRow - offR + 1;
+    const cols = maxCol - offC + 1;
+    if (rows <= 0 || cols <= 0) {
+      element.appendChild(h('p', { class: 'block-note', textContent: 'Не удалось построить сетку кроссворда.' }));
+      return element;
+    }
+
+    // Карта клеток и нумерация
+    const cellMap = {};
+    const numberAt = {};
+    let nextNumber = 1;
+    normWords.forEach(w => {
+      const key0 = (w.row - offR) + '-' + (w.col - offC);
+      if (!numberAt[key0]) { numberAt[key0] = nextNumber++; }
+      w.number = numberAt[key0];
+      for (let i = 0; i < w.word.length; i++) {
+        const r = (w.row - offR) + (w.direction === 'down' ? i : 0);
+        const c = (w.col - offC) + (w.direction === 'across' ? i : 0);
+        const key = r + '-' + c;
+        if (!cellMap[key]) cellMap[key] = { letter: w.word[i], number: numberAt[key0] };
+      }
+    });
+
+    // Сетка
+    const gridEl = h('div', { class: 'crossword-grid' });
+    gridEl.style.gridTemplateColumns = 'repeat(' + cols + ', 34px)';
+    const cellInputs = [];
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const key = r + '-' + c;
+        const cell = cellMap[key];
+        if (!cell) {
+          gridEl.appendChild(h('div', { class: 'crossword-cell empty' }));
+          continue;
+        }
+        const cellWrap = h('div', { class: 'crossword-cell' });
+        if (cell.number) {
+          cellWrap.appendChild(h('span', { class: 'crossword-number', textContent: String(cell.number) }));
+        }
+        const input = h('input', { class: 'crossword-input', type: 'text', maxlength: '1' });
+        input.addEventListener('input', () => {
+          const v = input.value.toUpperCase().replace(/[^A-ZА-ЯЁ]/g, '');
+          input.value = v.slice(-1);
+          input.classList.remove('correct', 'wrong');
+          if (input.value) {
+            const idxNow = cellInputs.indexOf(input);
+            if (idxNow !== -1 && idxNow < cellInputs.length - 1) cellInputs[idxNow + 1].focus();
+          }
+        });
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && input.value === '') {
+            const idxNow = cellInputs.indexOf(input);
+            if (idxNow > 0) cellInputs[idxNow - 1].focus();
+          }
+        });
+        cellWrap.appendChild(input);
+        gridEl.appendChild(cellWrap);
+        cellInputs.push(input);
+        cell.input = input;
+      }
+    }
+    element.appendChild(gridEl);
+
+    // Подсказки
+    const acrossWords = normWords.filter(w => w.direction === 'across');
+    const downWords = normWords.filter(w => w.direction === 'down');
+    const hintsWrap = h('div', { class: 'crossword-hints' });
+    if (acrossWords.length > 0) {
+      hintsWrap.appendChild(h('div', { class: 'crossword-hints-title', textContent: 'По горизонтали:' }));
+      acrossWords.forEach(w => {
+        hintsWrap.appendChild(h('div', { class: 'crossword-hint', textContent: w.number + '. ' + (w.hint || '—') + ' (' + w.word.length + ' букв)' }));
+      });
+    }
+    if (downWords.length > 0) {
+      hintsWrap.appendChild(h('div', { class: 'crossword-hints-title', textContent: 'По вертикали:' }));
+      downWords.forEach(w => {
+        hintsWrap.appendChild(h('div', { class: 'crossword-hint', textContent: w.number + '. ' + (w.hint || '—') + ' (' + w.word.length + ' букв)' }));
+      });
+    }
+    element.appendChild(hintsWrap);
+
+    // Кнопки управления
+    const controls = h('div', { class: 'crossword-controls' });
+    const checkBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Проверить' });
+    const showBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Показать ответы' });
+    const clearBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Очистить' });
+    controls.appendChild(checkBtn);
+    controls.appendChild(showBtn);
+    controls.appendChild(clearBtn);
+    element.appendChild(controls);
+
+    const feedback = h('div', { class: 'crossword-feedback' });
+    element.appendChild(feedback);
+
+    const entries = Object.keys(cellMap).map(k => ({ input: cellMap[k].input, letter: cellMap[k].letter }));
+
+    checkBtn.addEventListener('click', () => {
+      let correctCount = 0;
+      let filledCount = 0;
+      entries.forEach(({ input, letter }) => {
+        const v = input.value.toUpperCase();
+        input.classList.remove('correct', 'wrong');
+        if (v === '') return;
+        filledCount++;
+        if (v === letter) { input.classList.add('correct'); correctCount++; }
+        else input.classList.add('wrong');
+      });
+      if (entries.length > 0 && correctCount === entries.length) {
+        feedback.textContent = '🎉 Кроссворд разгадан! Все буквы верны.';
+        feedback.style.color = 'var(--green)';
+      } else if (filledCount === 0) {
+        feedback.textContent = 'Заполните буквы в клетках.';
+        feedback.style.color = 'var(--yellow)';
+      } else {
+        feedback.textContent = 'Правильных букв: ' + correctCount + ' из ' + entries.length + '.';
+        feedback.style.color = 'var(--yellow)';
+      }
+    });
+
+    showBtn.addEventListener('click', () => {
+      entries.forEach(({ input, letter }) => {
+        input.value = letter;
+        input.classList.remove('wrong');
+        input.classList.add('correct');
+      });
+      feedback.textContent = 'Показаны правильные ответы.';
+      feedback.style.color = 'var(--green)';
+    });
+
+    clearBtn.addEventListener('click', () => {
+      entries.forEach(({ input }) => {
+        input.value = '';
+        input.classList.remove('correct', 'wrong');
+      });
+      feedback.textContent = '';
+    });
+
+    return element;
+  }
+
   // ---------- СПРАВКА И ГЕНЕРАЦИЯ ПРОМПТА ----------
   function openHelpModal() {
     const overlay = h('div', { class: 'modal-overlay' });
@@ -3287,13 +3593,13 @@
 }</code></pre>
       <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования). Для генерации подробных лекций используйте «Генерацию промпта» — промпт требует поиска информации в нескольких авторитетных источниках (учебники, статьи, документация, стандарты) и указания реальных найденных URL в разделе «Источники» каждого урока.</p>
       <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
-      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты типа блока (включая незаполненные), а для блока <code>graph</code> поля скрываются в зависимости от режима (2d/3d, обычное/параметрическое уравнение). Вложенные массивы редактируются как списки элементов, узлы дерева (<code>tree</code>) — с неограниченной вложенностью подузлов, вложенные блоки — в таком же редакторе.</p>
+      <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>. Во вкладке «Форма» доступны все атрибуты типа блока (включая незаполненные), вложенные массивы редактируются как списки элементов, узлы дерева — с неограниченной вложенностью, вложенные блоки — в таком же редакторе.</p>
       <h4 style="color: #fff; margin-top: 10px;">График функции (тип <code>graph</code>)</h4>
       <p>2D (<code>y = f(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), параметрические кривые (<code>parametric: true</code> + <code>paramX/paramY/paramZ</code>, диапазоны <code>tMin/tMax</code>). Интерактивные параметры — массив <code>params</code> (поля <code>name</code>, <code>value</code>, <code>min</code>, <code>max</code>, <code>step</code>) отображаются как слайдеры. Имена параметров чувствительны к регистру: <code>a</code> и <code>A</code> — разные переменные. Функции: sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max и др.; константы: pi, e.</p>
       <h4 style="color: #fff; margin-top: 10px;">3D объект (тип <code>model3d</code>)</h4>
-      <p>Просмотр 3D-моделей <code>.glb</code>/<code>.gltf</code>: по URL (поле <code>src</code>) или из локального файла — панель загрузки сворачивается под окном просмотра. Управление: вращение мышью, масштаб колёсиком, опция <code>autoRotate</code>. Для внешних URL требуется CORS; для .gltf с внешними текстурами рекомендуется .glb.</p>
+      <p>Просмотр 3D-моделей <code>.glb</code>/<code>.gltf</code>: по URL (поле <code>src</code>) или из локального файла — панель загрузки сворачивается под окном просмотра. Управление: вращение мышью, масштаб колёсиком, опция <code>autoRotate</code>.</p>
       <h4 style="color: #fff; margin-top: 10px;">Дополнительные типы блоков</h4>
-      <p><code>flashcards</code> — колода карточек с перелистыванием; <code>checklist</code> — чек-лист с прогрессом; <code>quote</code> — цитата; <code>glossary</code> — глоссарий терминов; <code>equation</code> — формула KaTeX; <code>youtube</code> — видео YouTube (ID или ссылка); <code>kanban</code> — канбан-доска; <code>stats</code> — карточки показателей; <code>countdown</code> — таймер обратного отсчёта; <code>tree</code> — сворачиваемое дерево (вложенные узлы редактируются в форме); <code>truefalse</code> — вопрос «верно/неверно»; <code>divider</code> — разделитель (line, dots, glow); <code>download</code> — кнопка скачивания файла.</p>
+      <p><code>flashcards</code> — колода карточек с перелистыванием; <code>checklist</code> — чек-лист с прогрессом; <code>quote</code> — цитата; <code>glossary</code> — глоссарий терминов; <code>equation</code> — формула KaTeX; <code>youtube</code> — видео YouTube (ID или ссылка); <code>kanban</code> — канбан-доска; <code>stats</code> — карточки показателей; <code>countdown</code> — таймер обратного отсчёта; <code>tree</code> — сворачиваемое дерево; <code>truefalse</code> — вопрос «верно/неверно»; <code>divider</code> — разделитель (line, dots, glow); <code>download</code> — кнопка скачивания файла; <code>hotspots</code> — интерактивное изображение с кликабельными маркерами; <code>crossword</code> — кроссворд с проверкой букв.</p>
       <p>Кнопка <code>✎</code> рядом с названием урока открывает редактор всего урока, а <code>✎</code> рядом с названием курса — редактор всего курса. Все изменения автоматически сохраняются в IndexedDB.</p>
     `;
     content.appendChild(helpDiv);
@@ -3409,7 +3715,6 @@
 36. html: { "type": "html", "code": "<div>...</div>" }
 37. graph: { "type": "graph", "title": "График", "mode": "2d", "parametric": false, "equation": "a*sin(x)", "paramX": "cos(t)", "paramY": "sin(t)", "paramZ": "t", "rangeMin": -10, "rangeMax": 10, "rangeYMin": -5, "rangeYMax": 5, "tMin": 0, "tMax": 6.28, "points": 300, "params": [ { "name": "a", "value": 1, "min": 0, "max": 5, "step": 0.1 } ] }
     // mode: "2d" — y = f(x) по полю equation; "3d" — поверхность z = f(x, y) по equation, либо параметрическая 3D-кривая при "parametric": true (нужны paramX, paramY, paramZ).
-    // Уравнения: переменные x, y, t; параметры из массива params (имена чувствительны к регистру); функции sin, cos, tan, sqrt, abs, ln, log, exp, pow, min, max, atan2; константы pi, e; операции + - * / ^.
 38. model3d: { "type": "model3d", "src": "https://example.com/model.glb", "caption": "Подпись", "height": "450px", "background": "#0a0c14", "autoRotate": true }
 39. flashcards: { "type": "flashcards", "title": "Колода карточек", "cards": [ { "front": "Вопрос", "back": "Ответ" } ] }
 40. checklist: { "type": "checklist", "title": "Чек-лист", "items": ["Пункт 1", "Пункт 2"] }
@@ -3424,6 +3729,12 @@
 49. truefalse: { "type": "truefalse", "question": "Утверждение", "answer": true, "explanation": "Пояснение" }
 50. divider: { "type": "divider", "style": "line" } // style: line | dots | glow
 51. download: { "type": "download", "src": "URL файла", "label": "Скачать", "fileName": "file.pdf" }
+52. hotspots: { "type": "hotspots", "src": "URL изображения", "caption": "Подпись", "Подпись"", "hotspots": [ { "x": 25, "y": 40, "label": "Название точки", "text": "Описание точки", "color": "#00f0ff" } ] }
+    // Интерактивное изображение: маркеры размещаются по координатам в процентах (0–100) от размеров изображения; клик по маркеру показывает название и описание (поддерживается KaTeX в описании).
+53. crossword: { "type": "crossword", "title": "Кроссворд", "words": [ { "word": "СЛОВО", "hint": "Определение", "direction": "across", "row": 0, "col": 0 } ] }
+    // Кроссворд: слова размещаются на общей сетке. direction: "across" (по горизонтали) или "down" (по вертикали);
+    // row/col — координаты начальной буквы (с 0, допускается любое смещение — сетка строится автоматически).
+    // Пересекающиеся слова должны иметь одинаковую букву в общей клетке. Слова записываются ЗАГЛАВНЫМИ буквами.
 `;
 
     const prompt = `Ты — эксперт по созданию интерактивных образовательных курсов и опытный методист. Твоя задача — создать подробный, глубокий и хорошо структурированный учебный курс (конспект лекций) на тему "${topic}" в формате JSON для LMS-плеера.
@@ -3446,16 +3757,18 @@
   1) введение — мотивация, цели и план урока;
   2) основная часть — несколько логических разделов (блоки section с заголовками), раскрывающих тему от базовых понятий к сложным;
   3) ключевые определения и термины (блоки glossary, callout);
-  4) примеры, иллюстрации, схемы (image, svg, mermaid, graph, table);
-  5) контроль понимания (quiz, fill-blank, truefalse, match);
+  4) примеры, иллюстрации, схемы (image, hotspots, svg, mermaid, graph, table);
+  5) контроль понимания (quiz, fill-blank, truefalse, match, crossword);
   6) итоги урока — краткие выводы и список источников.
 - Материал излагай подробно и глубоко: давай точные определения, объясняй принципы и механизмы, приводи классификации, свойства, формулы, типичные ошибки и лучшие практики.
 - Первый урок сделай обзорным (введение в предмет, контекст, область применения), последний — итоговым (обобщение материала, перспективы, сквозные связи тем).
 - Крупные смысловые куски оформляй крупными блоками (развёрнутый текст, таблицы, схемы), а не множеством мелких блоков подряд.
 
 === ЭТАП 4. ТРЕБОВАНИЯ К ОФОРМЛЕНИЮ (БЛОКИ) ===
-- Используй разнообразные типы блоков: текст, списки, таблицы, выноски, вкладки, аккордеоны, карточки, графики функций (graph), SVG- и Mermaid-схемы, 3D-модели (model3d) и другие — где это уместно.
+- Используй разнообразные типы блоков: текст, списки, таблицы, выноски, вкладки, аккордеоны, карточки, интерактивные изображения (hotspots), кроссворды (crossword), графики функций (graph), SVG- и Mermaid-схемы, 3D-модели (model3d) и другие — где это уместно.
 - Отдавай предпочтение иллюстрациям mermaid и svg для визуализации структур и процессов.
+- Интерактивные изображения (hotspots) используй для анатомии, схем устройств, карт и других изображений с важными деталями: координаты маркеров задаются в процентах от размеров изображения.
+- Кроссворды (crossword) добавляй как итоговый контроль по терминологии урока: слова должны пересекаться корректно (одинаковая буква в общей клетке), все слова — заглавными буквами.
 - Формулы оформляй синтаксисом KaTeX внутри текстовых блоков или отдельным блоком equation.
 - Блоки кода преимущественно размещай внутри блока modal.
 - JSON должен быть валидным, без комментариев, и строго соответствовать схеме ниже.
@@ -3606,7 +3919,6 @@ ${schema}
     });
     lessonContainer.appendChild(completeBtn);
 
-    // ----- НАВИГАЦИЯ МЕЖДУ УРОКАМИ -----
     const lessonIndex = course.lessons.findIndex(l => l.id === lessonId);
     const navContainer = h('div', { style: 'display: flex; gap: 10px; margin-top: 20px; justify-content: space-between; flex-wrap: wrap;' });
 
@@ -3641,7 +3953,6 @@ ${schema}
     navContainer.appendChild(prevBtn);
     navContainer.appendChild(nextBtn);
     lessonContainer.appendChild(navContainer);
-    // ----- КОНЕЦ НАВИГАЦИИ -----
 
     app.appendChild(lessonContainer);
     postProcess(lessonContainer);
@@ -4453,6 +4764,12 @@ ${schema}
         break;
       case 'download':
         element = renderDownloadBlock(block);
+        break;
+      case 'hotspots':
+        element = renderHotspotsBlock(block);
+        break;
+      case 'crossword':
+        element = renderCrosswordBlock(block);
         break;
       default:
         console.warn('Unknown block type:', block.type);
