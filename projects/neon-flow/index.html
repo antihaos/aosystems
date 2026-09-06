@@ -24,7 +24,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:13
 button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input,select{font-family:inherit;color:var(--text);background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:13px;outline:none;width:100%}
 input:focus,select:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(0,229,255,.15)}
-#app{display:flex;flex-direction:column;height:100dvh;user-select:none}
+#app{display:flex;flex-direction:column;height:100dvh;user-select:none;-webkit-user-select:none}
 
 /* ---------- TOPBAR ---------- */
 #topbar{height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;background:linear-gradient(180deg,#0d1428,#0a0f1e);border-bottom:1px solid var(--border);position:relative;z-index:30}
@@ -58,8 +58,6 @@ input:focus,select:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(0,22
 .btn:hover{border-color:var(--neon);color:var(--neon);box-shadow:0 0 12px rgba(0,229,255,.2)}
 .btn.neon{border-color:var(--neon-dim);color:var(--neon);background:rgba(0,229,255,.06)}
 .btn.neon:hover{background:rgba(0,229,255,.14);box-shadow:0 0 16px var(--neon-dim)}
-.btn.mag{border-color:rgba(255,46,196,.4);color:var(--mag)}
-.btn.mag:hover{background:rgba(255,46,196,.1);box-shadow:0 0 16px rgba(255,46,196,.3)}
 
 /* ---------- TOOLBAR ---------- */
 #toolbar{height:46px;flex:none;display:flex;align-items:center;gap:4px;padding:0 10px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;overflow-y:hidden;z-index:20}
@@ -110,46 +108,84 @@ input:focus,select:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(0,22
 #sbBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:35;backdrop-filter:blur(2px)}
 
 /* ---------- CANVAS ---------- */
-#viewport{flex:1;position:relative;overflow:hidden;background-color:var(--bg);background-image:radial-gradient(circle,rgba(0,229,255,.13) 1px,transparent 1.4px),radial-gradient(circle,rgba(139,92,246,.07) 1px,transparent 1.4px);background-size:26px 26px,26px 26px;background-position:0 0;touch-action:none;cursor:default}
+#viewport{flex:1;position:relative;overflow:hidden;background-color:var(--bg);background-image:radial-gradient(circle,rgba(0,229,255,.13) 1px,transparent 1.4px),radial-gradient(circle,rgba(139,92,246,.07) 1px,transparent 1.4px);background-size:26px 26px,130px 130px;background-position:0 0;touch-action:none;cursor:default}
 #viewport.nogrid{background-image:none}
 #viewport.panmode{cursor:grab}
 #viewport.panmode:active{cursor:grabbing}
 #world{position:absolute;left:0;top:0;transform-origin:0 0;width:0;height:0}
 #edgesSvg{position:absolute;left:0;top:0;overflow:visible;width:1px;height:1px}
-.edge-vis{fill:none;stroke-width:2.2;filter:drop-shadow(0 0 4px currentColor)}
-.edge-vis.t-audio{stroke:var(--neon);color:var(--neon)}
-.edge-vis.t-text{stroke:var(--amb);color:var(--amb)}
-.edge-hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
-g.edge.selected .edge-vis{stroke-width:3.4;stroke-dasharray:8 5;animation:dashMove .7s linear infinite}
-@keyframes dashMove{to{stroke-dashoffset:-13}}
+
+/* --- соединения: неоновый жгут (подложка-свечение + ядро + бегущий импульс + зона касания) --- */
+.edge-glow{fill:none;stroke:currentColor;stroke-width:7;opacity:.22;pointer-events:none}
+.edge-flow{fill:none;stroke:#eaffff;stroke-width:1.2;stroke-dasharray:3 15;stroke-linecap:round;opacity:0;pointer-events:none}
+.edge-vis{fill:none;stroke:currentColor;stroke-width:2.4;pointer-events:none}
+.edge-hit{fill:none;stroke:transparent;stroke-width:18;pointer-events:stroke;cursor:pointer}
+.edge.t-audio{color:#19d7ff}
+.edge.t-text{color:#ffb020}
+body.pipe-run .edge-flow{opacity:.85;animation:flowMove .9s linear infinite}
+body.pipe-run .edge-vis{filter:drop-shadow(0 0 4px currentColor)}
+@keyframes flowMove{to{stroke-dashoffset:-18}}
+g.edge.selected .edge-vis{stroke-width:3.3;stroke-dasharray:9 6;animation:dashMove .6s linear infinite}
+g.edge.selected .edge-glow{opacity:.5}
+@keyframes dashMove{to{stroke-dashoffset:-15}}
 #tempPath{fill:none;stroke:var(--mag);stroke-width:2.2;stroke-dasharray:6 5;filter:drop-shadow(0 0 5px var(--mag));pointer-events:none;animation:dashMove .5s linear infinite}
-.node{position:absolute;width:212px;background:linear-gradient(180deg,#111a34,#0c1226);border:1px solid var(--border2);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.5);cursor:grab;transition:box-shadow .15s}
+
+/* --- узлы --- */
+.node{position:absolute;width:212px;background:linear-gradient(180deg,#111a34,#0c1226);border:1px solid var(--border2);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.5);cursor:grab;transition:box-shadow .15s;overflow:visible;touch-action:none;-webkit-touch-callout:none}
 .node:hover{border-color:#35478a}
 .node:active{cursor:grabbing}
-.node.selected{border-color:var(--nc,var(--neon));box-shadow:0 0 0 1px var(--nc,var(--neon)),0 0 22px color-mix(in srgb,var(--nc,var(--neon)) 45%,transparent),0 8px 28px rgba(0,0,0,.55)}
-.nhead{display:flex;align-items:center;gap:8px;padding:9px 10px 7px;border-bottom:1px solid rgba(255,255,255,.05)}
+.node.selected{border-color:var(--nc,var(--neon));box-shadow:0 0 0 1px var(--nc,var(--neon)),0 0 22px rgba(0,229,255,.25),0 8px 28px rgba(0,0,0,.55)}
+.nhead{display:flex;align-items:center;gap:7px;padding:9px 9px 7px;border-bottom:1px solid rgba(255,255,255,.05)}
 .ndot{width:9px;height:9px;border-radius:50%;background:var(--nc);box-shadow:0 0 9px var(--nc);flex:none}
 .ntitle{font-size:12.5px;font-weight:600;letter-spacing:.3px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nled{width:7px;height:7px;border-radius:50%;background:#26315a;flex:none;transition:.3s}
 .nled.on{background:var(--grn);box-shadow:0 0 8px var(--grn);animation:pulseHex 1.2s ease-in-out infinite}
 .nled.err{background:var(--red);box-shadow:0 0 8px var(--red)}
-.ngear{width:22px;height:22px;border-radius:6px;color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.ngear,.ndel{width:22px;height:22px;border-radius:6px;color:#54628f;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;transition:.15s}
 .ngear:hover{background:rgba(0,229,255,.12);color:var(--neon)}
+.ndel{font-size:10px}
+.ndel:hover{background:rgba(255,59,92,.15);color:var(--red)}
+@media (hover:none){.ngear{color:#8a97c9}.ndel{color:#a26a7c}}
 .nsub{padding:5px 11px 2px;font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ports{padding:8px 0 9px}
-.prow{display:flex;justify-content:space-between;align-items:center;min-height:22px}
-.port{display:flex;align-items:center;gap:6px;padding:2px 8px;position:relative}
-.port i{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);background:var(--bg);transition:.15s;flex:none}
-.port em{font-style:normal;font-size:10px;color:var(--muted);font-family:var(--mono)}
-.port.p-in{margin-left:-14px}
-.port.p-out{margin-right:-14px;flex-direction:row-reverse}
-.port:hover i,.port.linkable i{border-color:var(--mag);box-shadow:0 0 10px var(--mag);transform:scale(1.25)}
-.port.linkable{cursor:crosshair}
-.tpreview{margin:2px 10px 10px;background:#070b16;border:1px solid var(--border);border-radius:8px;padding:7px 9px;font-family:var(--mono);font-size:10px;line-height:1.55;color:#9fe8c8;height:70px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent);mask-image:linear-gradient(180deg,#000 60%,transparent);word-break:break-word}
+.ports{padding:9px 0 10px}
+.prow{display:flex;justify-content:space-between;align-items:center;min-height:24px}
+
+/* --- порты: неоновые гнёзда, центр точно на границе блока --- */
+.port{display:flex;align-items:center;gap:7px;padding:3px 10px;cursor:crosshair;touch-action:none}
+.port em{font-style:normal;font-size:9.5px;color:var(--muted);font-family:var(--mono);letter-spacing:.3px}
+.port i{width:15px;height:15px;border-radius:50%;background:#05080f;border:2px solid var(--pc,#00e5ff);box-shadow:0 0 9px rgba(0,229,255,.45);box-shadow:0 0 9px color-mix(in srgb,var(--pc,#00e5ff) 55%,transparent);position:relative;flex:none;transition:transform .13s,box-shadow .13s}
+.port i::after{content:'';position:absolute;inset:3.5px;border-radius:50%;background:var(--pc,#00e5ff);box-shadow:0 0 6px var(--pc,#00e5ff)}
+.port i::before{content:'';position:absolute;top:50%;width:9px;height:2px;transform:translateY(-50%);opacity:.55}
+.port[data-type="audio"]{--pc:#00e5ff}
+.port[data-type="text"]{--pc:#ffb020}
+.port.p-in{padding-left:2px}
+.port.p-in i{margin-left:-11px}
+.port.p-in i::before{left:100%;background:linear-gradient(90deg,var(--pc),transparent)}
+.port.p-out{padding-right:2px}
+.port.p-out i{margin-right:-11px}
+.port.p-out i::before{right:100%;background:linear-gradient(270deg,var(--pc),transparent)}
+.port:hover i,.port.linkable i{transform:scale(1.3);box-shadow:0 0 16px var(--pc,#00e5ff)}
+.tpreview{margin:2px 10px 10px;background:#070b16;border:1px solid var(--border);border-radius:8px;padding:7px 9px;font-family:var(--mono);font-size:10px;line-height:1.55;color:#9fe8c8;height:70px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent);mask-image:linear-gradient(180deg,#000 60%,transparent);word-break:break-word;white-space:pre-wrap}
 #marquee{position:absolute;border:1px solid var(--neon);background:rgba(0,229,255,.07);display:none;pointer-events:none;z-index:5;box-shadow:0 0 12px rgba(0,229,255,.2) inset}
 #emptyHint{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:1}
 #emptyHint>div{text-align:center;color:var(--muted);font-size:14px;line-height:2}
 #emptyHint .big{font-family:var(--disp);font-size:18px;color:#3d4c80;letter-spacing:2px}
+
+/* --- плавающая кнопка удаления (выделение) --- */
+#delFab{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:9;display:flex;align-items:center;gap:9px;padding:10px 18px;border-radius:24px;background:rgba(24,10,18,.92);border:1px solid rgba(255,59,92,.6);color:#ffc2cd;font-size:12.5px;box-shadow:0 0 20px rgba(255,59,92,.3),0 8px 22px rgba(0,0,0,.5);backdrop-filter:blur(6px);animation:fabIn .18s ease;white-space:nowrap}
+#delFab:hover{background:rgba(255,59,92,.2)}
+#delFab .cnt{background:var(--red);color:#fff;border-radius:10px;padding:1px 8px;font-family:var(--mono);font-size:11px}
+@keyframes fabIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* сенсорные устройства: толще зоны касания, кнопки узлов заметнее */
+@media (pointer:coarse){
+  .edge-hit{stroke-width:36}
+  .port{padding-top:6px;padding-bottom:6px}
+  .port i{width:18px;height:18px}
+  .port.p-in i{margin-left:-12px}
+  .port.p-out i{margin-right:-12px}
+  .ngear,.ndel{width:28px;height:28px;font-size:14px}
+}
 
 /* ---------- STATUSBAR ---------- */
 #statusbar{height:30px;flex:none;display:flex;align-items:center;gap:14px;padding:0 12px;background:var(--bg2);border-top:1px solid var(--border);font-family:var(--mono);font-size:10.5px;color:var(--muted);z-index:30;position:relative}
@@ -303,6 +339,7 @@ g.edge.selected .edge-vis{stroke-width:3.4;stroke-dasharray:8 5;animation:dashMo
         <svg id="edgesSvg" xmlns="http://www.w3.org/2000/svg"><path id="tempPath" d="" style="display:none"/></svg>
       </div>
       <div id="marquee"></div>
+      <button id="delFab" hidden>🗑 Удалить <span class="cnt">0</span></button>
       <div id="emptyHint"><div><div class="big">ХОЛСТ ПУСТ</div>Дважды кликните, чтобы добавить блок,<br>или перетащите его из панели «Блоки»</div></div>
     </main>
   </div>
@@ -316,7 +353,7 @@ g.edge.selected .edge-vis{stroke-width:3.4;stroke-dasharray:8 5;animation:dashMo
     <div class="sb-right">
       <span id="sbNodes">0 блоков</span>
       <span id="zoomLabel">100%</span>
-      <span>NF v1.0</span>
+      <span>NF v1.1</span>
     </div>
   </footer>
 </div>
@@ -377,7 +414,7 @@ const NODE_TYPES = {
   filter:{ name: 'Полосовой фильтр',   cat: 'dsp', color: '#8b5cf6', desc: 'Гц',   inputs: A_IN, outputs: A_OUT, defParams: { hp: 300, lp: 3400 } },
   vad:   { name: 'Детектор речи (VAD)',cat: 'dsp', color: '#8b5cf6', desc: 'детект', inputs: A_IN, outputs: A_OUT, defParams: { threshold: -40 } },
   asr:   { name: 'Whisper ASR',        cat: 'ai', color: '#ff2ec4', desc: 'transformers.js', inputs: A_IN, outputs: [{ id: 'text', type: 'text', label: 'текст' }],
-           defParams: { model: 'Xenova/whisper-tiny', language: 'auto', window: 5, stride: 1.5, silenceDb: -48 } },
+           defParams: { model: 'Xenova/whisper-tiny', language: 'ru', window: 4, stride: 2, silenceDb: -48 } },
   transcript: { name: 'Транскрипт',    cat: 'out', color: '#22ff88', desc: 'экран', inputs: T_IN, outputs: [], defParams: {} },
   logger:     { name: 'Журнал событий',cat: 'out', color: '#22ff88', desc: 'лог',   inputs: T_IN, outputs: [], defParams: {} },
   ws:         { name: 'WebSocket-отправка', cat: 'out', color: '#22ff88', desc: 'ws', inputs: T_IN, outputs: [], defParams: { url: '' } }
@@ -403,10 +440,10 @@ const PARAM_DEFS = {
   vad: [{ k: 'threshold', l: 'Порог речи, дБ', t: 'number', min: -90, max: 0 }],
   asr: [
     { k: 'model', l: 'Модель Whisper', t: 'select', o: ['Xenova/whisper-tiny', 'Xenova/whisper-base', 'Xenova/whisper-small'] },
-    { k: 'language', l: 'Язык речи', t: 'select', o: ['auto', 'ru', 'en', 'uk', 'de', 'fr', 'es', 'zh'] },
+    { k: 'language', l: 'Язык речи (фиксация языка снижает галлюцинации)', t: 'select', o: ['ru', 'auto', 'en', 'uk', 'de', 'fr', 'es', 'zh'] },
     { k: 'window', l: 'Окно анализа, с', t: 'number', min: 2, max: 15, step: 0.5 },
-    { k: 'stride', l: 'Перекрытие окон, с', t: 'number', min: 0.5, max: 5, step: 0.5 },
-    { k: 'silenceDb', l: 'Порог тишины, дБ', t: 'number', min: -90, max: 0 }
+    { k: 'stride', l: 'Перекрытие окон, с', t: 'number', min: 0.5, max: 4, step: 0.5 },
+    { k: 'silenceDb', l: 'Порог тишины, дБ (ниже — тишина не распознаётся)', t: 'number', min: -90, max: 0 }
   ],
   ws: [{ k: 'url', l: 'URL WebSocket-сервера', t: 'text', ph: 'wss://host/path' }]
 };
@@ -481,6 +518,48 @@ function fit100() {
   view.s = 1; view.x = r.width / 2 - cw; view.y = r.height / 2 - ch; applyView();
 }
 
+/* ================= ВЫДЕЛЕНИЕ + FAB УДАЛЕНИЯ ================= */
+function updateDelFab() {
+  const n = selectedNodes.size + selectedEdges.size;
+  const fab = $('#delFab');
+  fab.hidden = n === 0;
+  fab.querySelector('.cnt').textContent = n;
+}
+$('#delFab').addEventListener('click', () => deleteSelection());
+
+function selectNode(id, additive) {
+  if (!additive) clearSelection();
+  selectedNodes.add(id);
+  nodeEls.get(id)?.classList.add('selected');
+  updateSbMsg(); updateDelFab();
+}
+function selectEdge(id, additive) {
+  if (!additive) clearSelection();
+  selectedEdges.add(id);
+  edgeEls.get(id)?.classList.add('selected');
+  updateSbMsg(); updateDelFab();
+}
+function clearSelection() {
+  selectedNodes.forEach(id => nodeEls.get(id)?.classList.remove('selected'));
+  selectedEdges.forEach(id => edgeEls.get(id)?.classList.remove('selected'));
+  selectedNodes.clear(); selectedEdges.clear();
+  updateSbMsg(); updateDelFab();
+}
+function deleteSelection() {
+  const had = selectedNodes.size + selectedEdges.size;
+  [...selectedEdges].forEach(removeEdge);
+  [...selectedNodes].forEach(removeNode);
+  if (had) { markDirty(); setSbMsg('Удалено объектов: ' + had); }
+  updateDelFab();
+}
+function updateSbMsg() {
+  const parts = [];
+  if (selectedNodes.size) parts.push('узлов: ' + selectedNodes.size);
+  if (selectedEdges.size) parts.push('связей: ' + selectedEdges.size);
+  setSbMsg(parts.length ? 'Выделено — ' + parts.join(', ') : 'Готов к работе');
+}
+function setSbMsg(t) { $('#sbMsg').textContent = t; }
+
 /* ================= УЗЛЫ ================= */
 function nodeSummary(n) {
   const p = n.params || {};
@@ -519,13 +598,23 @@ function createNodeEl(node) {
   }
   el.innerHTML = `
     <div class="nhead"><span class="ndot"></span><span class="nled"></span><span class="ntitle" title="${esc(t.name)}">${esc(t.name)}</span>
-      <button class="ngear" title="Настройки (двойной клик)">⚙</button></div>
+      <button class="ngear" title="Настройки (двойной клик)">⚙</button>
+      <button class="ndel" title="Удалить блок">✕</button></div>
     <div class="nsub"></div>
     ${rows ? `<div class="ports">${portsHtml}</div>` : ''}
     ${node.type === 'transcript' ? '<div class="tpreview">— тишина в эфире —</div>' : ''}`;
   el.querySelector('.nsub').textContent = nodeSummary(node);
-  el.querySelector('.ngear').addEventListener('pointerdown', e => e.stopPropagation());
-  el.querySelector('.ngear').addEventListener('click', e => { e.stopPropagation(); openNodeSettings(node); });
+  const gear = el.querySelector('.ngear');
+  gear.addEventListener('pointerdown', e => e.stopPropagation());
+  gear.addEventListener('click', e => { e.stopPropagation(); openNodeSettings(node); });
+  const del = el.querySelector('.ndel');
+  del.addEventListener('pointerdown', e => e.stopPropagation());
+  del.addEventListener('click', e => {
+    e.stopPropagation();
+    removeNode(node.id);
+    markDirty();
+    toast('Блок удалён', 'info', 1300);
+  });
   el.addEventListener('pointerdown', e => onNodePointerDown(e, node));
   el.addEventListener('dblclick', e => {
     e.stopPropagation();
@@ -534,18 +623,22 @@ function createNodeEl(node) {
   el.addEventListener('contextmenu', e => {
     e.preventDefault(); e.stopPropagation();
     if (!selectedNodes.has(node.id)) { clearSelection(); selectNode(node.id, false); }
-    showCtx(e.clientX, e.clientY, [
-      { label: '⚙ Настройки', fn: () => openNodeSettings(node) },
-      { label: '⧉ Дублировать', fn: () => duplicateNode(node) },
-      { sep: true },
-      { label: '🗑 Удалить', danger: true, fn: () => { deleteSelection(); } }
-    ]);
+    showCtx(e.clientX, e.clientY, nodeCtxItems(node));
   });
   el.querySelectorAll('.port').forEach(p => p.addEventListener('pointerdown', e => onPortPointerDown(e, node, p)));
   world.appendChild(el);
   nodeEls.set(node.id, el);
   updateEmptyHint();
   return el;
+}
+function nodeCtxItems(node) {
+  return [
+    { label: '⚙ Настройки', fn: () => openNodeSettings(node) },
+    { label: node.type === 'transcript' ? '📝 Открыть транскрипт' : '⧉ Дублировать',
+      fn: () => node.type === 'transcript' ? openTranscriptModal(node) : duplicateNode(node) },
+    { sep: true },
+    { label: '🗑 Удалить блок', danger: true, fn: () => { removeNode(node.id); markDirty(); } }
+  ];
 }
 function updateNodeSummary(node) {
   const el = nodeEls.get(node.id);
@@ -568,7 +661,7 @@ function removeNode(id) {
   nodeEls.delete(id);
   nodes.delete(id);
   selectedNodes.delete(id);
-  updateEmptyHint();
+  updateEmptyHint(); updateDelFab();
 }
 function duplicateNode(node) {
   const c = addNode(node.type, node.x + 30, node.y + 30, JSON.parse(JSON.stringify(node.params)));
@@ -590,13 +683,13 @@ function edgePathD(p1, p2) {
 }
 function createEdgeEl(edge) {
   const g = document.createElementNS(SVG_NS, 'g');
-  g.classList.add('edge');
+  g.classList.add('edge', 't-' + edge.type);
   g.dataset.id = edge.id;
-  const hit = document.createElementNS(SVG_NS, 'path');
-  hit.setAttribute('class', 'edge-hit');
-  const vis = document.createElementNS(SVG_NS, 'path');
-  vis.setAttribute('class', 'edge-vis t-' + edge.type);
-  g.append(hit, vis);
+  const glow = document.createElementNS(SVG_NS, 'path'); glow.setAttribute('class', 'edge-glow');
+  const flow = document.createElementNS(SVG_NS, 'path'); flow.setAttribute('class', 'edge-flow');
+  const vis = document.createElementNS(SVG_NS, 'path'); vis.setAttribute('class', 'edge-vis');
+  const hit = document.createElementNS(SVG_NS, 'path'); hit.setAttribute('class', 'edge-hit');
+  g.append(glow, flow, vis, hit);
   hit.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); selectEdge(edge.id, e.shiftKey); });
   hit.addEventListener('contextmenu', e => {
     e.preventDefault(); e.stopPropagation();
@@ -633,40 +726,8 @@ function removeEdge(id) {
   edgeEls.delete(id);
   edges.delete(id);
   selectedEdges.delete(id);
+  updateDelFab();
 }
-
-/* ================= ВЫДЕЛЕНИЕ ================= */
-function selectNode(id, additive) {
-  if (!additive) { clearSelection(); }
-  selectedNodes.add(id);
-  nodeEls.get(id)?.classList.add('selected');
-  updateSbMsg();
-}
-function selectEdge(id, additive) {
-  if (!additive) clearSelection();
-  selectedEdges.add(id);
-  edgeEls.get(id)?.classList.add('selected');
-  updateSbMsg();
-}
-function clearSelection() {
-  selectedNodes.forEach(id => nodeEls.get(id)?.classList.remove('selected'));
-  selectedEdges.forEach(id => edgeEls.get(id)?.classList.remove('selected'));
-  selectedNodes.clear(); selectedEdges.clear();
-  updateSbMsg();
-}
-function deleteSelection() {
-  const had = selectedNodes.size + selectedEdges.size;
-  [...selectedEdges].forEach(removeEdge);
-  [...selectedNodes].forEach(removeNode);
-  if (had) { markDirty(); setSbMsg('Удалено объектов: ' + had); }
-}
-function updateSbMsg() {
-  const parts = [];
-  if (selectedNodes.size) parts.push('узлов: ' + selectedNodes.size);
-  if (selectedEdges.size) parts.push('связей: ' + selectedEdges.size);
-  setSbMsg(parts.length ? 'Выделено — ' + parts.join(', ') : 'Готов к работе');
-}
-function setSbMsg(t) { $('#sbMsg').textContent = t; }
 
 /* ================= ВЗАИМОДЕЙСТВИЕ С ХОЛСТОМ ================= */
 const pointers = new Map();
@@ -686,15 +747,15 @@ viewport.addEventListener('pointerdown', e => {
   hideCtx();
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 2) { cancelDrag(); startPinch(); return; }
-  if (drag || e.target.closest('.node')) return;
+  if (drag) return;
+  if (pendingLink) cancelLinkVisual();
   const wantPan = panTool || spaceDown || e.button === 1 || e.pointerType === 'touch';
   if (wantPan) {
     drag = { type: 'pan', sx: e.clientX, sy: e.clientY, ox: view.x, oy: view.y };
     viewport.classList.add('panmode');
   } else if (e.button === 0) {
-    drag = { type: 'marquee', sx: e.clientX, sy: e.clientY, additive: e.shiftKey };
+    drag = { type: 'marquee', sx: e.clientX, sy: e.clientY };
     if (!e.shiftKey) clearSelection();
-    if (pendingLink) cancelLinkVisual();
   }
 });
 window.addEventListener('pointermove', e => {
@@ -703,20 +764,32 @@ window.addEventListener('pointermove', e => {
   if (drag) dragMove(e);
   if (pendingLink) {
     const w = clientToWorld(e.clientX, e.clientY);
-    const p0 = portPos(nodes.get(pendingLink.node), pendingLink.port, pendingLink.dir);
-    const d = pendingLink.dir === 'out' ? edgePathD(p0, w) : edgePathD(w, p0);
-    tempPath.setAttribute('d', d);
-    tempPath.style.display = '';
+    const n0 = nodes.get(pendingLink.node);
+    if (n0) {
+      const p0 = portPos(n0, pendingLink.port, pendingLink.dir);
+      tempPath.setAttribute('d', pendingLink.dir === 'out' ? edgePathD(p0, w) : edgePathD(w, p0));
+      tempPath.style.display = '';
+    }
   }
 });
 window.addEventListener('pointerup', e => {
   pointers.delete(e.pointerId);
-  if (pinch && pointers.size < 2) { pinch = null; }
-  if (drag) { dragUp(e); drag = null; viewport.classList.remove('panmode'); }
+  if (pinch && pointers.size < 2) pinch = null;
+  if (drag) {
+    if (drag.lpTimer) clearTimeout(drag.lpTimer);
+    dragUp(e);
+    drag = null;
+    viewport.classList.remove('panmode');
+  }
 });
-window.addEventListener('pointercancel', e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; drag = null; });
+window.addEventListener('pointercancel', e => {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinch = null;
+  if (drag?.lpTimer) clearTimeout(drag.lpTimer);
+  drag = null;
+});
 
-function cancelDrag() { if (drag && drag.type === 'marquee') $('#marquee').style.display = 'none'; drag = null; }
+function cancelDrag() { if (drag && drag.type === 'marquee') $('#marquee').style.display = 'none'; if (drag?.lpTimer) clearTimeout(drag.lpTimer); drag = null; }
 function dragMove(e) {
   if (drag.type === 'pan') {
     view.x = drag.ox + (e.clientX - drag.sx);
@@ -733,7 +806,11 @@ function dragMove(e) {
     drag.rect = { x1, y1, x2, y2 };
   } else if (drag.type === 'node') {
     const dx = (e.clientX - drag.sx) / view.s, dy = (e.clientY - drag.sy) / view.s;
-    if (!drag.moved && Math.hypot(dx * view.s, dy * view.s) > 3) drag.moved = true;
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 9) {
+      drag.moved = true;
+      if (drag.lpTimer) { clearTimeout(drag.lpTimer); drag.lpTimer = null; }
+    }
+    if (!drag.moved) return;
     for (const [id, st] of drag.starts) {
       const n = nodes.get(id); if (!n) continue;
       n.x = Math.round(st.x + dx); n.y = Math.round(st.y + dy);
@@ -762,23 +839,32 @@ function dragUp(e) {
 function onNodePointerDown(e, node) {
   if (e.button === 2) return;
   e.stopPropagation();
+  hideCtx();
   if (pendingLink) { cancelLinkVisual(); return; }
   if (e.shiftKey) {
-    if (selectedNodes.has(node.id)) { selectedNodes.delete(node.id); nodeEls.get(node.id)?.classList.remove('selected'); }
+    if (selectedNodes.has(node.id)) { selectedNodes.delete(node.id); nodeEls.get(node.id)?.classList.remove('selected'); updateDelFab(); }
     else selectNode(node.id, true);
     return;
   }
   if (!selectedNodes.has(node.id)) { clearSelection(); selectNode(node.id, false); }
-  const el = nodeEls.get(node.id);
-  world.appendChild(el); // на передний план
+  world.appendChild(nodeEls.get(node.id)); // на передний план
   const starts = new Map();
   selectedNodes.forEach(id => { const n = nodes.get(id); if (n) starts.set(id, { x: n.x, y: n.y }); });
-  drag = { type: 'node', sx: e.clientX, sy: e.clientY, starts, moved: false };
+  const evX = e.clientX, evY = e.clientY;
+  drag = { type: 'node', sx: evX, sy: evY, starts, moved: false };
+  // долгое нажатие (сенсорные экраны) → контекстное меню с удалением
+  drag.lpTimer = setTimeout(() => {
+    if (drag && drag.type === 'node' && !drag.moved) {
+      drag.lpFired = true;
+      showCtx(evX, evY, nodeCtxItems(node));
+    }
+  }, 550);
 }
 
 /* ---- связи: перетаскивание портов + клик-клик ---- */
 function onPortPointerDown(e, node, portEl) {
   e.stopPropagation(); e.preventDefault();
+  hideCtx();
   if (e.button !== 0 && e.pointerType !== 'touch') return;
   const dir = portEl.dataset.dir, type = portEl.dataset.type, portId = portEl.dataset.id;
   if (pendingLink) {
@@ -834,13 +920,17 @@ function tryCompleteLink(a, b) {
 /* ---- пинч-зум ---- */
 function startPinch() {
   const [p1, p2] = [...pointers.values()];
-  pinch = { d0: Math.hypot(p2.x - p1.x, p2.y - p1.y), s0: view.s };
+  pinch = {
+    d0: Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1, s0: view.s,
+    mid0: { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }, x0: view.x, y0: view.y
+  };
 }
 function updatePinch() {
+  if (!pinch) return;
   const [p1, p2] = [...pointers.values()];
   const d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
   const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-  const ns = clamp(pinch.s0 * (d / (pinch.d0 || 1)), 0.08, 4);
+  const ns = clamp(pinch.s0 * (d / pinch.d0), 0.08, 4);
   const r = viewport.getBoundingClientRect();
   const wx = (pinch.mid0.x - r.left - pinch.x0) / pinch.s0;
   const wy = (pinch.mid0.y - r.top - pinch.y0) / pinch.s0;
@@ -848,14 +938,7 @@ function updatePinch() {
   view.y = mid.y - r.top - wy * ns;
   view.s = ns;
   applyView();
-  if (!pinch.mid0) {} // noop
 }
-// сохраняем опорные данные при старте пинча
-const _startPinch = startPinch;
-startPinch = function () {
-  const [p1, p2] = [...pointers.values()];
-  pinch = { d0: Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1, s0: view.s, mid0: { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }, x0: view.x, y0: view.y };
-};
 
 viewport.addEventListener('wheel', e => {
   e.preventDefault();
@@ -866,9 +949,6 @@ viewport.addEventListener('dblclick', e => {
   if (e.target.closest('.node')) return;
   const w = clientToWorld(e.clientX, e.clientY);
   openQuickAdd(w.x, w.y);
-});
-viewport.addEventListener('pointerdown', e => {
-  if (!e.target.closest('.node') && !e.target.closest('.port') && pendingLink && e.button === 0 && (panTool || spaceDown || e.pointerType === 'touch')) cancelLinkVisual();
 });
 document.addEventListener('pointerdown', e => {
   if (pendingLink && !e.target.closest('.port') && !e.target.closest('#viewport')) cancelLinkVisual();
@@ -888,8 +968,8 @@ function showCtx(x, y, items) {
   });
   ctxMenu.hidden = false;
   const r = ctxMenu.getBoundingClientRect();
-  ctxMenu.style.left = Math.min(x, innerWidth - r.width - 8) + 'px';
-  ctxMenu.style.top = Math.min(y, innerHeight - r.height - 8) + 'px';
+  ctxMenu.style.left = clamp(x, 8, innerWidth - r.width - 8) + 'px';
+  ctxMenu.style.top = clamp(y, 8, innerHeight - r.height - 8) + 'px';
 }
 function hideCtx() { ctxMenu.hidden = true; }
 document.addEventListener('pointerdown', e => { if (!ctxMenu.hidden && !ctxMenu.contains(e.target)) hideCtx(); }, true);
@@ -1002,12 +1082,11 @@ function pushTranscript(node, text) {
   const pv = el?.querySelector('.tpreview');
   if (pv) {
     pv.textContent = node.lines.slice(-4).map(l => `▸ ${l.text}`).join('\n');
-    pv.scrollTop = pv.scrollHeight;
   }
   if (node._modalLog) {
     const line = document.createElement('div');
     line.innerHTML = `<span class="tl-t">[${fmtTime(Date.now())}]</span><span class="tl-x">${esc(text)}</span>`;
-    if (node._modalLog.firstElementChild?.textContent?.startsWith('Пока пусто')) node._modalLog.innerHTML = '';
+    if (node._modalLog.textContent.startsWith('Пока пусто')) node._modalLog.innerHTML = '';
     node._modalLog.appendChild(line);
     if (node._modalAuto?.checked) node._modalLog.scrollTop = node._modalLog.scrollHeight;
   }
@@ -1038,8 +1117,10 @@ function renderPalette() {
       `<div class="pal-item" draggable="true" data-type="${k}">
         <span class="pal-dot" style="color:${t.color};background:${t.color}"></span>
         <span class="pal-name">${t.name}</span><span class="pal-desc">${t.desc}</span></div>`).join('')).join('') +
-    `<div style="margin-top:14px;padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:11px;line-height:1.6">
-      💡 Перетащите блок на холст или кликните для добавления. Соединяйте порты перетаскиванием или двумя кликами.</div>`;
+    `<div style="margin-top:14px;padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:11px;line-height:1.7">
+      💡 Перетащите блок на холст или кликните для добавления.<br>
+      🔗 Порты соединяются перетаскиванием или двумя касаниями.<br>
+      🗑 Удаление: кнопка ✕ на блоке, долгое нажатие (сенсор) или плавающая кнопка при выделении.</div>`;
   el.querySelectorAll('.pal-item').forEach(it => {
     it.addEventListener('dragstart', e => e.dataTransfer.setData('node-type', it.dataset.type));
     it.addEventListener('click', () => {
@@ -1142,10 +1223,7 @@ function loadProjectData(p) {
   setSbMsg('Проект «' + project.name + '» загружен');
   appendLog('info', 'Загружен проект: ' + project.name);
 }
-function markDirty() {
-  dirty = true;
-  updateSaveInfo();
-}
+function markDirty() { dirty = true; updateSaveInfo(); }
 function updateSaveInfo() {
   $('#saveInfo').textContent = dirty ? '● не сохранено' : (lastSavedAt ? '✓ ' + fmtTime(lastSavedAt) : '');
 }
@@ -1202,7 +1280,6 @@ function importFromFile(file) {
 }
 $('#fileInput').addEventListener('change', e => { if (e.target.files[0]) importFromFile(e.target.files[0]); e.target.value = ''; });
 
-/* drag&drop импорт */
 let dragCnt = 0;
 window.addEventListener('dragenter', e => { e.preventDefault(); dragCnt++; $('#dropZone').style.display = 'flex'; });
 window.addEventListener('dragleave', e => { e.preventDefault(); if (--dragCnt <= 0) { dragCnt = 0; $('#dropZone').style.display = 'none'; } });
@@ -1214,7 +1291,7 @@ window.addEventListener('drop', e => {
   if (f && /\.json$/i.test(f.name)) importFromFile(f);
 });
 
-/* ================= МОДАЛКИ ПРОЧІЕ ================= */
+/* ================= МОДАЛКИ ПРОЧИЕ ================= */
 function openProjectsModal() {
   const body = document.createElement('div');
   body.innerHTML = '<div style="color:var(--muted)">Загрузка…</div>';
@@ -1261,14 +1338,14 @@ function openAboutModal() {
       • DSP-обработка: усиление, гейт, полосовой фильтр, VAD<br>
       • Потоковое распознавание речи в браузере — <b>Whisper</b> через <b>transformers.js</b> (локально, ONNX/WASM)<br>
       • Хранение проектов в IndexedDB, импорт/экспорт JSON<br>
-      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">ВНИМАНИЕ: модели Whisper скачиваются с huggingface.co при первом запуске распознавания.</span>
+      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">ВНИМАНИЕ: модели Whisper скачиваются с huggingface.co при первом запуске распознавания. Для стабильного результата зафиксируйте язык речи в настройках блока ASR.</span>
     </div>` });
 }
 function openKeysModal() {
   openModal({
-    title: '⌨ Горячие клавиши', width: 460, body: `
+    title: '⌨ Горячие клавиши', width: 480, body: `
     <div style="display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:13px;line-height:1.5">
-      ${[['Пробел + перетаскивание', 'панорама холста'], ['Колесо мыши / пинч', 'масштаб'], ['Двойной клик по холсту', 'добавить блок'], ['Двойной клик по блоку', 'настройки / транскрипт'], ['Delete / Backspace', 'удалить выделенное'], ['Ctrl+S', 'сохранить проект'], ['Ctrl+O', 'открыть проект'], ['Ctrl+N', 'новый проект'], ['Ctrl+E', 'экспорт JSON'], ['F', 'вписать всё'], ['0', 'масштаб 100%'], ['+ / −', 'зум'], ['Esc', 'закрыть / отменить связь'], ['Правый клик', 'контекстное меню']].map(([k, v]) => `<span>${v}</span><span style="font-family:var(--mono);color:var(--neon);font-size:11px">${k}</span>`).join('')}
+      ${[['Пробел + перетаскивание', 'панорама холста'], ['Колесо мыши / пинч', 'масштаб'], ['Двойной клик по холсту', 'добавить блок'], ['Двойной клик по блоку', 'настройки / транскрипт'], ['Долгое нажатие на блок (сенсор)', 'меню с удалением'], ['Кнопка ✕ на блоке', 'удалить блок'], ['Касание линии связи', 'выделить связь'], ['Плавающая кнопка 🗑', 'удалить выделенное'], ['Delete / Backspace', 'удалить выделенное'], ['Ctrl+S', 'сохранить проект'], ['Ctrl+O', 'открыть проект'], ['Ctrl+N', 'новый проект'], ['Ctrl+E', 'экспорт JSON'], ['F', 'вписать всё'], ['0', 'масштаб 100%'], ['Esc', 'закрыть / отменить связь'], ['Правый клик', 'контекстное меню']].map(([k, v]) => `<span>${v}</span><span style="font-family:var(--mono);color:var(--neon);font-size:11px;text-align:right">${k}</span>`).join('')}
     </div>` });
 }
 
@@ -1295,7 +1372,7 @@ self.onmessage = async (e) => {
       const p = pipes.get(m.model);
       if (!p) throw new Error('модель не загружена: ' + m.model);
       const opts = { task: 'transcribe' };
-      if (m.language && m.language !== 'auto') { opts.language = m.language; opts.chunk_length_s = 30; }
+      if (m.language && m.language !== 'auto') opts.language = m.language;
       const out = await p(m.audio, opts);
       self.postMessage({ type: 'result', id: m.id, text: out.text || '' });
     }
@@ -1330,7 +1407,7 @@ function onWorkerMsg(e) {
     $('#modelStatus').textContent = '✓ модель ' + m.model.split('/')[1] + ' готова';
     appendLog('ok', 'Модель готова: ' + m.model);
     toast('Модель ' + m.model + ' готова к работе', 'ok');
-    pipeline.asrRts.forEach(rt => rt.flush());
+    pumpQueue();
   } else if (m.type === 'result') {
     workerBusy.v = false;
     const rt = pipeline.asrRts.find(r => r.node.id === m.id);
@@ -1338,6 +1415,7 @@ function onWorkerMsg(e) {
     pumpQueue();
   } else if (m.type === 'error') {
     workerBusy.v = false;
+    if (m.model) loadingModels.delete(m.model);
     appendLog('err', 'ASR ошибка: ' + m.message);
     toast('ASR: ' + m.message, 'err', 5000);
     pumpQueue();
@@ -1357,6 +1435,10 @@ function rmsDb(b) {
   let s = 0;
   for (let i = 0; i < b.length; i++) s += b[i] * b[i];
   return 20 * Math.log10(Math.sqrt(s / Math.max(1, b.length)) + 1e-7);
+}
+function bufIsFinite(b) {
+  for (let i = 0; i < b.length; i += 257) if (!isFinite(b[i])) return false;
+  return true;
 }
 
 const pipeline = { running: false, ctx: null, sp: null, mute: null, sourceCtl: null, chain: [], asrRts: [], level: 0, srcLabel: '' };
@@ -1402,12 +1484,15 @@ function makeDspRuntime(node) {
       const aL = 1 - Math.exp(-2 * Math.PI * lp / sr);
       let x1 = 0, yH = 0, yL = 0;
       return { node, process(b) {
+        // защита от NaN-лавины: сброс состояния при повреждении
+        if (!isFinite(yL) || !isFinite(yH) || !isFinite(x1)) { x1 = 0; yH = 0; yL = 0; }
         for (let i = 0; i < b.length; i++) {
-          const x = b[i];
+          const x = isFinite(b[i]) ? b[i] : 0;
           yH = aH * (yH + x - x1); x1 = x;
           yL += aL * (yH - yL);
           b[i] = yL;
         }
+        if (!isFinite(yL)) { x1 = 0; yH = 0; yL = 0; }
         return b;
       } };
     }
@@ -1422,12 +1507,12 @@ function makeDspRuntime(node) {
 function makeAsrRuntime(node) {
   const p = node.params;
   const srIn = pipeline.ctx.sampleRate;
-  const winSamples = Math.round(clamp(p.window || 5, 2, 15) * 16000);
-  const strideSamples = Math.round(clamp(p.stride || 1.5, 0.5, (p.window || 5) - 0.5) * 16000);
+  const winSamples = Math.round(clamp(p.window || 4, 2, 15) * 16000);
+  const strideSamples = Math.round(clamp(p.stride || 2, 0.5, (p.window || 4) - 0.5) * 16000);
   const silenceDb = p.silenceDb ?? -48;
   const rt = {
-    node, model: p.model, lang: p.language || 'auto',
-    chunks: [], total: 0, phase: 0, hold: [],
+    node, model: p.model, lang: p.language || 'ru',
+    chunks: [], total: 0, phase: 0,
     append(buf) { this.chunks.push(buf); this.total += buf.length; },
     readFront(n) {
       const out = new Float32Array(n); let off = 0;
@@ -1451,17 +1536,19 @@ function makeAsrRuntime(node) {
       }
     },
     push(b) {
-      // линейная интерполяция srIn → 16000
+      if (!b.length) return;
+      // передискретизация srIn → 16000 линейной интерполяцией
       const ratio = srIn / 16000;
       const est = Math.ceil(b.length / ratio) + 2;
       const out = new Float32Array(est);
       let cnt = 0, t = this.phase;
       while (t < b.length - 1) {
         const i = Math.floor(t), f = t - i;
-        out[cnt++] = b[i] * (1 - f) + b[i + 1] * f;
+        const v = b[i] * (1 - f) + b[i + 1] * f;
+        out[cnt++] = isFinite(v) ? v : 0;
         t += ratio;
       }
-      this.phase = t - b.length;
+      this.phase = Math.max(0, t - b.length); // фикс ухода фазы в минус (раньше давало NaN)
       this.append(out.subarray(0, cnt).slice());
       while (this.total >= winSamples) {
         const w = this.readFront(winSamples);
@@ -1470,19 +1557,21 @@ function makeAsrRuntime(node) {
       }
     },
     dispatch(w) {
+      if (!bufIsFinite(w)) return;               // брак — в топку
       const db = rmsDb(w);
-      setLed(node.id, 'on');
-      if (db < silenceDb) return; // тишина — пропускаем
+      if (!isFinite(db) || db < silenceDb) return; // тишина — не распознаём
       asrJobQueue.push({ model: this.model, msg: { type: 'run', id: node.id, model: this.model, audio: w, language: this.lang } });
       if (asrJobQueue.length > 6) asrJobQueue.splice(0, asrJobQueue.length - 6);
       pumpQueue();
     },
-    flush() { pumpQueue(); },
     onResult(text) {
-      const clean = text.trim();
-      const el = nodeEls.get(node.id);
-      if (el) el.querySelector('.nled').className = 'nled on';
+      const clean = (text || '').trim();
+      setLed(node.id, 'on');
       if (!clean) return;
+      // отсечение повторов от перекрывающихся окон и «мусорных» токенов
+      if (node._lastText === clean) return;
+      if (/^[\s.!?,;:…—\-_*#()«»"]+$/.test(clean)) return;
+      node._lastText = clean;
       onAsrText(node, clean);
     }
   };
@@ -1534,10 +1623,11 @@ function pump(raw) {
   let b = raw.slice(0);
   const meta = { silent: false };
   for (const rt of pipeline.chain) { try { b = rt.process(b, meta) || b; } catch (e) {} }
+  if (!bufIsFinite(b)) return;
   let peak = 0;
   for (let i = 0; i < b.length; i += 2) { const a = Math.abs(b[i]); if (a > peak) peak = a; }
   pipeline.level = Math.max(pipeline.level * 0.82, peak);
-  for (const rt of pipeline.asrRts) if (!meta.silent) rt.push(b);
+  for (const rt of pipeline.asrRts) rt.push(b);
 }
 
 async function startSource(node) {
@@ -1577,7 +1667,7 @@ async function startSipSource(p) {
     authorizationUsername: p.user,
     authorizationPassword: p.password || undefined,
     displayName: p.user,
-    userAgentString: 'NeonFlow/1.0',
+    userAgentString: 'NeonFlow/1.1',
     logLevel: 'error'
   });
   await ua.start();
@@ -1641,6 +1731,7 @@ async function startPipeline() {
     runBtn.classList.remove('starting');
     runBtn.classList.add('running');
     runBtn.innerHTML = '⏹ СТОП';
+    document.body.classList.add('pipe-run');
     [...chain.dsp, ...chain.asrs, ...chain.outs, chain.src].forEach(n => setLed(n.id, 'on'));
     appendLog('ok', '▶ Пайплайн запущен. Источник: ' + pipeline.sourceCtl.label);
     toast('Пайплайн запущен', 'ok', 1800);
@@ -1655,6 +1746,7 @@ async function startPipeline() {
 }
 async function stopPipeline(silent) {
   pipeline.running = false;
+  document.body.classList.remove('pipe-run');
   try { pipeline.sourceCtl?.stop(); } catch (e) {}
   pipeline.sourceCtl = null;
   if (pipeline.sp) { pipeline.sp.onaudioprocess = null; try { pipeline.sp.disconnect(); } catch (e) {} }
@@ -1696,7 +1788,10 @@ const ACTIONS = {
   'import': () => $('#fileInput').click(),
   'export': () => exportProject(),
   'fit-all': fitAll,
+  'fit-sel': fitSelection,
   'fit-100': fit100,
+  'fit-w': () => { const b = nodesBounds([...nodes.values()]); if (b) fitBounds(b, 'w'); },
+  'fit-h': () => { const b = nodesBounds([...nodes.values()]); if (b) fitBounds(b, 'h'); },
   'view-grid': () => toggleGrid(),
   'view-sidebar': () => toggleSidebar(),
   'help-about': openAboutModal,
@@ -1709,7 +1804,6 @@ document.addEventListener('click', e => {
   const fn = ACTIONS[btn.dataset.action];
   if (fn) fn();
 });
-document.querySelectorAll('.toolbar-btn');
 $('#zoomIn').onclick = () => { const r = viewport.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.25); };
 $('#zoomOut').onclick = () => { const r = viewport.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 0.8); };
 $('#toolSelect').onclick = () => { panTool = false; $('#toolSelect').classList.add('active'); $('#toolPan').classList.remove('active'); viewport.classList.remove('panmode'); };
@@ -1796,6 +1890,7 @@ async function init() {
   }
   updateEmptyHint();
   appendLog('info', 'NeonFlow готов. Соберите цепь блоков и нажмите «ЗАПУСК».');
+  appendLog('info', 'Совет: для чистого распознавания зафиксируйте язык в настройках блока Whisper (по умолчанию — русский).');
   setInterval(() => { if (dirty && project.name) saveProject(true); }, 15000);
   window.addEventListener('beforeunload', () => { if (dirty && project.name) saveProject(true); });
   window.addEventListener('resize', () => { updateAllEdges(); });
