@@ -103,6 +103,8 @@ display: inline-flex; align-items: center; justify-content: center; width: 40px;
 .text { margin: 10px 0; }
 .figure { margin: 15px 0; text-align: center; }
 .figure img, .figure video, .figure audio { max-width: 100%; border-radius: 6px; border: 1px solid var(--border); box-shadow: 0 0 12px rgba(0,240,255,0.2); display: block; margin: 0 auto; }
+.figure video { width: 100%; height: auto; background: #000; }
+.figure audio { width: 100%; }
 .figure figcaption { color: var(--muted); font-size: 0.9em; margin-top: 8px; }
 .list { margin: 10px 0 10px 25px; }
 .list li { margin: 5px 0; }
@@ -829,7 +831,7 @@ const info = h('div', { class: 'app-info' });
 info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
 info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
 header.appendChild(info);
-header.appendChild(h('span', { class: 'app-version', textContent: 'v1.8.1' }));
+header.appendChild(h('span', { class: 'app-version', textContent: 'v1.8.2' }));
 return header;
 }
 function renderCourseHeader() {
@@ -1094,14 +1096,19 @@ const BLOCK_SCHEMAS = {
 { key: 'src', label: 'src — URL видео', type: 'text' },
 { key: 'poster', label: 'poster — URL постера', type: 'text' },
 { key: 'caption', label: 'caption — подпись', type: 'text' },
-{ key: 'mimeType', label: 'mimeType — тип (напр. video/mp4)', type: 'text' },
-{ key: 'speedControl', label: 'speedControl — показать переключатель скорости', type: 'checkbox', omitFalse: true }
+{ key: 'mimeType', label: 'mimeType — тип (напр. video/mp4, video/webm). Если не указан, определяется по расширению', type: 'text' },
+{ key: 'speedControl', label: 'speedControl — показать переключатель скорости', type: 'checkbox', omitFalse: true },
+{ key: 'autoplay', label: 'autoplay — автозапуск (включается без звука)', type: 'checkbox', omitFalse: true },
+{ key: 'loop', label: 'loop — зациклить воспроизведение', type: 'checkbox', omitFalse: true },
+{ key: 'muted', label: 'muted — без звука', type: 'checkbox', omitFalse: true }
 ],
 'audio': [
 { key: 'src', label: 'src — URL аудио', type: 'text' },
 { key: 'caption', label: 'caption — подпись', type: 'text' },
-{ key: 'mimeType', label: 'mimeType — тип (напр. audio/mpeg)', type: 'text' },
-{ key: 'speedControl', label: 'speedControl — показать переключатель скорости', type: 'checkbox', omitFalse: true }
+{ key: 'mimeType', label: 'mimeType — тип (напр. audio/mpeg, audio/ogg). Если не указан, определяется по расширению', type: 'text' },
+{ key: 'speedControl', label: 'speedControl — показать переключатель скорости', type: 'checkbox', omitFalse: true },
+{ key: 'autoplay', label: 'autoplay — автозапуск', type: 'checkbox', omitFalse: true },
+{ key: 'loop', label: 'loop — зациклить воспроизведение', type: 'checkbox', omitFalse: true }
 ],
 'list': [
 { key: 'ordered', label: 'ordered — нумерованный список', type: 'checkbox', omitFalse: true },
@@ -2209,6 +2216,60 @@ document.body.appendChild(overlay);
 overlay.addEventListener('click', (e) => {
 if (e.target === overlay) overlay.remove();
 });
+}
+// ---------- ОПРЕДЕЛЕНИЕ MIME-ТИПА МЕДИАФАЙЛА ПО РАСШИРЕНИЮ ----------
+function guessMediaType(url, kind) {
+if (!url) return null;
+const clean = String(url).split('?')[0].split('#')[0].toLowerCase();
+const extMatch = clean.match(/\.([a-z0-9]+)$/);
+const ext = extMatch ? extMatch[1] : '';
+const videoTypes = {
+mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', ogv: 'video/ogg',
+ogg: 'video/ogg', mov: 'video/quicktime', avi: 'video/x-msvideo', mkv: 'video/x-matroska'
+};
+const audioTypes = {
+mp3: 'audio/mpeg', mpga: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg', oga: 'audio/ogg',
+m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac', weba: 'audio/webm', opus: 'audio/ogg'
+};
+if (kind === 'video') return videoTypes[ext] || null;
+return audioTypes[ext] || null;
+}
+// ---------- ОБРАБОТЧИК ОШИБОК ЗАГРУЗКИ МЕДИА ----------
+function attachMediaErrorHandler(mediaEl, src, container) {
+const showMediaError = () => {
+if (mediaEl.dataset.errShown === '1') return;
+mediaEl.dataset.errShown = '1';
+const note = h('p', { class: 'block-note', textContent: '⚠ Не удалось загрузить медиафайл: ' + (src || 'ссылка не указана') + '. Проверьте ссылку и доступность файла (для внешних серверов может требоваться настройка CORS).' });
+const target = container || mediaEl.parentNode || document.body;
+if (target) target.appendChild(note);
+};
+mediaEl.addEventListener('error', showMediaError);
+mediaEl.querySelectorAll('source').forEach(s => s.addEventListener('error', showMediaError));
+}
+function setupMediaElement(mediaEl, block, kind) {
+mediaEl.setAttribute('preload', 'metadata');
+if (block.loop) mediaEl.loop = true;
+if (kind === 'video') {
+if (block.muted || block.autoplay) mediaEl.muted = true;
+if (block.autoplay) {
+mediaEl.autoplay = true;
+mediaEl.setAttribute('playsinline', '');
+}
+} else {
+if (block.autoplay) {
+mediaEl.autoplay = true;
+mediaEl.muted = true;
+}
+}
+const mime = block.mimeType || guessMediaType(block.src, kind);
+if (block.src) {
+if (mime) {
+mediaEl.appendChild(h('source', { src: block.src, type: mime }));
+} else {
+mediaEl.setAttribute('src', block.src);
+}
+try { mediaEl.load(); } catch (e) { console.warn('media load():', e); }
+}
 }
 function compileMathExpression(src, allowedVars) {
 const str = String(src).replace(/\s+/g, '');
@@ -3392,6 +3453,8 @@ helpDiv.innerHTML = `
 <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования). Для генерации подробных лекций используйте «Генерацию промпта».</p>
 <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
 <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>.</p>
+<h4 style="color: #fff; margin-top: 10px;">Аудио и видео</h4>
+<p>Блоки <code>video</code> и <code>audio</code> поддерживают поля: <code>src</code> (URL медиафайла), <code>caption</code>, <code>mimeType</code> (определяется автоматически по расширению, если не задан), <code>speedControl</code> (переключатель скорости), <code>loop</code>, <code>muted</code>, <code>autoplay</code> (для видео автозапуск включается без звука из-за ограничений браузеров). Видео масштабируется на всю ширину блока; при ошибке загрузки отображается предупреждение со ссылкой.</p>
 <h4 style="color: #fff; margin-top: 10px;">Размеры и масштабирование блоков</h4>
 <p>Любой блок поддерживает поля <code>width</code>, <code>height</code>, <code>maxWidth</code>, <code>maxHeight</code>, <code>minWidth</code>, <code>minHeight</code> и флаг <code>autoScale</code> (по умолчанию включён). Для медиаблоков размеры применяются непосредственно к медиаэлементу с сохранением пропорций. Для контейнерных блоков при заданной высоте включается внутренняя прокрутка, поэтому содержимое не перекрывает последующие блоки.</p>
 <h4 style="color: #fff; margin-top: 10px;">График функции (тип <code>graph</code>)</h4>
@@ -3460,8 +3523,9 @@ const schema = `ТИПЫ БЛОКОВ:
 2. heading: { "type": "heading", "level": 2, "text": "Текст заголовка" }
 3. text: { "type": "text", "text": "Текст абзаца" }
 4. image: { "type": "image", "src": "URL", "caption": "Подпись" }
-5. video: { "type": "video", "src": "URL", "caption": "Подпись", "speedControl": true }
-6. audio: { "type": "audio", "src": "URL", "caption": "Подпись" }
+5. video: { "type": "video", "src": "URL видео (.mp4, .webm, .ogg)", "poster": "URL постера", "caption": "Подпись", "mimeType": "video/mp4", "speedControl": true, "loop": false, "muted": false, "autoplay": false }
+// mimeType можно не указывать — он определится по расширению. Не указывайте неправильный mimeType.
+6. audio: { "type": "audio", "src": "URL аудио (.mp3, .ogg, .wav, .m4a)", "caption": "Подпись", "mimeType": "audio/mpeg", "speedControl": true, "loop": false, "autoplay": false }
 7. list: { "type": "list", "ordered": false, "items": ["Элемент 1", "Элемент 2"] }
 8. code: { "type": "code", "language": "javascript", "code": "текст кода" }
 9. callout: { "type": "callout", "variant": "info", "title": "Заголовок", "text": "Текст", "children": [ ...блоки... ] }
@@ -3518,8 +3582,9 @@ const prompt = `Ты — эксперт по созданию интеракти
 - Для каждого урока используй не менее 3–5 различных независимых источников.
 - В конец каждого урока добавь раздел «Источники» (блок section или callout со списком): для каждого источника укажи его название и полный реальный URL.
 === ЭТАП 2. ТРЕБОВАНИЯ К URL ===
-- Все URL (источники, изображения, видео, 3D-модели) должны быть найдены реальным поиском в интернете и вести на существующие страницы.
+- Все URL (источники, изображения, видео, аудио, 3D-модели) должны быть найдены реальным поиском в интернете и вести на существующие страницы файлов.
 - ЗАПРЕЩЕНО выдумывать, угадывать или конструировать URL — используй только адреса, реально полученные в результатах поиска.
+- Для блоков video и audio используй прямые ссылки на медиафайлы с расширениями .mp4/.webm (видео) и .mp3/.ogg/.wav/.m4a (аудио). Не указывай mimeType, если не уверен в типе файла.
 - Если достоверный источник найти не удалось — лучше не указывать ссылку, чем приводить несуществующую.
 === ЭТАП 3. СТРУКТУРА И ГЛУБИНА ЛЕКЦИЙ ===
 - Курс должен содержать 10–15 уроков-лекций; каждый урок — не менее 30 блоков.
@@ -3809,13 +3874,17 @@ const autoScale = block.autoScale !== false;
 Object.keys(sizes).forEach(field => { element.style[field] = sizes[field]; });
 element.style.boxSizing = 'border-box';
 if (isMedia) {
+const tag = element.tagName;
 if (autoScale && !sizes.maxWidth) element.style.maxWidth = '100%';
-if (sizes.width && sizes.height) {
+if (tag === 'AUDIO') {
+// аудио сохраняет собственные размеры, не сжимаем его по высоте
+} else if (sizes.width && sizes.height) {
 element.style.objectFit = 'contain';
+} else if (sizes.height && !sizes.width) {
+element.style.width = 'auto';
 } else if (!sizes.height) {
 element.style.height = 'auto';
 }
-if (!sizes.width) element.style.width = 'auto';
 } else {
 const constrainedTypes = ['carousel', 'before-after', 'flip-card'];
 if (autoScale && !sizes.maxWidth && !sizes.width && constrainedTypes.indexOf(block.type) === -1) {
@@ -3858,8 +3927,10 @@ case 'video': {
 element = h('figure', { class: 'figure' });
 const video = h('video', { controls: '' });
 if (block.poster) video.setAttribute('poster', block.poster);
-video.appendChild(h('source', { src: block.src, type: block.mimeType || 'video/mp4' }));
+setupMediaElement(video, block, 'video');
 element.appendChild(video);
+if (block.src) attachMediaErrorHandler(video, block.src, element);
+else element.appendChild(h('p', { class: 'block-note', textContent: '⚠ Укажите поле src (URL видео).' }));
 if (block.speedControl) {
 const speedControl = h('div', { class: 'speed-control' });
 speedControl.appendChild(h('label', { textContent: 'Скорость:' }));
@@ -3876,8 +3947,10 @@ break;
 case 'audio': {
 element = h('figure', { class: 'figure' });
 const audio = h('audio', { controls: '' });
-audio.appendChild(h('source', { src: block.src, type: block.mimeType || 'audio/mpeg' }));
+setupMediaElement(audio, block, 'audio');
 element.appendChild(audio);
+if (block.src) attachMediaErrorHandler(audio, block.src, element);
+else element.appendChild(h('p', { class: 'block-note', textContent: '⚠ Укажите поле src (URL аудио).' }));
 if (block.speedControl) {
 const audioSpeedControl = h('div', { class: 'speed-control' });
 audioSpeedControl.appendChild(h('label', { textContent: 'Скорость:' }));
