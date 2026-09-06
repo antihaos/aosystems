@@ -77,7 +77,7 @@ input:focus,select:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(0,22
 #workspace{flex:1;display:flex;min-height:0;position:relative}
 #sidebar{width:284px;flex:none;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:40;transition:transform .25s ease}
 .sb-tabs{display:flex;border-bottom:1px solid var(--border);flex:none}
-.sb-tab{flex:1;padding:11px 4px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:.15s;font-family:var(--disp);font-weight:600}
+.sb-tab{flex:1;padding:11px 2px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:.15s;font-family:var(--disp);font-weight:600;white-space:nowrap}
 .sb-tab:hover{color:var(--text)}
 .sb-tab.active{color:var(--neon);border-bottom-color:var(--neon);text-shadow:0 0 10px var(--neon-dim)}
 .sb-body{flex:1;overflow-y:auto;padding:10px}
@@ -99,6 +99,16 @@ input:focus,select:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(0,22
 .mini-btn{padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid var(--border2);color:var(--muted);transition:.15s}
 .mini-btn:hover{color:var(--neon);border-color:var(--neon)}
 .mini-btn.danger:hover{color:var(--red);border-color:var(--red)}
+
+/* --- пресеты --- */
+.preset-card{background:linear-gradient(180deg,var(--panel2),#0d1428);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;transition:.15s}
+.preset-card:hover{border-color:var(--neon-dim);box-shadow:0 0 14px rgba(0,229,255,.12)}
+.ps-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.ps-icon{font-size:16px;flex:none}
+.ps-desc{color:var(--muted);font-size:11.5px;line-height:1.5;margin:6px 0 9px}
+.ps-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.ps-tag{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:10px;border:1px solid var(--border2);color:var(--muted)}
+
 .log-line{font-family:var(--mono);font-size:10.5px;padding:3px 6px;border-left:2px solid var(--border2);margin-bottom:3px;color:var(--muted);word-break:break-word}
 .log-line .t{color:#4a5680;margin-right:6px}
 .log-line.ok{border-color:var(--grn);color:#b8ffd9}
@@ -115,7 +125,6 @@ input:focus,select:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(0,22
 #world{position:absolute;left:0;top:0;transform-origin:0 0;width:0;height:0}
 #edgesSvg{position:absolute;left:0;top:0;overflow:visible;width:1px;height:1px}
 
-/* --- соединения: неоновый жгут (подложка-свечение + ядро + бегущий импульс + зона касания) --- */
 .edge-glow{fill:none;stroke:currentColor;stroke-width:7;opacity:.22;pointer-events:none}
 .edge-flow{fill:none;stroke:#eaffff;stroke-width:1.2;stroke-dasharray:3 15;stroke-linecap:round;opacity:0;pointer-events:none}
 .edge-vis{fill:none;stroke:currentColor;stroke-width:2.4;pointer-events:none}
@@ -130,7 +139,6 @@ g.edge.selected .edge-glow{opacity:.5}
 @keyframes dashMove{to{stroke-dashoffset:-15}}
 #tempPath{fill:none;stroke:var(--mag);stroke-width:2.2;stroke-dasharray:6 5;filter:drop-shadow(0 0 5px var(--mag));pointer-events:none;animation:dashMove .5s linear infinite}
 
-/* --- узлы --- */
 .node{position:absolute;width:212px;background:linear-gradient(180deg,#111a34,#0c1226);border:1px solid var(--border2);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.5);cursor:grab;transition:box-shadow .15s;overflow:visible;touch-action:none;-webkit-touch-callout:none}
 .node:hover{border-color:#35478a}
 .node:active{cursor:grabbing}
@@ -150,7 +158,6 @@ g.edge.selected .edge-glow{opacity:.5}
 .ports{padding:9px 0 10px}
 .prow{display:flex;justify-content:space-between;align-items:center;min-height:24px}
 
-/* --- порты: неоновые гнёзда, центр точно на границе блока --- */
 .port{display:flex;align-items:center;gap:7px;padding:3px 10px;cursor:crosshair;touch-action:none}
 .port em{font-style:normal;font-size:9.5px;color:var(--muted);font-family:var(--mono);letter-spacing:.3px}
 .port i{width:15px;height:15px;border-radius:50%;background:#05080f;border:2px solid var(--pc,#00e5ff);box-shadow:0 0 9px rgba(0,229,255,.45);box-shadow:0 0 9px color-mix(in srgb,var(--pc,#00e5ff) 55%,transparent);position:relative;flex:none;transition:transform .13s,box-shadow .13s}
@@ -171,13 +178,11 @@ g.edge.selected .edge-glow{opacity:.5}
 #emptyHint>div{text-align:center;color:var(--muted);font-size:14px;line-height:2}
 #emptyHint .big{font-family:var(--disp);font-size:18px;color:#3d4c80;letter-spacing:2px}
 
-/* --- плавающая кнопка удаления (выделение) --- */
 #delFab{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:9;display:flex;align-items:center;gap:9px;padding:10px 18px;border-radius:24px;background:rgba(24,10,18,.92);border:1px solid rgba(255,59,92,.6);color:#ffc2cd;font-size:12.5px;box-shadow:0 0 20px rgba(255,59,92,.3),0 8px 22px rgba(0,0,0,.5);backdrop-filter:blur(6px);animation:fabIn .18s ease;white-space:nowrap}
 #delFab:hover{background:rgba(255,59,92,.2)}
 #delFab .cnt{background:var(--red);color:#fff;border-radius:10px;padding:1px 8px;font-family:var(--mono);font-size:11px}
 @keyframes fabIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
 
-/* сенсорные устройства: толще зоны касания, кнопки узлов заметнее */
 @media (pointer:coarse){
   .edge-hit{stroke-width:36}
   .port{padding-top:6px;padding-bottom:6px}
@@ -270,6 +275,8 @@ g.edge.selected .edge-glow{opacity:.5}
           <button class="mi" data-action="save">💾 Сохранить<span class="k">Ctrl+S</span></button>
           <button class="mi" data-action="saveas">Сохранить как…</button>
           <div class="msep"></div>
+          <button class="mi" data-action="presets">🧩 Пресеты пайплайнов…</button>
+          <div class="msep"></div>
           <button class="mi" data-action="import">⤓ Импорт JSON…</button>
           <button class="mi" data-action="export">⤒ Экспорт JSON<span class="k">Ctrl+E</span></button>
         </div>
@@ -299,6 +306,10 @@ g.edge.selected .edge-glow{opacity:.5}
 
   <!-- TOOLBAR -->
   <div id="toolbar">
+    <button class="tb active" id="sidebarBtn" title="Показать/скрыть боковую панель">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+    </button>
+    <div class="tb-sep"></div>
     <button class="tb active" id="toolSelect" title="Выделение (V)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3l7 17 2.5-7.5L21 10z"/></svg>
     </button>
@@ -316,6 +327,7 @@ g.edge.selected .edge-glow{opacity:.5}
     <button class="tb" id="zoomIn" title="Приблизить (+)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg></button>
     <div class="tb-sep"></div>
     <button class="tb active" id="gridBtn" title="Сетка">▦</button>
+    <button class="tb" data-action="presets" title="Пресеты пайплайнов">🧩</button>
     <button id="runBtn" title="Запустить/остановить пайплайн">▶ ЗАПУСК</button>
   </div>
 
@@ -325,11 +337,13 @@ g.edge.selected .edge-glow{opacity:.5}
     <aside id="sidebar">
       <div class="sb-tabs">
         <button class="sb-tab active" data-panel="palette">Блоки</button>
+        <button class="sb-tab" data-panel="presets">Пресеты</button>
         <button class="sb-tab" data-panel="projects">Проекты</button>
         <button class="sb-tab" data-panel="log">Журнал</button>
       </div>
       <div class="sb-body">
         <div class="sb-panel active" id="panel-palette"></div>
+        <div class="sb-panel" id="panel-presets"></div>
         <div class="sb-panel" id="panel-projects"></div>
         <div class="sb-panel" id="panel-log"></div>
       </div>
@@ -340,7 +354,7 @@ g.edge.selected .edge-glow{opacity:.5}
       </div>
       <div id="marquee"></div>
       <button id="delFab" hidden>🗑 Удалить <span class="cnt">0</span></button>
-      <div id="emptyHint"><div><div class="big">ХОЛСТ ПУСТ</div>Дважды кликните, чтобы добавить блок,<br>или перетащите его из панели «Блоки»</div></div>
+      <div id="emptyHint"><div><div class="big">ХОЛСТ ПУСТ</div>Дважды кликните, чтобы добавить блок,<br>перетащите его из панели «Блоки»<br>или выберите готовый пресет 🧩</div></div>
     </main>
   </div>
 
@@ -353,7 +367,7 @@ g.edge.selected .edge-glow{opacity:.5}
     <div class="sb-right">
       <span id="sbNodes">0 блоков</span>
       <span id="zoomLabel">100%</span>
-      <span>NF v1.1</span>
+      <span>NF v1.3</span>
     </div>
   </footer>
 </div>
@@ -379,6 +393,54 @@ function toast(msg, type = 'info', ms = 3200) {
   t.innerHTML = msg;
   $('#toasts').appendChild(t);
   setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, ms);
+}
+
+/* ================= ЗАГРУЗКА SIP.JS (мульти-CDN, лениво) ================= */
+let sipLibPromise = null;
+function loadScriptOnce(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => res();
+    s.onerror = () => rej(new Error('не загрузился ' + src));
+    document.head.appendChild(s);
+  });
+}
+function withTimeout(p, ms) {
+  return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('таймаут загрузки')), ms))]);
+}
+function ensureSipLib() {
+  if (window.SIP && window.SIP.UserAgent) return Promise.resolve(window.SIP);
+  if (sipLibPromise) return sipLibPromise;
+  sipLibPromise = (async () => {
+    appendLog('info', 'Загрузка библиотеки sip.js…');
+    const esmUrls = [
+      'https://cdn.jsdelivr.net/npm/sip.js@0.21.2/+esm',
+      'https://esm.run/sip.js@0.21.2',
+      'https://esm.sh/sip.js@0.21.2'
+    ];
+    for (const u of esmUrls) {
+      try {
+        const mod = await withTimeout(import(u), 25000);
+        const ns = (mod && mod.default && mod.default.UserAgent) ? mod.default : mod;
+        if (ns && ns.UserAgent && ns.Inviter && ns.Registerer) {
+          window.SIP = ns;
+          appendLog('ok', 'sip.js загружен (' + u.replace(/^https:\/\//, '') + ')');
+          return ns;
+        }
+      } catch (e) { /* пробуем следующий CDN */ }
+    }
+    try {
+      await withTimeout(loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/sip.js/0.21.2/sip.min.js'), 25000);
+      if (window.SIP && window.SIP.UserAgent) {
+        appendLog('ok', 'sip.js загружен (cdnjs)');
+        return window.SIP;
+      }
+    } catch (e) { /* всё плохо */ }
+    sipLibPromise = null;
+    throw new Error('Не удалось загрузить sip.js ни с одного CDN. Проверьте доступ в интернет / блокировщик и повторите.');
+  })();
+  return sipLibPromise;
 }
 
 /* ================= INDEXEDDB ================= */
@@ -457,6 +519,7 @@ let view = { x: 60, y: 60, s: 1 };
 let dirty = false, lastSavedAt = null;
 let panTool = false, spaceDown = false;
 let pendingLink = null;
+let sidebarVisible = true;
 const viewport = $('#viewport'), world = $('#world'), edgesSvg = $('#edgesSvg'), tempPath = $('#tempPath');
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -712,7 +775,7 @@ function updateAllEdges() { for (const e of edges.values()) updateEdge(e); }
 function addEdge(fromN, fromP, toN, toP, type, silent) {
   for (const [eid, e] of [...edges]) {
     if (e.from.n === fromN && e.from.p === fromP && e.to.n === toN && e.to.p === toP) return null;
-    if (e.to.n === toN && e.to.p === toP) removeEdge(eid); // один вход — одно соединение
+    if (e.to.n === toN && e.to.p === toP) removeEdge(eid);
   }
   const edge = { id: uid(), from: { n: fromN, p: fromP }, to: { n: toN, p: toP }, type };
   edges.set(edge.id, edge);
@@ -847,12 +910,11 @@ function onNodePointerDown(e, node) {
     return;
   }
   if (!selectedNodes.has(node.id)) { clearSelection(); selectNode(node.id, false); }
-  world.appendChild(nodeEls.get(node.id)); // на передний план
+  world.appendChild(nodeEls.get(node.id));
   const starts = new Map();
   selectedNodes.forEach(id => { const n = nodes.get(id); if (n) starts.set(id, { x: n.x, y: n.y }); });
   const evX = e.clientX, evY = e.clientY;
   drag = { type: 'node', sx: evX, sy: evY, starts, moved: false };
-  // долгое нажатие (сенсорные экраны) → контекстное меню с удалением
   drag.lpTimer = setTimeout(() => {
     if (drag && drag.type === 'node' && !drag.moved) {
       drag.lpFired = true;
@@ -1108,6 +1170,137 @@ function openQuickAdd(wx, wy) {
   });
 }
 
+/* ================= ПРЕСЕТЫ ПАЙПЛАЙНОВ ================= */
+function buildChainNodes(types, y = 230, x0 = 40, gap = 280) {
+  const ns = types.map((t, i) => ({ id: uid(), type: t, x: x0 + i * gap, y, params: { ...NODE_TYPES[t].defParams } }));
+  ns.forEach(n => { if (n.type === 'transcript') n.lines = []; });
+  const es = [];
+  for (let i = 0; i < ns.length - 1; i++)
+    es.push({ id: uid(), from: { n: ns[i].id, p: 'out' }, to: { n: ns[i + 1].id, p: 'in' }, type: 'audio' });
+  return { ns, es };
+}
+function attachTextSink(srcNode, type, x, y, ns, es) {
+  const n = { id: uid(), type, x, y, params: { ...NODE_TYPES[type].defParams } };
+  if (type === 'transcript') n.lines = [];
+  ns.push(n);
+  es.push({ id: uid(), from: { n: srcNode.id, p: 'text' }, to: { n: n.id, p: 'in' }, type: 'text' });
+  return n;
+}
+const PRESETS = [
+  {
+    id: 'mic-basic', icon: '🎙', name: 'Микрофон → Транскрипт',
+    desc: 'Быстрый тест распознавания без АТС: локальный микрофон, лёгкое усиление и вывод текста на экран.',
+    tags: ['микрофон', 'усиление', 'whisper', 'экран'],
+    build() { return buildChainNodes(['mic', 'gain', 'asr', 'transcript']); }
+  },
+  {
+    id: 'sip-full', icon: '📞', name: 'SIP-транк → Экран + Журнал',
+    desc: 'Полная цепь разговора с виртуальной АТС: гейт, полосовой фильтр, Whisper. Текст уходит на экран и в журнал событий.',
+    tags: ['sip', 'гейт', 'фильтр', '2 вывода'],
+    build() {
+      const { ns, es } = buildChainNodes(['sip', 'gain', 'gate', 'filter', 'asr']);
+      const asrN = ns[ns.length - 1];
+      attachTextSink(asrN, 'transcript', asrN.x + 300, asrN.y - 20, ns, es);
+      attachTextSink(asrN, 'logger', asrN.x + 300, asrN.y + 230, ns, es);
+      return { ns, es };
+    }
+  },
+  {
+    id: 'sip-clean', icon: '🧹', name: 'Максимальная очистка речи',
+    desc: 'Для шумных линий: усиление, полосовой фильтр 300–3400 Гц, шумовой гейт и VAD перед распознаванием.',
+    tags: ['sip', 'фильтр', 'гейт', 'vad'],
+    build() { return buildChainNodes(['sip', 'gain', 'filter', 'gate', 'vad', 'asr', 'transcript'], 230, 20, 262); }
+  },
+  {
+    id: 'sip-stream', icon: '📡', name: 'Эфир → Экран + WebSocket',
+    desc: 'Распознавание звонка с одновременной отправкой фраз во внешнюю систему (бот, CRM) через WebSocket.',
+    tags: ['sip', 'whisper', 'ws-стрим'],
+    build() {
+      const { ns, es } = buildChainNodes(['sip', 'filter', 'asr']);
+      const asrN = ns[ns.length - 1];
+      attachTextSink(asrN, 'transcript', asrN.x + 300, asrN.y - 20, ns, es);
+      const w = attachTextSink(asrN, 'ws', asrN.x + 300, asrN.y + 230, ns, es);
+      w.params.url = 'wss://example.com/realtime';
+      return { ns, es };
+    }
+  },
+  {
+    id: 'tone-test', icon: '∿', name: 'Диагностика: генератор тона',
+    desc: 'Проверка DSP-тракта без микрофона и АТС: тон 440 Гц через фильтр и весь тракт распознавания.',
+    tags: ['тон', 'фильтр', 'тест'],
+    build() { return buildChainNodes(['tone', 'gain', 'filter', 'asr', 'transcript']); }
+  },
+  {
+    id: 'duo-branch', icon: '🎧', name: 'Параллельные ветки',
+    desc: 'Один микрофон питает две ветки обработки: чистый тракт и тракт с гейтом — удобно сравнивать результат.',
+    tags: ['микрофон', '2 ветки', '2×whisper'],
+    build() {
+      const mic = { id: uid(), type: 'mic', x: 40, y: 320, params: { ...NODE_TYPES.mic.defParams } };
+      const ns = [mic], es = [];
+      const branch = (types, y) => {
+        let prev = mic;
+        types.forEach((t, i) => {
+          const n = { id: uid(), type: t, x: 320 + i * 280, y, params: { ...NODE_TYPES[t].defParams } };
+          if (t === 'transcript') n.lines = [];
+          ns.push(n);
+          es.push({ id: uid(), from: { n: prev.id, p: 'out' }, to: { n: n.id, p: 'in' }, type: 'audio' });
+          prev = n;
+        });
+      };
+      branch(['gain', 'asr', 'transcript'], 140);
+      branch(['gate', 'gain', 'asr', 'transcript'], 470);
+      return { ns, es };
+    }
+  }
+];
+function presetCardHtml(p) {
+  return `<div class="preset-card" data-id="${p.id}">
+    <div class="ps-head"><span class="ps-icon">${p.icon}</span>${esc(p.name)}</div>
+    <div class="ps-desc">${esc(p.desc)}</div>
+    <div class="ps-tags">${p.tags.map(t => `<span class="ps-tag">${esc(t)}</span>`).join('')}</div>
+    <button class="btn neon" style="width:100%;justify-content:center">⚡ Применить</button>
+  </div>`;
+}
+function applyPreset(p) {
+  if (pipeline.running) stopPipeline();
+  if (dirty && nodes.size && !confirm('Текущий проект не сохранён. Загрузить пресет без сохранения?')) return;
+  const built = p.build();
+  project.id = null;
+  loadProjectData({ id: null, name: p.name, nodes: built.ns, edges: built.es });
+  project.id = null;
+  dirty = true;
+  updateSaveInfo();
+  requestAnimationFrame(fitAll);
+  appendLog('info', 'Применён пресет: ' + p.name);
+  toast('🧩 Пресет «' + p.name + '» загружен', 'ok');
+  if (innerWidth <= 920) toggleSidebar(false);
+}
+function renderPresets() {
+  const el = $('#panel-presets');
+  el.innerHTML = `<div style="color:var(--muted);font-size:11.5px;line-height:1.6;margin-bottom:12px">
+    Готовые схемы пайплайнов. Применение заменяет текущий холст — сохраните проект, если он важен.</div>` +
+    PRESETS.map(presetCardHtml).join('');
+  el.querySelectorAll('.preset-card').forEach(card => {
+    card.querySelector('button').onclick = () => {
+      const p = PRESETS.find(x => x.id === card.dataset.id);
+      if (p) applyPreset(p);
+    };
+  });
+}
+function openPresetsModal() {
+  const body = document.createElement('div');
+  body.innerHTML = `<div style="color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:14px">
+    Выберите готовую схему — она заменит текущий холст. Модальное окно можно развернуть на весь экран (⛶).</div>` +
+    PRESETS.map(presetCardHtml).join('');
+  const m = openModal({ title: '🧩 Пресеты пайплайнов', body, width: 560 });
+  body.querySelectorAll('.preset-card').forEach(card => {
+    card.querySelector('button').onclick = () => {
+      const p = PRESETS.find(x => x.id === card.dataset.id);
+      if (p) { m.close(); applyPreset(p); }
+    };
+  });
+}
+
 /* ================= ПАЛИТРА / ПРОЕКТЫ / ЖУРНАЛ ================= */
 function renderPalette() {
   const el = $('#panel-palette');
@@ -1334,18 +1527,19 @@ function openAboutModal() {
       Визуальный конструктор аудио-пайплайнов для обработки потока с SIP-транка виртуальной АТС.<br><br>
       <b style="color:var(--mag)">Возможности:</b><br>
       • Нода-редактор с зумом, панорамой и режимами «вписать»<br>
+      • 🧩 Готовые пресеты пайплайнов — быстрый старт типовых схем<br>
       • Захват аудио: микрофон, генератор тона, SIP-транк (sip.js → WebRTC)<br>
       • DSP-обработка: усиление, гейт, полосовой фильтр, VAD<br>
       • Потоковое распознавание речи в браузере — <b>Whisper</b> через <b>transformers.js</b> (локально, ONNX/WASM)<br>
       • Хранение проектов в IndexedDB, импорт/экспорт JSON<br>
-      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">ВНИМАНИЕ: модели Whisper скачиваются с huggingface.co при первом запуске распознавания. Для стабильного результата зафиксируйте язык речи в настройках блока ASR.</span>
+      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">Библиотека sip.js подтягивается автоматически с резервных CDN при первом запуске SIP-источника. Модели Whisper скачиваются с huggingface.co.</span>
     </div>` });
 }
 function openKeysModal() {
   openModal({
     title: '⌨ Горячие клавиши', width: 480, body: `
     <div style="display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:13px;line-height:1.5">
-      ${[['Пробел + перетаскивание', 'панорама холста'], ['Колесо мыши / пинч', 'масштаб'], ['Двойной клик по холсту', 'добавить блок'], ['Двойной клик по блоку', 'настройки / транскрипт'], ['Долгое нажатие на блок (сенсор)', 'меню с удалением'], ['Кнопка ✕ на блоке', 'удалить блок'], ['Касание линии связи', 'выделить связь'], ['Плавающая кнопка 🗑', 'удалить выделенное'], ['Delete / Backspace', 'удалить выделенное'], ['Ctrl+S', 'сохранить проект'], ['Ctrl+O', 'открыть проект'], ['Ctrl+N', 'новый проект'], ['Ctrl+E', 'экспорт JSON'], ['F', 'вписать всё'], ['0', 'масштаб 100%'], ['Esc', 'закрыть / отменить связь'], ['Правый клик', 'контекстное меню']].map(([k, v]) => `<span>${v}</span><span style="font-family:var(--mono);color:var(--neon);font-size:11px;text-align:right">${k}</span>`).join('')}
+      ${[['Пробел + перетаскивание', 'панорама холста'], ['Колесо мыши / пинч', 'масштаб'], ['Двойной клик по холсту', 'добавить блок'], ['Двойной клик по блоку', 'настройки / транскрипт'], ['Долгое нажатие на блок (сенсор)', 'меню с удалением'], ['Кнопка ✕ на блоке', 'удалить блок'], ['Касание линии связи', 'выделить связь'], ['Плавающая кнопка 🗑', 'удалить выделенное'], ['Кнопка ◧ в тулбаре', 'боковая панель'], ['Delete / Backspace', 'удалить выделенное'], ['Ctrl+S', 'сохранить проект'], ['Ctrl+O', 'открыть проект'], ['Ctrl+N', 'новый проект'], ['Ctrl+E', 'экспорт JSON'], ['F', 'вписать всё'], ['0', 'масштаб 100%'], ['Esc', 'закрыть / отменить связь'], ['Правый клик', 'контекстное меню']].map(([k, v]) => `<span>${v}</span><span style="font-family:var(--mono);color:var(--neon);font-size:11px;text-align:right">${k}</span>`).join('')}
     </div>` });
 }
 
@@ -1484,7 +1678,6 @@ function makeDspRuntime(node) {
       const aL = 1 - Math.exp(-2 * Math.PI * lp / sr);
       let x1 = 0, yH = 0, yL = 0;
       return { node, process(b) {
-        // защита от NaN-лавины: сброс состояния при повреждении
         if (!isFinite(yL) || !isFinite(yH) || !isFinite(x1)) { x1 = 0; yH = 0; yL = 0; }
         for (let i = 0; i < b.length; i++) {
           const x = isFinite(b[i]) ? b[i] : 0;
@@ -1537,7 +1730,6 @@ function makeAsrRuntime(node) {
     },
     push(b) {
       if (!b.length) return;
-      // передискретизация srIn → 16000 линейной интерполяцией
       const ratio = srIn / 16000;
       const est = Math.ceil(b.length / ratio) + 2;
       const out = new Float32Array(est);
@@ -1548,7 +1740,7 @@ function makeAsrRuntime(node) {
         out[cnt++] = isFinite(v) ? v : 0;
         t += ratio;
       }
-      this.phase = Math.max(0, t - b.length); // фикс ухода фазы в минус (раньше давало NaN)
+      this.phase = Math.max(0, t - b.length);
       this.append(out.subarray(0, cnt).slice());
       while (this.total >= winSamples) {
         const w = this.readFront(winSamples);
@@ -1557,9 +1749,9 @@ function makeAsrRuntime(node) {
       }
     },
     dispatch(w) {
-      if (!bufIsFinite(w)) return;               // брак — в топку
+      if (!bufIsFinite(w)) return;
       const db = rmsDb(w);
-      if (!isFinite(db) || db < silenceDb) return; // тишина — не распознаём
+      if (!isFinite(db) || db < silenceDb) return;
       asrJobQueue.push({ model: this.model, msg: { type: 'run', id: node.id, model: this.model, audio: w, language: this.lang } });
       if (asrJobQueue.length > 6) asrJobQueue.splice(0, asrJobQueue.length - 6);
       pumpQueue();
@@ -1568,7 +1760,6 @@ function makeAsrRuntime(node) {
       const clean = (text || '').trim();
       setLed(node.id, 'on');
       if (!clean) return;
-      // отсечение повторов от перекрывающихся окон и «мусорных» токенов
       if (node._lastText === clean) return;
       if (/^[\s.!?,;:…—\-_*#()«»"]+$/.test(clean)) return;
       node._lastText = clean;
@@ -1657,37 +1848,39 @@ async function startSource(node) {
 }
 
 async function startSipSource(p) {
-  if (typeof SIP === 'undefined') throw new Error('Библиотека sip.js не загружена (нет сети?). Используйте «Микрофон» или «Генератор тона».');
+  setSrcStatus('SIP: загрузка sip.js…', '');
+  const S = await ensureSipLib();
   const host = (p.server || '').replace(/^wss?:\/\//, '').replace(/[:/].*$/, '') || 'localhost';
   appendLog('info', 'SIP: подключение к ' + p.server);
   setSrcStatus('SIP: подключение…', '');
-  const ua = new SIP.UserAgent({
-    uri: SIP.UserAgent.makeURI(`sip:${p.user}@${host}`),
+  const ua = new S.UserAgent({
+    uri: S.UserAgent.makeURI(`sip:${p.user}@${host}`),
     transportOptions: { server: p.server },
     authorizationUsername: p.user,
     authorizationPassword: p.password || undefined,
     displayName: p.user,
-    userAgentString: 'NeonFlow/1.1',
-    logLevel: 'error'
+    userAgentString: 'NeonFlow/1.3',
+    reconnectionAttempts: 0,
+    logLevel: S.LogLevel ? S.LogLevel.Error : 'error'
   });
   await ua.start();
-  const reg = new SIP.Registerer(ua);
+  const reg = new S.Registerer(ua);
   await new Promise((res, rej) => {
     const t = setTimeout(() => rej(new Error('таймаут регистрации на АТС')), 15000);
-    reg.stateChange.addListener(st => { if (st === SIP.RegistererState.Registered) { clearTimeout(t); res(); } });
+    reg.stateChange.addListener(st => { if (st === S.RegistererState.Registered) { clearTimeout(t); res(); } });
     reg.register().catch(e => { clearTimeout(t); rej(e); });
   });
   appendLog('ok', 'SIP: зарегистрирован на транке как ' + p.user);
   setSrcStatus('SIP: вызов ' + (p.callee || '') + '…', '');
-  const inviter = new SIP.Inviter(ua, SIP.UserAgent.makeURI(`sip:${p.callee}@${host}`), {
+  const inviter = new S.Inviter(ua, S.UserAgent.makeURI(`sip:${p.callee}@${host}`), {
     sessionDescriptionHandlerOptions: { constraints: { audio: true, video: false } }
   });
   await inviter.invite();
   await new Promise((res, rej) => {
     const t = setTimeout(() => rej(new Error('таймаут дозвона')), 25000);
     inviter.stateChange.addListener(st => {
-      if (st === SIP.SessionState.Established) { clearTimeout(t); res(); }
-      if (st === SIP.SessionState.Terminated) { clearTimeout(t); rej(new Error('вызов отклонён/завершён')); }
+      if (st === S.SessionState.Established) { clearTimeout(t); res(); }
+      if (st === S.SessionState.Terminated) { clearTimeout(t); rej(new Error('вызов отклонён/завершён')); }
     });
   });
   const sdh = inviter.sessionDescriptionHandler;
@@ -1740,7 +1933,7 @@ async function startPipeline() {
     runBtn.classList.remove('starting');
     runBtn.innerHTML = '▶ ЗАПУСК';
     appendLog('err', 'Ошибка запуска: ' + (err.message || err));
-    toast('Не удалось запустить: ' + (err.message || err), 'err', 5000);
+    toast('Не удалось запустить: ' + (err.message || err), 'err', 6000);
     await stopPipeline(true);
   }
 }
@@ -1769,7 +1962,28 @@ function vuLoop() {
   requestAnimationFrame(vuLoop);
 }
 
-/* ================= МЕНЮ / ТУЛБАР ================= */
+/* ================= САЙДБАР / МЕНЮ / ТУЛБАР ================= */
+function syncSidebarBtn() {
+  const open = innerWidth <= 920 ? $('#sidebar').classList.contains('open') : sidebarVisible;
+  $('#sidebarBtn').classList.toggle('active', open);
+}
+function toggleSidebar(force) {
+  const sb = $('#sidebar');
+  if (innerWidth <= 920) {
+    const open = force !== undefined ? force : !sb.classList.contains('open');
+    sb.classList.toggle('open', open);
+    $('#sbBackdrop').classList.toggle('show', open);
+  } else {
+    sidebarVisible = force !== undefined ? force : !sidebarVisible;
+    sb.style.display = sidebarVisible ? '' : 'none';
+  }
+  syncSidebarBtn();
+}
+$('#sidebarBtn').onclick = () => toggleSidebar();
+$('#burger').onclick = () => toggleSidebar();
+$('#sbBackdrop').onclick = () => toggleSidebar(false);
+window.addEventListener('resize', () => { syncSidebarBtn(); updateAllEdges(); });
+
 function closeMenus() { $$('.menu.open').forEach(m => m.classList.remove('open')); }
 $$('.menu > .menu-btn').forEach(b => b.addEventListener('click', e => {
   e.stopPropagation();
@@ -1785,6 +1999,7 @@ const ACTIONS = {
   'open': openProjectsModal,
   'save': () => saveProject(),
   'saveas': openSaveAsModal,
+  'presets': openPresetsModal,
   'import': () => $('#fileInput').click(),
   'export': () => exportProject(),
   'fit-all': fitAll,
@@ -1822,18 +2037,6 @@ $$('.sb-tab').forEach(t => t.addEventListener('click', () => {
   $('#panel-' + t.dataset.panel).classList.add('active');
   if (t.dataset.panel === 'projects') renderProjects();
 }));
-function toggleSidebar(force) {
-  const sb = $('#sidebar');
-  const open = force !== undefined ? force : !sb.classList.contains('open');
-  if (innerWidth <= 920) {
-    sb.classList.toggle('open', open);
-    $('#sbBackdrop').classList.toggle('show', open);
-  } else {
-    sb.style.display = open ? '' : 'none';
-  }
-}
-$('#burger').onclick = () => toggleSidebar();
-$('#sbBackdrop').onclick = () => toggleSidebar(false);
 
 /* ================= ГОРЯЧИЕ КЛАВИШИ ================= */
 document.addEventListener('keydown', e => {
@@ -1862,21 +2065,16 @@ document.addEventListener('keyup', e => { if (e.code === 'Space') { spaceDown = 
 
 /* ================= ДЕМО-ПРОЕКТ ================= */
 function makeDemoProject() {
-  const N = (type, x, y) => ({ id: uid(), type, x, y, params: { ...NODE_TYPES[type].defParams } });
-  const a = N('sip', 30, 250), b = N('gain', 310, 250), c = N('gate', 590, 250), d = N('filter', 870, 250);
-  const e1 = N('asr', 1150, 225), f = N('transcript', 1450, 225), lg = N('logger', 1450, 480);
-  const ns = [a, b, c, d, e1, f, lg];
-  ns.find(n => n.type === 'transcript').lines = [];
-  const E = (A, B) => ({ id: uid(), from: { n: A.id, p: 'out' }, to: { n: B.id, p: 'in' }, type: 'audio' });
-  const es = [E(a, b), E(b, c), E(c, d), E(d, e1), E(e1, f),
-    { id: uid(), from: { n: e1.id, p: 'text' }, to: { n: lg.id, p: 'in' }, type: 'text' }];
-  return { name: 'Демо: SIP-транк → Whisper', nodes: ns, edges: es };
+  const built = PRESETS.find(p => p.id === 'sip-full').build();
+  return { name: 'Демо: SIP-транк → Whisper', nodes: built.ns, edges: built.es };
 }
 
 /* ================= ИНИЦИАЛИЗАЦИЯ ================= */
 async function init() {
   renderPalette();
+  renderPresets();
   applyView();
+  syncSidebarBtn();
   try { await IDB.open(); } catch (e) { toast('IndexedDB недоступна', 'err'); }
   let last = null;
   try { last = await IDB.get(localStorage.getItem('nf-last')); } catch (e) {}
@@ -1889,11 +2087,10 @@ async function init() {
     updateSaveInfo();
   }
   updateEmptyHint();
-  appendLog('info', 'NeonFlow готов. Соберите цепь блоков и нажмите «ЗАПУСК».');
+  appendLog('info', 'NeonFlow готов. Соберите цепь блоков (или выберите пресет 🧩) и нажмите «ЗАПУСК».');
   appendLog('info', 'Совет: для чистого распознавания зафиксируйте язык в настройках блока Whisper (по умолчанию — русский).');
   setInterval(() => { if (dirty && project.name) saveProject(true); }, 15000);
   window.addEventListener('beforeunload', () => { if (dirty && project.name) saveProject(true); });
-  window.addEventListener('resize', () => { updateAllEdges(); });
 }
 init();
 </script>
