@@ -157,6 +157,10 @@ g.edge.selected .edge-glow{opacity:.5}
 .ports{padding:9px 0 10px}
 .prow{display:flex;justify-content:space-between;align-items:center;min-height:24px}
 
+.nodebtns{display:flex;gap:6px;padding:2px 10px 10px}
+.nbtn{flex:1;padding:5px 2px;font-size:10px;border:1px solid var(--border2);border-radius:7px;color:var(--muted);transition:.15s;white-space:nowrap;font-family:var(--mono)}
+.nbtn:hover{color:var(--neon);border-color:var(--neon);box-shadow:0 0 10px rgba(0,229,255,.2)}
+
 .port{display:flex;align-items:center;gap:7px;padding:3px 10px;cursor:crosshair;touch-action:none}
 .port em{font-style:normal;font-size:9.5px;color:var(--muted);font-family:var(--mono);letter-spacing:.3px}
 .port i{width:15px;height:15px;border-radius:50%;background:#05080f;border:2px solid var(--pc,#00e5ff);box-shadow:0 0 9px rgba(0,229,255,.45);box-shadow:0 0 9px color-mix(in srgb,var(--pc,#00e5ff) 55%,transparent);position:relative;flex:none;transition:transform .13s,box-shadow .13s}
@@ -363,7 +367,7 @@ g.edge.selected .edge-glow{opacity:.5}
     <div class="sb-right">
       <span id="sbNodes">0 блоков</span>
       <span id="zoomLabel">100%</span>
-      <span>NF v1.7</span>
+      <span>NF v1.8</span>
     </div>
   </footer>
 </div>
@@ -391,7 +395,6 @@ function toast(msg, type = 'info', ms = 3200) {
   setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, ms);
 }
 
-/* глобальный перехват ошибок — чтобы любые сбои были видны в журнале */
 window.addEventListener('error', e => {
   try { appendLog('err', 'Ошибка скрипта: ' + (e.message || 'неизвестно')); } catch (_) {}
 });
@@ -399,7 +402,7 @@ window.addEventListener('unhandledrejection', e => {
   try { appendLog('err', 'Ошибка (promise): ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason))); } catch (_) {}
 });
 
-/* ================= ЗАГРУЗКА SIP.JS (мульти-CDN, лениво) ================= */
+/* ================= ЗАГРУЗКА ВНЕШНИХ БИБЛИОТЕК ================= */
 let sipLibPromise = null;
 function loadScriptOnce(src) {
   return new Promise((res, rej) => {
@@ -432,7 +435,7 @@ function ensureSipLib() {
           appendLog('ok', 'sip.js загружен (' + u.replace(/^https:\/\//, '') + ')');
           return ns;
         }
-      } catch (e) { /* пробуем следующий CDN */ }
+      } catch (e) { /* следующий */ }
     }
     try {
       await withTimeout(loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/sip.js/0.21.2/sip.min.js'), 25000);
@@ -440,11 +443,28 @@ function ensureSipLib() {
         appendLog('ok', 'sip.js загружен (cdnjs)');
         return window.SIP;
       }
-    } catch (e) { /* всё плохо */ }
+    } catch (e) { /* нет */ }
     sipLibPromise = null;
     throw new Error('Не удалось загрузить sip.js ни с одного CDN. Проверьте доступ в интернет / блокировщик и повторите.');
   })();
   return sipLibPromise;
+}
+let lamePromise = null;
+function ensureLame() {
+  if (window.lamejs) return Promise.resolve();
+  if (lamePromise) return lamePromise;
+  lamePromise = loadScriptOnce('https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js').catch(() => {
+    lamePromise = null;
+    throw new Error('lamejs недоступен');
+  });
+  return lamePromise;
+}
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 
 /* ================= INDEXEDDB ================= */
@@ -492,27 +512,30 @@ const NODE_TYPES = {
                         fallback: 'Я не понял. Повторите, пожалуйста.', loop: true } },
   merge: { name: 'Слияние веток',      cat: 'dialog', color: '#ff9f43', desc: 'N входов', inputs: [], outputs: T_OUT, defParams: { count: 3 } },
   delay: { name: 'Пауза',              cat: 'dialog', color: '#ff9f43', desc: 'задержка', inputs: T_IN, outputs: T_OUT, defParams: { ms: 600 } },
-  tts:   { name: 'Синтез речи (РУС)',  cat: 'dialog', color: '#ff9f43', desc: 'динамики', inputs: T_IN, outputs: [{ id: 'out', type: 'text', label: 'дальше' }],
+  tts:   { name: 'Голос системы (РУС)',cat: 'dialog', color: '#ff9f43', desc: 'динамики', inputs: T_IN, outputs: [{ id: 'out', type: 'text', label: 'дальше' }],
            defParams: { rate: 1, pitch: 1, voice: 'auto' } },
-  ttsai: { name: 'Нейро-синтез (SpeechT5)', cat: 'dialog', color: '#ff9f43', desc: 'звук в граф', inputs: T_IN, outputs: [{ id: 'out', type: 'audio', label: 'речь' }], defParams: {} },
+  rtts:  { name: 'Нейро-речь (РУС)',   cat: 'dialog', color: '#ff9f43', desc: 'MMS-TTS ru', inputs: T_IN, outputs: [{ id: 'out', type: 'audio', label: 'речь' }],
+           defParams: { model: 'Xenova/mms-tts-rus' } },
   clip:  { name: 'Аудиофайл',          cat: 'dialog', color: '#ff9f43', desc: 'ролик/приветствие', inputs: T_IN, outputs: [{ id: 'out', type: 'audio', label: 'звук' }],
            defParams: { file: '', fileName: '', onStart: false } },
   sipout:{ name: 'Вывод в транк',      cat: 'dialog', color: '#ff9f43', desc: 'аудио → вызов', inputs: [{ id: 'in', type: 'audio', label: 'речь' }], outputs: [],
            defParams: { monitor: true } },
   spk:   { name: 'Динамик',            cat: 'out', color: '#22ff88', desc: 'воспроизведение', inputs: [{ id: 'in', type: 'audio', label: 'звук' }], outputs: [],
            defParams: { volume: 1 } },
+  rec:   { name: 'Аудиобуфер',         cat: 'out', color: '#22ff88', desc: 'запись → mp3', inputs: [{ id: 'in', type: 'audio', label: 'звук' }], outputs: [],
+           defParams: { tapLive: false } },
   transcript: { name: 'Транскрипт',    cat: 'out', color: '#22ff88', desc: 'экран', inputs: T_IN, outputs: [], defParams: {} },
   logger:     { name: 'Журнал событий',cat: 'out', color: '#22ff88', desc: 'лог',   inputs: T_IN, outputs: [], defParams: {} },
   ws:         { name: 'WebSocket-отправка', cat: 'out', color: '#22ff88', desc: 'ws', inputs: T_IN, outputs: [], defParams: { url: '' } }
 };
-const RUNTIME_TYPES = ['router', 'reply', 'dialog', 'merge', 'delay', 'tts', 'ttsai', 'clip', 'sipout', 'spk', 'transcript', 'logger', 'ws'];
+const RUNTIME_TYPES = ['router', 'reply', 'dialog', 'merge', 'delay', 'tts', 'rtts', 'clip', 'sipout', 'spk', 'rec', 'transcript', 'logger', 'ws'];
 const PARAM_DEFS = {
   sip: [
     { k: 'server', l: 'WSS-сервер (транспорт транка)', t: 'text', ph: 'wss://pbx.example.ru:8089/ws' },
     { k: 'user', l: 'Учётная запись (внутренний номер)', t: 'text' },
     { k: 'password', l: 'Пароль', t: 'password' },
     { k: 'callee', l: 'Номер назначения (куда звонить)', t: 'text' },
-    { k: 'sendGraph', l: 'Автоответчик: отправлять в транк звук блоков (нейро-синтез, файлы) вместо микрофона', t: 'checkbox' }
+    { k: 'sendGraph', l: 'Автоответчик: отправлять в транк звук блоков (нейро-речь, файлы) вместо микрофона', t: 'checkbox' }
   ],
   tone: [
     { k: 'freq', l: 'Частота, Гц', t: 'number', min: 40, max: 8000, step: 10 },
@@ -550,9 +573,11 @@ const PARAM_DEFS = {
     { k: 'pitch', l: 'Высота тона (0–2)', t: 'number', min: 0, max: 2, step: 0.1 },
     { k: 'voice', l: 'Голос (русские голоса системы)', t: 'select', o: ['auto'] }
   ],
+  rtts: [{ k: 'model', l: 'Модель русского синтеза (MMS-TTS)', t: 'select', o: ['Xenova/mms-tts-rus', 'onnx-community/mms-tts-rus', 'Xenova/mms-tts-eng'] }],
   clip: [{ k: 'onStart', l: 'Проиграть файл сразу при запуске пайплайна', t: 'checkbox' }],
   sipout: [{ k: 'monitor', l: 'Дублировать отправляемый звук в динамики (контроль)', t: 'checkbox' }],
   spk: [{ k: 'volume', l: 'Громкость воспроизведения (0–1)', t: 'number', min: 0, max: 1, step: 0.05 }],
+  rec: [{ k: 'tapLive', l: 'Писать живой аудиопоток источника во время запуска пайплайна', t: 'checkbox' }],
   ws: [{ k: 'url', l: 'URL WebSocket-сервера', t: 'text', ph: 'wss://host/path' }]
 };
 
@@ -661,7 +686,7 @@ function fit100() {
   view.s = 1; view.x = r.width / 2 - cw; view.y = r.height / 2 - ch; applyView();
 }
 
-/* ================= ВЫДЕЛЕНИЕ + FAB УДАЛЕНИЯ ================= */
+/* ================= ВЫДЕЛЕНИЕ ================= */
 function updateDelFab() {
   const n = selectedNodes.size + selectedEdges.size;
   const fab = $('#delFab');
@@ -703,6 +728,116 @@ function updateSbMsg() {
 }
 function setSbMsg(t) { $('#sbMsg').textContent = t; }
 
+/* ================= АУДИО-УТИЛИТЫ (динамик, буфер, экспорт) ================= */
+let localCtx = null;
+function getAudioCtx() {
+  if (pipeline.ctx) return pipeline.ctx;
+  if (!localCtx) localCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (localCtx.state === 'suspended') localCtx.resume();
+  return localCtx;
+}
+function playFloat(buf, sr, vol = 1) {
+  const ctx = getAudioCtx();
+  const ab = ctx.createBuffer(1, buf.length, sr);
+  ab.getChannelData(0).set(buf);
+  const s = ctx.createBufferSource();
+  s.buffer = ab;
+  const g = ctx.createGain();
+  g.gain.value = vol;
+  s.connect(g);
+  g.connect(ctx.destination);
+  s.start();
+  return s;
+}
+function spkTest(node) {
+  const ctx = getAudioCtx();
+  const sr = ctx.sampleRate;
+  const n = Math.floor(sr * 0.6);
+  const buf = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const env = Math.min(1, i / 500) * Math.min(1, (n - i) / 2000);
+    buf[i] = Math.sin(2 * Math.PI * 440 * i / sr) * 0.4 * env;
+  }
+  playFloat(buf, sr, clamp(node.params.volume ?? 1, 0, 1));
+  setLed(node.id, 'speak');
+  setTimeout(() => setLed(node.id, pipeline.running ? 'on' : ''), 700);
+}
+function recAppend(node, buf, sr) {
+  node._buf = node._buf || { chunks: [], total: 0, phase: 0, lastUi: 0 };
+  const b = node._buf;
+  const ratio = sr / 16000;
+  const est = Math.ceil(buf.length / ratio) + 2;
+  const out = new Float32Array(est);
+  let cnt = 0, t = b.phase;
+  while (t < buf.length - 1) {
+    const i = Math.floor(t), f = t - i;
+    const v = buf[i] * (1 - f) + buf[i + 1] * f;
+    out[cnt++] = isFinite(v) ? v : 0;
+    t += ratio;
+  }
+  b.phase = Math.max(0, t - buf.length);
+  b.chunks.push(out.subarray(0, cnt).slice());
+  b.total += cnt;
+  const cap = 16000 * 300; // максимум 5 минут
+  while (b.total > cap && b.chunks.length) { const c = b.chunks.shift(); b.total -= c.length; }
+  if (Date.now() - b.lastUi > 1000) { b.lastUi = Date.now(); updateNodeSummary(node); }
+}
+function recFlatten(node) {
+  const b = node._buf;
+  if (!b || !b.total) return null;
+  const out = new Float32Array(b.total);
+  let o = 0;
+  for (const c of b.chunks) { out.set(c, o); o += c.length; }
+  return out;
+}
+function recPlay(node) {
+  const d = recFlatten(node);
+  if (!d) { toast('Буфер пуст', 'warn'); return; }
+  node._src = playFloat(d, 16000, 1);
+  setLed(node.id, 'speak');
+}
+function recStop(node) { try { node._src?.stop(); } catch (e) {} node._src = null; setLed(node.id, pipeline.running ? 'on' : ''); }
+function recClear(node) { node._buf = { chunks: [], total: 0, phase: 0, lastUi: 0 }; updateNodeSummary(node); toast('Буфер очищен', 'info', 1200); }
+function encodeWavBlob(f32, sr) {
+  const n = f32.length;
+  const s16 = new Int16Array(n);
+  for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, f32[i])); s16[i] = v < 0 ? v * 0x8000 : v * 0x7FFF; }
+  const buf = new ArrayBuffer(44 + n * 2);
+  const dv = new DataView(buf);
+  const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  wstr(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, sr, true); dv.setUint32(28, sr * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+  wstr(36, 'data'); dv.setUint32(40, n * 2, true);
+  new Int16Array(buf, 44).set(s16);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+async function recExportMp3(node) {
+  const d = recFlatten(node);
+  if (!d) { toast('Буфер пуст — нечего экспортировать', 'warn'); return; }
+  const base = 'neonflow_rec_' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  try {
+    await ensureLame();
+    const enc = new lamejs.Mp3Encoder(1, 16000, 128);
+    const s16 = new Int16Array(d.length);
+    for (let i = 0; i < d.length; i++) { const v = Math.max(-1, Math.min(1, d[i])); s16[i] = v < 0 ? v * 0x8000 : v * 0x7FFF; }
+    const parts = [];
+    for (let i = 0; i < s16.length; i += 1152) {
+      const mp3 = enc.encodeBuffer(s16.subarray(i, i + 1152));
+      if (mp3.length) parts.push(new Uint8Array(mp3));
+    }
+    const end = enc.flush();
+    if (end.length) parts.push(new Uint8Array(end));
+    downloadBlob(new Blob(parts, { type: 'audio/mpeg' }), base + '.mp3');
+    appendLog('ok', '💾 Аудиобуфер экспортирован в MP3 (' + (d.length / 16000).toFixed(1) + ' c)');
+    toast('MP3 сохранён', 'ok');
+  } catch (e) {
+    downloadBlob(encodeWavBlob(d, 16000), base + '.wav');
+    appendLog('warn', 'lamejs недоступен — экспорт в WAV');
+    toast('lamejs недоступен — сохранено в WAV', 'warn', 4000);
+  }
+}
+
 /* ================= УЗЛЫ ================= */
 function parseDialogScript(s) {
   return String(s || '').split('\n').map(l => l.trim()).filter(Boolean).map(l => {
@@ -727,10 +862,11 @@ function nodeSummary(n) {
     case 'merge': return `входов: ${clamp(Math.round(p.count || 3), 1, 8)} → 1`;
     case 'delay': return `${p.ms} мс`;
     case 'tts': return `ru-RU ×${p.rate} · тон ${p.pitch}`;
-    case 'ttsai': return 'SpeechT5 → звук в граф';
+    case 'rtts': return `${(p.model || '').split('/').pop()} · русский`;
     case 'clip': return p.fileName || 'файл не загружен';
     case 'sipout': return p.monitor ? 'транк + динамики' : 'только в транк';
     case 'spk': return `громкость ${clamp(p.volume ?? 1, 0, 1)}`;
+    case 'rec': return `${n._buf && n._buf.total ? (n._buf.total / 16000).toFixed(1) + ' с записано' : 'буфер пуст'}${p.tapLive ? ' · live' : ''}`;
     case 'transcript': return `${(n.lines || []).length} фраз`;
     case 'logger': return 'события в журнал';
     case 'ws': return p.url || 'URL не задан';
@@ -761,7 +897,14 @@ function createNodeEl(node) {
       <button class="ndel" title="Удалить блок">✕</button></div>
     <div class="nsub"></div>
     ${rows ? `<div class="ports">${portsHtml}</div>` : ''}
-    ${node.type === 'transcript' ? '<div class="tpreview">— тишина в эфире —</div>' : ''}`;
+    ${node.type === 'transcript' ? '<div class="tpreview">— тишина в эфире —</div>' : ''}
+    ${node.type === 'rec' ? `<div class="nodebtns">
+      <button class="nbtn" data-act="rplay">▶ Играть</button>
+      <button class="nbtn" data-act="rstop">⏹</button>
+      <button class="nbtn" data-act="rclear">✕</button>
+      <button class="nbtn" data-act="rexp">💾 MP3</button>
+    </div>` : ''}
+    ${node.type === 'spk' ? `<div class="nodebtns"><button class="nbtn" data-act="stest">🔊 Тест звука</button></div>` : ''}`;
   el.querySelector('.nsub').textContent = nodeSummary(node);
   const gear = el.querySelector('.ngear');
   gear.addEventListener('pointerdown', e => e.stopPropagation());
@@ -773,6 +916,18 @@ function createNodeEl(node) {
     removeNode(node.id);
     markDirty();
     toast('Блок удалён', 'info', 1300);
+  });
+  el.querySelectorAll('.nbtn').forEach(b => {
+    b.addEventListener('pointerdown', e => e.stopPropagation());
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const act = b.dataset.act;
+      if (act === 'rplay') recPlay(node);
+      else if (act === 'rstop') recStop(node);
+      else if (act === 'rclear') recClear(node);
+      else if (act === 'rexp') recExportMp3(node);
+      else if (act === 'stest') spkTest(node);
+    });
   });
   el.addEventListener('pointerdown', e => onNodePointerDown(e, node));
   el.addEventListener('dblclick', e => {
@@ -791,13 +946,19 @@ function createNodeEl(node) {
   return el;
 }
 function nodeCtxItems(node) {
-  return [
+  const items = [
     { label: '⚙ Настройки', fn: () => openNodeSettings(node) },
     { label: node.type === 'transcript' ? '📝 Открыть транскрипт' : '⧉ Дублировать',
-      fn: () => node.type === 'transcript' ? openTranscriptModal(node) : duplicateNode(node) },
-    { sep: true },
-    { label: '🗑 Удалить блок', danger: true, fn: () => { removeNode(node.id); markDirty(); } }
+      fn: () => node.type === 'transcript' ? openTranscriptModal(node) : duplicateNode(node) }
   ];
+  if (node.type === 'rec') {
+    items.push({ label: '💾 Экспорт MP3', fn: () => recExportMp3(node) });
+    items.push({ label: '✕ Очистить буфер', fn: () => recClear(node) });
+  }
+  if (node.type === 'spk') items.push({ label: '🔊 Тест звука', fn: () => spkTest(node) });
+  items.push({ sep: true });
+  items.push({ label: '🗑 Удалить блок', danger: true, fn: () => { removeNode(node.id); markDirty(); } });
+  return items;
 }
 function updateNodeSummary(node) {
   const el = nodeEls.get(node.id);
@@ -1279,19 +1440,25 @@ function openNodeSettings(node) {
     if (node.type === 'tts') {
       const h = document.createElement('div');
       h.className = 'hint-box';
-      h.textContent = 'Озвучивание идёт через системный синтез речи (динамики устройства), речь русская. Чтобы звук попал в SIP-вызов, используйте блоки «Нейро-синтез» + «Вывод в транк».';
+      h.textContent = 'Голос операционной системы — качественный русский, но звучит только в динамиках устройства (нельзя отправить в транк). Для звука в граф/транк используйте «Нейро-речь (РУС)» или «Аудиофайл».';
       body.appendChild(h);
     }
-    if (node.type === 'ttsai') {
+    if (node.type === 'rtts') {
       const h = document.createElement('div');
       h.className = 'hint-box';
-      h.textContent = 'Локальная модель SpeechT5 (transformers.js) генерирует аудио, которое можно отправить в транк («Вывод в транк») или проиграть локально («Динамик»). Модель обучена на английском — для русских объявлений используйте блок «Аудиофайл».';
+      h.textContent = 'Русский нейро-синтез MMS-TTS выполняется локально и выдаёт аудиопоток в граф: его можно подать на Динамик, в Аудиобуфер или в Вывод в транк. Модель скачивается при первом использовании. Если модель не загрузилась — выберите альтернативу из списка.';
       body.appendChild(h);
     }
     if (node.type === 'spk') {
       const h = document.createElement('div');
       h.className = 'hint-box';
-      h.textContent = 'Проигрывает любой звук из графа: нейро-синтез (речь), аудиофайлы, тон. Соедините аудиовыход блока со входом «звук» динамика.';
+      h.textContent = 'Проигрывает любой звук из графа (нейро-речь, файлы, буфер). Кнопка «Тест звука» прямо на блоке проверяет вывод без запуска пайплайна.';
+      body.appendChild(h);
+    }
+    if (node.type === 'rec') {
+      const h = document.createElement('div');
+      h.className = 'hint-box';
+      h.textContent = 'Записывает звук, приходящий на вход (16 кГц моно, до 5 минут), плюс опционально живой поток источника. Кнопки на блоке: ▶ воспроизвести, ✕ очистить, 💾 экспорт в MP3 (lamejs; если кодек недоступен — WAV).';
       body.appendChild(h);
     }
   }
@@ -1383,7 +1550,7 @@ function openQuickAdd(wx, wy) {
   });
 }
 
-/* ================= ПРЕСЕТЫ ПАЙПЛАЙНОВ ================= */
+/* ================= ПРЕСЕТЫ ================= */
 function buildChainNodes(types, y = 230, x0 = 40, gap = 280) {
   const ns = types.map((t, i) => ({ id: uid(), type: t, x: x0 + i * gap, y, params: JSON.parse(JSON.stringify(NODE_TYPES[t].defParams)) }));
   ns.forEach(n => { if (n.type === 'transcript') n.lines = []; });
@@ -1402,7 +1569,7 @@ function attachTextSink(srcNode, type, x, y, ns, es) {
 const PRESETS = [
   {
     id: 'sip-bot', icon: '📟', name: 'SIP-автоответчик (голос в вызов)',
-    desc: 'Полноценный диалоговый автоответчик: входящая речь транка распознаётся Whisper, маршрутизатор ветвит по условиям, реплики синтезируются и возвращаются в транк через блок «Вывод в транк».',
+    desc: 'Полноценный диалоговый автоответчик: входящая речь транка распознаётся Whisper, маршрутизатор ветвит по условиям, русские реплики синтезируются и возвращаются в транк.',
     tags: ['sip', 'автоответчик', 'маршрутизатор', 'синтез в вызов'],
     build() {
       const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
@@ -1416,10 +1583,10 @@ const PRESETS = [
       const rB = mk('reply', 940, 340, { phrases: 'До свидания! Хорошего дня.' });
       const rF = mk('reply', 940, 600, { phrases: 'Я не понял вас. Скажите привет или пока.' });
       const merge = mk('merge', 1220, 340, { count: 3 });
-      const ttsai = mk('ttsai', 1480, 340);
+      const rtts = mk('rtts', 1480, 340);
       const sout = mk('sipout', 1740, 340, { monitor: true });
       const tr = mk('transcript', 620, 700);
-      const ns = [sipN, asrN, router, rA, rB, rF, merge, ttsai, sout, tr];
+      const ns = [sipN, asrN, router, rA, rB, rF, merge, rtts, sout, tr];
       const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
       const ET = (a, ap, b, bp) => ({ id: uid(), from: { n: a.id, p: ap }, to: { n: b.id, p: bp }, type: 'text' });
       const es = [
@@ -1427,9 +1594,9 @@ const PRESETS = [
         ET(asrN, 'text', router, 'in'),
         ET(router, 'b1', rA, 'in'), ET(router, 'b2', rB, 'in'), ET(router, 'els', rF, 'in'),
         ET(rA, 'out', merge, 'in1'), ET(rB, 'out', merge, 'in2'), ET(rF, 'out', merge, 'in3'),
-        ET(merge, 'out', ttsai, 'in'),
+        ET(merge, 'out', rtts, 'in'),
         ET(asrN, 'text', tr, 'in'),
-        { id: uid(), from: { n: ttsai.id, p: 'out' }, to: { n: sout.id, p: 'in' }, type: 'audio' }
+        { id: uid(), from: { n: rtts.id, p: 'out' }, to: { n: sout.id, p: 'in' }, type: 'audio' }
       ];
       return { ns, es };
     }
@@ -1437,7 +1604,7 @@ const PRESETS = [
   {
     id: 'assistant', icon: '🤖', name: 'Голосовой ассистент (динамик)',
     desc: 'Микрофон → Whisper → маршрутизатор по ключевым словам: приветствие, прощание, помощь и запасная ветка. Ответы озвучиваются русским системным синтезом речи.',
-    tags: ['микрофон', 'маршрутизатор', 'реплики', 'tts ru'],
+    tags: ['микрофон', 'маршрутизатор', 'реплики', 'голос системы'],
     build() {
       const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
       const mic = mk('mic', 40, 340), gain = mk('gain', 300, 340), asr = mk('asr', 560, 320);
@@ -1465,6 +1632,24 @@ const PRESETS = [
     }
   },
   {
+    id: 'rtts-spk-rec', icon: '🔊', name: 'Нейро-речь → Динамик + Запись',
+    desc: 'Проверка звуковой ветки: распознанная фраза → реплика → русский нейро-синтез → динамик и одновременно запись в Аудиобуфер с экспортом в MP3.',
+    tags: ['нейро-речь', 'динамик', 'аудиобуфер', 'mp3'],
+    build() {
+      const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
+      const mic = mk('mic', 40, 260), asr = mk('asr', 300, 240);
+      const reply = mk('reply', 620, 240, { phrases: 'Проверка звука: русский синтез работает.\nПривет! Это тестовая реплика ассистента.', order: 'seq' });
+      const rtts = mk('rtts', 900, 240);
+      const spk = mk('spk', 1160, 140, { volume: 1 });
+      const rec = mk('rec', 1160, 420);
+      const ns = [mic, asr, reply, rtts, spk, rec];
+      const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
+      const ET = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'text' });
+      const es = [EA(mic, asr), ET(asr, reply), ET(reply, rtts), EA(rtts, spk), EA(rtts, rec)];
+      return { ns, es };
+    }
+  },
+  {
     id: 'mic-basic', icon: '🎙', name: 'Микрофон → Транскрипт',
     desc: 'Быстрый тест распознавания без АТС: локальный микрофон, лёгкое усиление и вывод текста на экран.',
     tags: ['микрофон', 'усиление', 'whisper', 'экран'],
@@ -1485,7 +1670,7 @@ const PRESETS = [
   {
     id: 'dialog-fsm', icon: '🎭', name: 'Сценарий диалога (шаги)',
     desc: 'Микрофон → Whisper → блок «Сценарий диалога»: ассистент ведёт разговор по шагам, ожидая ключевые слова, и озвучивает реплики по-русски.',
-    tags: ['диалог', 'шаги', 'tts'],
+    tags: ['диалог', 'шаги', 'голос системы'],
     build() {
       const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
       const mic = mk('mic', 40, 260), asr = mk('asr', 300, 240);
@@ -1497,24 +1682,6 @@ const PRESETS = [
       const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
       const ET = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'text' });
       const es = [EA(mic, asr), ET(asr, dlg), ET(dlg, dl2), ET(dl2, tts), ET(tts, tr)];
-      return { ns, es };
-    }
-  },
-  {
-    id: 'tts-speaker', icon: '🔊', name: 'Нейро-речь → Динамик',
-    desc: 'Реплика синтезируется моделью SpeechT5 и проигрывается локально через блок «Динамик» — проверка звуковой ветки без звонка.',
-    tags: ['нейро-синтез', 'динамик', 'тест звука'],
-    build() {
-      const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
-      const mic = mk('mic', 40, 260), asr = mk('asr', 300, 240);
-      const reply = mk('reply', 620, 240, { phrases: 'Проверка звука: нейро-синтез работает.\nПривет! Это тестовая реплика ассистента.', order: 'seq' });
-      const ttsai = mk('ttsai', 900, 240);
-      const spk = mk('spk', 1160, 240, { volume: 1 });
-      const ns = [mic, asr, reply, ttsai, spk];
-      const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
-      const ET = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'text' });
-      const es = [EA(mic, asr), ET(asr, reply), ET(reply, ttsai),
-        { id: uid(), from: { n: ttsai.id, p: 'out' }, to: { n: spk.id, p: 'in' }, type: 'audio' }];
       return { ns, es };
     }
   },
@@ -1626,9 +1793,8 @@ function renderPalette() {
     `<div style="margin-top:14px;padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:11px;line-height:1.7">
       💡 Перетащите блок на холст или кликните для добавления.<br>
       🔗 Порты соединяются перетаскиванием или двумя касаниями.<br>
-      🤖 Диалог: Маршрутизатор ветвит текст по условиям (число выходов настраивается), Слияние объединяет ветки (число входов настраивается).<br>
-      📟 Автоответчик: включите режим в блоке SIP и цепочкой Нейро-синтез/Аудиофайл → Вывод в транк верните голос в вызов.<br>
-      🔊 Динамик проигрывает локально любой звук блоков (нейро-речь, файлы, тон).<br>
+      🗣 Русский звук в граф: «Нейро-речь (РУС)» или «Аудиофайл»; в динамики — «Динамик» и «Голос системы».<br>
+      🎙 «Аудиобуфер» записывает звук и экспортирует его в MP3.<br>
       🗑 Удаление: ✕ на блоке, долгое нажатие (сенсор) или плавающая кнопка.</div>`;
   el.querySelectorAll('.pal-item').forEach(it => {
     it.addEventListener('dragstart', e => e.dataTransfer.setData('node-type', it.dataset.type));
@@ -1712,6 +1878,7 @@ function normalizeNodeParams(node) {
     }
   }
   if (node.type === 'merge' && node.params.count == null) node.params.count = 3;
+  if (node.type === 'ttsai') { node.type = 'rtts'; } // миграция со старого блока
 }
 function clearCanvas() {
   if (pipeline.running) stopPipeline();
@@ -1724,8 +1891,10 @@ function loadProjectData(p) {
   project.id = p.id || null;
   project.name = p.name || 'Без имени';
   (p.nodes || []).forEach(raw => {
-    if (!NODE_TYPES[raw.type]) return;
-    const node = { id: raw.id || uid(), type: raw.type, x: raw.x ?? 100, y: raw.y ?? 100, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[raw.type].defParams, ...(raw.params || {}) })) };
+    let type = raw.type;
+    if (type === 'ttsai') type = 'rtts';
+    if (!NODE_TYPES[type]) return;
+    const node = { id: raw.id || uid(), type, x: raw.x ?? 100, y: raw.y ?? 100, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[type].defParams, ...(raw.params || {}) })) };
     if (raw.lines) node.lines = raw.lines;
     normalizeNodeParams(node);
     nodes.set(node.id, node);
@@ -1733,6 +1902,10 @@ function loadProjectData(p) {
   });
   (p.edges || []).forEach(raw => {
     if (!nodes.has(raw.from.n) || !nodes.has(raw.to.n)) return;
+    const fn = nodes.get(raw.from.n), tn = nodes.get(raw.to.n);
+    const outs = getNodePorts(fn).outputs.map(x => x.id);
+    const ins = getNodePorts(tn).inputs.map(x => x.id);
+    if (!outs.includes(raw.from.p) || !ins.includes(raw.to.p)) return;
     const edge = { id: raw.id || uid(), from: raw.from, to: raw.to, type: raw.type || 'audio' };
     edges.set(edge.id, edge);
     createEdgeEl(edge);
@@ -1862,11 +2035,11 @@ function openAboutModal() {
       • Захват аудио: микрофон, генератор тона, SIP-транк (sip.js → WebRTC)<br>
       • DSP: усиление, гейт, полосовой фильтр, VAD<br>
       • Распознавание речи локально — <b>Whisper</b> через <b>transformers.js</b><br>
-      • 🤖 Диалоговые графы: маршрутизатор с произвольным числом выходов, реплики, сценарий-автомат, паузы, слияние с произвольным числом входов<br>
-      • 📟 Возврат звука в вызов: нейро-синтез SpeechT5 или аудиофайлы → «Вывод в транк» (подмена исходящего WebRTC-трека)<br>
-      • 🔊 Блок «Динамик» — локальное воспроизведение звука любых блоков с регулировкой громкости<br>
+      • 🗣 Два русских синтеза: системный голос (динамики) и нейро-синтез <b>MMS-TTS (ru)</b> с выдачей звука в граф/транк<br>
+      • 🤖 Диалоговые графы: маршрутизатор с произвольным числом выходов, реплики, сценарии, паузы, слияние веток<br>
+      • 🎙 Аудиобуфер: запись звука графа/линии, воспроизведение и экспорт в <b>MP3</b> (lamejs)<br>
       • Хранение проектов в IndexedDB, импорт/экспорт JSON<br>
-      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">Если что-то не работает — откройте вкладку «Журнал»: все ошибки выводются туда.</span>
+      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">Все ошибки видны во вкладке «Журнал».</span>
     </div>` });
 }
 function openKeysModal() {
@@ -1877,13 +2050,11 @@ function openKeysModal() {
     </div>` });
 }
 
-/* ================= ДВИЖОК ПАЙПЛАЙНА ================= */
+/* ================= WORKER: WHISPER (ASR) ================= */
 const WORKER_SRC = `
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 env.allowLocalModels = false;
 const pipes = new Map();
-let ttsPipe = null, ttsSeq = Promise.resolve();
-const SPEAKER_EMB = 'https://huggingface.co/datasets/Xenova/transformers.js-docs/resolve/main/speaker_embeddings.npy';
 self.onmessage = async (e) => {
   const m = e.data;
   if (m.type === 'load') {
@@ -1912,24 +2083,6 @@ self.onmessage = async (e) => {
     } catch (err) {
       self.postMessage({ type: 'error', id: m.id, model: m.model, message: String(err && err.message || err) });
     }
-  } else if (m.type === 'tts') {
-    ttsSeq = ttsSeq.then(async () => {
-      try {
-        if (!ttsPipe) {
-          ttsPipe = await pipeline('text-to-speech', 'Xenova/speecht5-tts', {
-            quantized: true,
-            progress_callback: (pr) => {
-              if (pr.status === 'progress') self.postMessage({ type: 'progress', model: 'speecht5-tts', file: pr.file || '', progress: pr.progress || 0 });
-            }
-          });
-          self.postMessage({ type: 'tts-ready' });
-        }
-        const out = await ttsPipe(String(m.text).slice(0, 300), { speaker_embeddings: SPEAKER_EMB });
-        self.postMessage({ type: 'tts-result', id: m.id, audio: out.audio, sr: out.sampling_rate || 16000 }, [out.audio.buffer]);
-      } catch (err) {
-        self.postMessage({ type: 'error', id: m.id, message: 'TTS: ' + String(err && err.message || err) });
-      }
-    });
   }
 };
 `;
@@ -1960,16 +2113,11 @@ function onWorkerMsg(e) {
     appendLog('ok', 'Модель готова: ' + m.model);
     toast('Модель ' + m.model + ' готова к работе', 'ok');
     pumpQueue();
-  } else if (m.type === 'tts-ready') {
-    appendLog('ok', 'Модель синтеза speecht5-tts готова');
   } else if (m.type === 'result') {
     workerBusy.v = false;
     const rt = pipeline.asrRts.find(r => r.node.id === m.id);
     if (rt) rt.onResult(m.text);
     pumpQueue();
-  } else if (m.type === 'tts-result') {
-    const rt = pipeline.textRts.get(m.id);
-    if (rt?.onSynth) rt.onSynth(m.audio, m.sr);
   } else if (m.type === 'error') {
     workerBusy.v = false;
     if (m.model) loadingModels.delete(m.model);
@@ -1988,6 +2136,70 @@ function pumpQueue() {
   catch (e) { workerBusy.v = false; }
 }
 
+/* ================= WORKER: НЕЙРО-СИНТЕЗ РУС (MMS-TTS, transformers v3) ================= */
+const TTS_WORKER_SRC = `
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.1';
+env.allowLocalModels = false;
+let pipe = null, curModel = null;
+self.onmessage = async (e) => {
+  const m = e.data;
+  if (m.type !== 'tts') return;
+  try {
+    if (!pipe || curModel !== m.model) {
+      pipe = await pipeline('text-to-speech', m.model, {
+        progress_callback: (pr) => {
+          if (pr.status === 'progress') self.postMessage({ type: 'progress', model: m.model, file: pr.file || '', progress: pr.progress || 0 });
+        }
+      });
+      curModel = m.model;
+      self.postMessage({ type: 'ready', model: m.model });
+    }
+    const out = await pipe(String(m.text).slice(0, 400));
+    const audio = out.audio;
+    self.postMessage({ type: 'result', id: m.id, audio: audio, sr: out.sampling_rate || 16000 }, [audio.buffer]);
+  } catch (err) {
+    self.postMessage({ type: 'error', id: m.id, message: String(err && err.message || err) });
+  }
+};
+`;
+let ttsWorker = null, ttsBusy = false;
+const ttsQueue = [];
+function ensureTtsWorker() {
+  if (ttsWorker) return ttsWorker;
+  ttsWorker = new Worker(URL.createObjectURL(new Blob([TTS_WORKER_SRC], { type: 'text/javascript' })), { type: 'module' });
+  ttsWorker.onmessage = onTtsMsg;
+  return ttsWorker;
+}
+function onTtsMsg(e) {
+  const m = e.data;
+  if (m.type === 'progress') {
+    $('#modelStatus').textContent = `⬇ ${(m.model || '').split('/').pop()}: ${Math.round(m.progress)}%`;
+  } else if (m.type === 'ready') {
+    appendLog('ok', 'Модель синтеза готова: ' + m.model);
+  } else if (m.type === 'result') {
+    ttsBusy = false;
+    const rt = pipeline.textRts.get(m.id);
+    if (rt?.onSynth) rt.onSynth(m.audio, m.sr);
+    pumpTts();
+  } else if (m.type === 'error') {
+    ttsBusy = false;
+    appendLog('err', 'Синтез: ' + m.message);
+    toast('Синтез: ' + m.message + '. Попробуйте другую модель в настройках блока.', 'err', 6000);
+    pumpTts();
+  }
+}
+function queueTts(node, text) {
+  ttsQueue.push({ type: 'tts', id: node.id, text, model: node.params.model || 'Xenova/mms-tts-rus' });
+  if (ttsQueue.length > 6) ttsQueue.splice(0, ttsQueue.length - 6);
+  pumpTts();
+}
+function pumpTts() {
+  if (ttsBusy || !ttsQueue.length) return;
+  ttsBusy = true;
+  ensureTtsWorker().postMessage(ttsQueue.shift());
+}
+
+/* ================= ДВИЖОК ПАЙПЛАЙНА ================= */
 function rmsDb(b) {
   let s = 0;
   for (let i = 0; i < b.length; i++) s += b[i] * b[i];
@@ -1998,7 +2210,7 @@ function bufIsFinite(b) {
   return true;
 }
 
-const pipeline = { running: false, ctx: null, sp: null, mute: null, sourceCtl: null, sendDest: null, chain: [], asrRts: [], textRts: new Map(), timerIds: [], level: 0, srcLabel: '' };
+const pipeline = { running: false, ctx: null, sp: null, mute: null, sourceCtl: null, sendDest: null, chain: [], asrRts: [], textRts: new Map(), timerIds: [], level: 0, srcLabel: '', recTapNode: null };
 
 function buildChain() {
   const sources = [...nodes.values()].filter(n => NODE_TYPES[n.type].cat === 'sources');
@@ -2267,16 +2479,15 @@ function makeTextRuntime(node) {
       speak(t, p);
       emitPort(node.id, 'out', t);
     } };
-    case 'ttsai': return { node,
+    case 'rtts': return { node,
       onText(t) {
         setLed(node.id, 'speak');
-        appendLog('info', '🧠 Нейро-синтез: «' + t + '»');
-        ensureWorker();
-        asrWorker.postMessage({ type: 'tts', id: node.id, text: t });
+        appendLog('info', '🗣 Нейро-синтез РУС: «' + t + '»');
+        queueTts(node, t);
       },
       onSynth(audio, sr) {
         setLed(node.id, 'on');
-        appendLog('ok', '🧠 Синтез готов: ' + (audio.length / sr).toFixed(1) + ' c');
+        appendLog('ok', '🗣 Синтез готов: ' + (audio.length / sr).toFixed(1) + ' c');
         emitAudio(node.id, 'out', audio, sr);
       }
     };
@@ -2322,23 +2533,19 @@ function makeTextRuntime(node) {
     };
     case 'spk': return { node,
       onAudio(buf, sr) {
-        const ctx = pipeline.ctx;
-        if (!ctx) return;
+        if (!pipeline.ctx) return;
         try {
-          const ab = ctx.createBuffer(1, buf.length, sr);
-          ab.getChannelData(0).set(buf);
-          const s = ctx.createBufferSource();
-          s.buffer = ab;
-          const g = ctx.createGain();
-          g.gain.value = clamp(node.params.volume ?? 1, 0, 1);
-          s.connect(g);
-          g.connect(ctx.destination);
-          s.start();
+          playFloat(buf, sr, clamp(node.params.volume ?? 1, 0, 1));
           setLed(node.id, 'speak');
-          appendLog('info', '🔊 Динамик: ' + (buf.length / sr).toFixed(1) + ' c звука');
-          const id = setTimeout(() => setLed(node.id, pipeline.running ? 'on' : ''), Math.max(400, buf.length / sr * 1000));
+          const id = setTimeout(() => setLed(node.id, 'on'), Math.max(400, buf.length / sr * 1000));
           pipeline.timerIds.push(id);
         } catch (e) { appendLog('err', 'Динамик: ' + (e.message || e)); }
+      }
+    };
+    case 'rec': return { node,
+      onAudio(buf, sr) {
+        recAppend(node, buf, sr);
+        if (!node._led || Date.now() - node._led > 600) { node._led = Date.now(); setLed(node.id, 'speak'); }
       }
     };
     case 'transcript': return { node, onText(t) { pushTranscript(node, t); } };
@@ -2389,6 +2596,7 @@ function pump(raw) {
   for (let i = 0; i < b.length; i += 2) { const a = Math.abs(b[i]); if (a > peak) peak = a; }
   pipeline.level = Math.max(pipeline.level * 0.82, peak);
   for (const rt of pipeline.asrRts) rt.push(b);
+  if (pipeline.recTapNode) recAppend(pipeline.recTapNode, b, pipeline.ctx.sampleRate);
 }
 
 async function startSource(node) {
@@ -2429,7 +2637,7 @@ async function startSipSource(p) {
     authorizationUsername: p.user,
     authorizationPassword: p.password || undefined,
     displayName: p.user,
-    userAgentString: 'NeonFlow/1.7',
+    userAgentString: 'NeonFlow/1.8',
     reconnectionAttempts: 0,
     logLevel: S.LogLevel ? S.LogLevel.Error : 'error'
   });
@@ -2495,6 +2703,8 @@ async function startPipeline() {
         if (rt) pipeline.textRts.set(n.id, rt);
       }
     }
+    pipeline.recTapNode = [...nodes.values()].find(n => n.type === 'rec' && n.params.tapLive) || null;
+    if (pipeline.recTapNode) appendLog('info', '🎙 Аудиобуфер пишет живой поток источника');
     pipeline.sourceCtl = await startSource(chain.src);
     if (chain.src.type === 'sip' && chain.src.params.sendGraph) {
       const pc = pipeline.sourceCtl?.pc;
@@ -2538,6 +2748,7 @@ async function stopPipeline(silent) {
   try { pipeline.sourceCtl?.stop(); } catch (e) {}
   pipeline.sourceCtl = null;
   pipeline.sendDest = null;
+  pipeline.recTapNode = null;
   if (pipeline.sp) { pipeline.sp.onaudioprocess = null; try { pipeline.sp.disconnect(); } catch (e) {} }
   if (pipeline.ctx) { try { await pipeline.ctx.close(); } catch (e) {} }
   pipeline.ctx = null; pipeline.sp = null; pipeline.chain = []; pipeline.asrRts = [];
@@ -2687,9 +2898,9 @@ async function init() {
   }
   updateEmptyHint();
   appendLog('info', 'NeonFlow готов. Соберите цепь блоков (или выберите пресет 🧩) и нажмите «ЗАПУСК».');
-  appendLog('info', 'Маршрутизатор и Слияние поддерживают произвольное число выходов/входов — настраивается в ⚙ блока.');
-  appendLog('info', 'Блок «Динамик» 🔊 проигрывает звук других блоков (нейро-речь, файлы, тон) локально с регулировкой громкости.');
-  appendLog('info', 'Автоответчик: в настройках SIP-блока включите режим автоответчика и подайте звук (Нейро-синтез / Аудиофайл) на блок «Вывод в транк».');
+  appendLog('info', 'Русский звук: «Голос системы» (динамики) или «Нейро-речь (РУС)» — звук в граф, транк и буфер.');
+  appendLog('info', 'Аудиобуфер 🎙 пишет звук, проигрывает и экспортирует в MP3 прямо с кнопок блока.');
+  appendLog('info', 'Проверка звука: кнопка «Тест звука» на блоке «Динамик» работает без запуска пайплайна.');
   setInterval(() => { if (dirty && project.name) saveProject(true); }, 15000);
   window.addEventListener('beforeunload', () => { if (dirty && project.name) saveProject(true); });
 }
