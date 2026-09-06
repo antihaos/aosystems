@@ -28,7 +28,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--neon);box-shadow:0 0 
 input[type=checkbox]{width:auto;accent-color:var(--neon);transform:scale(1.25)}
 #app{display:flex;flex-direction:column;height:100dvh;user-select:none;-webkit-user-select:none}
 
-/* ---------- TOPBAR ---------- */
 #topbar{height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;background:linear-gradient(180deg,#0d1428,#0a0f1e);border-bottom:1px solid var(--border);position:relative;z-index:30}
 #topbar::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--neon-dim),rgba(255,46,196,.3),transparent)}
 .iconbtn{width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);transition:.15s;flex:none}
@@ -61,7 +60,6 @@ input[type=checkbox]{width:auto;accent-color:var(--neon);transform:scale(1.25)}
 .btn.neon{border-color:var(--neon-dim);color:var(--neon);background:rgba(0,229,255,.06)}
 .btn.neon:hover{background:rgba(0,229,255,.14);box-shadow:0 0 16px var(--neon-dim)}
 
-/* ---------- TOOLBAR ---------- */
 #toolbar{height:46px;flex:none;display:flex;align-items:center;gap:4px;padding:0 10px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;overflow-y:hidden;z-index:20}
 #toolbar::-webkit-scrollbar{height:0}
 .tb{min-width:34px;height:32px;padding:0 8px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:12px;transition:.15s;flex:none;border:1px solid transparent}
@@ -75,7 +73,6 @@ input[type=checkbox]{width:auto;accent-color:var(--neon);transform:scale(1.25)}
 #runBtn.starting{opacity:.6;pointer-events:none}
 @keyframes runGlow{0%,100%{box-shadow:0 0 8px rgba(255,59,92,.25)}50%{box-shadow:0 0 22px rgba(255,59,92,.5)}}
 
-/* ---------- WORKSPACE ---------- */
 #workspace{flex:1;display:flex;min-height:0;position:relative}
 #sidebar{width:284px;flex:none;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:40;transition:transform .25s ease}
 .sb-tabs{display:flex;border-bottom:1px solid var(--border);flex:none}
@@ -102,7 +99,6 @@ input[type=checkbox]{width:auto;accent-color:var(--neon);transform:scale(1.25)}
 .mini-btn:hover{color:var(--neon);border-color:var(--neon)}
 .mini-btn.danger:hover{color:var(--red);border-color:var(--red)}
 
-/* --- пресеты --- */
 .preset-card{background:linear-gradient(180deg,var(--panel2),#0d1428);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;transition:.15s}
 .preset-card:hover{border-color:var(--neon-dim);box-shadow:0 0 14px rgba(0,229,255,.12)}
 .ps-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
@@ -120,7 +116,6 @@ input[type=checkbox]{width:auto;accent-color:var(--neon);transform:scale(1.25)}
 .log-line.say{border-color:var(--dlg);color:#ffd9b0}
 #sbBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:35;backdrop-filter:blur(2px)}
 
-/* ---------- CANVAS ---------- */
 #viewport{flex:1;position:relative;overflow:hidden;background-color:var(--bg);background-image:radial-gradient(circle,rgba(0,229,255,.13) 1px,transparent 1.4px),radial-gradient(circle,rgba(139,92,246,.07) 1px,transparent 1.4px);background-size:26px 26px,130px 130px;background-position:0 0;touch-action:none;cursor:default}
 #viewport.nogrid{background-image:none}
 #viewport.panmode{cursor:grab}
@@ -196,7 +191,6 @@ g.edge.selected .edge-glow{opacity:.5}
   .ngear,.ndel{width:28px;height:28px;font-size:14px}
 }
 
-/* ---------- STATUSBAR ---------- */
 #statusbar{height:30px;flex:none;display:flex;align-items:center;gap:14px;padding:0 12px;background:var(--bg2);border-top:1px solid var(--border);font-family:var(--mono);font-size:10.5px;color:var(--muted);z-index:30;position:relative}
 #statusbar::before{content:'';position:absolute;left:0;right:0;top:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,46,196,.3),var(--neon-dim),transparent)}
 .sb-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap}
@@ -210,7 +204,6 @@ g.edge.selected .edge-glow{opacity:.5}
 #sbMsg{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sb-right{display:flex;gap:14px;white-space:nowrap}
 
-/* ---------- MODAL ---------- */
 .modal-overlay{position:fixed;inset:0;background:rgba(4,6,14,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;animation:fadeIn .15s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal{width:100%;max-width:var(--mw,560px);max-height:calc(100dvh - 60px);background:linear-gradient(180deg,#101832,#0b1122);border:1px solid var(--border2);border-radius:14px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.7),0 0 40px rgba(0,229,255,.07);animation:modalIn .18s cubic-bezier(.2,.9,.3,1.2);overflow:hidden}
@@ -235,7 +228,6 @@ g.edge.selected .edge-glow{opacity:.5}
 .tlog .tl-x{color:#c5ffe0}
 .hint-box{color:var(--muted);font-size:11px;line-height:1.6;margin-top:10px;padding:9px 11px;border:1px dashed var(--border2);border-radius:9px}
 
-/* ---------- TOAST / CTX ---------- */
 #toasts{position:fixed;right:16px;bottom:44px;display:flex;flex-direction:column;gap:8px;z-index:1300;max-width:min(360px,86vw)}
 .toast{padding:11px 16px;border-radius:10px;background:var(--panel2);border:1px solid var(--border2);font-size:12.5px;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:toastIn .2s ease;display:flex;gap:9px;align-items:center}
 .toast.ok{border-color:rgba(34,255,136,.5);box-shadow:0 0 18px rgba(34,255,136,.12),0 10px 30px rgba(0,0,0,.5)}
@@ -268,7 +260,6 @@ g.edge.selected .edge-glow{opacity:.5}
 </head>
 <body>
 <div id="app">
-  <!-- TOPBAR -->
   <header id="topbar">
     <button id="burger" class="iconbtn" title="Панели">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
@@ -312,7 +303,6 @@ g.edge.selected .edge-glow{opacity:.5}
     <button id="saveBtn" class="btn neon" title="Сохранить (Ctrl+S)">💾 <span>Сохранить</span></button>
   </header>
 
-  <!-- TOOLBAR -->
   <div id="toolbar">
     <button class="tb active" id="sidebarBtn" title="Показать/скрыть боковую панель">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
@@ -339,7 +329,6 @@ g.edge.selected .edge-glow{opacity:.5}
     <button id="runBtn" title="Запустить/остановить пайплайн">▶ ЗАПУСК</button>
   </div>
 
-  <!-- WORKSPACE -->
   <div id="workspace">
     <div id="sbBackdrop"></div>
     <aside id="sidebar">
@@ -366,7 +355,6 @@ g.edge.selected .edge-glow{opacity:.5}
     </main>
   </div>
 
-  <!-- STATUSBAR -->
   <footer id="statusbar">
     <span class="sb-pill" id="srcStatus"><span class="d"></span><span id="srcStatusTxt">Пайплайн остановлен</span></span>
     <span id="modelStatus"></span>
@@ -375,7 +363,7 @@ g.edge.selected .edge-glow{opacity:.5}
     <div class="sb-right">
       <span id="sbNodes">0 блоков</span>
       <span id="zoomLabel">100%</span>
-      <span>NF v1.5</span>
+      <span>NF v1.7</span>
     </div>
   </footer>
 </div>
@@ -402,6 +390,14 @@ function toast(msg, type = 'info', ms = 3200) {
   $('#toasts').appendChild(t);
   setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, ms);
 }
+
+/* глобальный перехват ошибок — чтобы любые сбои были видны в журнале */
+window.addEventListener('error', e => {
+  try { appendLog('err', 'Ошибка скрипта: ' + (e.message || 'неизвестно')); } catch (_) {}
+});
+window.addEventListener('unhandledrejection', e => {
+  try { appendLog('err', 'Ошибка (promise): ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason))); } catch (_) {}
+});
 
 /* ================= ЗАГРУЗКА SIP.JS (мульти-CDN, лениво) ================= */
 let sipLibPromise = null;
@@ -503,11 +499,13 @@ const NODE_TYPES = {
            defParams: { file: '', fileName: '', onStart: false } },
   sipout:{ name: 'Вывод в транк',      cat: 'dialog', color: '#ff9f43', desc: 'аудио → вызов', inputs: [{ id: 'in', type: 'audio', label: 'речь' }], outputs: [],
            defParams: { monitor: true } },
+  spk:   { name: 'Динамик',            cat: 'out', color: '#22ff88', desc: 'воспроизведение', inputs: [{ id: 'in', type: 'audio', label: 'звук' }], outputs: [],
+           defParams: { volume: 1 } },
   transcript: { name: 'Транскрипт',    cat: 'out', color: '#22ff88', desc: 'экран', inputs: T_IN, outputs: [], defParams: {} },
   logger:     { name: 'Журнал событий',cat: 'out', color: '#22ff88', desc: 'лог',   inputs: T_IN, outputs: [], defParams: {} },
   ws:         { name: 'WebSocket-отправка', cat: 'out', color: '#22ff88', desc: 'ws', inputs: T_IN, outputs: [], defParams: { url: '' } }
 };
-const RUNTIME_TYPES = ['router', 'reply', 'dialog', 'merge', 'delay', 'tts', 'ttsai', 'clip', 'sipout', 'transcript', 'logger', 'ws'];
+const RUNTIME_TYPES = ['router', 'reply', 'dialog', 'merge', 'delay', 'tts', 'ttsai', 'clip', 'sipout', 'spk', 'transcript', 'logger', 'ws'];
 const PARAM_DEFS = {
   sip: [
     { k: 'server', l: 'WSS-сервер (транспорт транка)', t: 'text', ph: 'wss://pbx.example.ru:8089/ws' },
@@ -554,6 +552,7 @@ const PARAM_DEFS = {
   ],
   clip: [{ k: 'onStart', l: 'Проиграть файл сразу при запуске пайплайна', t: 'checkbox' }],
   sipout: [{ k: 'monitor', l: 'Дублировать отправляемый звук в динамики (контроль)', t: 'checkbox' }],
+  spk: [{ k: 'volume', l: 'Громкость воспроизведения (0–1)', t: 'number', min: 0, max: 1, step: 0.05 }],
   ws: [{ k: 'url', l: 'URL WebSocket-сервера', t: 'text', ph: 'wss://host/path' }]
 };
 
@@ -731,6 +730,7 @@ function nodeSummary(n) {
     case 'ttsai': return 'SpeechT5 → звук в граф';
     case 'clip': return p.fileName || 'файл не загружен';
     case 'sipout': return p.monitor ? 'транк + динамики' : 'только в транк';
+    case 'spk': return `громкость ${clamp(p.volume ?? 1, 0, 1)}`;
     case 'transcript': return `${(n.lines || []).length} фраз`;
     case 'logger': return 'события в журнал';
     case 'ws': return p.url || 'URL не задан';
@@ -1020,7 +1020,6 @@ function onNodePointerDown(e, node) {
   }, 550);
 }
 
-/* ---- связи: перетаскивание портов + клик-клик ---- */
 function onPortPointerDown(e, node, portEl) {
   e.stopPropagation(); e.preventDefault();
   hideCtx();
@@ -1076,7 +1075,6 @@ function tryCompleteLink(a, b) {
   return true;
 }
 
-/* ---- пинч-зум ---- */
 function startPinch() {
   const [p1, p2] = [...pointers.values()];
   pinch = {
@@ -1250,16 +1248,6 @@ function openNodeSettings(node) {
           sel.value = cur;
           if (sel.value !== cur) sel.value = 'auto';
         }
-        const h = document.createElement('div');
-        h.className = 'hint-box';
-        h.textContent = 'Озвучивание идёт через системный синтез речи (динамики устройства), речь русская. Чтобы звук попал в SIP-вызов, используйте блоки «Нейро-синтез» + «Вывод в транк».';
-        body.appendChild(h);
-      }
-      if (node.type === 'ttsai') {
-        const h = document.createElement('div');
-        h.className = 'hint-box';
-        h.textContent = 'Локальная модель SpeechT5 (transformers.js) генерирует аудиофайл, который можно отправить в транк. Модель обучена на английском — русские фразы произносит с сильным акцентом. Для качественных русских объявлений используйте блок «Аудиофайл».';
-        body.appendChild(h);
       }
       if (node.type === 'clip') {
         const wrap = document.createElement('div');
@@ -1287,6 +1275,24 @@ function openNodeSettings(node) {
           rd.readAsDataURL(f);
         };
       }
+    }
+    if (node.type === 'tts') {
+      const h = document.createElement('div');
+      h.className = 'hint-box';
+      h.textContent = 'Озвучивание идёт через системный синтез речи (динамики устройства), речь русская. Чтобы звук попал в SIP-вызов, используйте блоки «Нейро-синтез» + «Вывод в транк».';
+      body.appendChild(h);
+    }
+    if (node.type === 'ttsai') {
+      const h = document.createElement('div');
+      h.className = 'hint-box';
+      h.textContent = 'Локальная модель SpeechT5 (transformers.js) генерирует аудио, которое можно отправить в транк («Вывод в транк») или проиграть локально («Динамик»). Модель обучена на английском — для русских объявлений используйте блок «Аудиофайл».';
+      body.appendChild(h);
+    }
+    if (node.type === 'spk') {
+      const h = document.createElement('div');
+      h.className = 'hint-box';
+      h.textContent = 'Проигрывает любой звук из графа: нейро-синтез (речь), аудиофайлы, тон. Соедините аудиовыход блока со входом «звук» динамика.';
+      body.appendChild(h);
     }
   }
   const foot = document.createElement('div');
@@ -1495,6 +1501,24 @@ const PRESETS = [
     }
   },
   {
+    id: 'tts-speaker', icon: '🔊', name: 'Нейро-речь → Динамик',
+    desc: 'Реплика синтезируется моделью SpeechT5 и проигрывается локально через блок «Динамик» — проверка звуковой ветки без звонка.',
+    tags: ['нейро-синтез', 'динамик', 'тест звука'],
+    build() {
+      const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
+      const mic = mk('mic', 40, 260), asr = mk('asr', 300, 240);
+      const reply = mk('reply', 620, 240, { phrases: 'Проверка звука: нейро-синтез работает.\nПривет! Это тестовая реплика ассистента.', order: 'seq' });
+      const ttsai = mk('ttsai', 900, 240);
+      const spk = mk('spk', 1160, 240, { volume: 1 });
+      const ns = [mic, asr, reply, ttsai, spk];
+      const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
+      const ET = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'text' });
+      const es = [EA(mic, asr), ET(asr, reply), ET(reply, ttsai),
+        { id: uid(), from: { n: ttsai.id, p: 'out' }, to: { n: spk.id, p: 'in' }, type: 'audio' }];
+      return { ns, es };
+    }
+  },
+  {
     id: 'sip-clean', icon: '🧹', name: 'Максимальная очистка речи',
     desc: 'Для шумных линий: усиление, полосовой фильтр 300–3400 Гц, шумовой гейт и VAD перед распознаванием.',
     tags: ['sip', 'фильтр', 'гейт', 'vad'],
@@ -1604,6 +1628,7 @@ function renderPalette() {
       🔗 Порты соединяются перетаскиванием или двумя касаниями.<br>
       🤖 Диалог: Маршрутизатор ветвит текст по условиям (число выходов настраивается), Слияние объединяет ветки (число входов настраивается).<br>
       📟 Автоответчик: включите режим в блоке SIP и цепочкой Нейро-синтез/Аудиофайл → Вывод в транк верните голос в вызов.<br>
+      🔊 Динамик проигрывает локально любой звук блоков (нейро-речь, файлы, тон).<br>
       🗑 Удаление: ✕ на блоке, долгое нажатие (сенсор) или плавающая кнопка.</div>`;
   el.querySelectorAll('.pal-item').forEach(it => {
     it.addEventListener('dragstart', e => e.dataTransfer.setData('node-type', it.dataset.type));
@@ -1839,8 +1864,9 @@ function openAboutModal() {
       • Распознавание речи локально — <b>Whisper</b> через <b>transformers.js</b><br>
       • 🤖 Диалоговые графы: маршрутизатор с произвольным числом выходов, реплики, сценарий-автомат, паузы, слияние с произвольным числом входов<br>
       • 📟 Возврат звука в вызов: нейро-синтез SpeechT5 или аудиофайлы → «Вывод в транк» (подмена исходящего WebRTC-трека)<br>
+      • 🔊 Блок «Динамик» — локальное воспроизведение звука любых блоков с регулировкой громкости<br>
       • Хранение проектов в IndexedDB, импорт/экспорт JSON<br>
-      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">Примечание: SpeechT5 обучен на английском — для русских объявлений в вызове используйте блок «Аудиофайл»; системный синтез (динамики) говорит по-русски.</span>
+      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">Если что-то не работает — откройте вкладку «Журнал»: все ошибки выводются туда.</span>
     </div>` });
 }
 function openKeysModal() {
@@ -2244,7 +2270,7 @@ function makeTextRuntime(node) {
     case 'ttsai': return { node,
       onText(t) {
         setLed(node.id, 'speak');
-        appendLog('info', '🧠 Нейро-синтез (в транк): «' + t + '»');
+        appendLog('info', '🧠 Нейро-синтез: «' + t + '»');
         ensureWorker();
         asrWorker.postMessage({ type: 'tts', id: node.id, text: t });
       },
@@ -2292,6 +2318,27 @@ function makeTextRuntime(node) {
           const id = setTimeout(() => setLed(node.id, 'on'), Math.max(500, buf.length / sr * 1000));
           pipeline.timerIds.push(id);
         }
+      }
+    };
+    case 'spk': return { node,
+      onAudio(buf, sr) {
+        const ctx = pipeline.ctx;
+        if (!ctx) return;
+        try {
+          const ab = ctx.createBuffer(1, buf.length, sr);
+          ab.getChannelData(0).set(buf);
+          const s = ctx.createBufferSource();
+          s.buffer = ab;
+          const g = ctx.createGain();
+          g.gain.value = clamp(node.params.volume ?? 1, 0, 1);
+          s.connect(g);
+          g.connect(ctx.destination);
+          s.start();
+          setLed(node.id, 'speak');
+          appendLog('info', '🔊 Динамик: ' + (buf.length / sr).toFixed(1) + ' c звука');
+          const id = setTimeout(() => setLed(node.id, pipeline.running ? 'on' : ''), Math.max(400, buf.length / sr * 1000));
+          pipeline.timerIds.push(id);
+        } catch (e) { appendLog('err', 'Динамик: ' + (e.message || e)); }
       }
     };
     case 'transcript': return { node, onText(t) { pushTranscript(node, t); } };
@@ -2382,7 +2429,7 @@ async function startSipSource(p) {
     authorizationUsername: p.user,
     authorizationPassword: p.password || undefined,
     displayName: p.user,
-    userAgentString: 'NeonFlow/1.5',
+    userAgentString: 'NeonFlow/1.7',
     reconnectionAttempts: 0,
     logLevel: S.LogLevel ? S.LogLevel.Error : 'error'
   });
@@ -2449,7 +2496,6 @@ async function startPipeline() {
       }
     }
     pipeline.sourceCtl = await startSource(chain.src);
-    // режим автоответчика: подменяем исходящий трек вызова на звук из графа
     if (chain.src.type === 'sip' && chain.src.params.sendGraph) {
       const pc = pipeline.sourceCtl?.pc;
       if (pc) {
@@ -2583,7 +2629,6 @@ $('#saveBtn').onclick = () => saveProject();
 $('#projName').addEventListener('change', e => { project.name = e.target.value.trim() || 'Без имени'; markDirty(); });
 $('#projName').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
 
-/* сайдбар: вкладки */
 $$('.sb-tab').forEach(t => t.addEventListener('click', () => {
   $$('.sb-tab').forEach(x => x.classList.remove('active'));
   $$('.sb-panel').forEach(x => x.classList.remove('active'));
@@ -2643,6 +2688,7 @@ async function init() {
   updateEmptyHint();
   appendLog('info', 'NeonFlow готов. Соберите цепь блоков (или выберите пресет 🧩) и нажмите «ЗАПУСК».');
   appendLog('info', 'Маршрутизатор и Слияние поддерживают произвольное число выходов/входов — настраивается в ⚙ блока.');
+  appendLog('info', 'Блок «Динамик» 🔊 проигрывает звук других блоков (нейро-речь, файлы, тон) локально с регулировкой громкости.');
   appendLog('info', 'Автоответчик: в настройках SIP-блока включите режим автоответчика и подайте звук (Нейро-синтез / Аудиофайл) на блок «Вывод в транк».');
   setInterval(() => { if (dirty && project.name) saveProject(true); }, 15000);
   window.addEventListener('beforeunload', () => { if (dirty && project.name) saveProject(true); });
