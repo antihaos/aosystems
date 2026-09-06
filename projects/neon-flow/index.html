@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NeonFlow — аудио-пайплайны | SIP → Whisper</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/orbitron@5.0.20/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/index.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.19/index.css">
+<style>
+:root{
+  --bg:#060910; --bg2:#0a0f1d; --panel:#0c1222; --panel2:#101830; --border:#1b2542; --border2:#26345e;
+  --neon:#00e5ff; --neon-dim:rgba(0,229,255,.35); --mag:#ff2ec4; --vio:#8b5cf6; --grn:#22ff88; --amb:#ffb020; --red:#ff3b5c;
+  --text:#dce6ff; --muted:#7d8bb3; --mono:'JetBrains Mono',monospace; --disp:'Orbitron',sans-serif; --body:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:13px;overflow:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(0,229,255,.3)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#22305c;border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#2e3f78}
+button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select{font-family:inherit;color:var(--text);background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:7px 10px;font-size:13px;outline:none;width:100%}
+input:focus,select:focus{border-color:var(--neon);box-shadow:0 0 0 2px rgba(0,229,255,.15)}
+#app{display:flex;flex-direction:column;height:100dvh;user-select:none}
+
+/* ---------- TOPBAR ---------- */
+#topbar{height:52px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px;background:linear-gradient(180deg,#0d1428,#0a0f1e);border-bottom:1px solid var(--border);position:relative;z-index:30}
+#topbar::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--neon-dim),rgba(255,46,196,.3),transparent)}
+.iconbtn{width:34px;height:34px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);transition:.15s;flex:none}
+.iconbtn:hover{background:rgba(0,229,255,.08);color:var(--neon)}
+#burger{display:none}
+.logo{display:flex;align-items:baseline;gap:8px;font-family:var(--disp);font-weight:800;font-size:16px;letter-spacing:2px;color:var(--neon);text-shadow:0 0 14px var(--neon-dim);white-space:nowrap;cursor:default}
+.logo b{color:var(--mag);text-shadow:0 0 14px rgba(255,46,196,.5)}
+.logo .hex{animation:pulseHex 3s ease-in-out infinite}
+@keyframes pulseHex{0%,100%{opacity:1}50%{opacity:.45}}
+.logo-sub{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:none;font-weight:400}
+#menus{display:flex;gap:2px;margin-left:6px}
+.menu{position:relative}
+.menu-btn{padding:7px 12px;border-radius:7px;color:var(--muted);font-size:13px;transition:.15s}
+.menu-btn:hover,.menu.open .menu-btn{background:rgba(0,229,255,.08);color:var(--text)}
+.menu-items{position:absolute;top:calc(100% + 6px);left:0;min-width:230px;background:var(--panel2);border:1px solid var(--border2);border-radius:10px;padding:6px;display:none;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(0,229,255,.06);z-index:60}
+.menu.open .menu-items{display:block;animation:menuIn .14s ease}
+@keyframes menuIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.mi{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border-radius:7px;color:var(--text);font-size:13px}
+.mi:hover{background:rgba(0,229,255,.1);color:var(--neon)}
+.mi .k{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.mi.danger:hover{background:rgba(255,59,92,.12);color:var(--red)}
+.msep{height:1px;background:var(--border);margin:5px 8px}
+.top-spacer{flex:1}
+.proj-name{width:210px;background:transparent;border:1px solid transparent;font-family:var(--mono);font-size:13px;text-align:right;transition:.15s}
+.proj-name:hover{border-color:var(--border)}
+.proj-name:focus{border-color:var(--neon);background:var(--bg2)}
+.save-info{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;border:1px solid var(--border2);background:var(--panel2);font-size:13px;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--neon);color:var(--neon);box-shadow:0 0 12px rgba(0,229,255,.2)}
+.btn.neon{border-color:var(--neon-dim);color:var(--neon);background:rgba(0,229,255,.06)}
+.btn.neon:hover{background:rgba(0,229,255,.14);box-shadow:0 0 16px var(--neon-dim)}
+.btn.mag{border-color:rgba(255,46,196,.4);color:var(--mag)}
+.btn.mag:hover{background:rgba(255,46,196,.1);box-shadow:0 0 16px rgba(255,46,196,.3)}
+
+/* ---------- TOOLBAR ---------- */
+#toolbar{height:46px;flex:none;display:flex;align-items:center;gap:4px;padding:0 10px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;overflow-y:hidden;z-index:20}
+#toolbar::-webkit-scrollbar{height:0}
+.tb{min-width:34px;height:32px;padding:0 8px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;gap:6px;color:var(--muted);font-size:12px;transition:.15s;flex:none;border:1px solid transparent}
+.tb:hover{background:rgba(0,229,255,.08);color:var(--neon)}
+.tb.active{background:rgba(0,229,255,.12);color:var(--neon);border-color:var(--neon-dim);box-shadow:0 0 10px rgba(0,229,255,.15) inset}
+.tb svg{width:16px;height:16px;flex:none}
+.tb-sep{width:1px;height:22px;background:var(--border);margin:0 6px;flex:none}
+#runBtn{margin-left:auto;border:1px solid rgba(34,255,136,.4);color:var(--grn);background:rgba(34,255,136,.06);padding:6px 18px;border-radius:8px;font-family:var(--disp);font-size:12px;letter-spacing:1.5px;font-weight:700;transition:.2s;flex:none}
+#runBtn:hover{background:rgba(34,255,136,.14);box-shadow:0 0 18px rgba(34,255,136,.35)}
+#runBtn.running{border-color:rgba(255,59,92,.5);color:var(--red);background:rgba(255,59,92,.08);animation:runGlow 1.6s ease-in-out infinite}
+#runBtn.starting{opacity:.6;pointer-events:none}
+@keyframes runGlow{0%,100%{box-shadow:0 0 8px rgba(255,59,92,.25)}50%{box-shadow:0 0 22px rgba(255,59,92,.5)}}
+
+/* ---------- WORKSPACE ---------- */
+#workspace{flex:1;display:flex;min-height:0;position:relative}
+#sidebar{width:284px;flex:none;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:40;transition:transform .25s ease}
+.sb-tabs{display:flex;border-bottom:1px solid var(--border);flex:none}
+.sb-tab{flex:1;padding:11px 4px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;transition:.15s;font-family:var(--disp);font-weight:600}
+.sb-tab:hover{color:var(--text)}
+.sb-tab.active{color:var(--neon);border-bottom-color:var(--neon);text-shadow:0 0 10px var(--neon-dim)}
+.sb-body{flex:1;overflow-y:auto;padding:10px}
+.sb-panel{display:none}
+.sb-panel.active{display:block}
+.pal-cat{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:12px 4px 6px}
+.pal-cat:first-child{margin-top:2px}
+.pal-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;border:1px solid transparent;cursor:grab;transition:.15s;margin-bottom:3px}
+.pal-item:hover{background:var(--panel2);border-color:var(--border2);transform:translateX(2px)}
+.pal-item:active{cursor:grabbing}
+.pal-dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 8px currentColor}
+.pal-name{font-size:13px}
+.pal-desc{margin-left:auto;font-size:10px;color:var(--muted);font-family:var(--mono)}
+.proj-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;transition:.15s}
+.proj-card:hover{border-color:var(--border2)}
+.proj-card .pn{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.proj-card .pd{font-family:var(--mono);font-size:10px;color:var(--muted);margin:4px 0 8px}
+.proj-card .acts{display:flex;gap:6px}
+.mini-btn{padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid var(--border2);color:var(--muted);transition:.15s}
+.mini-btn:hover{color:var(--neon);border-color:var(--neon)}
+.mini-btn.danger:hover{color:var(--red);border-color:var(--red)}
+.log-line{font-family:var(--mono);font-size:10.5px;padding:3px 6px;border-left:2px solid var(--border2);margin-bottom:3px;color:var(--muted);word-break:break-word}
+.log-line .t{color:#4a5680;margin-right:6px}
+.log-line.ok{border-color:var(--grn);color:#b8ffd9}
+.log-line.err{border-color:var(--red);color:#ffb8c4}
+.log-line.warn{border-color:var(--amb);color:#ffe0b0}
+.log-line.info{border-color:var(--neon)}
+#sbBackdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:35;backdrop-filter:blur(2px)}
+
+/* ---------- CANVAS ---------- */
+#viewport{flex:1;position:relative;overflow:hidden;background-color:var(--bg);background-image:radial-gradient(circle,rgba(0,229,255,.13) 1px,transparent 1.4px),radial-gradient(circle,rgba(139,92,246,.07) 1px,transparent 1.4px);background-size:26px 26px,26px 26px;background-position:0 0;touch-action:none;cursor:default}
+#viewport.nogrid{background-image:none}
+#viewport.panmode{cursor:grab}
+#viewport.panmode:active{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;width:0;height:0}
+#edgesSvg{position:absolute;left:0;top:0;overflow:visible;width:1px;height:1px}
+.edge-vis{fill:none;stroke-width:2.2;filter:drop-shadow(0 0 4px currentColor)}
+.edge-vis.t-audio{stroke:var(--neon);color:var(--neon)}
+.edge-vis.t-text{stroke:var(--amb);color:var(--amb)}
+.edge-hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
+g.edge.selected .edge-vis{stroke-width:3.4;stroke-dasharray:8 5;animation:dashMove .7s linear infinite}
+@keyframes dashMove{to{stroke-dashoffset:-13}}
+#tempPath{fill:none;stroke:var(--mag);stroke-width:2.2;stroke-dasharray:6 5;filter:drop-shadow(0 0 5px var(--mag));pointer-events:none;animation:dashMove .5s linear infinite}
+.node{position:absolute;width:212px;background:linear-gradient(180deg,#111a34,#0c1226);border:1px solid var(--border2);border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.5);cursor:grab;transition:box-shadow .15s}
+.node:hover{border-color:#35478a}
+.node:active{cursor:grabbing}
+.node.selected{border-color:var(--nc,var(--neon));box-shadow:0 0 0 1px var(--nc,var(--neon)),0 0 22px color-mix(in srgb,var(--nc,var(--neon)) 45%,transparent),0 8px 28px rgba(0,0,0,.55)}
+.nhead{display:flex;align-items:center;gap:8px;padding:9px 10px 7px;border-bottom:1px solid rgba(255,255,255,.05)}
+.ndot{width:9px;height:9px;border-radius:50%;background:var(--nc);box-shadow:0 0 9px var(--nc);flex:none}
+.ntitle{font-size:12.5px;font-weight:600;letter-spacing:.3px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nled{width:7px;height:7px;border-radius:50%;background:#26315a;flex:none;transition:.3s}
+.nled.on{background:var(--grn);box-shadow:0 0 8px var(--grn);animation:pulseHex 1.2s ease-in-out infinite}
+.nled.err{background:var(--red);box-shadow:0 0 8px var(--red)}
+.ngear{width:22px;height:22px;border-radius:6px;color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.ngear:hover{background:rgba(0,229,255,.12);color:var(--neon)}
+.nsub{padding:5px 11px 2px;font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ports{padding:8px 0 9px}
+.prow{display:flex;justify-content:space-between;align-items:center;min-height:22px}
+.port{display:flex;align-items:center;gap:6px;padding:2px 8px;position:relative}
+.port i{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);background:var(--bg);transition:.15s;flex:none}
+.port em{font-style:normal;font-size:10px;color:var(--muted);font-family:var(--mono)}
+.port.p-in{margin-left:-14px}
+.port.p-out{margin-right:-14px;flex-direction:row-reverse}
+.port:hover i,.port.linkable i{border-color:var(--mag);box-shadow:0 0 10px var(--mag);transform:scale(1.25)}
+.port.linkable{cursor:crosshair}
+.tpreview{margin:2px 10px 10px;background:#070b16;border:1px solid var(--border);border-radius:8px;padding:7px 9px;font-family:var(--mono);font-size:10px;line-height:1.55;color:#9fe8c8;height:70px;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,#000 60%,transparent);mask-image:linear-gradient(180deg,#000 60%,transparent);word-break:break-word}
+#marquee{position:absolute;border:1px solid var(--neon);background:rgba(0,229,255,.07);display:none;pointer-events:none;z-index:5;box-shadow:0 0 12px rgba(0,229,255,.2) inset}
+#emptyHint{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:1}
+#emptyHint>div{text-align:center;color:var(--muted);font-size:14px;line-height:2}
+#emptyHint .big{font-family:var(--disp);font-size:18px;color:#3d4c80;letter-spacing:2px}
+
+/* ---------- STATUSBAR ---------- */
+#statusbar{height:30px;flex:none;display:flex;align-items:center;gap:14px;padding:0 12px;background:var(--bg2);border-top:1px solid var(--border);font-family:var(--mono);font-size:10.5px;color:var(--muted);z-index:30;position:relative}
+#statusbar::before{content:'';position:absolute;left:0;right:0;top:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,46,196,.3),var(--neon-dim),transparent)}
+.sb-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap}
+.sb-pill .d{width:7px;height:7px;border-radius:50%;background:#3a4670}
+.sb-pill.on{border-color:rgba(34,255,136,.5);color:#b8ffd9}
+.sb-pill.on .d{background:var(--grn);box-shadow:0 0 7px var(--grn);animation:pulseHex 1.4s infinite}
+.sb-pill.err{border-color:rgba(255,59,92,.5);color:#ffb8c4}
+.sb-pill.err .d{background:var(--red);box-shadow:0 0 7px var(--red)}
+#sbVu{width:110px;height:7px;background:#0a0f1d;border:1px solid var(--border);border-radius:5px;overflow:hidden;flex:none}
+#vuFill{height:100%;width:0%;background:linear-gradient(90deg,var(--grn),var(--amb),var(--red));box-shadow:0 0 8px rgba(34,255,136,.5);transition:width .06s linear}
+#sbMsg{flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-right{display:flex;gap:14px;white-space:nowrap}
+
+/* ---------- MODAL ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(4,6,14,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{width:100%;max-width:var(--mw,560px);max-height:calc(100dvh - 60px);background:linear-gradient(180deg,#101832,#0b1122);border:1px solid var(--border2);border-radius:14px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.7),0 0 40px rgba(0,229,255,.07);animation:modalIn .18s cubic-bezier(.2,.9,.3,1.2);overflow:hidden}
+@keyframes modalIn{from{opacity:0;transform:scale(.94) translateY(12px)}to{opacity:1;transform:none}}
+.modal.fs{max-width:none;width:100%;height:100%;max-height:none;border-radius:0}
+.mhead{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--border);flex:none;background:rgba(0,229,255,.03)}
+.mtitle{font-family:var(--disp);font-size:13px;letter-spacing:1.5px;color:var(--neon);text-shadow:0 0 12px var(--neon-dim);flex:1;text-transform:uppercase}
+.mbtn{width:30px;height:30px;border-radius:7px;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;transition:.15s}
+.mbtn:hover{background:rgba(0,229,255,.1);color:var(--neon)}
+.mbtn.mx:hover{background:rgba(255,59,92,.12);color:var(--red)}
+.mbody{padding:16px;overflow-y:auto;flex:1;min-height:0}
+.mfoot{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex:none}
+.f-row{margin-bottom:13px}
+.f-row label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-family:var(--mono);letter-spacing:.5px}
+.qa-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;cursor:pointer;border:1px solid transparent;transition:.12s}
+.qa-item:hover{background:var(--panel2);border-color:var(--border2)}
+.tlog{font-family:var(--mono);font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.tlog .tl-t{color:#4a5680;margin-right:8px;font-size:10px}
+.tlog .tl-x{color:#c5ffe0}
+
+/* ---------- TOAST / CTX ---------- */
+#toasts{position:fixed;right:16px;bottom:44px;display:flex;flex-direction:column;gap:8px;z-index:1300;max-width:min(360px,86vw)}
+.toast{padding:11px 16px;border-radius:10px;background:var(--panel2);border:1px solid var(--border2);font-size:12.5px;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:toastIn .2s ease;display:flex;gap:9px;align-items:center}
+.toast.ok{border-color:rgba(34,255,136,.5);box-shadow:0 0 18px rgba(34,255,136,.12),0 10px 30px rgba(0,0,0,.5)}
+.toast.err{border-color:rgba(255,59,92,.55)}
+.toast.warn{border-color:rgba(255,176,32,.5)}
+.toast.info{border-color:var(--neon-dim)}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+.toast.out{opacity:0;transform:translateX(30px);transition:.25s}
+#ctxMenu{position:fixed;z-index:1200;min-width:190px;background:var(--panel2);border:1px solid var(--border2);border-radius:10px;padding:6px;box-shadow:0 14px 44px rgba(0,0,0,.6)}
+#dropZone{position:fixed;inset:0;z-index:1400;background:rgba(0,229,255,.06);border:2px dashed var(--neon);display:none;align-items:center;justify-content:center;font-family:var(--disp);font-size:20px;color:var(--neon);letter-spacing:2px;backdrop-filter:blur(3px)}
+
+@media (max-width:920px){
+  #burger{display:inline-flex}
+  #menus{display:none}
+  #sidebar{position:fixed;left:0;top:52px;bottom:30px;transform:translateX(-102%);box-shadow:14px 0 40px rgba(0,0,0,.5)}
+  #sidebar.open{transform:none}
+  #sbBackdrop.show{display:block}
+  .proj-name{width:120px}
+  .save-info,.logo-sub{display:none}
+  #sbMsg{display:none}
+  #saveBtn span{display:none}
+  #topbar{gap:6px;padding:0 8px}
+}
+@media (max-width:560px){
+  .logo{font-size:13px}
+  #sbVu{width:60px}
+  .sb-right span:nth-child(2){display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- TOPBAR -->
+  <header id="topbar">
+    <button id="burger" class="iconbtn" title="Панели">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div class="logo"><span class="hex">⬢</span>NEON<b>FLOW</b><span class="logo-sub">sip · whisper · realtime</span></div>
+    <nav id="menus">
+      <div class="menu" data-menu="file">
+        <button class="menu-btn">Файл</button>
+        <div class="menu-items">
+          <button class="mi" data-action="new">🗎 Новый проект<span class="k">Ctrl+N</span></button>
+          <button class="mi" data-action="open">📂 Открыть…<span class="k">Ctrl+O</span></button>
+          <button class="mi" data-action="save">💾 Сохранить<span class="k">Ctrl+S</span></button>
+          <button class="mi" data-action="saveas">Сохранить как…</button>
+          <div class="msep"></div>
+          <button class="mi" data-action="import">⤓ Импорт JSON…</button>
+          <button class="mi" data-action="export">⤒ Экспорт JSON<span class="k">Ctrl+E</span></button>
+        </div>
+      </div>
+      <div class="menu" data-menu="view">
+        <button class="menu-btn">Вид</button>
+        <div class="menu-items">
+          <button class="mi" data-action="fit-all">⛶ Вписать всё<span class="k">F</span></button>
+          <button class="mi" data-action="fit-100">1:1 (100%)<span class="k">0</span></button>
+          <button class="mi" data-action="view-grid">▦ Сетка вкл/выкл</button>
+          <button class="mi" data-action="view-sidebar">◧ Боковая панель</button>
+        </div>
+      </div>
+      <div class="menu" data-menu="help">
+        <button class="menu-btn">Справка</button>
+        <div class="menu-items">
+          <button class="mi" data-action="help-keys">⌨ Горячие клавиши</button>
+          <button class="mi" data-action="help-about">ℹ О приложении</button>
+        </div>
+      </div>
+    </nav>
+    <div class="top-spacer"></div>
+    <span class="save-info" id="saveInfo"></span>
+    <input id="projName" class="proj-name" value="Новый проект" spellcheck="false" title="Имя проекта">
+    <button id="saveBtn" class="btn neon" title="Сохранить (Ctrl+S)">💾 <span>Сохранить</span></button>
+  </header>
+
+  <!-- TOOLBAR -->
+  <div id="toolbar">
+    <button class="tb active" id="toolSelect" title="Выделение (V)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3l7 17 2.5-7.5L21 10z"/></svg>
+    </button>
+    <button class="tb" id="toolPan" title="Рука — перемещение холста (H)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 0 0-4 0v5m0-3a2 2 0 0 0-4 0v3m0 0a2 2 0 0 0-4 0v5c0 3 2 5 6 5s6-2 6-6v-4a2 2 0 0 0-4 0"/></svg>
+    </button>
+    <div class="tb-sep"></div>
+    <button class="tb" data-action="fit-all" title="Вписать всё (F)">⛶ Всё</button>
+    <button class="tb" data-action="fit-sel" title="Вписать выделенное">◱ Выделенное</button>
+    <button class="tb" data-action="fit-100" title="Масштаб 100% (0)">1:1</button>
+    <button class="tb" data-action="fit-w" title="Вписать по ширине">⇤ Ширина</button>
+    <button class="tb" data-action="fit-h" title="Вписать по высоте">⇡ Высота</button>
+    <div class="tb-sep"></div>
+    <button class="tb" id="zoomOut" title="Отдалить (−)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/></svg></button>
+    <button class="tb" id="zoomIn" title="Приблизить (+)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6"/></svg></button>
+    <div class="tb-sep"></div>
+    <button class="tb active" id="gridBtn" title="Сетка">▦</button>
+    <button id="runBtn" title="Запустить/остановить пайплайн">▶ ЗАПУСК</button>
+  </div>
+
+  <!-- WORKSPACE -->
+  <div id="workspace">
+    <div id="sbBackdrop"></div>
+    <aside id="sidebar">
+      <div class="sb-tabs">
+        <button class="sb-tab active" data-panel="palette">Блоки</button>
+        <button class="sb-tab" data-panel="projects">Проекты</button>
+        <button class="sb-tab" data-panel="log">Журнал</button>
+      </div>
+      <div class="sb-body">
+        <div class="sb-panel active" id="panel-palette"></div>
+        <div class="sb-panel" id="panel-projects"></div>
+        <div class="sb-panel" id="panel-log"></div>
+      </div>
+    </aside>
+    <main id="viewport">
+      <div id="world">
+        <svg id="edgesSvg" xmlns="http://www.w3.org/2000/svg"><path id="tempPath" d="" style="display:none"/></svg>
+      </div>
+      <div id="marquee"></div>
+      <div id="emptyHint"><div><div class="big">ХОЛСТ ПУСТ</div>Дважды кликните, чтобы добавить блок,<br>или перетащите его из панели «Блоки»</div></div>
+    </main>
+  </div>
+
+  <!-- STATUSBAR -->
+  <footer id="statusbar">
+    <span class="sb-pill" id="srcStatus"><span class="d"></span><span id="srcStatusTxt">Пайплайн остановлен</span></span>
+    <span id="modelStatus"></span>
+    <div id="sbVu"><div id="vuFill"></div></div>
+    <span id="sbMsg">Готов к работе</span>
+    <div class="sb-right">
+      <span id="sbNodes">0 блоков</span>
+      <span id="zoomLabel">100%</span>
+      <span>NF v1.0</span>
+    </div>
+  </footer>
+</div>
+
+<input type="file" id="fileInput" accept=".json,application/json" hidden>
+<div id="toasts"></div>
+<div id="ctxMenu" hidden></div>
+<div id="dropZone">ОТПУСТИТЕ ФАЙЛ ДЛЯ ИМПОРТА ПРОЕКТА</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sip.js/0.21.2/sip.min.js" defer></script>
+<script type="module">
+/* ================= УТИЛИТЫ ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = ts => { const d = new Date(ts); return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}); };
+const fmtTime = ts => new Date(ts).toLocaleTimeString('ru-RU');
+
+function toast(msg, type = 'info', ms = 3200) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, ms);
+}
+
+/* ================= INDEXEDDB ================= */
+const IDB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      const q = indexedDB.open('neonflow-db', 1);
+      q.onupgradeneeded = e => { const db = e.target.result; if (!db.objectStoreNames.contains('projects')) db.createObjectStore('projects', { keyPath: 'id' }); };
+      q.onsuccess = e => { IDB.db = e.target.result; res(); };
+      q.onerror = () => rej(q.error);
+    });
+  },
+  store(mode) { return IDB.db.transaction('projects', mode).objectStore('projects'); },
+  req(r) { return new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  put(p) { return IDB.req(IDB.store('readwrite').put(p)); },
+  get(id) { return IDB.req(IDB.store('readonly').get(id)); },
+  del(id) { return IDB.req(IDB.store('readwrite').delete(id)); },
+  all() { return IDB.req(IDB.store('readonly').getAll()); }
+};
+
+/* ================= ТИПЫ УЗЛОВ ================= */
+const CATEGORIES = { sources: 'Источники', dsp: 'Обработка DSP', ai: 'Распознавание', out: 'Вывод' };
+const A_IN = [{ id: 'in', type: 'audio', label: 'поток' }];
+const A_OUT = [{ id: 'out', type: 'audio', label: 'поток' }];
+const T_IN = [{ id: 'in', type: 'text', label: 'текст' }];
+const NODE_TYPES = {
+  mic:   { name: 'Микрофон',           cat: 'sources', color: '#00e5ff', desc: 'локальный ввод', inputs: [], outputs: A_OUT, defParams: {} },
+  tone:  { name: 'Генератор тона',     cat: 'sources', color: '#00e5ff', desc: 'тест',           inputs: [], outputs: A_OUT, defParams: { freq: 440, wave: 'sine', level: 0.15 } },
+  sip:   { name: 'SIP-транк (АТС)',    cat: 'sources', color: '#00e5ff', desc: 'WebRTC',         inputs: [], outputs: A_OUT, defParams: { server: 'wss://pbx.example.ru:8089/ws', user: '1001', password: '', callee: '79000000000' } },
+  gain:  { name: 'Усиление',           cat: 'dsp', color: '#8b5cf6', desc: 'дБ',   inputs: A_IN, outputs: A_OUT, defParams: { db: 0 } },
+  gate:  { name: 'Шумовой гейт',       cat: 'dsp', color: '#8b5cf6', desc: 'gate', inputs: A_IN, outputs: A_OUT, defParams: { threshold: -45 } },
+  filter:{ name: 'Полосовой фильтр',   cat: 'dsp', color: '#8b5cf6', desc: 'Гц',   inputs: A_IN, outputs: A_OUT, defParams: { hp: 300, lp: 3400 } },
+  vad:   { name: 'Детектор речи (VAD)',cat: 'dsp', color: '#8b5cf6', desc: 'детект', inputs: A_IN, outputs: A_OUT, defParams: { threshold: -40 } },
+  asr:   { name: 'Whisper ASR',        cat: 'ai', color: '#ff2ec4', desc: 'transformers.js', inputs: A_IN, outputs: [{ id: 'text', type: 'text', label: 'текст' }],
+           defParams: { model: 'Xenova/whisper-tiny', language: 'auto', window: 5, stride: 1.5, silenceDb: -48 } },
+  transcript: { name: 'Транскрипт',    cat: 'out', color: '#22ff88', desc: 'экран', inputs: T_IN, outputs: [], defParams: {} },
+  logger:     { name: 'Журнал событий',cat: 'out', color: '#22ff88', desc: 'лог',   inputs: T_IN, outputs: [], defParams: {} },
+  ws:         { name: 'WebSocket-отправка', cat: 'out', color: '#22ff88', desc: 'ws', inputs: T_IN, outputs: [], defParams: { url: '' } }
+};
+const PARAM_DEFS = {
+  sip: [
+    { k: 'server', l: 'WSS-сервер (транспорт транка)', t: 'text', ph: 'wss://pbx.example.ru:8089/ws' },
+    { k: 'user', l: 'Учётная запись (внутренний номер)', t: 'text' },
+    { k: 'password', l: 'Пароль', t: 'password' },
+    { k: 'callee', l: 'Номер назначения (куда звонить)', t: 'text' }
+  ],
+  tone: [
+    { k: 'freq', l: 'Частота, Гц', t: 'number', min: 40, max: 8000, step: 10 },
+    { k: 'wave', l: 'Форма волны', t: 'select', o: ['sine', 'square', 'sawtooth', 'triangle'] },
+    { k: 'level', l: 'Амплитуда (0..1)', t: 'number', min: 0, max: 1, step: 0.01 }
+  ],
+  gain: [{ k: 'db', l: 'Усиление, дБ', t: 'number', min: -30, max: 30, step: 0.5 }],
+  gate: [{ k: 'threshold', l: 'Порог открытия, дБ', t: 'number', min: -90, max: 0 }],
+  filter: [
+    { k: 'hp', l: 'ФВЧ (нижняя граница), Гц', t: 'number', min: 20, max: 8000 },
+    { k: 'lp', l: 'ФНЧ (верхняя граница), Гц', t: 'number', min: 100, max: 20000 }
+  ],
+  vad: [{ k: 'threshold', l: 'Порог речи, дБ', t: 'number', min: -90, max: 0 }],
+  asr: [
+    { k: 'model', l: 'Модель Whisper', t: 'select', o: ['Xenova/whisper-tiny', 'Xenova/whisper-base', 'Xenova/whisper-small'] },
+    { k: 'language', l: 'Язык речи', t: 'select', o: ['auto', 'ru', 'en', 'uk', 'de', 'fr', 'es', 'zh'] },
+    { k: 'window', l: 'Окно анализа, с', t: 'number', min: 2, max: 15, step: 0.5 },
+    { k: 'stride', l: 'Перекрытие окон, с', t: 'number', min: 0.5, max: 5, step: 0.5 },
+    { k: 'silenceDb', l: 'Порог тишины, дБ', t: 'number', min: -90, max: 0 }
+  ],
+  ws: [{ k: 'url', l: 'URL WebSocket-сервера', t: 'text', ph: 'wss://host/path' }]
+};
+
+/* ================= СОСТОЯНИЕ ================= */
+let nodes = new Map(), edges = new Map();
+let nodeEls = new Map(), edgeEls = new Map();
+let selectedNodes = new Set(), selectedEdges = new Set();
+let project = { id: null, name: 'Новый проект' };
+let view = { x: 60, y: 60, s: 1 };
+let dirty = false, lastSavedAt = null;
+let panTool = false, spaceDown = false;
+let pendingLink = null;
+const viewport = $('#viewport'), world = $('#world'), edgesSvg = $('#edgesSvg'), tempPath = $('#tempPath');
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/* ================= ХОЛСТ / ТРАНСФОРМ ================= */
+function applyView() {
+  world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`;
+  const gs = 26 * view.s;
+  viewport.style.backgroundSize = `${gs}px ${gs}px, ${gs * 5}px ${gs * 5}px`;
+  viewport.style.backgroundPosition = `${view.x}px ${view.y}px, ${view.x}px ${view.y}px`;
+  $('#zoomLabel').textContent = Math.round(view.s * 100) + '%';
+}
+function clientToWorld(cx, cy) {
+  const r = viewport.getBoundingClientRect();
+  return { x: (cx - r.left - view.x) / view.s, y: (cy - r.top - view.y) / view.s };
+}
+function zoomAt(cx, cy, factor) {
+  const ns = clamp(view.s * factor, 0.08, 4);
+  const r = viewport.getBoundingClientRect();
+  const px = cx - r.left, py = cy - r.top;
+  view.x = px - (px - view.x) * (ns / view.s);
+  view.y = py - (py - view.y) * (ns / view.s);
+  view.s = ns;
+  applyView();
+}
+function nodesBounds(list) {
+  if (!list.length) return null;
+  let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9;
+  for (const n of list) {
+    const el = nodeEls.get(n.id);
+    const w = el ? el.offsetWidth : 212, h = el ? el.offsetHeight : 80;
+    x1 = Math.min(x1, n.x); y1 = Math.min(y1, n.y);
+    x2 = Math.max(x2, n.x + w); y2 = Math.max(y2, n.y + h);
+  }
+  return { x1, y1, x2, y2 };
+}
+function fitBounds(b, mode) {
+  if (!b) return;
+  const r = viewport.getBoundingClientRect();
+  const w = b.x2 - b.x1, h = b.y2 - b.y1, pad = 70;
+  let s;
+  if (mode === 'w') s = r.width / (w + pad * 2);
+  else if (mode === 'h') s = r.height / (h + pad * 2);
+  else s = Math.min(r.width / (w + pad * 2), r.height / (h + pad * 2));
+  s = clamp(s, 0.08, mode === 'all' || mode === 'sel' ? 2 : 4);
+  view.s = s;
+  view.x = (r.width - w * s) / 2 - b.x1 * s;
+  view.y = (r.height - h * s) / 2 - b.y1 * s;
+  applyView();
+}
+function fitAll() { const b = nodesBounds([...nodes.values()]); if (b) fitBounds(b, 'all'); }
+function fitSelection() {
+  const sel = [...selectedNodes].map(id => nodes.get(id)).filter(Boolean);
+  const b = nodesBounds(sel.length ? sel : [...nodes.values()]);
+  if (b) fitBounds(b, sel.length ? 'sel' : 'all');
+}
+function fit100() {
+  const r = viewport.getBoundingClientRect();
+  const cw = (r.width / 2 - view.x) / view.s, ch = (r.height / 2 - view.y) / view.s;
+  view.s = 1; view.x = r.width / 2 - cw; view.y = r.height / 2 - ch; applyView();
+}
+
+/* ================= УЗЛЫ ================= */
+function nodeSummary(n) {
+  const p = n.params || {};
+  switch (n.type) {
+    case 'mic': return 'локальный аудиовход';
+    case 'tone': return `${p.freq} Гц · ${p.wave}`;
+    case 'sip': return `${p.user || '?'} → ${p.callee || '?'}`;
+    case 'gain': return `${p.db > 0 ? '+' : ''}${p.db} дБ`;
+    case 'gate': return `порог ${p.threshold} дБ`;
+    case 'filter': return `${p.hp}–${p.lp} Гц`;
+    case 'vad': return `порог ${p.threshold} дБ`;
+    case 'asr': return `${(p.model || '').split('/')[1]} · ${p.language} · ${p.window}с`;
+    case 'transcript': return `${(n.lines || []).length} фраз`;
+    case 'logger': return 'события в журнал';
+    case 'ws': return p.url || 'URL не задан';
+  }
+  return '';
+}
+function createNodeEl(node) {
+  const t = NODE_TYPES[node.type];
+  const el = document.createElement('div');
+  el.className = 'node';
+  el.dataset.id = node.id;
+  el.style.setProperty('--nc', t.color);
+  el.style.left = node.x + 'px';
+  el.style.top = node.y + 'px';
+  const nIns = t.inputs.length, nOuts = t.outputs.length;
+  const rows = Math.max(nIns, nOuts, 0);
+  let portsHtml = '';
+  for (let i = 0; i < rows; i++) {
+    const pi = t.inputs[i], po = t.outputs[i];
+    portsHtml += `<div class="prow">
+      ${pi ? `<div class="port p-in" data-id="${pi.id}" data-dir="in" data-type="${pi.type}"><i></i><em>${pi.label}</em></div>` : '<span></span>'}
+      ${po ? `<div class="port p-out" data-id="${po.id}" data-dir="out" data-type="${po.type}"><em>${po.label}</em><i></i></div>` : '<span></span>'}
+    </div>`;
+  }
+  el.innerHTML = `
+    <div class="nhead"><span class="ndot"></span><span class="nled"></span><span class="ntitle" title="${esc(t.name)}">${esc(t.name)}</span>
+      <button class="ngear" title="Настройки (двойной клик)">⚙</button></div>
+    <div class="nsub"></div>
+    ${rows ? `<div class="ports">${portsHtml}</div>` : ''}
+    ${node.type === 'transcript' ? '<div class="tpreview">— тишина в эфире —</div>' : ''}`;
+  el.querySelector('.nsub').textContent = nodeSummary(node);
+  el.querySelector('.ngear').addEventListener('pointerdown', e => e.stopPropagation());
+  el.querySelector('.ngear').addEventListener('click', e => { e.stopPropagation(); openNodeSettings(node); });
+  el.addEventListener('pointerdown', e => onNodePointerDown(e, node));
+  el.addEventListener('dblclick', e => {
+    e.stopPropagation();
+    if (node.type === 'transcript') openTranscriptModal(node); else openNodeSettings(node);
+  });
+  el.addEventListener('contextmenu', e => {
+    e.preventDefault(); e.stopPropagation();
+    if (!selectedNodes.has(node.id)) { clearSelection(); selectNode(node.id, false); }
+    showCtx(e.clientX, e.clientY, [
+      { label: '⚙ Настройки', fn: () => openNodeSettings(node) },
+      { label: '⧉ Дублировать', fn: () => duplicateNode(node) },
+      { sep: true },
+      { label: '🗑 Удалить', danger: true, fn: () => { deleteSelection(); } }
+    ]);
+  });
+  el.querySelectorAll('.port').forEach(p => p.addEventListener('pointerdown', e => onPortPointerDown(e, node, p)));
+  world.appendChild(el);
+  nodeEls.set(node.id, el);
+  updateEmptyHint();
+  return el;
+}
+function updateNodeSummary(node) {
+  const el = nodeEls.get(node.id);
+  if (el) el.querySelector('.nsub').textContent = nodeSummary(node);
+}
+function addNode(type, x, y, params) {
+  const t = NODE_TYPES[type];
+  if (!t) return null;
+  const node = { id: uid(), type, x: Math.round(x), y: Math.round(y), params: { ...t.defParams, ...(params || {}) } };
+  if (type === 'transcript') node.lines = [];
+  nodes.set(node.id, node);
+  createNodeEl(node);
+  markDirty();
+  return node;
+}
+function removeNode(id) {
+  for (const [eid, e] of [...edges]) if (e.from.n === id || e.to.n === id) removeEdge(eid);
+  const el = nodeEls.get(id);
+  if (el) el.remove();
+  nodeEls.delete(id);
+  nodes.delete(id);
+  selectedNodes.delete(id);
+  updateEmptyHint();
+}
+function duplicateNode(node) {
+  const c = addNode(node.type, node.x + 30, node.y + 30, JSON.parse(JSON.stringify(node.params)));
+  if (c) { clearSelection(); selectNode(c.id, false); toast('Блок продублирован', 'ok', 1500); }
+}
+function updateEmptyHint() { $('#emptyHint').style.display = nodes.size === 0 ? 'flex' : 'none'; $('#sbNodes').textContent = nodes.size + ' блоков'; }
+
+/* ================= РЁБРА ================= */
+function portPos(node, portId, dir) {
+  const el = nodeEls.get(node.id);
+  const pe = el.querySelector(`.port[data-id="${portId}"][data-dir="${dir}"]`);
+  if (!pe) return { x: node.x, y: node.y };
+  const nr = el.getBoundingClientRect(), pr = pe.getBoundingClientRect();
+  return { x: node.x + (pr.left + pr.width / 2 - nr.left) / view.s, y: node.y + (pr.top + pr.height / 2 - nr.top) / view.s };
+}
+function edgePathD(p1, p2) {
+  const dx = Math.max(46, Math.abs(p2.x - p1.x) * 0.5);
+  return `M ${p1.x} ${p1.y} C ${p1.x + dx} ${p1.y}, ${p2.x - dx} ${p2.y}, ${p2.x} ${p2.y}`;
+}
+function createEdgeEl(edge) {
+  const g = document.createElementNS(SVG_NS, 'g');
+  g.classList.add('edge');
+  g.dataset.id = edge.id;
+  const hit = document.createElementNS(SVG_NS, 'path');
+  hit.setAttribute('class', 'edge-hit');
+  const vis = document.createElementNS(SVG_NS, 'path');
+  vis.setAttribute('class', 'edge-vis t-' + edge.type);
+  g.append(hit, vis);
+  hit.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); selectEdge(edge.id, e.shiftKey); });
+  hit.addEventListener('contextmenu', e => {
+    e.preventDefault(); e.stopPropagation();
+    showCtx(e.clientX, e.clientY, [{ label: '🗑 Удалить соединение', danger: true, fn: () => { removeEdge(edge.id); markDirty(); } }]);
+  });
+  edgesSvg.appendChild(g);
+  edgeEls.set(edge.id, g);
+  updateEdge(edge);
+}
+function updateEdge(edge) {
+  const g = edgeEls.get(edge.id);
+  if (!g) return;
+  const fn = nodes.get(edge.from.n), tn = nodes.get(edge.to.n);
+  if (!fn || !tn) return;
+  const d = edgePathD(portPos(fn, edge.from.p, 'out'), portPos(tn, edge.to.p, 'in'));
+  g.querySelectorAll('path').forEach(p => p.setAttribute('d', d));
+}
+function updateEdgesForNode(nid) { for (const e of edges.values()) if (e.from.n === nid || e.to.n === nid) updateEdge(e); }
+function updateAllEdges() { for (const e of edges.values()) updateEdge(e); }
+function addEdge(fromN, fromP, toN, toP, type, silent) {
+  for (const [eid, e] of [...edges]) {
+    if (e.from.n === fromN && e.from.p === fromP && e.to.n === toN && e.to.p === toP) return null;
+    if (e.to.n === toN && e.to.p === toP) removeEdge(eid); // один вход — одно соединение
+  }
+  const edge = { id: uid(), from: { n: fromN, p: fromP }, to: { n: toN, p: toP }, type };
+  edges.set(edge.id, edge);
+  createEdgeEl(edge);
+  if (!silent) { markDirty(); toast('Соединение создано', 'ok', 1200); }
+  return edge;
+}
+function removeEdge(id) {
+  const g = edgeEls.get(id);
+  if (g) g.remove();
+  edgeEls.delete(id);
+  edges.delete(id);
+  selectedEdges.delete(id);
+}
+
+/* ================= ВЫДЕЛЕНИЕ ================= */
+function selectNode(id, additive) {
+  if (!additive) { clearSelection(); }
+  selectedNodes.add(id);
+  nodeEls.get(id)?.classList.add('selected');
+  updateSbMsg();
+}
+function selectEdge(id, additive) {
+  if (!additive) clearSelection();
+  selectedEdges.add(id);
+  edgeEls.get(id)?.classList.add('selected');
+  updateSbMsg();
+}
+function clearSelection() {
+  selectedNodes.forEach(id => nodeEls.get(id)?.classList.remove('selected'));
+  selectedEdges.forEach(id => edgeEls.get(id)?.classList.remove('selected'));
+  selectedNodes.clear(); selectedEdges.clear();
+  updateSbMsg();
+}
+function deleteSelection() {
+  const had = selectedNodes.size + selectedEdges.size;
+  [...selectedEdges].forEach(removeEdge);
+  [...selectedNodes].forEach(removeNode);
+  if (had) { markDirty(); setSbMsg('Удалено объектов: ' + had); }
+}
+function updateSbMsg() {
+  const parts = [];
+  if (selectedNodes.size) parts.push('узлов: ' + selectedNodes.size);
+  if (selectedEdges.size) parts.push('связей: ' + selectedEdges.size);
+  setSbMsg(parts.length ? 'Выделено — ' + parts.join(', ') : 'Готов к работе');
+}
+function setSbMsg(t) { $('#sbMsg').textContent = t; }
+
+/* ================= ВЗАИМОДЕЙСТВИЕ С ХОЛСТОМ ================= */
+const pointers = new Map();
+let drag = null, pinch = null;
+
+function cancelLinkVisual() {
+  tempPath.style.display = 'none';
+  tempPath.setAttribute('d', '');
+  $$('.port.linkable').forEach(p => p.classList.remove('linkable'));
+  pendingLink = null;
+}
+function markLinkablePorts(type) {
+  $$('.port').forEach(p => { if (p.dataset.type === type) p.classList.add('linkable'); });
+}
+
+viewport.addEventListener('pointerdown', e => {
+  hideCtx();
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) { cancelDrag(); startPinch(); return; }
+  if (drag || e.target.closest('.node')) return;
+  const wantPan = panTool || spaceDown || e.button === 1 || e.pointerType === 'touch';
+  if (wantPan) {
+    drag = { type: 'pan', sx: e.clientX, sy: e.clientY, ox: view.x, oy: view.y };
+    viewport.classList.add('panmode');
+  } else if (e.button === 0) {
+    drag = { type: 'marquee', sx: e.clientX, sy: e.clientY, additive: e.shiftKey };
+    if (!e.shiftKey) clearSelection();
+    if (pendingLink) cancelLinkVisual();
+  }
+});
+window.addEventListener('pointermove', e => {
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && pointers.size >= 2) { updatePinch(); return; }
+  if (drag) dragMove(e);
+  if (pendingLink) {
+    const w = clientToWorld(e.clientX, e.clientY);
+    const p0 = portPos(nodes.get(pendingLink.node), pendingLink.port, pendingLink.dir);
+    const d = pendingLink.dir === 'out' ? edgePathD(p0, w) : edgePathD(w, p0);
+    tempPath.setAttribute('d', d);
+    tempPath.style.display = '';
+  }
+});
+window.addEventListener('pointerup', e => {
+  pointers.delete(e.pointerId);
+  if (pinch && pointers.size < 2) { pinch = null; }
+  if (drag) { dragUp(e); drag = null; viewport.classList.remove('panmode'); }
+});
+window.addEventListener('pointercancel', e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; drag = null; });
+
+function cancelDrag() { if (drag && drag.type === 'marquee') $('#marquee').style.display = 'none'; drag = null; }
+function dragMove(e) {
+  if (drag.type === 'pan') {
+    view.x = drag.ox + (e.clientX - drag.sx);
+    view.y = drag.oy + (e.clientY - drag.sy);
+    applyView();
+  } else if (drag.type === 'marquee') {
+    const r = viewport.getBoundingClientRect();
+    const x1 = Math.min(drag.sx, e.clientX) - r.left, y1 = Math.min(drag.sy, e.clientY) - r.top;
+    const x2 = Math.max(drag.sx, e.clientX) - r.left, y2 = Math.max(drag.sy, e.clientY) - r.top;
+    const m = $('#marquee');
+    m.style.display = 'block';
+    m.style.left = x1 + 'px'; m.style.top = y1 + 'px';
+    m.style.width = (x2 - x1) + 'px'; m.style.height = (y2 - y1) + 'px';
+    drag.rect = { x1, y1, x2, y2 };
+  } else if (drag.type === 'node') {
+    const dx = (e.clientX - drag.sx) / view.s, dy = (e.clientY - drag.sy) / view.s;
+    if (!drag.moved && Math.hypot(dx * view.s, dy * view.s) > 3) drag.moved = true;
+    for (const [id, st] of drag.starts) {
+      const n = nodes.get(id); if (!n) continue;
+      n.x = Math.round(st.x + dx); n.y = Math.round(st.y + dy);
+      const el = nodeEls.get(id);
+      el.style.left = n.x + 'px'; el.style.top = n.y + 'px';
+      updateEdgesForNode(id);
+    }
+  }
+}
+function dragUp(e) {
+  if (drag.type === 'marquee') {
+    $('#marquee').style.display = 'none';
+    if (drag.rect) {
+      const r = viewport.getBoundingClientRect();
+      const w1 = clientToWorld(drag.rect.x1 + r.left, drag.rect.y1 + r.top);
+      const w2 = clientToWorld(drag.rect.x2 + r.left, drag.rect.y2 + r.top);
+      for (const n of nodes.values()) {
+        const el = nodeEls.get(n.id);
+        const nw = el.offsetWidth, nh = el.offsetHeight;
+        if (n.x < w2.x && n.x + nw > w1.x && n.y < w2.y && n.y + nh > w1.y) selectNode(n.id, true);
+      }
+    }
+  } else if (drag.type === 'node' && drag.moved) markDirty();
+}
+
+function onNodePointerDown(e, node) {
+  if (e.button === 2) return;
+  e.stopPropagation();
+  if (pendingLink) { cancelLinkVisual(); return; }
+  if (e.shiftKey) {
+    if (selectedNodes.has(node.id)) { selectedNodes.delete(node.id); nodeEls.get(node.id)?.classList.remove('selected'); }
+    else selectNode(node.id, true);
+    return;
+  }
+  if (!selectedNodes.has(node.id)) { clearSelection(); selectNode(node.id, false); }
+  const el = nodeEls.get(node.id);
+  world.appendChild(el); // на передний план
+  const starts = new Map();
+  selectedNodes.forEach(id => { const n = nodes.get(id); if (n) starts.set(id, { x: n.x, y: n.y }); });
+  drag = { type: 'node', sx: e.clientX, sy: e.clientY, starts, moved: false };
+}
+
+/* ---- связи: перетаскивание портов + клик-клик ---- */
+function onPortPointerDown(e, node, portEl) {
+  e.stopPropagation(); e.preventDefault();
+  if (e.button !== 0 && e.pointerType !== 'touch') return;
+  const dir = portEl.dataset.dir, type = portEl.dataset.type, portId = portEl.dataset.id;
+  if (pendingLink) {
+    const ok = tryCompleteLink(pendingLink, { node: node.id, port: portId, dir, type });
+    if (ok) cancelLinkVisual();
+    return;
+  }
+  const link = { node: node.id, port: portId, dir, type, sx: e.clientX, sy: e.clientY, moved: false };
+  markLinkablePorts(type);
+  const move = ev => {
+    if (Math.hypot(ev.clientX - link.sx, ev.clientY - link.sy) > 5) link.moved = true;
+    if (link.moved) {
+      const w = clientToWorld(ev.clientX, ev.clientY);
+      const p0 = portPos(node, portId, dir);
+      tempPath.setAttribute('d', dir === 'out' ? edgePathD(p0, w) : edgePathD(w, p0));
+      tempPath.style.display = '';
+    }
+  };
+  const up = ev => {
+    window.removeEventListener('pointermove', move);
+    window.removeEventListener('pointerup', up);
+    $$('.port.linkable').forEach(p => p.classList.remove('linkable'));
+    if (link.moved) {
+      tempPath.style.display = 'none';
+      const tgt = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('.port');
+      if (tgt) {
+        const tn = tgt.closest('.node');
+        tryCompleteLink(link, { node: tn?.dataset.id, port: tgt.dataset.id, dir: tgt.dataset.dir, type: tgt.dataset.type });
+      }
+    } else {
+      markLinkablePorts(type);
+      pendingLink = link;
+      const p0 = portPos(node, portId, dir);
+      const w = clientToWorld(ev.clientX, ev.clientY);
+      tempPath.setAttribute('d', dir === 'out' ? edgePathD(p0, w) : edgePathD(w, p0));
+      tempPath.style.display = '';
+    }
+  };
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+}
+function tryCompleteLink(a, b) {
+  if (!a || !b || !b.node) return false;
+  if (a.node === b.node || a.type !== b.type) return false;
+  let from, to;
+  if (a.dir === 'out' && b.dir === 'in') { from = a; to = b; }
+  else if (a.dir === 'in' && b.dir === 'out') { from = b; to = a; }
+  else return false;
+  addEdge(from.node, from.port, to.node, to.port, a.type);
+  return true;
+}
+
+/* ---- пинч-зум ---- */
+function startPinch() {
+  const [p1, p2] = [...pointers.values()];
+  pinch = { d0: Math.hypot(p2.x - p1.x, p2.y - p1.y), s0: view.s };
+}
+function updatePinch() {
+  const [p1, p2] = [...pointers.values()];
+  const d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+  const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+  const ns = clamp(pinch.s0 * (d / (pinch.d0 || 1)), 0.08, 4);
+  const r = viewport.getBoundingClientRect();
+  const wx = (pinch.mid0.x - r.left - pinch.x0) / pinch.s0;
+  const wy = (pinch.mid0.y - r.top - pinch.y0) / pinch.s0;
+  view.x = mid.x - r.left - wx * ns;
+  view.y = mid.y - r.top - wy * ns;
+  view.s = ns;
+  applyView();
+  if (!pinch.mid0) {} // noop
+}
+// сохраняем опорные данные при старте пинча
+const _startPinch = startPinch;
+startPinch = function () {
+  const [p1, p2] = [...pointers.values()];
+  pinch = { d0: Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1, s0: view.s, mid0: { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 }, x0: view.x, y0: view.y };
+};
+
+viewport.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0016));
+}, { passive: false });
+
+viewport.addEventListener('dblclick', e => {
+  if (e.target.closest('.node')) return;
+  const w = clientToWorld(e.clientX, e.clientY);
+  openQuickAdd(w.x, w.y);
+});
+viewport.addEventListener('pointerdown', e => {
+  if (!e.target.closest('.node') && !e.target.closest('.port') && pendingLink && e.button === 0 && (panTool || spaceDown || e.pointerType === 'touch')) cancelLinkVisual();
+});
+document.addEventListener('pointerdown', e => {
+  if (pendingLink && !e.target.closest('.port') && !e.target.closest('#viewport')) cancelLinkVisual();
+}, true);
+
+/* ================= КОНТЕКСТНОЕ МЕНЮ ================= */
+const ctxMenu = $('#ctxMenu');
+function showCtx(x, y, items) {
+  ctxMenu.innerHTML = '';
+  items.forEach(it => {
+    if (it.sep) { const s = document.createElement('div'); s.className = 'msep'; ctxMenu.appendChild(s); return; }
+    const b = document.createElement('button');
+    b.className = 'mi' + (it.danger ? ' danger' : '');
+    b.textContent = it.label;
+    b.onclick = () => { hideCtx(); it.fn(); };
+    ctxMenu.appendChild(b);
+  });
+  ctxMenu.hidden = false;
+  const r = ctxMenu.getBoundingClientRect();
+  ctxMenu.style.left = Math.min(x, innerWidth - r.width - 8) + 'px';
+  ctxMenu.style.top = Math.min(y, innerHeight - r.height - 8) + 'px';
+}
+function hideCtx() { ctxMenu.hidden = true; }
+document.addEventListener('pointerdown', e => { if (!ctxMenu.hidden && !ctxMenu.contains(e.target)) hideCtx(); }, true);
+
+/* ================= МОДАЛЬНЫЕ ОКНА ================= */
+const modalStack = [];
+function openModal({ title, body, footer, width = 560, onMount }) {
+  const ov = document.createElement('div');
+  ov.className = 'modal-overlay';
+  ov.innerHTML = `<div class="modal" style="--mw:${width}px">
+    <div class="mhead"><div class="mtitle">${title}</div>
+      <button class="mbtn mfs" title="На весь экран">⛶</button>
+      <button class="mbtn mx" title="Закрыть">✕</button>
+    </div>
+    <div class="mbody"></div>
+    ${footer ? '<div class="mfoot"></div>' : ''}
+  </div>`;
+  const modal = ov.querySelector('.modal');
+  const bodyEl = ov.querySelector('.mbody');
+  if (typeof body === 'string') bodyEl.innerHTML = body; else if (body) bodyEl.appendChild(body);
+  if (footer) { const f = ov.querySelector('.mfoot'); if (typeof footer === 'string') f.innerHTML = footer; else f.appendChild(footer); }
+  const api = {
+    ov, modal, bodyEl,
+    close() { ov.remove(); const i = modalStack.indexOf(api); if (i >= 0) modalStack.splice(i, 1); },
+    fs() { modal.classList.toggle('fs'); ov.querySelector('.mfs').textContent = modal.classList.contains('fs') ? '🗗' : '⛶'; }
+  };
+  ov.querySelector('.mfs').onclick = () => api.fs();
+  ov.querySelector('.mx').onclick = () => api.close();
+  ov.addEventListener('pointerdown', e => { if (e.target === ov) api.close(); });
+  document.body.appendChild(ov);
+  modalStack.push(api);
+  if (onMount) onMount(api);
+  return api;
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (!ctxMenu.hidden) { hideCtx(); return; }
+    if (pendingLink) { cancelLinkVisual(); return; }
+    if (modalStack.length) { modalStack[modalStack.length - 1].close(); return; }
+    closeMenus();
+  }
+});
+
+/* ================= НАСТРОЙКИ УЗЛА ================= */
+function openNodeSettings(node) {
+  const t = NODE_TYPES[node.type];
+  const defs = PARAM_DEFS[node.type];
+  const body = document.createElement('div');
+  if (!defs || !defs.length) {
+    body.innerHTML = `<div style="color:var(--muted);padding:10px 0">У блока «${esc(t.name)}» нет настраиваемых параметров.</div>
+      ${node.type === 'transcript' ? '<button class="btn neon" id="openTr">📝 Открыть транскрипт</button>' : ''}`;
+  } else {
+    body.innerHTML = defs.map(d => {
+      const v = node.params[d.k] ?? '';
+      if (d.t === 'select') {
+        return `<div class="f-row"><label>${d.l}</label><select data-k="${d.k}">${d.o.map(o => `<option value="${o}" ${o == v ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
+      }
+      return `<div class="f-row"><label>${d.l}</label><input data-k="${d.k}" type="${d.t}" ${d.min !== undefined ? `min="${d.min}"` : ''} ${d.max !== undefined ? `max="${d.max}"` : ''} ${d.step !== undefined ? `step="${d.step}"` : ''} value="${esc(v)}" placeholder="${d.ph || ''}"></div>`;
+    }).join('');
+  }
+  const foot = document.createElement('div');
+  foot.innerHTML = `<button class="btn" id="mCancel">Отмена</button><button class="btn neon" id="mOk">Применить</button>`;
+  const m = openModal({ title: '⚙ ' + t.name, body, footer: foot, width: 480 });
+  body.querySelector('#openTr')?.addEventListener('click', () => { m.close(); openTranscriptModal(node); });
+  foot.querySelector('#mCancel').onclick = () => m.close();
+  foot.querySelector('#mOk').onclick = () => {
+    if (defs) defs.forEach(d => {
+      const el = body.querySelector(`[data-k="${d.k}"]`);
+      if (!el) return;
+      node.params[d.k] = d.t === 'number' ? (parseFloat(el.value) || 0) : el.value;
+    });
+    updateNodeSummary(node);
+    markDirty();
+    m.close();
+    if (pipeline.running) toast('Параметры применятся при следующем запуске', 'info');
+  };
+}
+
+/* ================= ТРАНСКРИПТ ================= */
+function openTranscriptModal(node) {
+  const body = document.createElement('div');
+  body.innerHTML = `<div class="tlog" id="tlogEl"></div>`;
+  const foot = document.createElement('div');
+  foot.innerHTML = `<button class="btn" id="tClear">Очистить</button><button class="btn" id="tCopy">⧉ Копировать</button>
+    <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px;margin-right:auto"><input type="checkbox" id="tAuto" checked style="width:auto"> автопрокрутка</label>`;
+  const m = openModal({ title: '📝 Транскрипт — прямой эфир', body, footer: foot, width: 640 });
+  const logEl = body.querySelector('#tlogEl');
+  node._modalLog = logEl;
+  node._modalAuto = foot.querySelector('#tAuto');
+  const render = () => {
+    logEl.innerHTML = (node.lines || []).map(l =>
+      `<div><span class="tl-t">[${fmtTime(l.t)}]</span><span class="tl-x">${esc(l.text)}</span></div>`).join('') || '<span style="color:var(--muted)">Пока пусто. Запустите пайплайн и говорите…</span>';
+    if (node._modalAuto?.checked) logEl.scrollTop = logEl.scrollHeight;
+  };
+  render();
+  foot.querySelector('#tClear').onclick = () => { node.lines = []; render(); updateNodeSummary(node); };
+  foot.querySelector('#tCopy').onclick = () => {
+    navigator.clipboard?.writeText((node.lines || []).map(l => `[${fmtTime(l.t)}] ${l.text}`).join('\n'));
+    toast('Скопировано в буфер обмена', 'ok', 1500);
+  };
+  const orig = m.close.bind(m);
+  m.close = () => { delete node._modalLog; delete node._modalAuto; orig(); };
+}
+function pushTranscript(node, text) {
+  node.lines = node.lines || [];
+  node.lines.push({ t: Date.now(), text });
+  if (node.lines.length > 300) node.lines = node.lines.slice(-300);
+  updateNodeSummary(node);
+  const el = nodeEls.get(node.id);
+  const pv = el?.querySelector('.tpreview');
+  if (pv) {
+    pv.textContent = node.lines.slice(-4).map(l => `▸ ${l.text}`).join('\n');
+    pv.scrollTop = pv.scrollHeight;
+  }
+  if (node._modalLog) {
+    const line = document.createElement('div');
+    line.innerHTML = `<span class="tl-t">[${fmtTime(Date.now())}]</span><span class="tl-x">${esc(text)}</span>`;
+    if (node._modalLog.firstElementChild?.textContent?.startsWith('Пока пусто')) node._modalLog.innerHTML = '';
+    node._modalLog.appendChild(line);
+    if (node._modalAuto?.checked) node._modalLog.scrollTop = node._modalLog.scrollHeight;
+  }
+}
+
+/* ================= БЫСТРОЕ ДОБАВЛЕНИЕ ================= */
+function openQuickAdd(wx, wy) {
+  const body = document.createElement('div');
+  body.innerHTML = Object.keys(CATEGORIES).map(cat =>
+    `<div class="pal-cat">${CATEGORIES[cat]}</div>` +
+    Object.entries(NODE_TYPES).filter(([, t]) => t.cat === cat).map(([k, t]) =>
+      `<div class="qa-item" data-type="${k}"><span class="pal-dot" style="color:${t.color};background:${t.color}"></span>
+       <span class="pal-name">${t.name}</span><span class="pal-desc">${t.desc}</span></div>`).join('')).join('');
+  const m = openModal({ title: '➕ Добавить блок', body, width: 420 });
+  body.querySelectorAll('.qa-item').forEach(it => it.onclick = () => {
+    const n = addNode(it.dataset.type, wx - 106, wy - 30);
+    if (n) { clearSelection(); selectNode(n.id, false); }
+    m.close();
+  });
+}
+
+/* ================= ПАЛИТРА / ПРОЕКТЫ / ЖУРНАЛ ================= */
+function renderPalette() {
+  const el = $('#panel-palette');
+  el.innerHTML = Object.keys(CATEGORIES).map(cat =>
+    `<div class="pal-cat">${CATEGORIES[cat]}</div>` +
+    Object.entries(NODE_TYPES).filter(([, t]) => t.cat === cat).map(([k, t]) =>
+      `<div class="pal-item" draggable="true" data-type="${k}">
+        <span class="pal-dot" style="color:${t.color};background:${t.color}"></span>
+        <span class="pal-name">${t.name}</span><span class="pal-desc">${t.desc}</span></div>`).join('')).join('') +
+    `<div style="margin-top:14px;padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:11px;line-height:1.6">
+      💡 Перетащите блок на холст или кликните для добавления. Соединяйте порты перетаскиванием или двумя кликами.</div>`;
+  el.querySelectorAll('.pal-item').forEach(it => {
+    it.addEventListener('dragstart', e => e.dataTransfer.setData('node-type', it.dataset.type));
+    it.addEventListener('click', () => {
+      const r = viewport.getBoundingClientRect();
+      const c = clientToWorld(r.left + r.width / 2, r.top + r.height / 2);
+      const n = addNode(it.dataset.type, c.x - 106 + (Math.random() * 60 - 30), c.y - 30 + (Math.random() * 60 - 30));
+      if (n) { clearSelection(); selectNode(n.id, false); }
+    });
+  });
+}
+viewport.addEventListener('dragover', e => e.preventDefault());
+viewport.addEventListener('drop', e => {
+  e.preventDefault();
+  const type = e.dataTransfer.getData('node-type');
+  if (!type) return;
+  const w = clientToWorld(e.clientX, e.clientY);
+  const n = addNode(type, w.x - 106, w.y - 20);
+  if (n) { clearSelection(); selectNode(n.id, false); }
+});
+
+async function renderProjects() {
+  const el = $('#panel-projects');
+  let list = [];
+  try { list = (await IDB.all()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)); } catch (e) {}
+  el.innerHTML = `<button class="btn neon" style="width:100%;justify-content:center;margin-bottom:12px" id="pNew">🗎 Новый проект</button>` +
+    (list.length ? list.map(p => `
+      <div class="proj-card" data-id="${p.id}">
+        <div class="pn">⬢ ${esc(p.name || 'Без имени')}${p.id === project.id ? ' <span style="color:var(--grn);font-size:10px">● открыт</span>' : ''}</div>
+        <div class="pd">${fmtDate(p.updatedAt || Date.now())} · блоков: ${(p.nodes || []).length}</div>
+        <div class="acts">
+          <button class="mini-btn" data-act="open">Открыть</button>
+          <button class="mini-btn" data-act="export">Экспорт</button>
+          <button class="mini-btn danger" data-act="del">Удалить</button>
+        </div>
+      </div>`).join('') : `<div style="color:var(--muted);text-align:center;padding:20px 0;font-size:12px">Сохранённых проектов пока нет</div>`);
+  el.querySelector('#pNew').onclick = () => actionNew();
+  el.querySelectorAll('.proj-card').forEach(card => {
+    card.querySelectorAll('.mini-btn').forEach(btn => btn.onclick = async () => {
+      const id = card.dataset.id;
+      const p = await IDB.get(id);
+      if (!p) return;
+      if (btn.dataset.act === 'open') loadProjectData(p);
+      else if (btn.dataset.act === 'export') exportProject(p);
+      else if (btn.dataset.act === 'del') {
+        if (confirm(`Удалить проект «${p.name}»?`)) { await IDB.del(id); renderProjects(); toast('Проект удалён', 'info'); }
+      }
+    });
+  });
+}
+
+const logEl = $('#panel-log');
+function appendLog(kind, msg) {
+  const line = document.createElement('div');
+  line.className = 'log-line ' + kind;
+  line.innerHTML = `<span class="t">${fmtTime(Date.now())}</span>${esc(msg)}`;
+  logEl.appendChild(line);
+  while (logEl.children.length > 400) logEl.firstChild.remove();
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+/* ================= ПРОЕКТЫ: СОХРАНЕНИЕ / ЗАГРУЗКА ================= */
+function serializeProject() {
+  return {
+    app: 'neonflow', version: 1, id: project.id, name: project.name, updatedAt: Date.now(),
+    nodes: [...nodes.values()].map(n => ({ id: n.id, type: n.type, x: n.x, y: n.y, params: n.params, ...(n.lines ? { lines: n.lines.slice(-100) } : {}) })),
+    edges: [...edges.values()].map(e => ({ id: e.id, from: e.from, to: e.to, type: e.type })),
+    viewport: { ...view }
+  };
+}
+function clearCanvas() {
+  if (pipeline.running) stopPipeline();
+  [...nodes.keys()].forEach(removeNode);
+  [...edges.keys()].forEach(removeEdge);
+  clearSelection();
+}
+function loadProjectData(p) {
+  clearCanvas();
+  project.id = p.id || null;
+  project.name = p.name || 'Без имени';
+  (p.nodes || []).forEach(raw => {
+    if (!NODE_TYPES[raw.type]) return;
+    const node = { id: raw.id || uid(), type: raw.type, x: raw.x ?? 100, y: raw.y ?? 100, params: { ...NODE_TYPES[raw.type].defParams, ...(raw.params || {}) } };
+    if (raw.lines) node.lines = raw.lines;
+    nodes.set(node.id, node);
+    createNodeEl(node);
+  });
+  (p.edges || []).forEach(raw => {
+    if (!nodes.has(raw.from.n) || !nodes.has(raw.to.n)) return;
+    const edge = { id: raw.id || uid(), from: raw.from, to: raw.to, type: raw.type || 'audio' };
+    edges.set(edge.id, edge);
+    createEdgeEl(edge);
+  });
+  if (p.viewport?.s) view = { ...p.viewport }; else view = { x: 60, y: 60, s: 1 };
+  $('#projName').value = project.name;
+  dirty = false;
+  updateSaveInfo();
+  applyView();
+  requestAnimationFrame(() => { if (!p.viewport?.s) fitAll(); updateAllEdges(); });
+  renderProjects();
+  setSbMsg('Проект «' + project.name + '» загружен');
+  appendLog('info', 'Загружен проект: ' + project.name);
+}
+function markDirty() {
+  dirty = true;
+  updateSaveInfo();
+}
+function updateSaveInfo() {
+  $('#saveInfo').textContent = dirty ? '● не сохранено' : (lastSavedAt ? '✓ ' + fmtTime(lastSavedAt) : '');
+}
+async function saveProject(silent = false) {
+  if (!project.id) project.id = uid();
+  const data = serializeProject();
+  try {
+    await IDB.put(data);
+    localStorage.setItem('nf-last', project.id);
+    dirty = false;
+    lastSavedAt = Date.now();
+    updateSaveInfo();
+    if (!silent) toast('💾 Проект сохранён', 'ok', 1600);
+    renderProjects();
+  } catch (e) { toast('Ошибка сохранения: ' + e, 'err'); }
+}
+function actionNew() {
+  if (dirty && !confirm('Несохранённые изменения будут потеряны. Продолжить?')) return;
+  clearCanvas();
+  project.id = null;
+  project.name = 'Новый проект';
+  $('#projName').value = project.name;
+  dirty = false;
+  updateSaveInfo();
+  view = { x: 80, y: 80, s: 1 };
+  applyView();
+  updateEmptyHint();
+  toast('Создан новый проект', 'info', 1500);
+}
+function exportProject(p) {
+  const data = p || serializeProject();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (data.name || 'neonflow').replace(/[^\wа-яё\- ]/gi, '').trim().replace(/\s+/g, '_') + '.neonflow.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  appendLog('ok', 'Экспортирован проект: ' + (data.name || '?'));
+  toast('⤒ Проект экспортирован в JSON', 'ok');
+}
+function importFromFile(file) {
+  const rd = new FileReader();
+  rd.onload = async () => {
+    try {
+      const data = JSON.parse(rd.result);
+      if (!Array.isArray(data.nodes)) throw new Error('неверный формат');
+      const p = { id: uid(), name: data.name || file.name.replace(/\.neonflow\.json$|\.json$/i, ''), nodes: data.nodes, edges: data.edges || [], updatedAt: Date.now() };
+      await IDB.put(p);
+      loadProjectData(p);
+      toast('⤓ Проект импортирован', 'ok');
+    } catch (e) { toast('Ошибка импорта: ' + e.message, 'err'); }
+  };
+  rd.readAsText(file);
+}
+$('#fileInput').addEventListener('change', e => { if (e.target.files[0]) importFromFile(e.target.files[0]); e.target.value = ''; });
+
+/* drag&drop импорт */
+let dragCnt = 0;
+window.addEventListener('dragenter', e => { e.preventDefault(); dragCnt++; $('#dropZone').style.display = 'flex'; });
+window.addEventListener('dragleave', e => { e.preventDefault(); if (--dragCnt <= 0) { dragCnt = 0; $('#dropZone').style.display = 'none'; } });
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => {
+  e.preventDefault();
+  dragCnt = 0; $('#dropZone').style.display = 'none';
+  const f = e.dataTransfer.files?.[0];
+  if (f && /\.json$/i.test(f.name)) importFromFile(f);
+});
+
+/* ================= МОДАЛКИ ПРОЧІЕ ================= */
+function openProjectsModal() {
+  const body = document.createElement('div');
+  body.innerHTML = '<div style="color:var(--muted)">Загрузка…</div>';
+  const m = openModal({ title: '📂 Открыть проект', body, width: 520 });
+  IDB.all().then(list => {
+    list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    body.innerHTML = list.length ? list.map(p => `
+      <div class="qa-item" data-id="${p.id}">
+        <span style="color:var(--neon)">⬢</span>
+        <span class="pal-name">${esc(p.name || 'Без имени')}</span>
+        <span class="pal-desc">${fmtDate(p.updatedAt || Date.now())} · ${(p.nodes || []).length} бл.</span>
+      </div>`).join('') : '<div style="color:var(--muted);padding:14px">Нет сохранённых проектов</div>';
+    body.querySelectorAll('.qa-item').forEach(it => it.onclick = async () => {
+      const p = await IDB.get(it.dataset.id);
+      if (p) { loadProjectData(p); m.close(); }
+    });
+  });
+}
+function openSaveAsModal() {
+  const body = document.createElement('div');
+  body.innerHTML = `<div class="f-row"><label>Название проекта</label><input id="saName" type="text" value="${esc(project.name)}"></div>`;
+  const foot = document.createElement('div');
+  foot.innerHTML = `<button class="btn" id="saCancel">Отмена</button><button class="btn neon" id="saOk">Сохранить копию</button>`;
+  const m = openModal({ title: '💾 Сохранить как', body, footer: foot, width: 420 });
+  body.querySelector('#saName').focus();
+  foot.querySelector('#saCancel').onclick = () => m.close();
+  foot.querySelector('#saOk').onclick = async () => {
+    project.name = body.querySelector('#saName').value.trim() || 'Без имени';
+    project.id = uid();
+    $('#projName').value = project.name;
+    await saveProject();
+    m.close();
+  };
+}
+function openAboutModal() {
+  openModal({
+    title: 'ℹ О приложении', width: 520, body: `
+    <div style="line-height:1.9;font-size:13px">
+      <div style="font-family:var(--disp);font-size:20px;color:var(--neon);text-shadow:0 0 16px var(--neon-dim);letter-spacing:3px;margin-bottom:8px">⬢ NEONFLOW</div>
+      Визуальный конструктор аудио-пайплайнов для обработки потока с SIP-транка виртуальной АТС.<br><br>
+      <b style="color:var(--mag)">Возможности:</b><br>
+      • Нода-редактор с зумом, панорамой и режимами «вписать»<br>
+      • Захват аудио: микрофон, генератор тона, SIP-транк (sip.js → WebRTC)<br>
+      • DSP-обработка: усиление, гейт, полосовой фильтр, VAD<br>
+      • Потоковое распознавание речи в браузере — <b>Whisper</b> через <b>transformers.js</b> (локально, ONNX/WASM)<br>
+      • Хранение проектов в IndexedDB, импорт/экспорт JSON<br>
+      <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">ВНИМАНИЕ: модели Whisper скачиваются с huggingface.co при первом запуске распознавания.</span>
+    </div>` });
+}
+function openKeysModal() {
+  openModal({
+    title: '⌨ Горячие клавиши', width: 460, body: `
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:13px;line-height:1.5">
+      ${[['Пробел + перетаскивание', 'панорама холста'], ['Колесо мыши / пинч', 'масштаб'], ['Двойной клик по холсту', 'добавить блок'], ['Двойной клик по блоку', 'настройки / транскрипт'], ['Delete / Backspace', 'удалить выделенное'], ['Ctrl+S', 'сохранить проект'], ['Ctrl+O', 'открыть проект'], ['Ctrl+N', 'новый проект'], ['Ctrl+E', 'экспорт JSON'], ['F', 'вписать всё'], ['0', 'масштаб 100%'], ['+ / −', 'зум'], ['Esc', 'закрыть / отменить связь'], ['Правый клик', 'контекстное меню']].map(([k, v]) => `<span>${v}</span><span style="font-family:var(--mono);color:var(--neon);font-size:11px">${k}</span>`).join('')}
+    </div>` });
+}
+
+/* ================= ДВИЖОК ПАЙПЛАЙНА ================= */
+const WORKER_SRC = `
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+env.allowLocalModels = false;
+const pipes = new Map();
+self.onmessage = async (e) => {
+  const m = e.data;
+  try {
+    if (m.type === 'load') {
+      if (!pipes.has(m.model)) {
+        const p = await pipeline('automatic-speech-recognition', m.model, {
+          quantized: true,
+          progress_callback: (pr) => {
+            if (pr.status === 'progress') self.postMessage({ type: 'progress', model: m.model, file: pr.file || '', progress: pr.progress || 0 });
+          }
+        });
+        pipes.set(m.model, p);
+      }
+      self.postMessage({ type: 'ready', model: m.model });
+    } else if (m.type === 'run') {
+      const p = pipes.get(m.model);
+      if (!p) throw new Error('модель не загружена: ' + m.model);
+      const opts = { task: 'transcribe' };
+      if (m.language && m.language !== 'auto') { opts.language = m.language; opts.chunk_length_s = 30; }
+      const out = await p(m.audio, opts);
+      self.postMessage({ type: 'result', id: m.id, text: out.text || '' });
+    }
+  } catch (err) {
+    self.postMessage({ type: 'error', id: m.id, model: m.model, message: String(err && err.message || err) });
+  }
+};
+`;
+let asrWorker = null;
+const workerBusy = { v: false };
+const readyModels = new Set(), loadingModels = new Set();
+function ensureWorker() {
+  if (asrWorker) return asrWorker;
+  asrWorker = new Worker(URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' })), { type: 'module' });
+  asrWorker.onmessage = onWorkerMsg;
+  return asrWorker;
+}
+function ensureModel(model) {
+  ensureWorker();
+  if (readyModels.has(model) || loadingModels.has(model)) return;
+  loadingModels.add(model);
+  asrWorker.postMessage({ type: 'load', model });
+  appendLog('info', 'Загрузка модели ' + model + '…');
+}
+function onWorkerMsg(e) {
+  const m = e.data;
+  if (m.type === 'progress') {
+    $('#modelStatus').textContent = `⬇ ${m.model.split('/')[1]}: ${Math.round(m.progress)}%`;
+  } else if (m.type === 'ready') {
+    loadingModels.delete(m.model);
+    readyModels.add(m.model);
+    $('#modelStatus').textContent = '✓ модель ' + m.model.split('/')[1] + ' готова';
+    appendLog('ok', 'Модель готова: ' + m.model);
+    toast('Модель ' + m.model + ' готова к работе', 'ok');
+    pipeline.asrRts.forEach(rt => rt.flush());
+  } else if (m.type === 'result') {
+    workerBusy.v = false;
+    const rt = pipeline.asrRts.find(r => r.node.id === m.id);
+    if (rt) rt.onResult(m.text);
+    pumpQueue();
+  } else if (m.type === 'error') {
+    workerBusy.v = false;
+    appendLog('err', 'ASR ошибка: ' + m.message);
+    toast('ASR: ' + m.message, 'err', 5000);
+    pumpQueue();
+  }
+}
+let asrJobQueue = [];
+function pumpQueue() {
+  if (workerBusy.v || !asrJobQueue.length) return;
+  const job = asrJobQueue.shift();
+  if (!readyModels.has(job.model)) { asrJobQueue.unshift(job); return; }
+  workerBusy.v = true;
+  try { asrWorker.postMessage(job.msg, [job.msg.audio.buffer]); }
+  catch (e) { workerBusy.v = false; }
+}
+
+function rmsDb(b) {
+  let s = 0;
+  for (let i = 0; i < b.length; i++) s += b[i] * b[i];
+  return 20 * Math.log10(Math.sqrt(s / Math.max(1, b.length)) + 1e-7);
+}
+
+const pipeline = { running: false, ctx: null, sp: null, mute: null, sourceCtl: null, chain: [], asrRts: [], level: 0, srcLabel: '' };
+
+function buildChain() {
+  const sources = [...nodes.values()].filter(n => NODE_TYPES[n.type].cat === 'sources');
+  if (!sources.length) throw new Error('Добавьте источник аудио (микрофон, тон или SIP-транк)');
+  if (sources.length > 1) toast('Несколько источников — используется первый', 'warn');
+  const src = sources[0];
+  const order = [], seen = new Set(), q = [src.id];
+  while (q.length) {
+    const id = q.shift();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    order.push(id);
+    for (const e of edges.values()) if (e.from.n === id && nodes.has(e.to.n)) q.push(e.to.n);
+  }
+  const dsp = order.map(id => nodes.get(id)).filter(n => NODE_TYPES[n.type].cat === 'dsp');
+  const asrs = order.map(id => nodes.get(id)).filter(n => n.type === 'asr');
+  const outs = order.map(id => nodes.get(id)).filter(n => NODE_TYPES[n.type].cat === 'out');
+  return { src, dsp, asrs, outs };
+}
+
+function makeDspRuntime(node) {
+  const p = node.params, sr = pipeline.ctx.sampleRate;
+  switch (node.type) {
+    case 'gain': {
+      const g = Math.pow(10, (p.db || 0) / 20);
+      return { node, process(b) { for (let i = 0; i < b.length; i++) b[i] *= g; return b; } };
+    }
+    case 'gate': {
+      const thr = p.threshold ?? -45; let env = 0;
+      return { node, process(b) {
+        const db = rmsDb(b);
+        env = env * 0.7 + (db > thr ? 1 : 0) * 0.3;
+        if (env < 0.02) b.fill(0); else if (env < 0.99) for (let i = 0; i < b.length; i++) b[i] *= env;
+        return b;
+      } };
+    }
+    case 'filter': {
+      const hp = clamp(p.hp || 300, 20, 8000), lp = clamp(p.lp || 3400, 100, 20000);
+      const aH = (1 / (2 * Math.PI * hp)) / ((1 / (2 * Math.PI * hp)) + 1 / sr);
+      const aL = 1 - Math.exp(-2 * Math.PI * lp / sr);
+      let x1 = 0, yH = 0, yL = 0;
+      return { node, process(b) {
+        for (let i = 0; i < b.length; i++) {
+          const x = b[i];
+          yH = aH * (yH + x - x1); x1 = x;
+          yL += aL * (yH - yL);
+          b[i] = yL;
+        }
+        return b;
+      } };
+    }
+    case 'vad': {
+      const thr = p.threshold ?? -40;
+      return { node, process(b, meta) { if (rmsDb(b) < thr) meta.silent = true; return b; } };
+    }
+  }
+  return null;
+}
+
+function makeAsrRuntime(node) {
+  const p = node.params;
+  const srIn = pipeline.ctx.sampleRate;
+  const winSamples = Math.round(clamp(p.window || 5, 2, 15) * 16000);
+  const strideSamples = Math.round(clamp(p.stride || 1.5, 0.5, (p.window || 5) - 0.5) * 16000);
+  const silenceDb = p.silenceDb ?? -48;
+  const rt = {
+    node, model: p.model, lang: p.language || 'auto',
+    chunks: [], total: 0, phase: 0, hold: [],
+    append(buf) { this.chunks.push(buf); this.total += buf.length; },
+    readFront(n) {
+      const out = new Float32Array(n); let off = 0;
+      while (off < n && this.chunks.length) {
+        const c = this.chunks[0];
+        const take = Math.min(c.length, n - off);
+        out.set(c.subarray(0, take), off);
+        off += take;
+        if (take === c.length) this.chunks.shift();
+        else this.chunks[0] = c.subarray(take);
+      }
+      this.total -= n;
+      return out;
+    },
+    discard(n) {
+      let left = n;
+      while (left > 0 && this.chunks.length) {
+        const c = this.chunks[0];
+        if (c.length <= left) { left -= c.length; this.total -= c.length; this.chunks.shift(); }
+        else { this.chunks[0] = c.subarray(left); this.total -= left; left = 0; }
+      }
+    },
+    push(b) {
+      // линейная интерполяция srIn → 16000
+      const ratio = srIn / 16000;
+      const est = Math.ceil(b.length / ratio) + 2;
+      const out = new Float32Array(est);
+      let cnt = 0, t = this.phase;
+      while (t < b.length - 1) {
+        const i = Math.floor(t), f = t - i;
+        out[cnt++] = b[i] * (1 - f) + b[i + 1] * f;
+        t += ratio;
+      }
+      this.phase = t - b.length;
+      this.append(out.subarray(0, cnt).slice());
+      while (this.total >= winSamples) {
+        const w = this.readFront(winSamples);
+        this.discard(winSamples - strideSamples);
+        this.dispatch(w);
+      }
+    },
+    dispatch(w) {
+      const db = rmsDb(w);
+      setLed(node.id, 'on');
+      if (db < silenceDb) return; // тишина — пропускаем
+      asrJobQueue.push({ model: this.model, msg: { type: 'run', id: node.id, model: this.model, audio: w, language: this.lang } });
+      if (asrJobQueue.length > 6) asrJobQueue.splice(0, asrJobQueue.length - 6);
+      pumpQueue();
+    },
+    flush() { pumpQueue(); },
+    onResult(text) {
+      const clean = text.trim();
+      const el = nodeEls.get(node.id);
+      if (el) el.querySelector('.nled').className = 'nled on';
+      if (!clean) return;
+      onAsrText(node, clean);
+    }
+  };
+  return rt;
+}
+function setLed(nid, cls) { const el = nodeEls.get(nid); if (el) el.querySelector('.nled').className = 'nled ' + cls; }
+
+function onAsrText(asrNode, text) {
+  appendLog('ok', '🎙 ' + text);
+  for (const e of edges.values()) {
+    if (e.from.n !== asrNode.id || e.type !== 'text') continue;
+    const target = nodes.get(e.to.n);
+    if (!target) continue;
+    if (target.type === 'transcript') pushTranscript(target, text);
+    else if (target.type === 'logger') appendLog('info', '📋 ' + text);
+    else if (target.type === 'ws') wsSend(target, text);
+  }
+}
+const wsSockets = new Map();
+function wsSend(node, text) {
+  const url = node.params.url;
+  if (!url) return;
+  try {
+    let s = wsSockets.get(node.id);
+    if (!s || s.readyState > 1) {
+      s = new WebSocket(url);
+      wsSockets.set(node.id, s);
+      s.onopen = () => { appendLog('ok', 'WebSocket подключен: ' + url); setLed(node.id, 'on'); };
+      s.onerror = () => appendLog('err', 'WebSocket ошибка: ' + url);
+    }
+    if (s.readyState === 1) s.send(JSON.stringify({ t: Date.now(), text }));
+  } catch (e) { appendLog('err', 'WS: ' + e.message); }
+}
+
+function connectScript(srcNode) {
+  const ctx = pipeline.ctx;
+  const sp = ctx.createScriptProcessor(4096, 1, 1);
+  const mute = ctx.createGain();
+  mute.gain.value = 0;
+  srcNode.connect(sp);
+  sp.connect(mute);
+  mute.connect(ctx.destination);
+  sp.onaudioprocess = e => pump(e.inputBuffer.getChannelData(0));
+  pipeline.sp = sp; pipeline.mute = mute;
+  return sp;
+}
+function pump(raw) {
+  if (!pipeline.running) return;
+  let b = raw.slice(0);
+  const meta = { silent: false };
+  for (const rt of pipeline.chain) { try { b = rt.process(b, meta) || b; } catch (e) {} }
+  let peak = 0;
+  for (let i = 0; i < b.length; i += 2) { const a = Math.abs(b[i]); if (a > peak) peak = a; }
+  pipeline.level = Math.max(pipeline.level * 0.82, peak);
+  for (const rt of pipeline.asrRts) if (!meta.silent) rt.push(b);
+}
+
+async function startSource(node) {
+  const ctx = pipeline.ctx, p = node.params;
+  if (node.type === 'mic') {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    connectScript(ctx.createMediaStreamSource(stream));
+    return { label: 'Микрофон', stop() { stream.getTracks().forEach(t => t.stop()); } };
+  }
+  if (node.type === 'tone') {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = p.wave || 'sine';
+    osc.frequency.value = p.freq || 440;
+    g.gain.value = clamp(p.level ?? 0.15, 0, 1);
+    osc.connect(g);
+    connectScript(g);
+    osc.start();
+    return { label: `Тон ${p.freq} Гц`, stop() { try { osc.stop(); } catch (e) {} } };
+  }
+  if (node.type === 'sip') {
+    const ctl = await startSipSource(p);
+    connectScript(ctx.createMediaStreamSource(ctl.stream));
+    return { label: `SIP ${p.user}→${p.callee}`, stop: ctl.stop };
+  }
+  throw new Error('Неизвестный источник');
+}
+
+async function startSipSource(p) {
+  if (typeof SIP === 'undefined') throw new Error('Библиотека sip.js не загружена (нет сети?). Используйте «Микрофон» или «Генератор тона».');
+  const host = (p.server || '').replace(/^wss?:\/\//, '').replace(/[:/].*$/, '') || 'localhost';
+  appendLog('info', 'SIP: подключение к ' + p.server);
+  setSrcStatus('SIP: подключение…', '');
+  const ua = new SIP.UserAgent({
+    uri: SIP.UserAgent.makeURI(`sip:${p.user}@${host}`),
+    transportOptions: { server: p.server },
+    authorizationUsername: p.user,
+    authorizationPassword: p.password || undefined,
+    displayName: p.user,
+    userAgentString: 'NeonFlow/1.0',
+    logLevel: 'error'
+  });
+  await ua.start();
+  const reg = new SIP.Registerer(ua);
+  await new Promise((res, rej) => {
+    const t = setTimeout(() => rej(new Error('таймаут регистрации на АТС')), 15000);
+    reg.stateChange.addListener(st => { if (st === SIP.RegistererState.Registered) { clearTimeout(t); res(); } });
+    reg.register().catch(e => { clearTimeout(t); rej(e); });
+  });
+  appendLog('ok', 'SIP: зарегистрирован на транке как ' + p.user);
+  setSrcStatus('SIP: вызов ' + (p.callee || '') + '…', '');
+  const inviter = new SIP.Inviter(ua, SIP.UserAgent.makeURI(`sip:${p.callee}@${host}`), {
+    sessionDescriptionHandlerOptions: { constraints: { audio: true, video: false } }
+  });
+  await inviter.invite();
+  await new Promise((res, rej) => {
+    const t = setTimeout(() => rej(new Error('таймаут дозвона')), 25000);
+    inviter.stateChange.addListener(st => {
+      if (st === SIP.SessionState.Established) { clearTimeout(t); res(); }
+      if (st === SIP.SessionState.Terminated) { clearTimeout(t); rej(new Error('вызов отклонён/завершён')); }
+    });
+  });
+  const sdh = inviter.sessionDescriptionHandler;
+  let stream = sdh?.remoteMediaStream;
+  for (let i = 0; i < 50 && (!stream || !stream.getAudioTracks().length); i++) await new Promise(r => setTimeout(r, 100));
+  if (!stream || !stream.getAudioTracks().length) throw new Error('нет аудио-трека в RTP-потоке');
+  appendLog('ok', 'SIP: вызов установлен, принимаю RTP-аудио');
+  return {
+    stream,
+    stop() {
+      try { inviter.bye(); } catch (e) {}
+      try { reg.unregister(); } catch (e) {}
+      setTimeout(() => { try { ua.stop(); } catch (e) {} }, 300);
+    }
+  };
+}
+
+function setSrcStatus(txt, cls) {
+  const pill = $('#srcStatus');
+  pill.className = 'sb-pill ' + (cls || '');
+  $('#srcStatusTxt').textContent = txt;
+}
+
+const runBtn = $('#runBtn');
+async function startPipeline() {
+  if (pipeline.running) return;
+  runBtn.classList.add('starting');
+  runBtn.innerHTML = '⏳ ПОДКЛЮЧЕНИЕ…';
+  try {
+    const chain = buildChain();
+    pipeline.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    await pipeline.ctx.resume();
+    pipeline.chain = chain.dsp.map(makeDspRuntime).filter(Boolean);
+    pipeline.asrRts = chain.asrs.map(makeAsrRuntime);
+    if (!pipeline.asrRts.length) toast('В цепи нет блока Whisper ASR — аудио будет идти без распознавания', 'warn', 4000);
+    pipeline.asrRts.forEach(rt => ensureModel(rt.model));
+    pipeline.sourceCtl = await startSource(chain.src);
+    pipeline.running = true;
+    pipeline.level = 0;
+    setSrcStatus('● ' + pipeline.sourceCtl.label, 'on');
+    runBtn.classList.remove('starting');
+    runBtn.classList.add('running');
+    runBtn.innerHTML = '⏹ СТОП';
+    [...chain.dsp, ...chain.asrs, ...chain.outs, chain.src].forEach(n => setLed(n.id, 'on'));
+    appendLog('ok', '▶ Пайплайн запущен. Источник: ' + pipeline.sourceCtl.label);
+    toast('Пайплайн запущен', 'ok', 1800);
+    vuLoop();
+  } catch (err) {
+    runBtn.classList.remove('starting');
+    runBtn.innerHTML = '▶ ЗАПУСК';
+    appendLog('err', 'Ошибка запуска: ' + (err.message || err));
+    toast('Не удалось запустить: ' + (err.message || err), 'err', 5000);
+    await stopPipeline(true);
+  }
+}
+async function stopPipeline(silent) {
+  pipeline.running = false;
+  try { pipeline.sourceCtl?.stop(); } catch (e) {}
+  pipeline.sourceCtl = null;
+  if (pipeline.sp) { pipeline.sp.onaudioprocess = null; try { pipeline.sp.disconnect(); } catch (e) {} }
+  if (pipeline.ctx) { try { await pipeline.ctx.close(); } catch (e) {} }
+  pipeline.ctx = null; pipeline.sp = null; pipeline.chain = []; pipeline.asrRts = [];
+  asrJobQueue = [];
+  runBtn.classList.remove('running', 'starting');
+  runBtn.innerHTML = '▶ ЗАПУСК';
+  setSrcStatus('Пайплайн остановлен', '');
+  $('#vuFill').style.width = '0%';
+  $$('.nled').forEach(l => l.className = 'nled');
+  if (!silent) appendLog('info', '⏹ Пайплайн остановлен');
+}
+runBtn.addEventListener('click', () => pipeline.running ? stopPipeline() : startPipeline());
+
+function vuLoop() {
+  if (!pipeline.running) return;
+  $('#vuFill').style.width = clamp(pipeline.level * 160, 0, 100) + '%';
+  pipeline.level *= 0.9;
+  requestAnimationFrame(vuLoop);
+}
+
+/* ================= МЕНЮ / ТУЛБАР ================= */
+function closeMenus() { $$('.menu.open').forEach(m => m.classList.remove('open')); }
+$$('.menu > .menu-btn').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation();
+  const m = b.parentElement;
+  const was = m.classList.contains('open');
+  closeMenus();
+  if (!was) m.classList.add('open');
+}));
+document.addEventListener('click', e => { if (!e.target.closest('.menu')) closeMenus(); });
+
+const ACTIONS = {
+  'new': actionNew,
+  'open': openProjectsModal,
+  'save': () => saveProject(),
+  'saveas': openSaveAsModal,
+  'import': () => $('#fileInput').click(),
+  'export': () => exportProject(),
+  'fit-all': fitAll,
+  'fit-100': fit100,
+  'view-grid': () => toggleGrid(),
+  'view-sidebar': () => toggleSidebar(),
+  'help-about': openAboutModal,
+  'help-keys': openKeysModal
+};
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  closeMenus();
+  const fn = ACTIONS[btn.dataset.action];
+  if (fn) fn();
+});
+document.querySelectorAll('.toolbar-btn');
+$('#zoomIn').onclick = () => { const r = viewport.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 1.25); };
+$('#zoomOut').onclick = () => { const r = viewport.getBoundingClientRect(); zoomAt(r.left + r.width / 2, r.top + r.height / 2, 0.8); };
+$('#toolSelect').onclick = () => { panTool = false; $('#toolSelect').classList.add('active'); $('#toolPan').classList.remove('active'); viewport.classList.remove('panmode'); };
+$('#toolPan').onclick = () => { panTool = true; $('#toolPan').classList.add('active'); $('#toolSelect').classList.remove('active'); viewport.classList.add('panmode'); };
+function toggleGrid() { viewport.classList.toggle('nogrid'); $('#gridBtn').classList.toggle('active', !viewport.classList.contains('nogrid')); }
+$('#gridBtn').onclick = toggleGrid;
+$('#saveBtn').onclick = () => saveProject();
+$('#projName').addEventListener('change', e => { project.name = e.target.value.trim() || 'Без имени'; markDirty(); });
+$('#projName').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+
+/* сайдбар: вкладки */
+$$('.sb-tab').forEach(t => t.addEventListener('click', () => {
+  $$('.sb-tab').forEach(x => x.classList.remove('active'));
+  $$('.sb-panel').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  $('#panel-' + t.dataset.panel).classList.add('active');
+  if (t.dataset.panel === 'projects') renderProjects();
+}));
+function toggleSidebar(force) {
+  const sb = $('#sidebar');
+  const open = force !== undefined ? force : !sb.classList.contains('open');
+  if (innerWidth <= 920) {
+    sb.classList.toggle('open', open);
+    $('#sbBackdrop').classList.toggle('show', open);
+  } else {
+    sb.style.display = open ? '' : 'none';
+  }
+}
+$('#burger').onclick = () => toggleSidebar();
+$('#sbBackdrop').onclick = () => toggleSidebar(false);
+
+/* ================= ГОРЯЧИЕ КЛАВИШИ ================= */
+document.addEventListener('keydown', e => {
+  const inInput = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName);
+  if (e.code === 'Space' && !inInput) { spaceDown = true; viewport.classList.add('panmode'); e.preventDefault(); }
+  if (inInput) return;
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); saveProject(); }
+  else if (mod && e.key.toLowerCase() === 'o') { e.preventDefault(); openProjectsModal(); }
+  else if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); actionNew(); }
+  else if (mod && e.key.toLowerCase() === 'e') { e.preventDefault(); exportProject(); }
+  else if (mod && e.key.toLowerCase() === 'd') {
+    e.preventDefault();
+    const n = nodes.get([...selectedNodes][0]);
+    if (n) duplicateNode(n);
+  }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelection(); }
+  else if (e.key.toLowerCase() === 'f') fitAll();
+  else if (e.key === '0') fit100();
+  else if (e.key === '=' || e.key === '+') $('#zoomIn').click();
+  else if (e.key === '-' || e.key === '_') $('#zoomOut').click();
+  else if (e.key.toLowerCase() === 'v') $('#toolSelect').click();
+  else if (e.key.toLowerCase() === 'h') $('#toolPan').click();
+});
+document.addEventListener('keyup', e => { if (e.code === 'Space') { spaceDown = false; if (!panTool) viewport.classList.remove('panmode'); } });
+
+/* ================= ДЕМО-ПРОЕКТ ================= */
+function makeDemoProject() {
+  const N = (type, x, y) => ({ id: uid(), type, x, y, params: { ...NODE_TYPES[type].defParams } });
+  const a = N('sip', 30, 250), b = N('gain', 310, 250), c = N('gate', 590, 250), d = N('filter', 870, 250);
+  const e1 = N('asr', 1150, 225), f = N('transcript', 1450, 225), lg = N('logger', 1450, 480);
+  const ns = [a, b, c, d, e1, f, lg];
+  ns.find(n => n.type === 'transcript').lines = [];
+  const E = (A, B) => ({ id: uid(), from: { n: A.id, p: 'out' }, to: { n: B.id, p: 'in' }, type: 'audio' });
+  const es = [E(a, b), E(b, c), E(c, d), E(d, e1), E(e1, f),
+    { id: uid(), from: { n: e1.id, p: 'text' }, to: { n: lg.id, p: 'in' }, type: 'text' }];
+  return { name: 'Демо: SIP-транк → Whisper', nodes: ns, edges: es };
+}
+
+/* ================= ИНИЦИАЛИЗАЦИЯ ================= */
+async function init() {
+  renderPalette();
+  applyView();
+  try { await IDB.open(); } catch (e) { toast('IndexedDB недоступна', 'err'); }
+  let last = null;
+  try { last = await IDB.get(localStorage.getItem('nf-last')); } catch (e) {}
+  if (last && last.nodes) loadProjectData(last);
+  else {
+    project.id = null;
+    loadProjectData(makeDemoProject());
+    project.id = null;
+    dirty = true;
+    updateSaveInfo();
+  }
+  updateEmptyHint();
+  appendLog('info', 'NeonFlow готов. Соберите цепь блоков и нажмите «ЗАПУСК».');
+  setInterval(() => { if (dirty && project.name) saveProject(true); }, 15000);
+  window.addEventListener('beforeunload', () => { if (dirty && project.name) saveProject(true); });
+  window.addEventListener('resize', () => { updateAllEdges(); });
+}
+init();
+</script>
+</body>
+</html>
