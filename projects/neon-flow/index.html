@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>NeonFlow — аудио-пайплайны и голосовые ассистенты | SIP → Whisper → TTS</title>
+<title>NeonFlow — аудио-пайплайны и голосовые ассистенты | SIP → ASR → TTS</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/orbitron@5.0.20/index.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/index.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.19/index.css">
@@ -268,7 +268,7 @@ g.edge.selected .edge-glow{opacity:.5}
     <button id="burger" class="iconbtn" title="Панели">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
-    <div class="logo"><span class="hex">⬢</span>NEON<b>FLOW</b><span class="logo-sub">sip · whisper · dialog · tts</span></div>
+    <div class="logo"><span class="hex">⬢</span>NEON<b>FLOW</b><span class="logo-sub">sip · asr · dialog · tts</span></div>
     <nav id="menus">
       <div class="menu" data-menu="file">
         <button class="menu-btn">Файл</button>
@@ -367,7 +367,7 @@ g.edge.selected .edge-glow{opacity:.5}
     <div class="sb-right">
       <span id="sbNodes">0 блоков</span>
       <span id="zoomLabel">100%</span>
-      <span>NF v2.0</span>
+      <span>NF v2.1</span>
     </div>
   </footer>
 </div>
@@ -493,6 +493,7 @@ const A_IN = [{ id: 'in', type: 'audio', label: 'поток' }];
 const A_OUT = [{ id: 'out', type: 'audio', label: 'поток' }];
 const T_IN = [{ id: 'in', type: 'text', label: 'текст' }];
 const T_OUT = [{ id: 'out', type: 'text', label: 'текст' }];
+const TXT_OUT = [{ id: 'text', type: 'text', label: 'текст' }];
 const NODE_TYPES = {
   mic:   { name: 'Микрофон',           cat: 'sources', color: '#00e5ff', desc: 'локальный ввод', inputs: [], outputs: A_OUT, defParams: {} },
   tone:  { name: 'Генератор тона',     cat: 'sources', color: '#00e5ff', desc: 'тест',           inputs: [], outputs: A_OUT, defParams: { freq: 440, wave: 'sine', level: 0.15 } },
@@ -502,8 +503,10 @@ const NODE_TYPES = {
   gate:  { name: 'Шумовой гейт',       cat: 'dsp', color: '#8b5cf6', desc: 'gate', inputs: A_IN, outputs: A_OUT, defParams: { threshold: -45 } },
   filter:{ name: 'Полосовой фильтр',   cat: 'dsp', color: '#8b5cf6', desc: 'Гц',   inputs: A_IN, outputs: A_OUT, defParams: { hp: 300, lp: 3400 } },
   vad:   { name: 'Детектор речи (VAD)',cat: 'dsp', color: '#8b5cf6', desc: 'детект', inputs: A_IN, outputs: A_OUT, defParams: { threshold: -40 } },
-  asr:   { name: 'Whisper ASR',        cat: 'ai', color: '#ff2ec4', desc: 'transformers.js', inputs: A_IN, outputs: [{ id: 'text', type: 'text', label: 'текст' }],
+  asr:   { name: 'Whisper ASR (локально)', cat: 'ai', color: '#ff2ec4', desc: 'transformers.js', inputs: A_IN, outputs: TXT_OUT,
            defParams: { model: 'Xenova/whisper-tiny', language: 'ru', window: 4, stride: 2, silenceDb: -48 } },
+  casr:  { name: 'Облачный ASR (HQ)',  cat: 'ai', color: '#ff2ec4', desc: 'HTTP API · whisper', inputs: A_IN, outputs: TXT_OUT,
+           defParams: { url: 'https://api.openai.com/v1/audio/transcriptions', apiKey: '', model: 'whisper-1', language: 'ru', window: 5, stride: 2.5, silenceDb: -45 } },
   router:{ name: 'Маршрутизатор',      cat: 'dialog', color: '#ff9f43', desc: 'N выходов', inputs: T_IN, outputs: [],
            defParams: { rules: [{ mode: 'contains', pat: 'привет' }, { mode: 'contains', pat: 'пока' }] } },
   reply: { name: 'Реплика ассистента', cat: 'dialog', color: '#ff9f43', desc: 'фразы', inputs: T_IN, outputs: [{ id: 'out', type: 'text', label: 'фраза' }],
@@ -558,6 +561,15 @@ const PARAM_DEFS = {
     { k: 'window', l: 'Окно анализа, с', t: 'number', min: 2, max: 15, step: 0.5 },
     { k: 'stride', l: 'Перекрытие окон, с', t: 'number', min: 0.5, max: 4, step: 0.5 },
     { k: 'silenceDb', l: 'Порог тишины, дБ (ниже — тишина не распознаётся)', t: 'number', min: -90, max: 0 }
+  ],
+  casr: [
+    { k: 'url', l: 'URL API (OpenAI-совместимый /v1/audio/transcriptions)', t: 'text', ph: 'https://api.openai.com/v1/audio/transcriptions' },
+    { k: 'apiKey', l: 'API-ключ (Bearer)', t: 'password' },
+    { k: 'model', l: 'Модель', t: 'text', ph: 'whisper-1 / whisper-large-v3-turbo / gpt-4o-transcribe' },
+    { k: 'language', l: 'Язык речи', t: 'select', o: ['ru', 'auto', 'en', 'uk', 'de', 'fr', 'es', 'zh'] },
+    { k: 'window', l: 'Окно отправки, с', t: 'number', min: 2, max: 25, step: 0.5 },
+    { k: 'stride', l: 'Перекрытие окон, с', t: 'number', min: 0.5, max: 6, step: 0.5 },
+    { k: 'silenceDb', l: 'Порог тишины, дБ', t: 'number', min: -90, max: 0 }
   ],
   reply: [
     { k: 'phrases', l: 'Фразы (по одной на строку; «{текст}» — подстановка реплики собеседника)', t: 'textarea', rows: 4 },
@@ -749,13 +761,7 @@ function getAudioCtx() {
 }
 function decodeAudioBuf(ab) {
   const ctx = getAudioCtx();
-  try {
-    return new Promise((res, rej) => {
-      ctx.decodeAudioData(ab, res, rej);
-    });
-  } catch (e) {
-    return Promise.reject(e);
-  }
+  return new Promise((res, rej) => { ctx.decodeAudioData(ab, res, rej); });
 }
 function playFloat(buf, sr, vol = 1) {
   const ctx = getAudioCtx();
@@ -783,6 +789,20 @@ function spkTest(node) {
   setLed(node.id, 'speak');
   setTimeout(() => setLed(node.id, pipeline.running ? 'on' : ''), 700);
 }
+function encodeWavData(f32, sr) {
+  const n = f32.length;
+  const buf = new ArrayBuffer(44 + n * 2);
+  const dv = new DataView(buf);
+  const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  wstr(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, sr, true); dv.setUint32(28, sr * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+  wstr(36, 'data'); dv.setUint32(40, n * 2, true);
+  const s16 = new Int16Array(buf, 44);
+  for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, f32[i])); s16[i] = v < 0 ? v * 0x8000 : v * 0x7FFF; }
+  return buf;
+}
+function encodeWavBlob(f32, sr) { return new Blob([encodeWavData(f32, sr)], { type: 'audio/wav' }); }
 function recAppend(node, buf, sr) {
   node._buf = node._buf || { chunks: [], total: 0, phase: 0, lastUi: 0 };
   const b = node._buf;
@@ -819,20 +839,6 @@ function recPlay(node) {
 }
 function recStop(node) { try { node._src?.stop(); } catch (e) {} node._src = null; setLed(node.id, pipeline.running ? 'on' : ''); }
 function recClear(node) { node._buf = { chunks: [], total: 0, phase: 0, lastUi: 0 }; updateNodeSummary(node); toast('Буфер очищен', 'info', 1200); }
-function encodeWavBlob(f32, sr) {
-  const n = f32.length;
-  const s16 = new Int16Array(n);
-  for (let i = 0; i < n; i++) { const v = Math.max(-1, Math.min(1, f32[i])); s16[i] = v < 0 ? v * 0x8000 : v * 0x7FFF; }
-  const buf = new ArrayBuffer(44 + n * 2);
-  const dv = new DataView(buf);
-  const wstr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
-  wstr(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); wstr(8, 'WAVE'); wstr(12, 'fmt ');
-  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
-  dv.setUint32(24, sr, true); dv.setUint32(28, sr * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
-  wstr(36, 'data'); dv.setUint32(40, n * 2, true);
-  new Int16Array(buf, 44).set(s16);
-  return new Blob([buf], { type: 'audio/wav' });
-}
 async function recExportMp3(node) {
   const d = recFlatten(node);
   if (!d) { toast('Буфер пуст — нечего экспортировать', 'warn'); return; }
@@ -966,6 +972,7 @@ function nodeSummary(n) {
     case 'filter': return `${p.hp}–${p.lp} Гц`;
     case 'vad': return `порог ${p.threshold} дБ`;
     case 'asr': return `${(p.model || '').split('/')[1]} · ${p.language} · ${p.window}с`;
+    case 'casr': return `${p.model || '?'} · ${p.language} · ${p.window}с`;
     case 'router': return `${(p.rules || []).length} веток + иначе`;
     case 'reply': { const l = String(p.phrases || '').split('\n').filter(x => x.trim()); return `${l.length} фраз · ${p.order === 'rand' ? 'случайно' : 'по кругу'}`; }
     case 'dialog': return `шагов: ${parseDialogScript(p.script).length}${p.loop ? ' · цикл' : ''}`;
@@ -1551,16 +1558,22 @@ function openNodeSettings(node) {
         (IS_IOS ? '<b>iOS/iPadOS:</b> нажмите «ЗАПУСК» или «Тест голоса» на блоке — системе нужен жест для разблокировки звука.' : 'Кнопка «Тест голоса» на блоке проверяет озвучку.');
       body.appendChild(h);
     }
+    if (node.type === 'casr') {
+      const h = document.createElement('div');
+      h.className = 'hint-box';
+      h.innerHTML = 'Максимально точное распознавание: любой OpenAI-совместимый <b>/v1/audio/transcriptions</b> — OpenAI (whisper-1, gpt-4o-transcribe), Groq (whisper-large-v3-turbo — очень быстро и бесплатно), локальные серверы whisper.cpp / faster-whisper через прокси. Аудио отправляется WAV-фрагментами 16 кГц по окнам. Ключ хранится только в проекте (IndexedDB).';
+      body.appendChild(h);
+    }
     if (node.type === 'ctts') {
       const h = document.createElement('div');
       h.className = 'hint-box';
-      h.innerHTML = 'Самый качественный синтез: любой OpenAI-совместимый HTTP-API <b>/v1/audio/speech</b> — OpenAI (tts-1 / gpt-4o-mini-tts, голоса nova·alloy·shimmer отлично говорят по-русски), Groq (playai-tts), Azure OpenAI, локальные серверы Silero/XTTS через прокси. Ключ хранится только в проекте (IndexedDB), никуда не уходит кроме указанного URL. Звук возвращается в граф: Динамик, Аудиобуфер, Вывод в транк.';
+      h.innerHTML = 'Самый качественный синтез: любой OpenAI-совместимый <b>/v1/audio/speech</b> — OpenAI (tts-1 / gpt-4o-mini-tts, голоса nova·alloy·shimmer отлично говорят по-русски), Groq (playai-tts), Azure OpenAI, локальные серверы Silero/XTTS через прокси. Звук возвращается в граф: Динамик, Аудиобуфер, Вывод в транк.';
       body.appendChild(h);
     }
     if (node.type === 'rtts') {
       const h = document.createElement('div');
       h.className = 'hint-box';
-      h.textContent = 'Локальный синтез MMS-TTS (работает без интернета и ключей, но голос роботизированный). Для максимального качества используйте блок «Облачный TTS (HQ)» или «Аудиофайл».';
+      h.textContent = 'Локальный синтез MMS-TTS (работает без интернета и ключей, но голос роботизированный). Для максимального качества используйте «Облачный TTS (HQ)» или «Аудиофайл».';
       body.appendChild(h);
     }
     if (node.type === 'spk') {
@@ -1680,144 +1693,187 @@ function attachTextSink(srcNode, type, x, y, ns, es) {
   es.push({ id: uid(), from: { n: srcNode.id, p: 'text' }, to: { n: n.id, p: 'in' }, type: 'text' });
   return n;
 }
+/* универсальный конструктор диалоговых графов: ASR → маршрутизатор → реплики → слияние → пауза → озвучка */
+function buildAssistant(cfg) {
+  // cfg: { source: 'sip'|'mic', asrType: 'asr'|'casr', ttsType: 'ctts'|'rtts'|'tts', toTrunk: bool, withRec: bool, rules: [...], replies: {a,b,c,f} }
+  const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
+  const ns = [], es = [];
+  const EA = (a, b) => es.push({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
+  const ET = (a, ap, b, bp) => es.push({ id: uid(), from: { n: a.id, p: ap }, to: { n: b.id, p: bp }, type: 'text' });
+
+  const Y = 360;
+  const src = cfg.source === 'sip' ? mk('sip', 40, Y, { sendGraph: !!cfg.toTrunk }) : mk('mic', 40, Y);
+  ns.push(src);
+  let asrIn = src;
+  if (cfg.source === 'sip') {
+    const gate = mk('gate', 300, Y, { threshold: -48 });
+    const flt = mk('filter', 560, Y);
+    ns.push(gate, flt);
+    EA(src, gate); EA(gate, flt);
+    asrIn = flt;
+  }
+  const asr = mk(cfg.asrType, cfg.source === 'sip' ? 820 : 320, Y - 20);
+  ns.push(asr);
+  EA(asrIn, asr);
+
+  const tr = mk('transcript', cfg.source === 'sip' ? 820 : 320, Y + 320);
+  ns.push(tr);
+  ET(asr, 'text', tr, 'in');
+
+  let rec = null;
+  if (cfg.withRec) {
+    rec = mk('rec', cfg.source === 'sip' ? 300 : 40, Y + 320, { tapLive: true });
+    ns.push(rec); // пишет живой поток источника
+  }
+
+  const router = mk('router', cfg.source === 'sip' ? 1140 : 640, Y - 20, { rules: cfg.rules });
+  ns.push(router);
+  ET(asr, 'text', router, 'in');
+
+  const X0 = cfg.source === 'sip' ? 1460 : 960;
+  const rA = mk('reply', X0, Y - 280, { phrases: cfg.replies.a });
+  const rB = mk('reply', X0, Y - 40, { phrases: cfg.replies.b });
+  const rF = mk('reply', X0, Y + 200, { phrases: cfg.replies.f });
+  ns.push(rA, rB, rF);
+  ET(router, 'b1', rA, 'in');
+  ET(router, 'b2', rB, 'in');
+  ET(router, 'els', rF, 'in');
+
+  const merge = mk('merge', X0 + 280, Y - 40, { count: 3 });
+  ns.push(merge);
+  ET(rA, 'out', merge, 'in1');
+  ET(rB, 'out', merge, 'in2');
+  ET(rF, 'out', merge, 'in3');
+
+  const dl = mk('delay', X0 + 540, Y - 40, { ms: 250 });
+  ns.push(dl);
+  ET(merge, 'out', dl, 'in');
+
+  if (cfg.ttsType === 'tts') {
+    const tts = mk('tts', X0 + 800, Y - 40);
+    ns.push(tts);
+    ET(dl, 'out', tts, 'in');
+  } else {
+    const ttsA = mk(cfg.ttsType, X0 + 800, Y - 40);
+    ns.push(ttsA);
+    ET(dl, 'out', ttsA, 'in');
+    if (cfg.toTrunk) {
+      const sout = mk('sipout', X0 + 1080, Y - 40, { monitor: true });
+      ns.push(sout);
+      es.push({ id: uid(), from: { n: ttsA.id, p: 'out' }, to: { n: sout.id, p: 'in' }, type: 'audio' });
+    } else {
+      const spk = mk('spk', X0 + 1080, Y - 160, { volume: 1 });
+      ns.push(spk);
+      es.push({ id: uid(), from: { n: ttsA.id, p: 'out' }, to: { n: spk.id, p: 'in' }, type: 'audio' });
+      const rec2 = mk('rec', X0 + 1080, Y + 120);
+      ns.push(rec2);
+      es.push({ id: uid(), from: { n: ttsA.id, p: 'out' }, to: { n: rec2.id, p: 'in' }, type: 'audio' });
+    }
+  }
+  return { ns, es };
+}
 const PRESETS = [
   {
-    id: 'sip-bot-hq', icon: '☁️', name: 'SIP-автоответчик (облачный голос, HQ)',
-    desc: 'Максимальное качество: распознавание Whisper + диалоговый граф, ответы озвучиваются облачным TTS (OpenAI-совместимый API) и возвращаются в транк. Укажите URL и ключ в блоке «Облачный TTS».',
-    tags: ['sip', 'автоответчик', 'cloud tts', 'hq'],
+    id: 'sip-bot-cloud', icon: '🌟', name: 'SIP-автоответчик «всё облачное» (HQ)',
+    desc: 'Максимальное качество: облачный Whisper распознаёт речь транка, диалог ветвится по условиям, облачный TTS озвучивает ответ и возвращает его в вызов. Разговор пишется в Аудиобуфер. Нужны URL и ключи в блоках ASR/TTS.',
+    tags: ['sip', 'cloud asr', 'cloud tts', 'запись звонка', 'hq'],
     build() {
-      const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
-      const sipN = mk('sip', 40, 340, { sendGraph: true });
-      const asrN = mk('asr', 300, 320);
-      const router = mk('router', 620, 300, { rules: [
-        { mode: 'contains', pat: 'привет|здравств|добр' },
-        { mode: 'contains', pat: 'пока|прощай|до свидан' }
-      ] });
-      const rA = mk('reply', 940, 80, { phrases: 'Здравствуйте! Я виртуальный ассистент. Чем могу помочь?' });
-      const rB = mk('reply', 940, 340, { phrases: 'До свидания! Хорошего дня.' });
-      const rF = mk('reply', 940, 600, { phrases: 'Я не понял вас. Скажите привет или пока.' });
-      const merge = mk('merge', 1220, 340, { count: 3 });
-      const ctts = mk('ctts', 1480, 340);
-      const sout = mk('sipout', 1760, 340, { monitor: true });
-      const tr = mk('transcript', 620, 700);
-      const ns = [sipN, asrN, router, rA, rB, rF, merge, ctts, sout, tr];
-      const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
-      const ET = (a, ap, b, bp) => ({ id: uid(), from: { n: a.id, p: ap }, to: { n: b.id, p: bp }, type: 'text' });
-      const es = [
-        EA(sipN, asrN),
-        ET(asrN, 'text', router, 'in'),
-        ET(router, 'b1', rA, 'in'), ET(router, 'b2', rB, 'in'), ET(router, 'els', rF, 'in'),
-        ET(rA, 'out', merge, 'in1'), ET(rB, 'out', merge, 'in2'), ET(rF, 'out', merge, 'in3'),
-        ET(merge, 'out', ctts, 'in'),
-        ET(asrN, 'text', tr, 'in'),
-        { id: uid(), from: { n: ctts.id, p: 'out' }, to: { n: sout.id, p: 'in' }, type: 'audio' }
-      ];
-      return { ns, es };
+      return buildAssistant({
+        source: 'sip', asrType: 'casr', ttsType: 'ctts', toTrunk: true, withRec: true,
+        rules: [
+          { mode: 'contains', pat: 'привет|здравств|добр|алло' },
+          { mode: 'contains', pat: 'пока|прощай|до свидан' }
+        ],
+        replies: {
+          a: 'Здравствуйте! Я виртуальный ассистент компании. Чем могу помочь?',
+          b: 'Спасибо за звонок! До свидания.',
+          f: 'Извините, я не расслышал. Скажите «привет» или «пока».'
+        }
+      });
     }
   },
   {
-    id: 'sip-bot', icon: '📟', name: 'SIP-автоответчик (локальный синтез)',
-    desc: 'Полностью локальный автоответчик без API-ключей: Whisper, маршрутизация по условиям, нейро-синтез MMS-TTS и возврат звука в транк.',
-    tags: ['sip', 'автоответчик', 'маршрутизатор', 'оффлайн'],
+    id: 'assistant-cloud', icon: '☁️', name: 'Ассистент с облачным голосом (микрофон)',
+    desc: 'Микрофон → облачный Whisper → маршрутизация по ключевым словам → облачный TTS → динамик и запись в MP3-буфер. Без SIP, но с топовым качеством распознавания и озвучки.',
+    tags: ['микрофон', 'cloud asr', 'cloud tts', 'динамик', 'mp3'],
     build() {
-      const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
-      const sipN = mk('sip', 40, 340, { sendGraph: true });
-      const asrN = mk('asr', 300, 320);
-      const router = mk('router', 620, 300, { rules: [
-        { mode: 'contains', pat: 'привет|здравств|добр' },
-        { mode: 'contains', pat: 'пока|прощай|до свидан' }
-      ] });
-      const rA = mk('reply', 940, 80, { phrases: 'Здравствуйте! Я виртуальный ассистент. Чем могу помочь?' });
-      const rB = mk('reply', 940, 340, { phrases: 'До свидания! Хорошего дня.' });
-      const rF = mk('reply', 940, 600, { phrases: 'Я не понял вас. Скажите привет или пока.' });
-      const merge = mk('merge', 1220, 340, { count: 3 });
-      const rtts = mk('rtts', 1480, 340);
-      const sout = mk('sipout', 1740, 340, { monitor: true });
-      const tr = mk('transcript', 620, 700);
-      const ns = [sipN, asrN, router, rA, rB, rF, merge, rtts, sout, tr];
-      const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
-      const ET = (a, ap, b, bp) => ({ id: uid(), from: { n: a.id, p: ap }, to: { n: b.id, p: bp }, type: 'text' });
-      const es = [
-        EA(sipN, asrN),
-        ET(asrN, 'text', router, 'in'),
-        ET(router, 'b1', rA, 'in'), ET(router, 'b2', rB, 'in'), ET(router, 'els', rF, 'in'),
-        ET(rA, 'out', merge, 'in1'), ET(rB, 'out', merge, 'in2'), ET(rF, 'out', merge, 'in3'),
-        ET(merge, 'out', rtts, 'in'),
-        ET(asrN, 'text', tr, 'in'),
-        { id: uid(), from: { n: rtts.id, p: 'out' }, to: { n: sout.id, p: 'in' }, type: 'audio' }
-      ];
-      return { ns, es };
+      return buildAssistant({
+        source: 'mic', asrType: 'casr', ttsType: 'ctts', toTrunk: false, withRec: false,
+        rules: [
+          { mode: 'contains', pat: 'привет|здравств|добр' },
+          { mode: 'contains', pat: 'пока|прощай|до свидан' },
+          { mode: 'contains', pat: 'помощь|помоги' }
+        ],
+        replies: {
+          a: 'Здравствуйте! Я виртуальный ассистент. Чем могу помочь?',
+          b: 'До свидания! Хорошего дня.',
+          f: 'Я не понял. Скажите «привет», «помощь» или «пока».'
+        }
+      });
     }
   },
   {
-    id: 'assistant', icon: '🤖', name: 'Голосовой ассистент (динамик)',
-    desc: 'Микрофон → Whisper → маршрутизатор по ключевым словам: приветствие, прощание, помощь и запасная ветка. Ответы озвучиваются русским системным синтезом речи.',
-    tags: ['микрофон', 'маршрутизатор', 'реплики', 'голос системы'],
+    id: 'sip-bot', icon: '📟', name: 'SIP-автоответчик (полностью локальный)',
+    desc: 'Без API-ключей: локальный Whisper, маршрутизация, нейро-синтез MMS-TTS и возврат звука в транк. Разговор параллельно пишется в Аудиобуфер.',
+    tags: ['sip', 'автоответчик', 'оффлайн', 'запись звонка'],
     build() {
-      const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
-      const mic = mk('mic', 40, 340), gain = mk('gain', 300, 340), asr = mk('asr', 560, 320);
-      const router = mk('router', 880, 300, { rules: [
-        { mode: 'contains', pat: 'привет|здравств|добр' },
-        { mode: 'contains', pat: 'пока|прощай|до свидан' },
-        { mode: 'contains', pat: 'помощь|помоги' }
-      ] });
-      const rA = mk('reply', 1200, 80, { phrases: 'Здравствуйте! Я виртуальный ассистент. Чем могу помочь?' });
-      const rB = mk('reply', 1200, 340, { phrases: 'До свидания! Хорошего дня.' });
-      const rC = mk('reply', 1200, 560, { phrases: 'Конечно помогу. Скажите пока, чтобы завершить.' });
-      const rF = mk('reply', 1200, 780, { phrases: 'Я не понял. Скажите привет, помощь или пока.' });
-      const merge = mk('merge', 1480, 340, { count: 4 });
-      const tts = mk('tts', 1740, 340), tr = mk('transcript', 1740, 640);
-      tr.lines = [];
-      const ns = [mic, gain, asr, router, rA, rB, rC, rF, merge, tts, tr];
-      const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
-      const ET = (a, ap, b, bp) => ({ id: uid(), from: { n: a.id, p: ap }, to: { n: b.id, p: bp }, type: 'text' });
-      const es = [EA(mic, gain), EA(gain, asr),
-        ET(asr, 'text', router, 'in'),
-        ET(router, 'b1', rA, 'in'), ET(router, 'b2', rB, 'in'), ET(router, 'b3', rC, 'in'), ET(router, 'els', rF, 'in'),
-        ET(rA, 'out', merge, 'in1'), ET(rB, 'out', merge, 'in2'), ET(rC, 'out', merge, 'in3'), ET(rF, 'out', merge, 'in4'),
-        ET(merge, 'out', tts, 'in'), ET(tts, 'out', tr, 'in')];
-      return { ns, es };
+      return buildAssistant({
+        source: 'sip', asrType: 'asr', ttsType: 'rtts', toTrunk: true, withRec: true,
+        rules: [
+          { mode: 'contains', pat: 'привет|здравств|добр|алло' },
+          { mode: 'contains', pat: 'пока|прощай|до свидан' }
+        ],
+        replies: {
+          a: 'Здравствуйте! Я виртуальный ассистент. Чем могу помочь?',
+          b: 'До свидания! Хорошего дня.',
+          f: 'Я не понял вас. Скажите привет или пока.'
+        }
+      });
     }
   },
   {
-    id: 'ctts-hq', icon: '🌟', name: 'Ассистент с облачным голосом (HQ)',
-    desc: 'Микрофон → Whisper → облачный TTS (OpenAI-совместимый) → Динамик + Аудиобуфер. Самый качественный русский голос; нужен URL и API-ключ в настройках блока.',
-    tags: ['микрофон', 'cloud tts', 'динамик', 'запись'],
+    id: 'assistant', icon: '🤖', name: 'Голосовой ассистент (системный голос)',
+    desc: 'Локальное распознавание Whisper + системный русский голос (динамики). Маршрутизатор на 3 ветки: приветствие, прощание, запасная. Ответы попадают в транскрипт.',
+    tags: ['микрофон', 'whisper', 'голос системы'],
     build() {
-      const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
-      const mic = mk('mic', 40, 300), asr = mk('asr', 300, 280);
-      const dlg = mk('dialog', 620, 280);
-      const ctts = mk('ctts', 940, 280);
-      const spk = mk('spk', 1220, 180, { volume: 1 });
-      const rec = mk('rec', 1220, 460);
-      const ns = [mic, asr, dlg, ctts, spk, rec];
-      const EA = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'audio' });
-      const ET = (a, b) => ({ id: uid(), from: { n: a.id, p: 'out' }, to: { n: b.id, p: 'in' }, type: 'text' });
-      const es = [EA(mic, asr), ET(asr, dlg), ET(dlg, ctts), EA(ctts, spk), EA(ctts, rec)];
-      return { ns, es };
+      return buildAssistant({
+        source: 'mic', asrType: 'asr', ttsType: 'tts', toTrunk: false, withRec: false,
+        rules: [
+          { mode: 'contains', pat: 'привет|здравств|добр' },
+          { mode: 'contains', pat: 'пока|прощай|до свидан' },
+          { mode: 'contains', pat: 'помощь|помоги' }
+        ],
+        replies: {
+          a: 'Здравствуйте! Я виртуальный ассистент. Чем могу помочь?',
+          b: 'До свидания! Хорошего дня.',
+          f: 'Я не понял. Скажите «привет», «помощь» или «пока».'
+        }
+      });
     }
   },
   {
     id: 'mic-basic', icon: '🎙', name: 'Микрофон → Транскрипт',
-    desc: 'Быстрый тест распознавания без АТС: локальный микрофон, лёгкое усиление и вывод текста на экран.',
-    tags: ['микрофон', 'усиление', 'whisper', 'экран'],
+    desc: 'Быстрый тест распознавания без АТС: микрофон, усиление, локальный Whisper и вывод текста на экран.',
+    tags: ['микрофон', 'whisper', 'экран'],
     build() { return buildChainNodes(['mic', 'gain', 'asr', 'transcript']); }
   },
   {
-    id: 'sip-full', icon: '📞', name: 'SIP-транк → Экран + Журнал',
-    desc: 'Полная цепь разговора с виртуальной АТС: гейт, полосовой фильтр, Whisper. Текст уходит на экран и в журнал событий.',
-    tags: ['sip', 'гейт', 'фильтр', '2 вывода'],
+    id: 'sip-full', icon: '📞', name: 'SIP-транк → Экран + Журнал + Запись',
+    desc: 'Наблюдение за линией: гейт и полосовой фильтр, Whisper, текст на экран и в журнал, весь разговор параллельно пишется в Аудиобуфер (экспорт в MP3).',
+    tags: ['sip', 'гейт', 'фильтр', 'запись звонка'],
     build() {
       const { ns, es } = buildChainNodes(['sip', 'gain', 'gate', 'filter', 'asr']);
       const asrN = ns[ns.length - 1];
       attachTextSink(asrN, 'transcript', asrN.x + 300, asrN.y - 20, ns, es);
       attachTextSink(asrN, 'logger', asrN.x + 300, asrN.y + 230, ns, es);
+      const rec = { id: uid(), type: 'rec', x: 300, y: 560, params: JSON.parse(JSON.stringify({ ...NODE_TYPES.rec.defParams, tapLive: true })) };
+      ns.push(rec);
       return { ns, es };
     }
   },
   {
     id: 'dialog-fsm', icon: '🎭', name: 'Сценарий диалога (шаги)',
-    desc: 'Микрофон → Whisper → блок «Сценарий диалога»: ассистент ведёт разговор по шагам, ожидая ключевые слова, и озвучивает реплики по-русски.',
+    desc: 'Микрофон → Whisper → «Сценарий диалога»: ассистент ведёт разговор по шагам с ожиданием ключевых слов, паузой и русской озвучкой системным голосом.',
     tags: ['диалог', 'шаги', 'голос системы'],
     build() {
       const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
@@ -1835,8 +1891,8 @@ const PRESETS = [
   },
   {
     id: 'rtts-spk-rec', icon: '🔊', name: 'Нейро-речь → Динамик + Запись',
-    desc: 'Проверка звуковой ветки без интернета: реплика → локальный нейро-синтез → динамик и запись в Аудиобуфер с экспортом в MP3.',
-    tags: ['нейро-речь', 'динамик', 'аудиобуфер', 'mp3'],
+    desc: 'Оффлайн-проверка звуковой ветки: реплика → локальный нейро-синтез → динамик и запись в Аудиобуфер с экспортом в MP3.',
+    tags: ['нейро-речь', 'динамик', 'mp3'],
     build() {
       const mk = (t, x, y, pp) => ({ id: uid(), type: t, x, y, params: JSON.parse(JSON.stringify({ ...NODE_TYPES[t].defParams, ...(pp || {}) })) });
       const mic = mk('mic', 40, 260), asr = mk('asr', 300, 240);
@@ -1850,12 +1906,6 @@ const PRESETS = [
       const es = [EA(mic, asr), ET(asr, reply), ET(reply, rtts), EA(rtts, spk), EA(rtts, rec)];
       return { ns, es };
     }
-  },
-  {
-    id: 'sip-clean', icon: '🧹', name: 'Максимальная очистка речи',
-    desc: 'Для шумных линий: усиление, полосовой фильтр 300–3400 Гц, шумовой гейт и VAD перед распознаванием.',
-    tags: ['sip', 'фильтр', 'гейт', 'vad'],
-    build() { return buildChainNodes(['sip', 'gain', 'filter', 'gate', 'vad', 'asr', 'transcript'], 230, 20, 262); }
   },
   {
     id: 'sip-stream', icon: '📡', name: 'Эфир → Экран + WebSocket',
@@ -1937,7 +1987,7 @@ function renderPalette() {
     `<div style="margin-top:14px;padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:11px;line-height:1.7">
       💡 Перетащите блок на холст или кликните для добавления.<br>
       🔗 Порты соединяются перетаскиванием или двумя касаниями.<br>
-      🌟 Качество синтеза (по убыванию): «Облачный TTS (HQ)» → «Голос системы» → «Нейро-речь (РУС, локально)» → «Аудиофайл».<br>
+      🌟 Качество ASR/TTS: облачные блоки (HQ) → системный голос → локальные модели.<br>
       📱 iPad/iPhone: нажмите «ЗАПУСК» или «Тест голоса» — системе нужен жест для разблокировки звука.<br>
       🗑 Удаление: ✕ на блоке, долгое нажатие (сенсор) или плавающая кнопка.</div>`;
   el.querySelectorAll('.pal-item').forEach(it => {
@@ -2174,13 +2224,13 @@ function openAboutModal() {
       Визуальный конструктор аудио-пайплайнов и голосовых ассистентов для работы с потоком с SIP-транка виртуальной АТС.<br><br>
       <b style="color:var(--mag)">Возможности:</b><br>
       • Нода-редактор с зумом, панорамой и режимами «вписать»<br>
-      • 🧩 Пресеты: от транскрипта до SIP-автоответчика с облачным голосом<br>
+      • 🧩 Оптимизированные пресеты: облачные HQ-схемы и полностью локальные<br>
       • Захват аудио: микрофон, генератор тона, SIP-транк (sip.js → WebRTC)<br>
       • DSP: усиление, гейт, полосовой фильтр, VAD<br>
-      • Распознавание речи локально — <b>Whisper</b> через <b>transformers.js</b><br>
-      • 🌟 Синтез речи по качеству: <b>Облачный TTS (HQ)</b> — любой OpenAI-совместимый API с живыми русскими голосами → «Голос системы» (iOS/десктоп) → «Нейро-речь MMS» (оффлайн) → «Аудиофайл»<br>
+      • 🌟 Распознавание: локальный Whisper (transformers.js) и <b>Облачный ASR (HQ)</b> — OpenAI-совместимый API (whisper-1, Groq whisper-large-v3-turbo и др.)<br>
+      • 🌟 Синтез: <b>Облачный TTS (HQ)</b> → «Голос системы» (iOS-совместим) → «Нейро-речь MMS» (оффлайн) → «Аудиофайл»<br>
       • 🤖 Диалоговые графы: маршрутизатор с произвольным числом выходов, реплики, сценарии, паузы, слияние веток<br>
-      • 🎙 Аудиобуфер: запись звука графа/линии и экспорт в <b>MP3</b><br>
+      • 🎙 Аудиобуфер: запись линии/графа, воспроизведение, экспорт в <b>MP3</b><br>
       • Хранение проектов в IndexedDB, импорт/экспорт JSON<br>
       <br><span style="color:var(--muted);font-family:var(--mono);font-size:11px">Все ошибки видны во вкладке «Журнал».</span>
     </div>` });
@@ -2193,7 +2243,7 @@ function openKeysModal() {
     </div>` });
 }
 
-/* ================= WORKER: WHISPER (ASR) ================= */
+/* ================= WORKER: WHISPER (локальный ASR) ================= */
 const WORKER_SRC = `
 import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 env.allowLocalModels = false;
@@ -2342,6 +2392,56 @@ function pumpTts() {
   ensureTtsWorker().postMessage(ttsQueue.shift());
 }
 
+/* ================= ОБЛАЧНЫЙ ASR / TTS (HTTP) ================= */
+async function cloudTts(node, text) {
+  const p = node.params;
+  const url = (p.url || '').trim();
+  if (!url) throw new Error('не задан URL API');
+  const headers = { 'Content-Type': 'application/json' };
+  if (p.apiKey) headers['Authorization'] = 'Bearer ' + p.apiKey;
+  const payload = { model: p.model || 'tts-1', voice: p.voice || 'nova', input: text, response_format: p.format || 'mp3', speed: clamp(p.speed || 1, 0.25, 4) };
+  const ctrl = new AbortController();
+  const tm = setTimeout(() => ctrl.abort(), 30000);
+  let resp;
+  try {
+    resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload), signal: ctrl.signal });
+  } finally { clearTimeout(tm); }
+  if (!resp.ok) {
+    let detail = '';
+    try { detail = (await resp.text()).slice(0, 200); } catch (e) {}
+    throw new Error('HTTP ' + resp.status + (detail ? ' — ' + detail : ''));
+  }
+  const ab = await resp.arrayBuffer();
+  const abuf = await decodeAudioBuf(ab);
+  return { data: abuf.getChannelData(0).slice(0), sr: abuf.sampleRate };
+}
+async function cloudAsr(node, samples, sr) {
+  const p = node.params;
+  const url = (p.url || '').trim();
+  if (!url) throw new Error('не задан URL API');
+  const wav = encodeWavData(samples, sr);
+  const fd = new FormData();
+  fd.append('file', new Blob([wav], { type: 'audio/wav' }), 'audio.wav');
+  fd.append('model', p.model || 'whisper-1');
+  if (p.language && p.language !== 'auto') fd.append('language', p.language);
+  fd.append('response_format', 'json');
+  const headers = {};
+  if (p.apiKey) headers['Authorization'] = 'Bearer ' + p.apiKey;
+  const ctrl = new AbortController();
+  const tm = setTimeout(() => ctrl.abort(), 30000);
+  let resp;
+  try {
+    resp = await fetch(url, { method: 'POST', headers, body: fd, signal: ctrl.signal });
+  } finally { clearTimeout(tm); }
+  if (!resp.ok) {
+    let detail = '';
+    try { detail = (await resp.text()).slice(0, 200); } catch (e) {}
+    throw new Error('HTTP ' + resp.status + (detail ? ' — ' + detail : ''));
+  }
+  const j = await resp.json();
+  return j.text || '';
+}
+
 /* ================= ДВИЖОК ПАЙПЛАЙНА ================= */
 function rmsDb(b) {
   let s = 0;
@@ -2370,7 +2470,7 @@ function buildChain() {
   }
   const all = order.map(id => nodes.get(id)).filter(Boolean);
   const dsp = all.filter(n => NODE_TYPES[n.type].cat === 'dsp');
-  const asrs = all.filter(n => n.type === 'asr');
+  const asrs = all.filter(n => n.type === 'asr' || n.type === 'casr');
   return { src, all, dsp, asrs };
 }
 
@@ -2415,16 +2515,34 @@ function makeDspRuntime(node) {
   return null;
 }
 
-function makeAsrRuntime(node) {
-  const p = node.params;
+/* общий накопитель окон 16 кГц для ASR-блоков */
+function makeWindowCollector(node, winSec, strideSec) {
   const srIn = pipeline.ctx.sampleRate;
-  const winSamples = Math.round(clamp(p.window || 4, 2, 15) * 16000);
-  const strideSamples = Math.round(clamp(p.stride || 2, 0.5, (p.window || 4) - 0.5) * 16000);
-  const silenceDb = p.silenceDb ?? -48;
-  const rt = {
-    node, model: p.model, lang: p.language || 'ru',
-    chunks: [], total: 0, phase: 0,
-    append(buf) { this.chunks.push(buf); this.total += buf.length; },
+  const winSamples = Math.round(clamp(winSec, 2, 25) * 16000);
+  const strideSamples = Math.round(clamp(strideSec, 0.5, winSec - 0.5) * 16000);
+  return {
+    node, chunks: [], total: 0, phase: 0, winSamples, strideSamples,
+    push(b, onWindow) {
+      if (!b.length) return;
+      const ratio = srIn / 16000;
+      const est = Math.ceil(b.length / ratio) + 2;
+      const out = new Float32Array(est);
+      let cnt = 0, t = this.phase;
+      while (t < b.length - 1) {
+        const i = Math.floor(t), f = t - i;
+        const v = b[i] * (1 - f) + b[i + 1] * f;
+        out[cnt++] = isFinite(v) ? v : 0;
+        t += ratio;
+      }
+      this.phase = Math.max(0, t - b.length);
+      this.chunks.push(out.subarray(0, cnt).slice());
+      this.total += cnt;
+      while (this.total >= this.winSamples) {
+        const w = this.readFront(this.winSamples);
+        this.discard(this.winSamples - this.strideSamples);
+        onWindow(w);
+      }
+    },
     readFront(n) {
       const out = new Float32Array(n); let off = 0;
       while (off < n && this.chunks.length) {
@@ -2445,46 +2563,73 @@ function makeAsrRuntime(node) {
         if (c.length <= left) { left -= c.length; this.total -= c.length; this.chunks.shift(); }
         else { this.chunks[0] = c.subarray(left); this.total -= left; left = 0; }
       }
-    },
+    }
+  };
+}
+
+function makeAsrRuntime(node) {
+  const p = node.params;
+  const silenceDb = p.silenceDb ?? -48;
+  const col = makeWindowCollector(node, p.window || 4, p.stride || 2);
+  return {
+    node, model: p.model, lang: p.language || 'ru',
     push(b) {
-      if (!b.length) return;
-      const ratio = srIn / 16000;
-      const est = Math.ceil(b.length / ratio) + 2;
-      const out = new Float32Array(est);
-      let cnt = 0, t = this.phase;
-      while (t < b.length - 1) {
-        const i = Math.floor(t), f = t - i;
-        const v = b[i] * (1 - f) + b[i + 1] * f;
-        out[cnt++] = isFinite(v) ? v : 0;
-        t += ratio;
-      }
-      this.phase = Math.max(0, t - b.length);
-      this.append(out.subarray(0, cnt).slice());
-      while (this.total >= winSamples) {
-        const w = this.readFront(winSamples);
-        this.discard(winSamples - strideSamples);
-        this.dispatch(w);
-      }
-    },
-    dispatch(w) {
-      if (!bufIsFinite(w)) return;
-      const db = rmsDb(w);
-      if (!isFinite(db) || db < silenceDb) return;
-      asrJobQueue.push({ model: this.model, msg: { type: 'run', id: node.id, model: this.model, audio: w, language: this.lang } });
-      if (asrJobQueue.length > 6) asrJobQueue.splice(0, asrJobQueue.length - 6);
-      pumpQueue();
+      col.push(b, w => {
+        if (!bufIsFinite(w)) return;
+        const db = rmsDb(w);
+        if (!isFinite(db) || db < silenceDb) return;
+        asrJobQueue.push({ model: p.model, msg: { type: 'run', id: node.id, model: p.model, audio: w, language: p.language || 'ru' } });
+        if (asrJobQueue.length > 6) asrJobQueue.splice(0, asrJobQueue.length - 6);
+        pumpQueue();
+      });
     },
     onResult(text) {
-      const clean = (text || '').trim();
       setLed(node.id, 'on');
-      if (!clean) return;
-      if (node._lastText === clean) return;
-      if (/^[\s.!?,;:…—\-_*#()«»"]+$/.test(clean)) return;
-      node._lastText = clean;
-      onAsrText(node, clean);
+      deliverAsrText(node, text);
+    }
+  };
+}
+function makeCloudAsrRuntime(node) {
+  const p = node.params;
+  const silenceDb = p.silenceDb ?? -45;
+  const col = makeWindowCollector(node, p.window || 5, p.stride || 2.5);
+  let busy = false, pending = null;
+  const rt = {
+    node,
+    push(b) {
+      col.push(b, w => {
+        if (!bufIsFinite(w)) return;
+        const db = rmsDb(w);
+        if (!isFinite(db) || db < silenceDb) return;
+        if (busy) { pending = w; return; }
+        rt.run(w);
+      });
+    },
+    async run(w) {
+      busy = true;
+      setLed(node.id, 'speak');
+      try {
+        const text = await cloudAsr(node, w, 16000);
+        setLed(node.id, 'on');
+        deliverAsrText(node, text);
+      } catch (e) {
+        setLed(node.id, 'on');
+        appendLog('err', 'Облачный ASR: ' + (e.message || e));
+        toast('Облачный ASR: ' + (e.message || e), 'err', 6000);
+      }
+      busy = false;
+      if (pending) { const nx = pending; pending = null; rt.run(nx); }
     }
   };
   return rt;
+}
+function deliverAsrText(node, text) {
+  const clean = (text || '').trim();
+  if (!clean) return;
+  if (node._lastText === clean) return;
+  if (/^[\s.!?,;:…—\-_*#()«»"]+$/.test(clean)) return;
+  node._lastText = clean;
+  onAsrText(node, clean);
 }
 function setLed(nid, cls) { const el = nodeEls.get(nid); if (el) el.querySelector('.nled').className = 'nled ' + cls; }
 
@@ -2543,28 +2688,6 @@ function playBufferIntoGraph(buf, sr, monitor) {
   }
   s.start();
   return true;
-}
-async function cloudTts(node, text) {
-  const p = node.params;
-  const url = (p.url || '').trim();
-  if (!url) throw new Error('не задан URL API');
-  const headers = { 'Content-Type': 'application/json' };
-  if (p.apiKey) headers['Authorization'] = 'Bearer ' + p.apiKey;
-  const payload = { model: p.model || 'tts-1', voice: p.voice || 'nova', input: text, response_format: p.format || 'mp3', speed: clamp(p.speed || 1, 0.25, 4) };
-  const ctrl = new AbortController();
-  const tm = setTimeout(() => ctrl.abort(), 30000);
-  let resp;
-  try {
-    resp = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload), signal: ctrl.signal });
-  } finally { clearTimeout(tm); }
-  if (!resp.ok) {
-    let detail = '';
-    try { detail = (await resp.text()).slice(0, 200); } catch (e) {}
-    throw new Error('HTTP ' + resp.status + (detail ? ' — ' + detail : ''));
-  }
-  const ab = await resp.arrayBuffer();
-  const abuf = await decodeAudioBuf(ab);
-  return { data: abuf.getChannelData(0).slice(0), sr: abuf.sampleRate };
 }
 function makeTextRuntime(node) {
   const p = node.params || {};
@@ -2806,7 +2929,7 @@ async function startSipSource(p) {
     authorizationUsername: p.user,
     authorizationPassword: p.password || undefined,
     displayName: p.user,
-    userAgentString: 'NeonFlow/2.0',
+    userAgentString: 'NeonFlow/2.1',
     reconnectionAttempts: 0,
     logLevel: S.LogLevel ? S.LogLevel.Error : 'error'
   });
@@ -2863,9 +2986,9 @@ async function startPipeline() {
     pipeline.ctx = new (window.AudioContext || window.webkitAudioContext)();
     await pipeline.ctx.resume();
     pipeline.chain = chain.dsp.map(makeDspRuntime).filter(Boolean);
-    pipeline.asrRts = chain.asrs.map(makeAsrRuntime);
-    if (!pipeline.asrRts.length) toast('В цепи нет блока Whisper ASR — аудио будет идти без распознавания', 'warn', 4000);
-    pipeline.asrRts.forEach(rt => ensureModel(rt.model));
+    pipeline.asrRts = chain.asrs.map(n => n.type === 'casr' ? makeCloudAsrRuntime(n) : makeAsrRuntime(n));
+    if (!pipeline.asrRts.length) toast('В цепи нет блока распознавания (локального или облачного)', 'warn', 4000);
+    pipeline.asrRts.filter(rt => rt.node.type === 'asr').forEach(rt => ensureModel(rt.node.params.model));
     pipeline.textRts = new Map();
     for (const n of nodes.values()) {
       if (RUNTIME_TYPES.includes(n.type)) {
@@ -3070,7 +3193,8 @@ async function init() {
   }
   updateEmptyHint();
   appendLog('info', 'NeonFlow готов. Соберите цепь блоков (или выберите пресет 🧩) и нажмите «ЗАПУСК».');
-  appendLog('info', '🌟 Самый качественный русский голос — блок «Облачный TTS (HQ)»: укажите URL и ключ OpenAI-совместимого API.');
+  appendLog('info', '🌟 Облачный ASR (HQ): любой OpenAI-совместимый /v1/audio/transcriptions — OpenAI, Groq (whisper-large-v3-turbo), локальный whisper.cpp/faster-whisper.');
+  appendLog('info', '🌟 Облачный TTS (HQ): /v1/audio/speech — OpenAI, Groq, Azure, локальные Silero/XTTS через прокси.');
   if (IS_IOS) appendLog('warn', 'Обнаружен iOS/iPadOS: для звука нужен однократный жест — нажмите «ЗАПУСК» или «Тест голоса» на блоке «Голос системы».');
   setInterval(() => { if (dirty && project.name) saveProject(true); }, 15000);
   window.addEventListener('beforeunload', () => { if (dirty && project.name) saveProject(true); });
