@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- ВАЖНО: не отправлять Referer — downloader.disk.yandex.ru отвергает
-     запросы с чужим реферером ошибкой "Invalid Referer" -->
 <meta name="referrer" content="no-referrer">
 <title>NEON SHELF — электронные книги на Яндекс.Диске</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/orbitron@latest/latin-wght-normal.css">
@@ -55,7 +53,6 @@ body::after{
 }
 #app{position:relative;z-index:2;max-width:1280px;margin:0 auto;padding:18px 20px 60px}
 
-/* ==== режим без IndexedDB: скрываем всё, что требует БД ==== */
 body.no-idb .idb-only{display:none !important}
 .idb-warn{display:none}
 body.no-idb .idb-warn{display:block}
@@ -91,16 +88,50 @@ header{
   background:linear-gradient(90deg,var(--accent),var(--accent2));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   text-shadow:0 0 24px rgba(0,240,255,.35);
+  display:flex;align-items:center;gap:10px;
+}
+.ver-chip{
+  font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;letter-spacing:1px;
+  color:var(--accent3);border:1px solid rgba(157,77,255,.5);border-radius:20px;
+  padding:2px 9px;background:rgba(157,77,255,.08);
+  text-shadow:0 0 8px rgba(157,77,255,.8);
+  -webkit-text-fill-color:var(--accent3);
+  align-self:center;
 }
 .logo small{display:block;color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase}
 
-.disk-stats{display:flex;gap:14px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.disk-stats{display:flex;gap:12px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);flex-wrap:wrap}
 .stat-bubble{padding:6px 12px;border:1px solid var(--panel-border);border-radius:20px;background:rgba(0,240,255,.04)}
 .stat-bubble b{color:var(--accent);font-weight:600}
 .stat-bubble.mem{border-color:rgba(255,197,61,.45);color:var(--warn);background:rgba(255,197,61,.06)}
 .stat-bubble.mem b{color:var(--warn)}
 .stat-bubble.app-mode{border-color:rgba(157,77,255,.5);color:var(--accent3);background:rgba(157,77,255,.07)}
 .stat-bubble.app-mode b{color:var(--accent3);text-shadow:0 0 8px rgba(157,77,255,.8)}
+
+/* компактная группа иконочных кнопок в header */
+.header-actions{display:flex;gap:8px;align-items:center;flex:none}
+.icon-btn{
+  width:42px;height:42px;border-radius:11px;cursor:pointer;
+  display:grid;place-items:center;transition:.22s;position:relative;
+  color:var(--text);background:rgba(0,240,255,.06);
+  border:1px solid rgba(0,240,255,.35);
+}
+.icon-btn svg{width:19px;height:19px}
+.icon-btn:hover{background:rgba(0,240,255,.15);box-shadow:var(--glow);transform:translateY(-1px);color:#fff}
+.icon-btn.pink{border-color:rgba(255,47,214,.4);background:rgba(255,47,214,.07)}
+.icon-btn.pink:hover{background:rgba(255,47,214,.16);box-shadow:var(--glow2)}
+.icon-btn.purple{border-color:rgba(157,77,255,.45);background:rgba(157,77,255,.08)}
+.icon-btn.purple:hover{background:rgba(157,77,255,.18);box-shadow:0 0 12px rgba(157,77,255,.5)}
+.icon-btn::after{
+  content:attr(data-tip);
+  position:absolute;top:calc(100% + 8px);right:0;
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.5px;white-space:nowrap;
+  color:var(--text);background:rgba(10,13,30,.96);
+  border:1px solid var(--panel-border);border-radius:6px;padding:4px 8px;
+  opacity:0;pointer-events:none;transition:.2s;transform:translateY(-4px);
+  z-index:10;
+}
+.icon-btn:hover::after{opacity:1;transform:none}
 
 /* ============ BUTTONS ============ */
 .btn{
@@ -140,6 +171,15 @@ header{
 .panel h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(0,240,255,.5),transparent)}
 .panel h2.pink-t{color:var(--accent2);text-shadow:0 0 14px rgba(255,47,214,.5)}
 .panel h2.pink-t::after{background:linear-gradient(90deg,rgba(255,47,214,.5),transparent)}
+.panel h2 .refresh-mini{
+  margin-left:auto;width:30px;height:30px;border-radius:8px;flex:none;
+  display:grid;place-items:center;cursor:pointer;transition:.22s;
+  color:var(--accent);background:rgba(0,240,255,.06);border:1px solid rgba(0,240,255,.35);
+}
+.panel h2 .refresh-mini svg{width:15px;height:15px}
+.panel h2 .refresh-mini:hover{box-shadow:var(--glow);background:rgba(0,240,255,.15)}
+.panel h2 .refresh-mini.spin svg{animation:spin .8s linear infinite}
+.panel h2.pink-t::after{order:-1}
 
 /* ============ DROPZONE ============ */
 #dropzone{
@@ -336,7 +376,6 @@ select.neon-input option{background:#0a0d1e}
   border:1px solid rgba(255,47,214,.4);border-radius:20px;padding:2px 10px;
   text-shadow:0 0 8px rgba(255,47,214,.6);
 }
-/* скрытый контейнер iframe'ов для фонового скачивания */
 #dlFrames{position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none}
 </style>
 </head>
@@ -351,27 +390,25 @@ select.neon-input option{background:#0a0d1e}
         </svg>
       </div>
       <div>
-        <h1>NEON SHELF</h1>
+        <h1>NEON SHELF <span class="ver-chip" id="appVersion">v—</span></h1>
         <small>книги · яндекс.диск · rest api</small>
       </div>
     </div>
+
     <div class="disk-stats">
       <div class="stat-bubble" id="statSpace">диск: <b>—</b></div>
       <div class="stat-bubble" id="statCount">книг: <b>0</b></div>
       <div class="stat-bubble app-mode" id="statMode" style="display:none">режим: <b>app:/</b></div>
     </div>
-    <button class="btn" id="btnRefresh" title="Обновить список книг">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
-      Обновить
-    </button>
-    <button class="btn purple idb-only" id="btnProjects">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      Проекты
-    </button>
-    <button class="btn pink" id="btnSettings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Настройки
-    </button>
+
+    <div class="header-actions">
+      <button class="icon-btn purple idb-only" id="btnProjects" data-tip="Проекты" title="Проекты">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <button class="icon-btn pink" id="btnSettings" data-tip="Настройки" title="Настройки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
   </header>
 
   <div class="grid">
@@ -404,7 +441,13 @@ select.neon-input option{background:#0a0d1e}
 
     <!-- RIGHT: LIBRARY -->
     <section class="panel">
-      <h2 class="pink-t">Библиотека на диске <span class="count-badge" id="libCount">0</span></h2>
+      <h2 class="pink-t">
+        <span>Библиотека на диске</span>
+        <span class="count-badge" id="libCount">0</span>
+        <button class="refresh-mini" id="btnRefresh" title="Обновить список с диска" data-tip="Обновить">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+        </button>
+      </h2>
       <div class="toolbar">
         <input class="neon-input" id="searchInput" type="text" placeholder="🔍 Поиск по названию…">
         <select class="neon-input" id="filterFmt" style="max-width:150px;flex:none">
@@ -437,7 +480,6 @@ select.neon-input option{background:#0a0d1e}
   </div>
 </div>
 
-<!-- скрытый контейнер iframe'ов для скачивания БЕЗ fetch/CORS -->
 <div id="dlFrames"></div>
 
 <!-- ============ SETTINGS MODAL ============ -->
@@ -482,7 +524,7 @@ select.neon-input option{background:#0a0d1e}
         <label class="toggle"><input type="checkbox" id="setShowAll"><span class="slider"></span></label>
       </div>
       <div class="switch-row" style="border-bottom:none">
-        <span>Фоновое скачивание<small>через скрытый iframe без Referer (обход «Invalid Referer»); если выключено — ссылка откроется в новой вкладке</small></span>
+        <span>Фоновое скачивание<small>через скрытый iframe без Referer; если выключено — ссылка откроется в новой вкладке</small></span>
         <label class="toggle"><input type="checkbox" id="setBgDl" checked><span class="slider"></span></label>
       </div>
     </div>
@@ -500,7 +542,7 @@ select.neon-input option{background:#0a0d1e}
   </div>
 </div>
 
-<!-- ============ PROJECTS MODAL (требует IndexedDB) ============ -->
+<!-- ============ PROJECTS MODAL ============ -->
 <div class="modal-backdrop idb-only" id="modalProjects">
   <div class="modal">
     <h3>📁 Проекты <button class="close-x" data-close="modalProjects">×</button></h3>
@@ -527,22 +569,13 @@ select.neon-input option{background:#0a0d1e}
 'use strict';
 /* ================================================================
    NEON SHELF — SPA для управления книгами на Яндекс.Диске
-   v5: исправлена ошибка «Invalid Referer» при скачивании.
-   Причина: downloader.disk.yandex.ru проверяет заголовок Referer
-   и отклоняет запросы, пришедшие со страницы постороннего сайта.
-   Решение:
-   1) <meta name="referrer" content="no-referrer"> — браузер вообще
-      не отправляет Referer (см. head);
-   2) iframe и anchor создаются с referrerPolicy='no-referrer'
-      и rel='noreferrer' — двойная гарантия для всех браузеров;
-   3) никакого fetch/blob для контента файла — только навигация,
-      поэтому CORS не возникает.
    ================================================================ */
 
+const APP_VERSION = '1.3.0';
 const API = 'https://cloud-api.yandex.net/v1/disk';
 const BOOK_EXTS = ['fb2','epub','pdf','mobi','azw','azw3','djvu','djv','txt','rtf','zip','cbz','cbr','doc','docx','fb2.zip'];
 
-/* ---------------- IndexedDB (с защитой от недоступности) ---------------- */
+/* ---------------- IndexedDB ---------------- */
 const DB_NAME = 'neon-shelf-db', DB_VER = 1;
 let dbPromise = null;
 let idbAvailable = false;
@@ -647,10 +680,10 @@ function idbDegrade(){
 let settings = {
   token:'',
   folder:'/Books',
-  useAppFolder:false,   // работа через папку приложения app:/
+  useAppFolder:false,
   overwrite:true,
   showAll:false,
-  bgDownload:true,      // фоновое скачивание через iframe (без CORS и без Referer)
+  bgDownload:true,
   accent:'#00f0ff'
 };
 let library = [];
@@ -704,8 +737,6 @@ function extClass(ext){
 function isBook(name){ return BOOK_EXTS.includes(extOf(name)); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-/* Корректная сборка query-string: encodeURIComponent, а не
-   URLSearchParams (которая кодирует пробел как «+»). */
 function qs(params){
   return Object.keys(params)
     .filter(k=> params[k]!==undefined && params[k]!==null)
@@ -768,7 +799,7 @@ async function apiGet(path, params){
   const q = params ? qs(params) : '';
   const r = await fetch(API+path+(q?'?'+q:''), {
     headers: authHeaders(),
-    referrerPolicy: 'no-referrer'   // не светим адрес приложения
+    referrerPolicy: 'no-referrer'
   });
   let body = null;
   try{ body = await r.json(); }catch(e){}
@@ -862,7 +893,7 @@ async function fetchLibrary(){
   }
   return items.map(it=>({
     name: it.name,
-    path: it.path,          // путь exactly как вернул API (disk:/... или app:/...)
+    path: it.path,
     size: it.size,
     modified: it.modified,
     created: it.created,
@@ -873,31 +904,20 @@ async function fetchLibrary(){
 async function getDiskInfo(){ return await apiGet(''); }
 function downloadByPath(path){ return apiGet('/resources/download', {path}); }
 
-/* ---------------- Скачивание БЕЗ CORS и БЕЗ Referer ----------------
-   Ссылка downloader.disk.yandex.ru отдаёт файл с заголовком
-   Content-Disposition: attachment. Мы не читаем её через fetch
-   (это вызывало CORS-ошибку), а передаём браузеру для навигации.
-   Яндекс проверяет Referer и отвечает «Invalid Referer», если
-   запрос пришёл со страницы постороннего сайта, поэтому:
-   - в <head> задан <meta name="referrer" content="no-referrer">;
-   - iframe создаётся с referrerPolicy='no-referrer';
-   - anchor — с referrerPolicy='no-referrer' и rel='noreferrer'.
-   Без Referer Яндекс отдаёт файл как при обычном переходе. */
+/* ---------------- Скачивание ----------------
+   Файл отдаётся браузеру навигацией (iframe или anchor) без Referer —
+   без fetch-запросов к контенту и без CORS. */
 function startDownloadViaIframe(href, filename){
   const fr = document.createElement('iframe');
   fr.style.cssText = 'display:none;width:0;height:0;border:0';
   fr.setAttribute('title', 'download: '+filename);
-  // ключевое: никакого Referer
   fr.setAttribute('referrerpolicy','no-referrer');
   if('referrerPolicy' in fr) fr.referrerPolicy = 'no-referrer';
   fr.src = href;
   $('dlFrames').appendChild(fr);
-  // убираем iframe через 2 минуты — к этому времени загрузка уже началась
   setTimeout(()=>{ try{ fr.remove(); }catch(e){} }, 120000);
 }
 function startDownloadViaTab(href){
-  // anchor с noreferrer гарантирует отсутствие Referer даже там,
-  // где meta-тег игнорируется; window.open такого контроля не даёт
   const a = document.createElement('a');
   a.href = href;
   a.target = '_blank';
@@ -909,7 +929,7 @@ function startDownloadViaTab(href){
   a.remove();
 }
 
-/* ---------------- Persistence (деградирует до памяти) ---------------- */
+/* ---------------- Persistence ---------------- */
 async function saveSettings(){
   applyAccent(settings.accent);
   applyModeUI();
@@ -924,7 +944,6 @@ async function loadSettings(){
   applyAccent(settings.accent);
   applyModeUI();
 }
-/* миграция старых ключей настроек */
 async function settingsMigration(){
   if(typeof settings.blobDownload !== 'undefined'){
     settings.bgDownload = !!settings.blobDownload;
@@ -1100,6 +1119,9 @@ async function refreshLibrary(silent){
     if(!silent){ toast('Укажите OAuth-токен в настройках','warn'); openModal('modalSettings'); }
     return;
   }
+  const refreshBtn = $('btnRefresh');
+  refreshBtn.classList.add('spin');
+  refreshBtn.disabled = true;
   if(!silent) toast('Обновление библиотеки…','',2000);
   $('bookList').innerHTML = `<div class="empty"><div class="big"><span class="spinner" style="width:36px;height:36px;border-width:3px"></span></div><div>Загрузка списка с диска…</div></div>`;
   try{
@@ -1121,6 +1143,9 @@ async function refreshLibrary(silent){
     }else{
       toast('Не удалось обновить: '+err.message,'err',5000);
     }
+  }finally{
+    refreshBtn.classList.remove('spin');
+    refreshBtn.disabled = false;
   }
 }
 
@@ -1168,12 +1193,8 @@ async function onBookAction(path, act){
   if(act==='download'){
     toast('Запрашиваю ссылку на скачивание…','',2000);
     try{
-      // 1) получаем прямую ссылку у API (cloud-api.yandex.net поддерживает CORS)
       const d = await downloadByPath(book.path);
       if(!d || !d.href) throw new Error('Диск не вернул ссылку');
-
-      // 2) файл скачивает БРАУЗЕР обычной навигацией БЕЗ Referer:
-      //    ни CORS, ни «Invalid Referer» больше не возникают
       if(settings.bgDownload){
         startDownloadViaIframe(d.href, book.name);
         toast('Скачивание начато: '+book.name,'ok');
@@ -1263,7 +1284,7 @@ $('btnTestConn').addEventListener('click', async ()=>{
   }
 });
 
-/* ---------------- Projects (требуют IndexedDB) ---------------- */
+/* ---------------- Projects ---------------- */
 async function listProjects(){
   if(!idbAvailable) return [];
   return (await idbGetAll('projects')).sort((a,b)=> new Date(b.savedAt)-new Date(a.savedAt));
@@ -1396,6 +1417,7 @@ $('sortBy').addEventListener('change', renderLibrary);
 /* ---------------- Init ---------------- */
 (async function init(){
   try{
+    $('appVersion').textContent = 'v'+APP_VERSION;
     await detectIndexedDB();
     applyStorageMode();
     if(!idbAvailable){
