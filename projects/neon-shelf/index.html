@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ВАЖНО: не отправлять Referer — downloader.disk.yandex.ru отвергает
+     запросы с чужим реферером ошибкой "Invalid Referer" -->
+<meta name="referrer" content="no-referrer">
 <title>NEON SHELF — электронные книги на Яндекс.Диске</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/orbitron@latest/latin-wght-normal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/rajdhani@latest/latin-wght-normal.css">
@@ -333,7 +336,7 @@ select.neon-input option{background:#0a0d1e}
   border:1px solid rgba(255,47,214,.4);border-radius:20px;padding:2px 10px;
   text-shadow:0 0 8px rgba(255,47,214,.6);
 }
-/* скрытый iframe для фонового скачивания */
+/* скрытый контейнер iframe'ов для фонового скачивания */
 #dlFrames{position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none}
 </style>
 </head>
@@ -453,7 +456,7 @@ select.neon-input option{background:#0a0d1e}
         <input class="neon-input" type="password" id="setToken" placeholder="y0_AgAAA..." autocomplete="off">
         <button class="btn ghost sm" id="btnToggleToken" title="Показать/скрыть">👁</button>
       </div>
-      <div class="hint">Получить токен: <a href="https://oauth.yandex.ru/" target="_blank" rel="noopener">oauth.yandex.ru</a> (права «Яндекс.Диск»).
+      <div class="hint">Получить токен: <a href="https://oauth.yandex.ru/" target="_blank" rel="noopener noreferrer">oauth.yandex.ru</a> (права «Яндекс.Диск»).
         <span class="idb-only" style="display:inline">Хранится локально в IndexedDB.</span>
       </div>
     </div>
@@ -479,7 +482,7 @@ select.neon-input option{background:#0a0d1e}
         <label class="toggle"><input type="checkbox" id="setShowAll"><span class="slider"></span></label>
       </div>
       <div class="switch-row" style="border-bottom:none">
-        <span>Фоновое скачивание<small>через скрытый iframe (без CORS-запросов); если выключено — ссылка откроется в новой вкладке</small></span>
+        <span>Фоновое скачивание<small>через скрытый iframe без Referer (обход «Invalid Referer»); если выключено — ссылка откроется в новой вкладке</small></span>
         <label class="toggle"><input type="checkbox" id="setBgDl" checked><span class="slider"></span></label>
       </div>
     </div>
@@ -524,10 +527,16 @@ select.neon-input option{background:#0a0d1e}
 'use strict';
 /* ================================================================
    NEON SHELF — SPA для управления книгами на Яндекс.Диске
-   v4: скачивание БЕЗ fetch/blob (устранена ошибка CORS).
-   Файл отдаётся самим браузером через скрытый iframe или новую
-   вкладку по прямой ссылке downloader.disk.yandex.ru — такие
-   запросы не являются CORS-запросами и работают всегда.
+   v5: исправлена ошибка «Invalid Referer» при скачивании.
+   Причина: downloader.disk.yandex.ru проверяет заголовок Referer
+   и отклоняет запросы, пришедшие со страницы постороннего сайта.
+   Решение:
+   1) <meta name="referrer" content="no-referrer"> — браузер вообще
+      не отправляет Referer (см. head);
+   2) iframe и anchor создаются с referrerPolicy='no-referrer'
+      и rel='noreferrer' — двойная гарантия для всех браузеров;
+   3) никакого fetch/blob для контента файла — только навигация,
+      поэтому CORS не возникает.
    ================================================================ */
 
 const API = 'https://cloud-api.yandex.net/v1/disk';
@@ -641,7 +650,7 @@ let settings = {
   useAppFolder:false,   // работа через папку приложения app:/
   overwrite:true,
   showAll:false,
-  bgDownload:true,      // фоновое скачивание через iframe (без CORS)
+  bgDownload:true,      // фоновое скачивание через iframe (без CORS и без Referer)
   accent:'#00f0ff'
 };
 let library = [];
@@ -757,7 +766,10 @@ function authHeaders(extra){
 }
 async function apiGet(path, params){
   const q = params ? qs(params) : '';
-  const r = await fetch(API+path+(q?'?'+q:''), {headers:authHeaders()});
+  const r = await fetch(API+path+(q?'?'+q:''), {
+    headers: authHeaders(),
+    referrerPolicy: 'no-referrer'   // не светим адрес приложения
+  });
   let body = null;
   try{ body = await r.json(); }catch(e){}
   if(!r.ok) throw new Error((body && (body.message||body.description)) || ('HTTP '+r.status));
@@ -765,7 +777,9 @@ async function apiGet(path, params){
 }
 async function apiDelete(path, params){
   const q = params ? qs(params) : '';
-  const r = await fetch(API+path+(q?'?'+q:''), {method:'DELETE', headers:authHeaders()});
+  const r = await fetch(API+path+(q?'?'+q:''), {
+    method:'DELETE', headers:authHeaders(), referrerPolicy:'no-referrer'
+  });
   if(!r.ok && r.status!==204){
     let body=null; try{ body=await r.json(); }catch(e){}
     throw new Error((body && (body.message||body.description)) || ('HTTP '+r.status));
@@ -774,7 +788,9 @@ async function apiDelete(path, params){
 }
 async function apiPut(path, params){
   const q = params ? qs(params) : '';
-  const r = await fetch(API+path+(q?'?'+q:''), {method:'PUT', headers:authHeaders()});
+  const r = await fetch(API+path+(q?'?'+q:''), {
+    method:'PUT', headers:authHeaders(), referrerPolicy:'no-referrer'
+  });
   if(!r.ok && r.status!==409){
     let body=null; try{ body=await r.json(); }catch(e){}
     throw new Error((body && (body.message||body.description)) || ('HTTP '+r.status));
@@ -857,29 +873,40 @@ async function fetchLibrary(){
 async function getDiskInfo(){ return await apiGet(''); }
 function downloadByPath(path){ return apiGet('/resources/download', {path}); }
 
-/* ---------------- Скачивание БЕЗ CORS ----------------
-   Ссылка, возвращаемая /resources/download (downloader.disk.yandex.ru),
-   отдаёт файл с заголовком Content-Disposition: attachment.
-   Мы НЕ читаем её содержимое через fetch (это и вызывало CORS-ошибку),
-   а передаём браузеру для навигации: скрытый iframe или новая вкладка.
-   Такие запросы не подпадают под CORS-ограничения. */
+/* ---------------- Скачивание БЕЗ CORS и БЕЗ Referer ----------------
+   Ссылка downloader.disk.yandex.ru отдаёт файл с заголовком
+   Content-Disposition: attachment. Мы не читаем её через fetch
+   (это вызывало CORS-ошибку), а передаём браузеру для навигации.
+   Яндекс проверяет Referer и отвечает «Invalid Referer», если
+   запрос пришёл со страницы постороннего сайта, поэтому:
+   - в <head> задан <meta name="referrer" content="no-referrer">;
+   - iframe создаётся с referrerPolicy='no-referrer';
+   - anchor — с referrerPolicy='no-referrer' и rel='noreferrer'.
+   Без Referer Яндекс отдаёт файл как при обычном переходе. */
 function startDownloadViaIframe(href, filename){
   const fr = document.createElement('iframe');
   fr.style.cssText = 'display:none;width:0;height:0;border:0';
   fr.setAttribute('title', 'download: '+filename);
+  // ключевое: никакого Referer
+  fr.setAttribute('referrerpolicy','no-referrer');
+  if('referrerPolicy' in fr) fr.referrerPolicy = 'no-referrer';
   fr.src = href;
   $('dlFrames').appendChild(fr);
   // убираем iframe через 2 минуты — к этому времени загрузка уже началась
   setTimeout(()=>{ try{ fr.remove(); }catch(e){} }, 120000);
 }
 function startDownloadViaTab(href){
-  const w = window.open(href, '_blank', 'noopener');
-  if(!w){
-    // popup заблокирован — используем обычный anchor
-    const a = document.createElement('a');
-    a.href = href; a.target = '_blank'; a.rel = 'noopener';
-    document.body.appendChild(a); a.click(); a.remove();
-  }
+  // anchor с noreferrer гарантирует отсутствие Referer даже там,
+  // где meta-тег игнорируется; window.open такого контроля не даёт
+  const a = document.createElement('a');
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.setAttribute('referrerpolicy','no-referrer');
+  if('referrerPolicy' in a) a.referrerPolicy = 'no-referrer';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 /* ---------------- Persistence (деградирует до памяти) ---------------- */
@@ -893,18 +920,20 @@ async function loadSettings(){
     const s = await idbGet('kv','settings');
     if(s) settings = Object.assign(settings, s);
   }
-  // миграция со старого ключа blobDownload
+  await settingsMigration();
+  applyAccent(settings.accent);
+  applyModeUI();
+}
+/* миграция старых ключей настроек */
+async function settingsMigration(){
   if(typeof settings.blobDownload !== 'undefined'){
     settings.bgDownload = !!settings.blobDownload;
     delete settings.blobDownload;
   }
   if(typeof settings.bgDownload === 'undefined') settings.bgDownload = true;
-  // миграция: если в сохранённой папке был префикс app:/ — включаем режим
   if(/^app:\/?/i.test((settings.folder||'').trim())){
     settings.useAppFolder = true;
   }
-  applyAccent(settings.accent);
-  applyModeUI();
 }
 async function persistLibrary(){
   if(!idbAvailable) return;
@@ -1143,8 +1172,8 @@ async function onBookAction(path, act){
       const d = await downloadByPath(book.path);
       if(!d || !d.href) throw new Error('Диск не вернул ссылку');
 
-      // 2) сам файл скачивает БРАУЗЕР (навигация, не fetch — CORS не участвует):
-      //    downloader.disk.yandex.ru отдаёт файл с Content-Disposition: attachment
+      // 2) файл скачивает БРАУЗЕР обычной навигацией БЕЗ Referer:
+      //    ни CORS, ни «Invalid Referer» больше не возникают
       if(settings.bgDownload){
         startDownloadViaIframe(d.href, book.name);
         toast('Скачивание начато: '+book.name,'ok');
@@ -1304,24 +1333,13 @@ async function loadProject(name){
   if(!p) return;
   settings = Object.assign({}, settings, p.settings||{});
   library = p.library || [];
-  await loadSettingsMigration();
+  await settingsMigration();
   await saveSettings();
   await persistLibrary();
   renderLibrary();
   closeModal('modalProjects');
   toast('Проект «'+name+'» загружен','ok');
   refreshLibrary(true);
-}
-/* миграция настроек из старых проектов (blobDownload → bgDownload) */
-async function loadSettingsMigration(){
-  if(typeof settings.blobDownload !== 'undefined'){
-    settings.bgDownload = !!settings.blobDownload;
-    delete settings.blobDownload;
-  }
-  if(typeof settings.bgDownload === 'undefined') settings.bgDownload = true;
-  if(/^app:\/?/i.test((settings.folder||'').trim())){
-    settings.useAppFolder = true;
-  }
 }
 function downloadJSON(obj, filename){
   const blob = new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
