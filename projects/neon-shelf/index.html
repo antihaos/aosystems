@@ -333,6 +333,8 @@ select.neon-input option{background:#0a0d1e}
   border:1px solid rgba(255,47,214,.4);border-radius:20px;padding:2px 10px;
   text-shadow:0 0 8px rgba(255,47,214,.6);
 }
+/* скрытый iframe для фонового скачивания */
+#dlFrames{position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;pointer-events:none}
 </style>
 </head>
 <body>
@@ -432,6 +434,9 @@ select.neon-input option{background:#0a0d1e}
   </div>
 </div>
 
+<!-- скрытый контейнер iframe'ов для скачивания БЕЗ fetch/CORS -->
+<div id="dlFrames"></div>
+
 <!-- ============ SETTINGS MODAL ============ -->
 <div class="modal-backdrop" id="modalSettings">
   <div class="modal">
@@ -474,8 +479,8 @@ select.neon-input option{background:#0a0d1e}
         <label class="toggle"><input type="checkbox" id="setShowAll"><span class="slider"></span></label>
       </div>
       <div class="switch-row" style="border-bottom:none">
-        <span>Скачивать через браузер<small>загружать файл целиком (blob), иначе — прямая ссылка</small></span>
-        <label class="toggle"><input type="checkbox" id="setBlobDl"><span class="slider"></span></label>
+        <span>Фоновое скачивание<small>через скрытый iframe (без CORS-запросов); если выключено — ссылка откроется в новой вкладке</small></span>
+        <label class="toggle"><input type="checkbox" id="setBgDl" checked><span class="slider"></span></label>
       </div>
     </div>
 
@@ -519,8 +524,10 @@ select.neon-input option{background:#0a0d1e}
 'use strict';
 /* ================================================================
    NEON SHELF — SPA для управления книгами на Яндекс.Диске
-   v3: поддержка папки приложения (app:/) + корректное кодирование
-   путей в REST-запросах (исправлено скачивание).
+   v4: скачивание БЕЗ fetch/blob (устранена ошибка CORS).
+   Файл отдаётся самим браузером через скрытый iframe или новую
+   вкладку по прямой ссылке downloader.disk.yandex.ru — такие
+   запросы не являются CORS-запросами и работают всегда.
    ================================================================ */
 
 const API = 'https://cloud-api.yandex.net/v1/disk';
@@ -634,7 +641,7 @@ let settings = {
   useAppFolder:false,   // работа через папку приложения app:/
   overwrite:true,
   showAll:false,
-  blobDownload:false,
+  bgDownload:true,      // фоновое скачивание через iframe (без CORS)
   accent:'#00f0ff'
 };
 let library = [];
@@ -689,8 +696,7 @@ function isBook(name){ return BOOK_EXTS.includes(extOf(name)); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* Корректная сборка query-string: encodeURIComponent, а не
-   URLSearchParams (которая кодирует пробел как «+» — из-за этого
-   Яндекс.Диск не находил ресурс и ссылка на скачивание ломалась). */
+   URLSearchParams (которая кодирует пробел как «+»). */
 function qs(params){
   return Object.keys(params)
     .filter(k=> params[k]!==undefined && params[k]!==null)
@@ -701,18 +707,14 @@ function qs(params){
 /* ---------------- Пути: обычный диск / папка приложения ---------------- */
 function normalizeFolder(f){
   let p = (f||'').trim();
-  // если пользователь сам ввёл app:/ — учитываем
   const isApp = /^app:\/?/i.test(p);
-  if(isApp){
-    p = p.replace(/^app:\/?/i,'');
-  }
+  if(isApp) p = p.replace(/^app:\/?/i,'');
   if(!p) p = isApp ? '' : '/Books';
   if(!p.startsWith('/')) p = '/'+p;
   p = p.replace(/\/+$/,'');
   if(p === '/') p = '';
-  return p; // '' означает корень (диска или папки приложения)
+  return p;
 }
-/* Итоговый базовый путь с учётом режима папки приложения */
 function basePath(){
   const inner = normalizeFolder(settings.folder);
   if(settings.useAppFolder){
@@ -802,7 +804,6 @@ async function waitOperation(opId, timeoutMs=120000){
 }
 async function ensureFolder(){
   const base = basePath();
-  // корень диска или корень папки приложения создавать не нужно
   if(base==='/' || base==='app:/') return base;
   try{
     await apiGet('/resources', {path:base, limit:'1'});
@@ -845,7 +846,7 @@ async function fetchLibrary(){
   }
   return items.map(it=>({
     name: it.name,
-    path: it.path,          // сохраняем путь exactly как вернул API (disk:/... или app:/...)
+    path: it.path,          // путь exactly как вернул API (disk:/... или app:/...)
     size: it.size,
     modified: it.modified,
     created: it.created,
@@ -855,6 +856,31 @@ async function fetchLibrary(){
 
 async function getDiskInfo(){ return await apiGet(''); }
 function downloadByPath(path){ return apiGet('/resources/download', {path}); }
+
+/* ---------------- Скачивание БЕЗ CORS ----------------
+   Ссылка, возвращаемая /resources/download (downloader.disk.yandex.ru),
+   отдаёт файл с заголовком Content-Disposition: attachment.
+   Мы НЕ читаем её содержимое через fetch (это и вызывало CORS-ошибку),
+   а передаём браузеру для навигации: скрытый iframe или новая вкладка.
+   Такие запросы не подпадают под CORS-ограничения. */
+function startDownloadViaIframe(href, filename){
+  const fr = document.createElement('iframe');
+  fr.style.cssText = 'display:none;width:0;height:0;border:0';
+  fr.setAttribute('title', 'download: '+filename);
+  fr.src = href;
+  $('dlFrames').appendChild(fr);
+  // убираем iframe через 2 минуты — к этому времени загрузка уже началась
+  setTimeout(()=>{ try{ fr.remove(); }catch(e){} }, 120000);
+}
+function startDownloadViaTab(href){
+  const w = window.open(href, '_blank', 'noopener');
+  if(!w){
+    // popup заблокирован — используем обычный anchor
+    const a = document.createElement('a');
+    a.href = href; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+}
 
 /* ---------------- Persistence (деградирует до памяти) ---------------- */
 async function saveSettings(){
@@ -867,6 +893,12 @@ async function loadSettings(){
     const s = await idbGet('kv','settings');
     if(s) settings = Object.assign(settings, s);
   }
+  // миграция со старого ключа blobDownload
+  if(typeof settings.blobDownload !== 'undefined'){
+    settings.bgDownload = !!settings.blobDownload;
+    delete settings.blobDownload;
+  }
+  if(typeof settings.bgDownload === 'undefined') settings.bgDownload = true;
   // миграция: если в сохранённой папке был префикс app:/ — включаем режим
   if(/^app:\/?/i.test((settings.folder||'').trim())){
     settings.useAppFolder = true;
@@ -1107,36 +1139,18 @@ async function onBookAction(path, act){
   if(act==='download'){
     toast('Запрашиваю ссылку на скачивание…','',2000);
     try{
+      // 1) получаем прямую ссылку у API (cloud-api.yandex.net поддерживает CORS)
       const d = await downloadByPath(book.path);
       if(!d || !d.href) throw new Error('Диск не вернул ссылку');
-      let done = false;
-      if(settings.blobDownload){
-        try{
-          const r = await fetch(d.href);
-          if(!r.ok) throw new Error('HTTP '+r.status);
-          const blob = await r.blob();
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url; a.download = book.name;
-          document.body.appendChild(a); a.click(); a.remove();
-          setTimeout(()=>URL.revokeObjectURL(url), 4000);
-          toast('Скачивание начато: '+book.name,'ok');
-          done = true;
-        }catch(blobErr){
-          console.warn('Blob-скачивание не удалось, использую прямую ссылку:', blobErr);
-          toast('Blob-режим недоступен (CORS), качаю по прямой ссылке','warn');
-        }
-      }
-      if(!done){
-        // прямая ссылка downloader.disk.yandex.ru — отдаёт файл с
-        // Content-Disposition: attachment; открываем в новой вкладке
-        const w = window.open(d.href, '_blank', 'noopener');
-        if(!w){
-          const a = document.createElement('a');
-          a.href = d.href; a.target = '_blank'; a.rel = 'noopener';
-          document.body.appendChild(a); a.click(); a.remove();
-        }
-        toast('Открываю ссылку на скачивание','ok');
+
+      // 2) сам файл скачивает БРАУЗЕР (навигация, не fetch — CORS не участвует):
+      //    downloader.disk.yandex.ru отдаёт файл с Content-Disposition: attachment
+      if(settings.bgDownload){
+        startDownloadViaIframe(d.href, book.name);
+        toast('Скачивание начато: '+book.name,'ok');
+      }else{
+        startDownloadViaTab(d.href);
+        toast('Открываю ссылку на скачивание в новой вкладке','ok');
       }
     }catch(err){
       toast('Ошибка скачивания: '+err.message,'err',5000);
@@ -1160,7 +1174,7 @@ function fillSettingsForm(){
   $('setAppFolder').checked = !!settings.useAppFolder;
   $('setOverwrite').checked = !!settings.overwrite;
   $('setShowAll').checked = !!settings.showAll;
-  $('setBlobDl').checked = !!settings.blobDownload;
+  $('setBgDl').checked = settings.bgDownload !== false;
   applyModeUI();
   renderSwatches();
 }
@@ -1174,7 +1188,6 @@ function renderSwatches(){
 }
 $('btnSettings').addEventListener('click',()=>{ fillSettingsForm(); openModal('modalSettings'); });
 $('setAppFolder').addEventListener('change', ()=>{
-  // мгновенный предпросмотр итогового пути
   settings.useAppFolder = $('setAppFolder').checked;
   settings.folder = $('setFolder').value;
   applyModeUI();
@@ -1190,7 +1203,7 @@ $('btnSaveSettings').addEventListener('click', async ()=>{
   settings.useAppFolder = $('setAppFolder').checked;
   settings.overwrite = $('setOverwrite').checked;
   settings.showAll = $('setShowAll').checked;
-  settings.blobDownload = $('setBlobDl').checked;
+  settings.bgDownload = $('setBgDl').checked;
   await saveSettings();
   closeModal('modalSettings');
   toast(idbAvailable ? 'Настройки сохранены в IndexedDB' : 'Настройки применены (только текущая сессия)','ok');
@@ -1291,12 +1304,24 @@ async function loadProject(name){
   if(!p) return;
   settings = Object.assign({}, settings, p.settings||{});
   library = p.library || [];
+  await loadSettingsMigration();
   await saveSettings();
   await persistLibrary();
   renderLibrary();
   closeModal('modalProjects');
   toast('Проект «'+name+'» загружен','ok');
   refreshLibrary(true);
+}
+/* миграция настроек из старых проектов (blobDownload → bgDownload) */
+async function loadSettingsMigration(){
+  if(typeof settings.blobDownload !== 'undefined'){
+    settings.bgDownload = !!settings.blobDownload;
+    delete settings.blobDownload;
+  }
+  if(typeof settings.bgDownload === 'undefined') settings.bgDownload = true;
+  if(/^app:\/?/i.test((settings.folder||'').trim())){
+    settings.useAppFolder = true;
+  }
 }
 function downloadJSON(obj, filename){
   const blob = new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
