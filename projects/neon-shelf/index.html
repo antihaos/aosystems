@@ -62,6 +62,19 @@ body.no-idb .idb-warn{display:block}
   margin-bottom:16px;box-shadow:0 0 14px rgba(255,197,61,.15);
 }
 
+/* ==== режим download: скрываем всё, что связано с редактированием ==== */
+body.mode-download .upload-panel{display:none !important}
+body.mode-download .grid{grid-template-columns:1fr}
+body.mode-download .book-list{max-height:none}
+.mode-badge{
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+  color:var(--ok);border:1px solid rgba(57,255,136,.5);border-radius:20px;
+  padding:2px 9px;background:rgba(57,255,136,.07);
+  text-shadow:0 0 8px rgba(57,255,136,.8);
+  display:none;align-self:center;
+}
+body.mode-download .mode-badge{display:inline-block}
+
 /* ============ HEADER ============ */
 header{
   display:flex;align-items:center;gap:16px;flex-wrap:wrap;
@@ -88,7 +101,7 @@ header{
   background:linear-gradient(90deg,var(--accent),var(--accent2));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   text-shadow:0 0 24px rgba(0,240,255,.35);
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
 }
 .ver-chip{
   font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;letter-spacing:1px;
@@ -333,6 +346,13 @@ select.neon-input option{background:#0a0d1e}
 .field label{display:block;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .field .hint{font-size:13px;color:var(--muted);margin-top:5px}
 .field .hint a{color:var(--accent)}
+.url-params{
+  margin-top:10px;border:1px solid rgba(0,240,255,.18);border-radius:10px;
+  background:rgba(0,240,255,.04);padding:10px 12px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:var(--muted);
+}
+.url-params b{color:var(--accent);font-weight:600}
+.url-params .copy-all{margin-top:8px}
 .token-row{display:flex;gap:8px}
 .token-row .neon-input{font-family:'JetBrains Mono',monospace;font-size:13px}
 .switch-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,240,255,.08)}
@@ -438,11 +458,10 @@ select.neon-input option{background:#0a0d1e}
   .modal-actions .btn{flex:1;justify-content:center}
   .proj-item .p-acts{margin-left:0;width:100%}
   .proj-item .p-acts .btn{flex:1;justify-content:center}
+  .url-params{font-size:10px}
 }
 
-/* ============ E-INK ТЕМА ============
-   Высокий контраст, чёрное на белом, без анимаций, свечений,
-   градиентов и полупрозрачности — для экранов электронных книг. */
+/* ============ E-INK ТЕМА ============ */
 body.eink{background:#fff;color:#000;font-weight:600}
 body.eink::before,body.eink::after{display:none}
 body.eink *{
@@ -452,7 +471,6 @@ body.eink *{
   text-shadow:none !important;
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
-  text-decoration-skip-ink:none;
 }
 body.eink .logo-mark{background:#fff;border:2px solid #000}
 body.eink .logo-mark svg{stroke:#000;filter:none}
@@ -461,6 +479,7 @@ body.eink .logo h1{
   font-weight:900;
 }
 body.eink .ver-chip{color:#000;border:2px solid #000;background:#fff;-webkit-text-fill-color:#000;font-weight:700}
+body.eink .mode-badge{color:#000;border:2px solid #000;background:#fff;-webkit-text-fill-color:#000;font-weight:700}
 body.eink .logo small{color:#333}
 body.eink header,
 body.eink .panel,
@@ -523,6 +542,8 @@ body.eink .neon-input{
 body.eink .neon-input:focus{border-color:#000;outline:2px solid #000;outline-offset:1px}
 body.eink .neon-input::placeholder{color:#555}
 body.eink select.neon-input option{background:#fff;color:#000}
+body.eink .url-params{background:#fff;border:2px solid #000;color:#333}
+body.eink .url-params b{color:#000;-webkit-text-fill-color:#000}
 body.eink #dropzone{
   background:#fff;border:3px dashed #000;border-radius:8px;
 }
@@ -596,7 +617,7 @@ body.eink .modal::-webkit-scrollbar-thumb{background:#000}
         </svg>
       </div>
       <div>
-        <h1>NEON SHELF <span class="ver-chip" id="appVersion">v—</span></h1>
+        <h1>NEON SHELF <span class="ver-chip" id="appVersion">v—</span> <span class="mode-badge">download</span></h1>
         <small>книги · яндекс.диск · rest api</small>
       </div>
     </div>
@@ -618,8 +639,8 @@ body.eink .modal::-webkit-scrollbar-thumb{background:#000}
   </header>
 
   <div class="grid">
-    <!-- LEFT: UPLOAD -->
-    <section class="panel">
+    <!-- LEFT: UPLOAD (скрыта в режиме download) -->
+    <section class="panel upload-panel">
       <h2>Загрузка книг</h2>
       <div id="dropzone">
         <div class="dz-icon">📚</div>
@@ -699,14 +720,41 @@ body.eink .modal::-webkit-scrollbar-thumb{background:#000}
     </div>
 
     <div class="field">
+      <label>Режим работы</label>
+      <select class="neon-input" id="setMode" style="width:100%">
+        <option value="edit">edit — загрузка, удаление и скачивание книг</option>
+        <option value="download">download — только список и скачивание</option>
+      </select>
+      <div class="hint">В режиме <b>download</b> область загрузки скрыта, кнопка удаления не отображается — только просмотр и скачивание книг.</div>
+    </div>
+
+    <div class="field">
       <label>OAuth-токен Яндекс.Диска</label>
       <div class="token-row">
         <input class="neon-input" type="password" id="setToken" placeholder="y0_AgAAA..." autocomplete="off">
         <button class="btn ghost sm" id="btnToggleToken" title="Показать/скрыть">👁</button>
       </div>
       <div class="hint">Получить токен: <a href="https://oauth.yandex.ru/" target="_blank" rel="noopener noreferrer">oauth.yandex.ru</a> (права «Яндекс.Диск»).
-        Также токен можно передать в URL: <b>?token=…</b> — он будет подхвачен при запуске и удалён из адресной строки.
         <span class="idb-only" style="display:inline">Хранится локально в IndexedDB.</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Параметры в URL</label>
+      <div class="url-params">
+        Все настройки можно передать в GET-параметрах URL — они применяются при запуске и удаляются из адресной строки:<br>
+        <b>?token=…</b> — OAuth-токен (или <b>access_token</b>)<br>
+        <b>&amp;mode=edit|download</b> — режим работы<br>
+        <b>&amp;folder=/Books</b> — папка для книг<br>
+        <b>&amp;app=1|0</b> — папка приложения (app:/)<br>
+        <b>&amp;overwrite=1|0</b> — перезапись файлов<br>
+        <b>&amp;showall=1|0</b> — показывать все файлы<br>
+        <b>&amp;bgdownload=1|0</b> — фоновое скачивание<br>
+        <b>&amp;eink=1|0</b> — тема E-ink<br>
+        <b>&amp;accent=00f0ff</b> — цвет акцента (HEX)<br>
+        <b>&amp;sort=date-desc</b> — сортировка списка<br>
+        <b>&amp;project=Имя</b> — загрузить проект при старте
+        <div class="copy-all"><button class="btn ghost sm" id="btnCopyUrl">📋 Скопировать ссылку с текущими настройками</button></div>
       </div>
     </div>
 
@@ -782,10 +830,12 @@ body.eink .modal::-webkit-scrollbar-thumb{background:#000}
    NEON SHELF — SPA для управления книгами на Яндекс.Диске
    ================================================================ */
 
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.8.0';
 const API = 'https://cloud-api.yandex.net/v1/disk';
 const BOOK_EXTS = ['fb2','epub','pdf','mobi','azw','azw3','djvu','djv','txt','rtf','zip','cbz','cbr','doc','docx','fb2.zip'];
 const LONG_NAME_THRESHOLD = 48;
+const SORT_OPTIONS = ['name-asc','name-desc','date-desc','date-asc','size-desc','size-asc'];
+const MODES = ['edit','download'];
 
 /* ---------------- IndexedDB ---------------- */
 const DB_NAME = 'neon-shelf-db', DB_VER = 1;
@@ -892,7 +942,8 @@ function idbDegrade(){
 let settings = {
   token:'',
   folder:'/Books',
-  useAppFolder:true,    // по умолчанию — папка приложения
+  mode:'edit',          // edit | download
+  useAppFolder:true,
   overwrite:true,
   showAll:false,
   bgDownload:true,
@@ -903,6 +954,7 @@ let library = [];
 let queue = [];
 let uploading = false;
 let connOK = false;
+let urlProjectRequest = null;
 
 const ACCENTS = [
   {c:'#00f0ff', n:'Циан'},
@@ -912,6 +964,8 @@ const ACCENTS = [
   {c:'#ffc53d', n:'Янтарь'},
   {c:'#ff3b5c', n:'Красный'}
 ];
+
+function isDownloadMode(){ return settings.mode === 'download'; }
 
 /* ---------------- Helpers ---------------- */
 const $ = id => document.getElementById(id);
@@ -957,22 +1011,95 @@ function qs(params){
     .join('&');
 }
 
-/* ---------------- Токен из GET-параметра URL ----------------
-   Поддерживаются ?token=… и ?access_token=…
-   После чтения параметр удаляется из адресной строки. */
-function readTokenFromURL(){
+/* ---------------- Параметры из URL ---------------- */
+const URL_PARAM_KEYS = ['token','access_token','mode','folder','app','overwrite','showall','bgdownload','eink','accent','sort','project'];
+
+function parseBool(v){
+  const s = String(v).toLowerCase().trim();
+  if(['1','true','yes','on','да'].includes(s)) return true;
+  if(['0','false','no','off','нет'].includes(s)) return false;
+  return null;
+}
+
+function readParamsFromURL(){
+  const applied = {};
   try{
     const url = new URL(location.href);
-    const tok = url.searchParams.get('token') || url.searchParams.get('access_token');
-    if(tok){
-      url.searchParams.delete('token');
-      url.searchParams.delete('access_token');
+    let found = false;
+
+    const token = url.searchParams.get('token') || url.searchParams.get('access_token');
+    if(token){ settings.token = token.trim(); applied.token = true; found = true; }
+
+    const mode = url.searchParams.get('mode');
+    if(mode && MODES.includes(mode.toLowerCase().trim())){
+      settings.mode = mode.toLowerCase().trim();
+      applied.mode = settings.mode; found = true;
+    }
+
+    const folder = url.searchParams.get('folder') || url.searchParams.get('path');
+    if(folder !== null){ settings.folder = folder.trim(); applied.folder = folder.trim(); found = true; }
+
+    const boolMap = {
+      'app':'useAppFolder',
+      'overwrite':'overwrite',
+      'showall':'showAll',
+      'bgdownload':'bgDownload',
+      'eink':'eink'
+    };
+    for(const [param, key] of Object.entries(boolMap)){
+      const raw = url.searchParams.get(param);
+      if(raw !== null){
+        const val = parseBool(raw);
+        if(val !== null){ settings[key] = val; applied[key] = val; found = true; }
+      }
+    }
+
+    const accent = url.searchParams.get('accent');
+    if(accent){
+      let hex = accent.trim().replace(/^#/,'');
+      if(/^[0-9a-fA-F]{3}$/.test(hex)) hex = hex.split('').map(x=>x+x).join('');
+      if(/^[0-9a-fA-F]{6}$/.test(hex)){
+        settings.accent = '#'+hex.toLowerCase();
+        applied.accent = settings.accent; found = true;
+      }
+    }
+
+    const sort = url.searchParams.get('sort');
+    if(sort && SORT_OPTIONS.includes(sort)){
+      applied.sort = sort; found = true;
+    }
+
+    const project = url.searchParams.get('project');
+    if(project && project.trim()){
+      urlProjectRequest = project.trim();
+      applied.project = urlProjectRequest; found = true;
+    }
+
+    if(found){
+      for(const k of URL_PARAM_KEYS) url.searchParams.delete(k);
+      url.searchParams.delete('path');
       const rest = url.searchParams.toString();
       history.replaceState(null, '', url.pathname + (rest ? '?'+rest : '') + url.hash);
-      return tok.trim();
     }
-  }catch(e){ console.warn('URL token parse:', e); }
-  return null;
+  }catch(e){ console.warn('URL params parse:', e); }
+  return applied;
+}
+
+function buildShareURL(includeToken){
+  const url = new URL(location.href);
+  for(const k of URL_PARAM_KEYS) url.searchParams.delete(k);
+  url.searchParams.delete('path');
+  if(includeToken && settings.token) url.searchParams.set('token', settings.token);
+  url.searchParams.set('mode', settings.mode);
+  url.searchParams.set('folder', settings.folder || '/Books');
+  url.searchParams.set('app', settings.useAppFolder ? '1':'0');
+  url.searchParams.set('overwrite', settings.overwrite ? '1':'0');
+  url.searchParams.set('showall', settings.showAll ? '1':'0');
+  url.searchParams.set('bgdownload', settings.bgDownload ? '1':'0');
+  url.searchParams.set('eink', settings.eink ? '1':'0');
+  url.searchParams.set('accent', settings.accent.replace('#',''));
+  url.searchParams.set('sort', $('sortBy').value);
+  return url.toString();
 }
 
 /* ---------------- Пути: обычный диск / папка приложения ---------------- */
@@ -998,7 +1125,7 @@ function joinPath(base, name){
   return base + '/' + name;
 }
 
-/* ---------------- Theme / storage mode UI ---------------- */
+/* ---------------- Theme / storage / mode UI ---------------- */
 function applyTheme(){
   document.body.classList.toggle('eink', !!settings.eink);
   const af = $('accentField');
@@ -1024,6 +1151,7 @@ function applyModeUI(){
   $('folderHint').textContent = settings.useAppFolder
     ? 'Режим app:/ — путь указывается внутри папки приложения (например /Books → app:/Books).'
     : 'Путь на диске, куда загружаются книги и откуда строится список.';
+  document.body.classList.toggle('mode-download', isDownloadMode());
   applyTheme();
 }
 
@@ -1141,9 +1269,7 @@ async function fetchLibrary(){
 async function getDiskInfo(){ return await apiGet(''); }
 function downloadByPath(path){ return apiGet('/resources/download', {path}); }
 
-/* ---------------- Скачивание ----------------
-   Файл отдаётся браузеру навигацией (iframe или anchor) без Referer —
-   без fetch-запросов к контенту и без CORS. */
+/* ---------------- Скачивание ---------------- */
 function startDownloadViaIframe(href, filename){
   const fr = document.createElement('iframe');
   fr.style.cssText = 'display:none;width:0;height:0;border:0';
@@ -1189,6 +1315,7 @@ async function settingsMigration(){
   if(typeof settings.bgDownload === 'undefined') settings.bgDownload = true;
   if(typeof settings.useAppFolder === 'undefined') settings.useAppFolder = true;
   if(typeof settings.eink === 'undefined') settings.eink = false;
+  if(!MODES.includes(settings.mode)) settings.mode = 'edit';
   if(/^app:\/?/i.test((settings.folder||'').trim())){
     settings.useAppFolder = true;
   }
@@ -1250,6 +1377,7 @@ function renderLibrary(){
     list.innerHTML = `<div class="empty"><div class="big">🌌</div><div>${q||fmtF?'Ничего не найдено':'Библиотека пуста'}</div><small>${connOK?'Загрузите книги или смените папку/фильтр':'Настройте токен и нажмите «Обновить»'}</small></div>`;
     return;
   }
+  const dl = !isDownloadMode();   // в режиме download кнопка удаления не выводится
   list.innerHTML = items.map(b=>{
     const isLong = b.name.length > LONG_NAME_THRESHOLD;
     return `
@@ -1264,7 +1392,7 @@ function renderLibrary(){
       </div>
       <div class="acts">
         <button class="btn sm" data-act="download" title="Скачать">⬇ Скачать</button>
-        <button class="btn sm danger" data-act="delete" title="Удалить с диска">🗑</button>
+        ${dl?`<button class="btn sm danger" data-act="delete" title="Удалить с диска">🗑</button>`:''}
       </div>
     </div>`;
   }).join('');
@@ -1303,6 +1431,10 @@ function statusText(q){
 /* ---------------- Upload flow ---------------- */
 let qid = 0;
 function addFiles(fileList){
+  if(isDownloadMode()){
+    toast('Режим download: загрузка файлов отключена','warn');
+    return;
+  }
   let added = 0;
   for(const f of fileList){
     queue.push({id:++qid, file:f, status:'wait', progress:0, error:''});
@@ -1313,6 +1445,7 @@ function addFiles(fileList){
 }
 
 async function processQueue(){
+  if(isDownloadMode()){ toast('Режим download: загрузка файлов отключена','warn'); return; }
   if(uploading) return;
   if(!settings.token){ toast('Сначала укажите OAuth-токен в настройках','err'); openModal('modalSettings'); return; }
   const pending = queue.filter(q=>q.status==='wait'||q.status==='fail');
@@ -1371,7 +1504,7 @@ async function refreshLibrary(silent){
     if(info && info.total_space){
       $('statSpace').innerHTML = `диск: <b>${fmtSize(info.used_space||0)}</b> / ${fmtSize(info.total_space)}`;
     }
-    setConn(true,'подключено · '+(info&&info.user? info.user.display_name||info.user.login : 'OK')+(settings.useAppFolder?' · app:/':''));
+    setConn(true,'подключено · '+(info&&info.user? info.user.display_name||info.user.login : 'OK')+(settings.useAppFolder?' · app:/':'')+' · '+settings.mode);
     $('lastSync').textContent = 'синхронизация: '+new Date().toLocaleTimeString('ru-RU');
     await persistLibrary();
     renderLibrary();
@@ -1396,6 +1529,7 @@ async function onBookAction(path, act){
   if(!book) return;
 
   if(act==='delete'){
+    if(isDownloadMode()){ toast('Режим download: удаление недоступно','warn'); return; }
     if(!confirm(`Удалить «${book.name}» с Яндекс.Диска?`)) return;
     try{
       await apiDelete('/resources',{path:book.path});
@@ -1427,6 +1561,23 @@ async function onBookAction(path, act){
   }
 }
 
+/* ---------------- Clipboard ---------------- */
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    }catch(e2){ return false; }
+  }
+}
+
 /* ---------------- Modals ---------------- */
 function openModal(id){ $(id).classList.add('open'); }
 function closeModal(id){ const m=$(id); if(m) m.classList.remove('open'); }
@@ -1438,6 +1589,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySel
 
 /* settings modal */
 function fillSettingsForm(){
+  $('setMode').value = settings.mode;
   $('setToken').value = settings.token;
   $('setFolder').value = settings.folder;
   $('setAppFolder').checked = !!settings.useAppFolder;
@@ -1457,6 +1609,11 @@ function renderSwatches(){
   });
 }
 $('btnSettings').addEventListener('click',()=>{ fillSettingsForm(); openModal('modalSettings'); });
+$('setMode').addEventListener('change', ()=>{
+  settings.mode = $('setMode').value;
+  applyModeUI();
+  renderLibrary();
+});
 $('setAppFolder').addEventListener('change', ()=>{
   settings.useAppFolder = $('setAppFolder').checked;
   settings.folder = $('setFolder').value;
@@ -1472,6 +1629,7 @@ $('setEink').addEventListener('change', ()=>{
   applyTheme();
 });
 $('btnSaveSettings').addEventListener('click', async ()=>{
+  settings.mode = $('setMode').value;
   settings.token = $('setToken').value.trim();
   settings.folder = $('setFolder').value;
   settings.useAppFolder = $('setAppFolder').checked;
@@ -1480,6 +1638,7 @@ $('btnSaveSettings').addEventListener('click', async ()=>{
   settings.bgDownload = $('setBgDl').checked;
   settings.eink = $('setEink').checked;
   await saveSettings();
+  renderLibrary();
   closeModal('modalSettings');
   toast(idbAvailable ? 'Настройки сохранены в IndexedDB' : 'Настройки применены (только текущая сессия)','ok');
   refreshLibrary(true);
@@ -1487,6 +1646,12 @@ $('btnSaveSettings').addEventListener('click', async ()=>{
 $('btnToggleToken').addEventListener('click',()=>{
   const inp = $('setToken');
   inp.type = inp.type==='password' ? 'text':'password';
+});
+$('btnCopyUrl').addEventListener('click', async ()=>{
+  const withToken = confirm('Включить OAuth-токен в ссылку?\n\n«ОК» — ссылка с токеном (секретно!)\n«Отмена» — ссылка без токена');
+  const url = buildShareURL(withToken);
+  const ok = await copyText(url);
+  toast(ok ? 'Ссылка с настройками скопирована' : 'Не удалось скопировать ссылку', ok?'ok':'err', 4500);
 });
 $('btnTestConn').addEventListener('click', async ()=>{
   const tok = $('setToken').value.trim();
@@ -1525,7 +1690,7 @@ async function renderProjects(){
     <div class="proj-item" data-name="${esc(p.name)}">
       <div style="min-width:0;flex:1">
         <div class="p-name">📁 ${esc(p.name)}</div>
-        <div class="p-meta">${fmtDate(p.savedAt)} · книг: ${p.library? p.library.length:0} · папка: ${esc(p.settings?p.settings.folder:'—')}${p.settings&&p.settings.useAppFolder?' (app:/)':''}</div>
+        <div class="p-meta">${fmtDate(p.savedAt)} · книг: ${p.library? p.library.length:0} · папка: ${esc(p.settings?p.settings.folder:'—')}${p.settings&&p.settings.useAppFolder?' (app:/)':''}${p.settings&&p.settings.mode?' · '+esc(p.settings.mode):''}</div>
       </div>
       <div class="p-acts">
         <button class="btn sm purple" data-pact="load">Загрузить</button>
@@ -1617,9 +1782,9 @@ $('projFileInput').addEventListener('change', async e=>{
 
 /* ---------------- Dropzone & file input ---------------- */
 const dz = $('dropzone');
-dz.addEventListener('click', ()=> $('fileInput').click());
+dz.addEventListener('click', ()=>{ if(!isDownloadMode()) $('fileInput').click(); });
 $('fileInput').addEventListener('change', e=>{ addFiles(e.target.files); e.target.value=''; });
-['dragenter','dragover'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.add('drag'); }));
+['dragenter','dragover'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); if(!isDownloadMode()) dz.classList.add('drag'); }));
 ['dragleave','drop'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.remove('drag'); }));
 dz.addEventListener('drop', e=>{ if(e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
 document.addEventListener('dragover', e=>e.preventDefault());
@@ -1650,15 +1815,33 @@ $('sortBy').addEventListener('change', renderLibrary);
     }
     await loadSettings();
 
-    // токен из GET-параметра URL имеет приоритет над сохранённым
-    const urlToken = readTokenFromURL();
-    if(urlToken){
-      settings.token = urlToken;
+    // параметры из URL имеют приоритет над сохранёнными настройками
+    const applied = readParamsFromURL();
+    if(Object.keys(applied).length){
+      if(applied.sort) $('sortBy').value = applied.sort;
       await saveSettings();
-      toast('Токен получен из URL и удалён из адресной строки','ok');
+      renderLibrary();
+      const names = Object.keys(applied).join(', ');
+      toast('Применены параметры из URL: '+names,'ok',4500);
     }
 
-    await loadCachedLibrary();
+    // проект, запрошенный через ?project=…
+    if(urlProjectRequest){
+      const projName = urlProjectRequest;
+      urlProjectRequest = null;
+      if(idbAvailable){
+        const p = await idbGet('projects', projName);
+        if(p){
+          await loadProject(projName);
+        }else{
+          toast('Проект «'+projName+'» не найден в IndexedDB','warn',5000);
+        }
+      }else{
+        toast('Загрузка проекта из URL недоступна без IndexedDB','warn',5000);
+      }
+    }
+
+    await loadCachedLibraryIfNeeded();
     renderQueue();
     if(settings.token){
       refreshLibrary(true);
@@ -1671,6 +1854,16 @@ $('sortBy').addEventListener('change', renderLibrary);
     toast('Ошибка инициализации: '+err.message,'err',8000);
   }
 })();
+
+let cachedLibLoaded = false;
+async function loadCachedLibraryIfNeeded(){
+  if(cachedLibLoaded) return;
+  cachedLibLoaded = true;
+  if(!library.length){
+    library = idbAvailable ? await idbGetAll('library') : [];
+    renderLibrary();
+  }
+}
 </script>
 </body>
 </html>
