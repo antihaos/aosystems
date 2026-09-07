@@ -96,6 +96,8 @@ header{
 .stat-bubble b{color:var(--accent);font-weight:600}
 .stat-bubble.mem{border-color:rgba(255,197,61,.45);color:var(--warn);background:rgba(255,197,61,.06)}
 .stat-bubble.mem b{color:var(--warn)}
+.stat-bubble.app-mode{border-color:rgba(157,77,255,.5);color:var(--accent3);background:rgba(157,77,255,.07)}
+.stat-bubble.app-mode b{color:var(--accent3);text-shadow:0 0 8px rgba(157,77,255,.8)}
 
 /* ============ BUTTONS ============ */
 .btn{
@@ -351,6 +353,7 @@ select.neon-input option{background:#0a0d1e}
     <div class="disk-stats">
       <div class="stat-bubble" id="statSpace">диск: <b>—</b></div>
       <div class="stat-bubble" id="statCount">книг: <b>0</b></div>
+      <div class="stat-bubble app-mode" id="statMode" style="display:none">режим: <b>app:/</b></div>
     </div>
     <button class="btn" id="btnRefresh" title="Обновить список книг">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
@@ -453,11 +456,15 @@ select.neon-input option{background:#0a0d1e}
     <div class="field">
       <label>Папка для книг</label>
       <input class="neon-input" type="text" id="setFolder" placeholder="/Books" style="width:100%">
-      <div class="hint">Путь на диске, куда загружаются книги и откуда строится список.</div>
+      <div class="hint" id="folderHint">Путь на диске, куда загружаются книги и откуда строится список.</div>
     </div>
 
     <div class="field">
       <label>Параметры</label>
+      <div class="switch-row">
+        <span>Папка приложения (app:/)<small>для токенов с доступом только к папке приложения. Путь выше будет внутри app:/</small></span>
+        <label class="toggle"><input type="checkbox" id="setAppFolder"><span class="slider"></span></label>
+      </div>
       <div class="switch-row">
         <span>Перезаписывать файлы<small>overwrite=true при совпадении имени</small></span>
         <label class="toggle"><input type="checkbox" id="setOverwrite" checked><span class="slider"></span></label>
@@ -512,8 +519,8 @@ select.neon-input option{background:#0a0d1e}
 'use strict';
 /* ================================================================
    NEON SHELF — SPA для управления книгами на Яндекс.Диске
-   Корректная деградация при недоступной IndexedDB:
-   все функции, требующие БД, скрываются; остальное работает.
+   v3: поддержка папки приложения (app:/) + корректное кодирование
+   путей в REST-запросах (исправлено скачивание).
    ================================================================ */
 
 const API = 'https://cloud-api.yandex.net/v1/disk';
@@ -522,7 +529,7 @@ const BOOK_EXTS = ['fb2','epub','pdf','mobi','azw','azw3','djvu','djv','txt','rt
 /* ---------------- IndexedDB (с защитой от недоступности) ---------------- */
 const DB_NAME = 'neon-shelf-db', DB_VER = 1;
 let dbPromise = null;
-let idbAvailable = false;   // станет true только после успешного открытия
+let idbAvailable = false;
 let idbChecked = false;
 
 function openDB(){
@@ -544,7 +551,6 @@ function openDB(){
   });
   return dbPromise;
 }
-
 async function detectIndexedDB(){
   if(idbChecked) return idbAvailable;
   idbChecked = true;
@@ -561,8 +567,6 @@ async function detectIndexedDB(){
   }
   return idbAvailable;
 }
-
-/* Все операции БД безопасны: при недоступности — тихий no-op / пустой результат */
 async function idbPut(store,key,value){
   if(!idbAvailable) return undefined;
   try{
@@ -615,7 +619,6 @@ async function idbClear(store){
     });
   }catch(err){ console.warn('idbClear:',err); idbDegrade(); }
 }
-/* Если БД сломалась уже в процессе работы — переключаемся в сессионный режим */
 function idbDegrade(){
   if(!idbAvailable) return;
   idbAvailable = false;
@@ -628,13 +631,14 @@ function idbDegrade(){
 let settings = {
   token:'',
   folder:'/Books',
+  useAppFolder:false,   // работа через папку приложения app:/
   overwrite:true,
   showAll:false,
   blobDownload:false,
   accent:'#00f0ff'
 };
-let library = [];      // {name,path,size,modified,ext}
-let queue = [];        // {id,file,name,status,progress,error}
+let library = [];
+let queue = [];
 let uploading = false;
 let connOK = false;
 
@@ -684,6 +688,43 @@ function extClass(ext){
 function isBook(name){ return BOOK_EXTS.includes(extOf(name)); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* Корректная сборка query-string: encodeURIComponent, а не
+   URLSearchParams (которая кодирует пробел как «+» — из-за этого
+   Яндекс.Диск не находил ресурс и ссылка на скачивание ломалась). */
+function qs(params){
+  return Object.keys(params)
+    .filter(k=> params[k]!==undefined && params[k]!==null)
+    .map(k=> encodeURIComponent(k)+'='+encodeURIComponent(String(params[k])))
+    .join('&');
+}
+
+/* ---------------- Пути: обычный диск / папка приложения ---------------- */
+function normalizeFolder(f){
+  let p = (f||'').trim();
+  // если пользователь сам ввёл app:/ — учитываем
+  const isApp = /^app:\/?/i.test(p);
+  if(isApp){
+    p = p.replace(/^app:\/?/i,'');
+  }
+  if(!p) p = isApp ? '' : '/Books';
+  if(!p.startsWith('/')) p = '/'+p;
+  p = p.replace(/\/+$/,'');
+  if(p === '/') p = '';
+  return p; // '' означает корень (диска или папки приложения)
+}
+/* Итоговый базовый путь с учётом режима папки приложения */
+function basePath(){
+  const inner = normalizeFolder(settings.folder);
+  if(settings.useAppFolder){
+    return inner ? 'app:'+inner : 'app:/';
+  }
+  return inner ? inner : '/';
+}
+function joinPath(base, name){
+  if(base==='/' || base==='app:/') return base + name;
+  return base + '/' + name;
+}
+
 /* ---------------- Storage mode UI ---------------- */
 function applyStorageMode(){
   document.body.classList.toggle('no-idb', !idbAvailable);
@@ -696,9 +737,15 @@ function applyStorageMode(){
     badge.classList.add('mem');
     badge.innerHTML = 'хранилище: <b>память (сессия)</b>';
     $('saveSettingsLabel').textContent = 'Применить';
-    // на всякий случай закрываем модалку проектов, если была открыта
     closeModal('modalProjects');
   }
+}
+function applyModeUI(){
+  $('statMode').style.display = settings.useAppFolder ? '' : 'none';
+  $('targetFolder').textContent = basePath();
+  $('folderHint').textContent = settings.useAppFolder
+    ? 'Режим app:/ — путь указывается внутри папки приложения (например /Books → app:/Books).'
+    : 'Путь на диске, куда загружаются книги и откуда строится список.';
 }
 
 /* ---------------- Yandex.Disk REST API ---------------- */
@@ -707,17 +754,26 @@ function authHeaders(extra){
   return Object.assign({'Authorization':'OAuth '+settings.token}, extra||{});
 }
 async function apiGet(path, params){
-  const qs = params ? '?'+new URLSearchParams(params).toString() : '';
-  const r = await fetch(API+path+qs, {headers:authHeaders()});
+  const q = params ? qs(params) : '';
+  const r = await fetch(API+path+(q?'?'+q:''), {headers:authHeaders()});
   let body = null;
   try{ body = await r.json(); }catch(e){}
   if(!r.ok) throw new Error((body && (body.message||body.description)) || ('HTTP '+r.status));
   return body;
 }
 async function apiDelete(path, params){
-  const qs = params ? '?'+new URLSearchParams(params).toString() : '';
-  const r = await fetch(API+path+qs, {method:'DELETE', headers:authHeaders()});
+  const q = params ? qs(params) : '';
+  const r = await fetch(API+path+(q?'?'+q:''), {method:'DELETE', headers:authHeaders()});
   if(!r.ok && r.status!==204){
+    let body=null; try{ body=await r.json(); }catch(e){}
+    throw new Error((body && (body.message||body.description)) || ('HTTP '+r.status));
+  }
+  return true;
+}
+async function apiPut(path, params){
+  const q = params ? qs(params) : '';
+  const r = await fetch(API+path+(q?'?'+q:''), {method:'PUT', headers:authHeaders()});
+  if(!r.ok && r.status!==409){
     let body=null; try{ body=await r.json(); }catch(e){}
     throw new Error((body && (body.message||body.description)) || ('HTTP '+r.status));
   }
@@ -744,31 +800,22 @@ async function waitOperation(opId, timeoutMs=120000){
   }
   throw new Error('Ожидание операции превысило таймаут');
 }
-function normalizeFolder(f){
-  let p = (f||'').trim();
-  if(!p) p = '/Books';
-  if(!p.startsWith('/')) p = '/'+p;
-  p = p.replace(/\/+$/,'');
-  return p || '/';
-}
 async function ensureFolder(){
-  const folder = normalizeFolder(settings.folder);
-  if(folder === '/') return folder;
-  try{ await apiGet('/resources', {path:folder, limit:1}); }
-  catch(e){
-    const r = await fetch(API+'/resources?'+new URLSearchParams({path:folder}), {method:'PUT', headers:authHeaders()});
-    if(!r.ok && r.status!==409){
-      let b=null; try{b=await r.json();}catch(x){}
-      throw new Error((b&&(b.message||b.description))||('Не удалось создать папку '+folder));
-    }
-    toast('Создана папка '+folder,'ok');
+  const base = basePath();
+  // корень диска или корень папки приложения создавать не нужно
+  if(base==='/' || base==='app:/') return base;
+  try{
+    await apiGet('/resources', {path:base, limit:'1'});
+  }catch(e){
+    await apiPut('/resources', {path:base});
+    toast('Создана папка '+base,'ok');
   }
-  return folder;
+  return base;
 }
 
 async function uploadOneFile(file, onProgress){
-  const folder = await ensureFolder();
-  const targetPath = folder + '/' + file.name;
+  const base = await ensureFolder();
+  const targetPath = joinPath(base, file.name);
   const up = await apiGet('/resources/upload', {path:targetPath, overwrite: settings.overwrite ? 'true':'false'});
   if(!up || !up.href) throw new Error('Диск не выдал ссылку на загрузку');
   await xhrPut(up.href, file, p=>onProgress(p*0.9));
@@ -781,12 +828,12 @@ async function uploadOneFile(file, onProgress){
 }
 
 async function fetchLibrary(){
-  const folder = normalizeFolder(settings.folder);
+  const base = basePath();
   const items = [];
   let offset = 0;
   const limit = 1000;
   while(true){
-    const res = await apiGet('/resources', {path:folder, limit:String(limit), offset:String(offset)});
+    const res = await apiGet('/resources', {path:base, limit:String(limit), offset:String(offset)});
     const emb = res && res._embedded;
     const chunk = (emb && emb.items) ? emb.items : [];
     for(const it of chunk){
@@ -798,7 +845,7 @@ async function fetchLibrary(){
   }
   return items.map(it=>({
     name: it.name,
-    path: it.path,
+    path: it.path,          // сохраняем путь exactly как вернул API (disk:/... или app:/...)
     size: it.size,
     modified: it.modified,
     created: it.created,
@@ -812,7 +859,7 @@ function downloadByPath(path){ return apiGet('/resources/download', {path}); }
 /* ---------------- Persistence (деградирует до памяти) ---------------- */
 async function saveSettings(){
   applyAccent(settings.accent);
-  $('targetFolder').textContent = normalizeFolder(settings.folder);
+  applyModeUI();
   if(idbAvailable) await idbPut('kv','settings', settings);
 }
 async function loadSettings(){
@@ -820,8 +867,12 @@ async function loadSettings(){
     const s = await idbGet('kv','settings');
     if(s) settings = Object.assign(settings, s);
   }
+  // миграция: если в сохранённой папке был префикс app:/ — включаем режим
+  if(/^app:\/?/i.test((settings.folder||'').trim())){
+    settings.useAppFolder = true;
+  }
   applyAccent(settings.accent);
-  $('targetFolder').textContent = normalizeFolder(settings.folder);
+  applyModeUI();
 }
 async function persistLibrary(){
   if(!idbAvailable) return;
@@ -892,7 +943,7 @@ function renderLibrary(){
       </div>
       <div class="acts">
         <button class="btn sm" data-act="download" title="Скачать">⬇ Скачать</button>
-        <button class="btn sm purple" data-act="open" title="Открыть на Яндекс.Диске">🔗 Диск</button>
+        <button class="btn sm purple" data-act="copypath" title="Скопировать путь на диске">📋 Путь</button>
         <button class="btn sm danger" data-act="delete" title="Удалить с диска">🗑</button>
       </div>
     </div>`).join('');
@@ -996,7 +1047,7 @@ async function refreshLibrary(silent){
     if(info && info.total_space){
       $('statSpace').innerHTML = `диск: <b>${fmtSize(info.used_space||0)}</b> / ${fmtSize(info.total_space)}`;
     }
-    setConn(true,'подключено · '+(info&&info.user? info.user.display_name||info.user.login : 'OK'));
+    setConn(true,'подключено · '+(info&&info.user? info.user.display_name||info.user.login : 'OK')+(settings.useAppFolder?' · app:/':''));
     $('lastSync').textContent = 'синхронизация: '+new Date().toLocaleTimeString('ru-RU');
     await persistLibrary();
     renderLibrary();
@@ -1004,18 +1055,41 @@ async function refreshLibrary(silent){
   }catch(err){
     setConn(false,'ошибка: '+err.message);
     renderLibrary();
-    toast('Не удалось обновить: '+err.message,'err',5000);
+    if(/403|Недостаточно|scope/i.test(err.message) && !settings.useAppFolder){
+      toast('Возможно, токен выдан только для папки приложения — включите режим app:/ в настройках','warn',7000);
+    }else{
+      toast('Не удалось обновить: '+err.message,'err',5000);
+    }
   }
 }
 
 /* ---------------- Book actions ---------------- */
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    }catch(e2){ return false; }
+  }
+}
+
 async function onBookAction(path, act){
   const book = library.find(b=>b.path===path);
   if(!book) return;
-  if(act==='open'){
-    window.open('https://disk.yandex.ru/d/?path='+encodeURIComponent('/'+path.replace(/^disk:/,'')), '_blank');
+
+  if(act==='copypath'){
+    const ok = await copyText(book.path);
+    toast(ok ? 'Путь скопирован: '+book.path : 'Не удалось скопировать', ok?'ok':'err');
     return;
   }
+
   if(act==='delete'){
     if(!confirm(`Удалить «${book.name}» с Яндекс.Диска?`)) return;
     try{
@@ -1029,25 +1103,39 @@ async function onBookAction(path, act){
     }
     return;
   }
+
   if(act==='download'){
     toast('Запрашиваю ссылку на скачивание…','',2000);
     try{
       const d = await downloadByPath(book.path);
       if(!d || !d.href) throw new Error('Диск не вернул ссылку');
+      let done = false;
       if(settings.blobDownload){
-        const r = await fetch(d.href);
-        if(!r.ok) throw new Error('HTTP '+r.status);
-        const blob = await r.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = book.name;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url), 4000);
-        toast('Скачивание начато: '+book.name,'ok');
-      }else{
-        const a = document.createElement('a');
-        a.href = d.href; a.target='_blank'; a.rel='noopener';
-        document.body.appendChild(a); a.click(); a.remove();
+        try{
+          const r = await fetch(d.href);
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          const blob = await r.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = book.name;
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(()=>URL.revokeObjectURL(url), 4000);
+          toast('Скачивание начато: '+book.name,'ok');
+          done = true;
+        }catch(blobErr){
+          console.warn('Blob-скачивание не удалось, использую прямую ссылку:', blobErr);
+          toast('Blob-режим недоступен (CORS), качаю по прямой ссылке','warn');
+        }
+      }
+      if(!done){
+        // прямая ссылка downloader.disk.yandex.ru — отдаёт файл с
+        // Content-Disposition: attachment; открываем в новой вкладке
+        const w = window.open(d.href, '_blank', 'noopener');
+        if(!w){
+          const a = document.createElement('a');
+          a.href = d.href; a.target = '_blank'; a.rel = 'noopener';
+          document.body.appendChild(a); a.click(); a.remove();
+        }
         toast('Открываю ссылку на скачивание','ok');
       }
     }catch(err){
@@ -1069,9 +1157,11 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySel
 function fillSettingsForm(){
   $('setToken').value = settings.token;
   $('setFolder').value = settings.folder;
+  $('setAppFolder').checked = !!settings.useAppFolder;
   $('setOverwrite').checked = !!settings.overwrite;
   $('setShowAll').checked = !!settings.showAll;
   $('setBlobDl').checked = !!settings.blobDownload;
+  applyModeUI();
   renderSwatches();
 }
 function renderSwatches(){
@@ -1083,9 +1173,21 @@ function renderSwatches(){
   });
 }
 $('btnSettings').addEventListener('click',()=>{ fillSettingsForm(); openModal('modalSettings'); });
+$('setAppFolder').addEventListener('change', ()=>{
+  // мгновенный предпросмотр итогового пути
+  settings.useAppFolder = $('setAppFolder').checked;
+  settings.folder = $('setFolder').value;
+  applyModeUI();
+});
+$('setFolder').addEventListener('input', ()=>{
+  settings.folder = $('setFolder').value;
+  settings.useAppFolder = $('setAppFolder').checked;
+  applyModeUI();
+});
 $('btnSaveSettings').addEventListener('click', async ()=>{
   settings.token = $('setToken').value.trim();
-  settings.folder = normalizeFolder($('setFolder').value);
+  settings.folder = $('setFolder').value;
+  settings.useAppFolder = $('setAppFolder').checked;
   settings.overwrite = $('setOverwrite').checked;
   settings.showAll = $('setShowAll').checked;
   settings.blobDownload = $('setBlobDl').checked;
@@ -1135,7 +1237,7 @@ async function renderProjects(){
     <div class="proj-item" data-name="${esc(p.name)}">
       <div>
         <div class="p-name">📁 ${esc(p.name)}</div>
-        <div class="p-meta">${fmtDate(p.savedAt)} · книг: ${p.library? p.library.length:0} · папка: ${esc(p.settings?p.settings.folder:'—')}</div>
+        <div class="p-meta">${fmtDate(p.savedAt)} · книг: ${p.library? p.library.length:0} · папка: ${esc(p.settings?p.settings.folder:'—')}${p.settings&&p.settings.useAppFolder?' (app:/)':''}</div>
       </div>
       <div class="p-acts">
         <button class="btn sm purple" data-pact="load">Загрузить</button>
