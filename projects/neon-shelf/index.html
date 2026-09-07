@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON SHELF — электронные книги на Яндекс.Диске</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/orbitron@latest/latin-wght-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/rajdhani@latest/latin-wght-normal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/fonts/jetbrains-mono@latest/latin-wght-normal.css">
+<style>
+:root{
+  --bg:#05060f;
+  --bg2:#0a0d1e;
+  --panel:rgba(13,17,38,.72);
+  --panel-border:rgba(0,255,255,.14);
+  --accent:#00f0ff;
+  --accent2:#ff2fd6;
+  --accent3:#9d4dff;
+  --text:#d8e6ff;
+  --muted:#6d7aa3;
+  --ok:#39ff88;
+  --err:#ff3b5c;
+  --warn:#ffc53d;
+  --glow:0 0 12px rgba(0,240,255,.45),0 0 32px rgba(0,240,255,.15);
+  --glow2:0 0 12px rgba(255,47,214,.45),0 0 32px rgba(255,47,214,.15);
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Rajdhani',sans-serif;
+  font-size:16px;
+  overflow-x:hidden;
+  min-height:100vh;
+}
+body::before{
+  content:"";
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% -5%, rgba(0,240,255,.10), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(255,47,214,.09), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 110%, rgba(157,77,255,.10), transparent 60%),
+    linear-gradient(rgba(0,240,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,240,255,.035) 1px, transparent 1px);
+  background-size:auto,auto,auto,42px 42px,42px 42px;
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 3px);
+}
+#app{position:relative;z-index:2;max-width:1280px;margin:0 auto;padding:18px 20px 60px}
+
+/* ==== режим без IndexedDB: скрываем всё, что требует БД ==== */
+body.no-idb .idb-only{display:none !important}
+.idb-warn{display:none}
+body.no-idb .idb-warn{display:block}
+.idb-warn{
+  border:1px solid rgba(255,197,61,.5);background:rgba(255,197,61,.08);
+  color:var(--warn);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;
+  margin-bottom:16px;box-shadow:0 0 14px rgba(255,197,61,.15);
+}
+
+/* ============ HEADER ============ */
+header{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:14px 20px;margin-bottom:20px;
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius);
+  backdrop-filter:blur(14px);
+  box-shadow:inset 0 0 30px rgba(0,240,255,.05), 0 0 24px rgba(0,0,0,.5);
+}
+.logo{display:flex;align-items:center;gap:12px;margin-right:auto}
+.logo-mark{
+  width:44px;height:44px;border-radius:10px;flex:none;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg, rgba(0,240,255,.15), rgba(255,47,214,.15));
+  border:1px solid rgba(0,240,255,.4);
+  box-shadow:var(--glow);
+  animation:pulseGlow 3s ease-in-out infinite;
+}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 8px rgba(0,240,255,.4)}50%{box-shadow:0 0 22px rgba(0,240,255,.8),0 0 40px rgba(255,47,214,.3)}}
+.logo-mark svg{width:26px;height:26px}
+.logo h1{
+  font-family:'Orbitron',sans-serif;font-size:20px;letter-spacing:3px;font-weight:800;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 24px rgba(0,240,255,.35);
+}
+.logo small{display:block;color:var(--muted);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+
+.disk-stats{display:flex;gap:14px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.stat-bubble{padding:6px 12px;border:1px solid var(--panel-border);border-radius:20px;background:rgba(0,240,255,.04)}
+.stat-bubble b{color:var(--accent);font-weight:600}
+.stat-bubble.mem{border-color:rgba(255,197,61,.45);color:var(--warn);background:rgba(255,197,61,.06)}
+.stat-bubble.mem b{color:var(--warn)}
+
+/* ============ BUTTONS ============ */
+.btn{
+  font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text);background:rgba(0,240,255,.06);
+  border:1px solid rgba(0,240,255,.35);border-radius:10px;
+  padding:9px 16px;cursor:pointer;position:relative;
+  transition:.22s;display:inline-flex;align-items:center;gap:8px;
+}
+.btn:hover{background:rgba(0,240,255,.14);box-shadow:var(--glow);transform:translateY(-1px);color:#fff}
+.btn:active{transform:translateY(0)}
+.btn.pink{border-color:rgba(255,47,214,.4);background:rgba(255,47,214,.07)}
+.btn.pink:hover{background:rgba(255,47,214,.16);box-shadow:var(--glow2)}
+.btn.purple{border-color:rgba(157,77,255,.45);background:rgba(157,77,255,.08)}
+.btn.purple:hover{background:rgba(157,77,255,.18);box-shadow:0 0 12px rgba(157,77,255,.5)}
+.btn.ghost{border-color:rgba(109,122,163,.35);background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--text);border-color:var(--accent);background:rgba(0,240,255,.08)}
+.btn.danger{border-color:rgba(255,59,92,.45);color:#ff8ba0;background:rgba(255,59,92,.07)}
+.btn.danger:hover{background:rgba(255,59,92,.18);box-shadow:0 0 12px rgba(255,59,92,.5);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn svg{width:16px;height:16px;flex:none}
+
+/* ============ LAYOUT ============ */
+.grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+.panel{
+  background:var(--panel);border:1px solid var(--panel-border);border-radius:var(--radius);
+  backdrop-filter:blur(14px);padding:20px;
+  box-shadow:inset 0 0 30px rgba(0,240,255,.04),0 0 24px rgba(0,0,0,.45);
+}
+.panel h2{
+  font-family:'Orbitron',sans-serif;font-size:14px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:16px;display:flex;align-items:center;gap:10px;
+  text-shadow:0 0 14px rgba(0,240,255,.5);
+}
+.panel h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(0,240,255,.5),transparent)}
+.panel h2.pink-t{color:var(--accent2);text-shadow:0 0 14px rgba(255,47,214,.5)}
+.panel h2.pink-t::after{background:linear-gradient(90deg,rgba(255,47,214,.5),transparent)}
+
+/* ============ DROPZONE ============ */
+#dropzone{
+  border:2px dashed rgba(0,240,255,.35);border-radius:12px;
+  padding:34px 16px;text-align:center;cursor:pointer;transition:.25s;
+  background:radial-gradient(ellipse at center, rgba(0,240,255,.06), transparent 70%);
+  position:relative;overflow:hidden;
+}
+#dropzone:hover,#dropzone.drag{
+  border-color:var(--accent2);
+  background:radial-gradient(ellipse at center, rgba(255,47,214,.10), transparent 70%);
+  box-shadow:inset 0 0 40px rgba(255,47,214,.08),0 0 20px rgba(0,240,255,.2);
+}
+#dropzone .dz-icon{font-size:38px;filter:drop-shadow(0 0 12px rgba(0,240,255,.8));animation:float 3.5s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+#dropzone p{margin-top:8px;font-weight:600;letter-spacing:1px}
+#dropzone small{color:var(--muted);font-size:13px;display:block;margin-top:4px}
+.formats{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}
+.fmt{
+  font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 8px;border-radius:6px;
+  border:1px solid rgba(157,77,255,.4);color:var(--accent3);background:rgba(157,77,255,.08);
+  text-shadow:0 0 8px rgba(157,77,255,.6);
+}
+
+/* ============ QUEUE ============ */
+#queue{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.q-item{
+  border:1px solid rgba(0,240,255,.2);border-radius:10px;padding:10px 12px;
+  background:rgba(0,240,255,.03);font-size:14px;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.q-item .q-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.q-item .q-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.q-item .q-status{font-family:'JetBrains Mono',monospace;font-size:11px;flex:none;display:flex;align-items:center;gap:6px}
+.q-status .st-txt.wait{color:var(--muted)}
+.q-status .st-txt.up{color:var(--accent);text-shadow:0 0 8px rgba(0,240,255,.7)}
+.q-status .st-txt.done{color:var(--ok);text-shadow:0 0 8px rgba(57,255,136,.6)}
+.q-status .st-txt.fail{color:var(--err);text-shadow:0 0 8px rgba(255,59,92,.6)}
+.progress{height:5px;border-radius:4px;background:rgba(255,255,255,.06);margin-top:8px;overflow:hidden}
+.progress .bar{
+  height:100%;width:0%;border-radius:4px;transition:width .25s;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  box-shadow:0 0 10px rgba(0,240,255,.8);
+}
+.progress .bar.done{background:linear-gradient(90deg,var(--ok),var(--accent));box-shadow:0 0 10px rgba(57,255,136,.7)}
+.progress .bar.fail{background:var(--err);box-shadow:0 0 10px rgba(255,59,92,.7)}
+
+/* ============ LIBRARY ============ */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.neon-input{
+  font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;color:var(--text);
+  background:rgba(5,8,20,.8);border:1px solid rgba(0,240,255,.25);border-radius:10px;
+  padding:9px 14px;outline:none;transition:.2s;flex:1;min-width:140px;
+}
+.neon-input:focus{border-color:var(--accent);box-shadow:var(--glow)}
+.neon-input::placeholder{color:var(--muted)}
+select.neon-input{cursor:pointer;appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--accent) 50%),linear-gradient(135deg,var(--accent) 50%,transparent 50%);background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
+select.neon-input option{background:#0a0d1e}
+
+.book-list{display:flex;flex-direction:column;gap:10px;max-height:640px;overflow-y:auto;padding-right:6px}
+.book-list::-webkit-scrollbar{width:6px}
+.book-list::-webkit-scrollbar-track{background:rgba(255,255,255,.03);border-radius:4px}
+.book-list::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--accent2));border-radius:4px;box-shadow:0 0 8px rgba(0,240,255,.5)}
+
+.book{
+  display:flex;align-items:center;gap:14px;
+  border:1px solid rgba(0,240,255,.15);border-radius:12px;padding:12px 14px;
+  background:linear-gradient(100deg, rgba(0,240,255,.045), rgba(255,47,214,.03));
+  transition:.22s;animation:slideIn .3s ease;
+}
+.book:hover{border-color:rgba(0,240,255,.55);box-shadow:0 0 18px rgba(0,240,255,.18);transform:translateX(4px)}
+.book .ext-badge{
+  flex:none;width:52px;height:52px;border-radius:10px;display:grid;place-items:center;
+  font-family:'Orbitron',sans-serif;font-size:12px;font-weight:800;letter-spacing:1px;
+  border:1px solid;
+}
+.ext-fb2{color:#00f0ff;border-color:rgba(0,240,255,.5);background:rgba(0,240,255,.08);text-shadow:0 0 10px rgba(0,240,255,.9);box-shadow:0 0 14px rgba(0,240,255,.15)}
+.ext-epub{color:#39ff88;border-color:rgba(57,255,136,.5);background:rgba(57,255,136,.08);text-shadow:0 0 10px rgba(57,255,136,.9);box-shadow:0 0 14px rgba(57,255,136,.15)}
+.ext-pdf{color:#ff3b5c;border-color:rgba(255,59,92,.5);background:rgba(255,59,92,.08);text-shadow:0 0 10px rgba(255,59,92,.9);box-shadow:0 0 14px rgba(255,59,92,.15)}
+.ext-mobi,.ext-azw3,.ext-azw{color:#ffc53d;border-color:rgba(255,197,61,.5);background:rgba(255,197,61,.08);text-shadow:0 0 10px rgba(255,197,61,.9);box-shadow:0 0 14px rgba(255,197,61,.15)}
+.ext-djvu{color:#9d4dff;border-color:rgba(157,77,255,.5);background:rgba(157,77,255,.08);text-shadow:0 0 10px rgba(157,77,255,.9);box-shadow:0 0 14px rgba(157,77,255,.15)}
+.ext-other{color:#ff2fd6;border-color:rgba(255,47,214,.5);background:rgba(255,47,214,.08);text-shadow:0 0 10px rgba(255,47,214,.9);box-shadow:0 0 14px rgba(255,47,214,.15)}
+.book .info{flex:1;min-width:0}
+.book .info .name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.book .info .meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap}
+.book .acts{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+
+.empty{
+  text-align:center;padding:44px 16px;color:var(--muted);
+  border:1px dashed rgba(109,122,163,.3);border-radius:12px;
+}
+.empty .big{font-size:40px;margin-bottom:10px;filter:drop-shadow(0 0 12px rgba(157,77,255,.7))}
+
+.spinner{
+  width:16px;height:16px;border:2px solid rgba(0,240,255,.2);border-top-color:var(--accent);
+  border-radius:50%;display:inline-block;animation:spin .7s linear infinite;vertical-align:-3px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ============ MODALS ============ */
+.modal-backdrop{
+  position:fixed;inset:0;z-index:50;background:rgba(3,4,12,.78);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-backdrop.open{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  width:100%;max-width:560px;max-height:86vh;overflow-y:auto;
+  background:linear-gradient(160deg,#0c1128,#0a0d1e);
+  border:1px solid rgba(0,240,255,.35);border-radius:16px;
+  box-shadow:0 0 40px rgba(0,240,255,.15),0 0 90px rgba(255,47,214,.08),inset 0 0 40px rgba(0,240,255,.04);
+  padding:24px;animation:modalIn .3s cubic-bezier(.2,1.2,.4,1);
+}
+.modal::-webkit-scrollbar{width:6px}
+.modal::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--accent2));border-radius:4px}
+@keyframes modalIn{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+.modal h3{
+  font-family:'Orbitron',sans-serif;font-size:16px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--accent);text-shadow:0 0 16px rgba(0,240,255,.6);margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;
+}
+.modal h3.pink-t{color:var(--accent2);text-shadow:0 0 16px rgba(255,47,214,.6)}
+.modal .sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.modal .close-x{
+  margin-left:auto;background:none;border:none;color:var(--muted);font-size:26px;cursor:pointer;
+  line-height:1;transition:.2s;font-family:'Rajdhani',sans-serif;
+}
+.modal .close-x:hover{color:var(--accent2);text-shadow:0 0 12px rgba(255,47,214,.9);transform:rotate(90deg)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field .hint{font-size:13px;color:var(--muted);margin-top:5px}
+.field .hint a{color:var(--accent)}
+.token-row{display:flex;gap:8px}
+.token-row .neon-input{font-family:'JetBrains Mono',monospace;font-size:13px}
+.switch-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(0,240,255,.08)}
+.switch-row span{font-weight:600}
+.switch-row small{display:block;color:var(--muted);font-size:13px;font-weight:400}
+.toggle{position:relative;width:46px;height:24px;flex:none;cursor:pointer;margin-left:auto}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{
+  position:absolute;inset:0;border-radius:24px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(109,122,163,.4);transition:.25s;
+}
+.toggle .slider::before{
+  content:"";position:absolute;width:16px;height:16px;border-radius:50%;left:3px;top:3px;
+  background:var(--muted);transition:.25s;
+}
+.toggle input:checked + .slider{border-color:var(--accent);background:rgba(0,240,255,.15);box-shadow:0 0 12px rgba(0,240,255,.4)}
+.toggle input:checked + .slider::before{transform:translateX(22px);background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.accent-swatches{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.swatch{width:34px;height:34px;border-radius:9px;cursor:pointer;border:2px solid transparent;transition:.2s}
+.swatch:hover{transform:scale(1.12)}
+.swatch.active{border-color:#fff;box-shadow:0 0 14px currentColor}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+
+.proj-list{display:flex;flex-direction:column;gap:10px;margin:14px 0;max-height:300px;overflow-y:auto}
+.proj-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;
+  border:1px solid rgba(157,77,255,.3);background:rgba(157,77,255,.06);transition:.2s;
+}
+.proj-item:hover{border-color:var(--accent3);box-shadow:0 0 14px rgba(157,77,255,.25)}
+.proj-item .p-name{font-weight:700;font-size:15px}
+.proj-item .p-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.proj-item .p-acts{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+
+/* ============ TOASTS ============ */
+#toasts{position:fixed;right:18px;bottom:18px;z-index:100;display:flex;flex-direction:column;gap:10px;max-width:340px}
+.toast{
+  padding:12px 16px;border-radius:10px;font-weight:600;font-size:14px;
+  background:rgba(10,13,30,.95);border:1px solid var(--accent);color:var(--text);
+  box-shadow:0 0 18px rgba(0,240,255,.3);backdrop-filter:blur(8px);
+  animation:toastIn .3s cubic-bezier(.2,1.2,.4,1);
+}
+.toast.err{border-color:var(--err);box-shadow:0 0 18px rgba(255,59,92,.35)}
+.toast.ok{border-color:var(--ok);box-shadow:0 0 18px rgba(57,255,136,.3)}
+.toast.warn{border-color:var(--warn);box-shadow:0 0 18px rgba(255,197,61,.3)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.toast.hide{opacity:0;transform:translateX(40px);transition:.3s}
+
+/* statusbar */
+#statusbar{
+  margin-top:20px;padding:10px 16px;border-radius:10px;
+  border:1px solid rgba(0,240,255,.12);background:rgba(5,8,20,.6);
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+}
+#statusbar .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+#statusbar .dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 2s infinite}
+#statusbar .dot.off{background:var(--err);box-shadow:0 0 8px var(--err)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.count-badge{
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent2);
+  border:1px solid rgba(255,47,214,.4);border-radius:20px;padding:2px 10px;
+  text-shadow:0 0 8px rgba(255,47,214,.6);
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00f0ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 6px #00f0ff)">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>NEON SHELF</h1>
+        <small>книги · яндекс.диск · rest api</small>
+      </div>
+    </div>
+    <div class="disk-stats">
+      <div class="stat-bubble" id="statSpace">диск: <b>—</b></div>
+      <div class="stat-bubble" id="statCount">книг: <b>0</b></div>
+    </div>
+    <button class="btn" id="btnRefresh" title="Обновить список книг">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
+      Обновить
+    </button>
+    <button class="btn purple idb-only" id="btnProjects">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Проекты
+    </button>
+    <button class="btn pink" id="btnSettings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Настройки
+    </button>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: UPLOAD -->
+    <section class="panel">
+      <h2>Загрузка книг</h2>
+      <div id="dropzone">
+        <div class="dz-icon">📚</div>
+        <p>Перетащите файлы сюда</p>
+        <small>или нажмите для выбора · загрузка на Яндекс.Диск через REST API</small>
+        <div class="formats">
+          <span class="fmt">FB2</span><span class="fmt">EPUB</span><span class="fmt">PDF</span>
+          <span class="fmt">MOBI</span><span class="fmt">AZW3</span><span class="fmt">DJVU</span>
+          <span class="fmt">TXT</span><span class="fmt">ZIP</span>
+        </div>
+      </div>
+      <input type="file" id="fileInput" multiple hidden accept=".fb2,.epub,.pdf,.mobi,.azw,.azw3,.djvu,.djv,.txt,.rtf,.zip,.cbz,.cbr,.doc,.docx">
+      <div id="queue"></div>
+      <div style="margin-top:14px;display:flex;gap:10px">
+        <button class="btn" id="btnUploadAll" style="flex:1;justify-content:center" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+          Загрузить на диск
+        </button>
+        <button class="btn ghost" id="btnClearQueue" disabled>Очистить</button>
+      </div>
+      <p style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">
+        целевая папка: <span id="targetFolder" style="color:var(--accent)">—</span>
+      </p>
+    </section>
+
+    <!-- RIGHT: LIBRARY -->
+    <section class="panel">
+      <h2 class="pink-t">Библиотека на диске <span class="count-badge" id="libCount">0</span></h2>
+      <div class="toolbar">
+        <input class="neon-input" id="searchInput" type="text" placeholder="🔍 Поиск по названию…">
+        <select class="neon-input" id="filterFmt" style="max-width:150px;flex:none">
+          <option value="">Все форматы</option>
+        </select>
+        <select class="neon-input" id="sortBy" style="max-width:170px;flex:none">
+          <option value="name-asc">Имя А→Я</option>
+          <option value="name-desc">Имя Я→А</option>
+          <option value="date-desc" selected>Сначала новые</option>
+          <option value="date-asc">Сначала старые</option>
+          <option value="size-desc">Крупные первые</option>
+          <option value="size-asc">Мелкие первые</option>
+        </select>
+      </div>
+      <div class="book-list" id="bookList">
+        <div class="empty">
+          <div class="big">🌌</div>
+          <div>Библиотека пуста</div>
+          <small>Настройте токен и нажмите «Обновить»</small>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="statusbar">
+    <span class="dot" id="connDot"></span>
+    <span id="connText">соединение не проверено</span>
+    <span class="stat-bubble" id="storageBadge" style="font-size:11px;padding:3px 10px">хранилище: …</span>
+    <span style="margin-left:auto" id="lastSync">—</span>
+  </div>
+</div>
+
+<!-- ============ SETTINGS MODAL ============ -->
+<div class="modal-backdrop" id="modalSettings">
+  <div class="modal">
+    <h3 class="pink-t">⚙ Настройки <button class="close-x" data-close="modalSettings">×</button></h3>
+    <div class="sub">Параметры подключения к Яндекс.Диску и внешний вид</div>
+
+    <div class="idb-warn">
+      ⚠ IndexedDB недоступна в этом браузере. Настройки и библиотека работают только в текущей сессии и не сохраняются между перезагрузками. Функции проектов скрыты.
+    </div>
+
+    <div class="field">
+      <label>OAuth-токен Яндекс.Диска</label>
+      <div class="token-row">
+        <input class="neon-input" type="password" id="setToken" placeholder="y0_AgAAA..." autocomplete="off">
+        <button class="btn ghost sm" id="btnToggleToken" title="Показать/скрыть">👁</button>
+      </div>
+      <div class="hint">Получить токен: <a href="https://oauth.yandex.ru/" target="_blank" rel="noopener">oauth.yandex.ru</a> (права «Яндекс.Диск»).
+        <span class="idb-only" style="display:inline">Хранится локально в IndexedDB.</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Папка для книг</label>
+      <input class="neon-input" type="text" id="setFolder" placeholder="/Books" style="width:100%">
+      <div class="hint">Путь на диске, куда загружаются книги и откуда строится список.</div>
+    </div>
+
+    <div class="field">
+      <label>Параметры</label>
+      <div class="switch-row">
+        <span>Перезаписывать файлы<small>overwrite=true при совпадении имени</small></span>
+        <label class="toggle"><input type="checkbox" id="setOverwrite" checked><span class="slider"></span></label>
+      </div>
+      <div class="switch-row">
+        <span>Показывать все файлы<small>не фильтровать список по книжным расширениям</small></span>
+        <label class="toggle"><input type="checkbox" id="setShowAll"><span class="slider"></span></label>
+      </div>
+      <div class="switch-row" style="border-bottom:none">
+        <span>Скачивать через браузер<small>загружать файл целиком (blob), иначе — прямая ссылка</small></span>
+        <label class="toggle"><input type="checkbox" id="setBlobDl"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Неоновый акцент</label>
+      <div class="accent-swatches" id="accentSwatches"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnTestConn">⚡ Проверить соединение</button>
+      <button class="btn" data-close="modalSettings">Отмена</button>
+      <button class="btn pink" id="btnSaveSettings">💾 <span id="saveSettingsLabel">Сохранить</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PROJECTS MODAL (требует IndexedDB) ============ -->
+<div class="modal-backdrop idb-only" id="modalProjects">
+  <div class="modal">
+    <h3>📁 Проекты <button class="close-x" data-close="modalProjects">×</button></h3>
+    <div class="sub">Проект = настройки + текущий список книг. Хранится в IndexedDB, можно экспортировать в файл.</div>
+
+    <div class="field" style="display:flex;gap:8px">
+      <input class="neon-input" type="text" id="projName" placeholder="Имя нового проекта…">
+      <button class="btn purple" id="btnSaveProject" style="flex:none">＋ Сохранить</button>
+    </div>
+
+    <div class="proj-list" id="projList"></div>
+
+    <div class="modal-actions">
+      <button class="btn ghost" id="btnImportProject">⬆ Импорт из файла</button>
+      <input type="file" id="projFileInput" accept=".json,application/json" hidden>
+      <button class="btn" data-close="modalProjects">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* ================================================================
+   NEON SHELF — SPA для управления книгами на Яндекс.Диске
+   Корректная деградация при недоступной IndexedDB:
+   все функции, требующие БД, скрываются; остальное работает.
+   ================================================================ */
+
+const API = 'https://cloud-api.yandex.net/v1/disk';
+const BOOK_EXTS = ['fb2','epub','pdf','mobi','azw','azw3','djvu','djv','txt','rtf','zip','cbz','cbr','doc','docx','fb2.zip'];
+
+/* ---------------- IndexedDB (с защитой от недоступности) ---------------- */
+const DB_NAME = 'neon-shelf-db', DB_VER = 1;
+let dbPromise = null;
+let idbAvailable = false;   // станет true только после успешного открытия
+let idbChecked = false;
+
+function openDB(){
+  if(dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve,reject)=>{
+    try{
+      if(typeof indexedDB === 'undefined' || !indexedDB){ reject(new Error('IndexedDB отсутствует')); return; }
+      const rq = indexedDB.open(DB_NAME, DB_VER);
+      rq.onupgradeneeded = e=>{
+        const db = rq.result;
+        if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+        if(!db.objectStoreNames.contains('projects')) db.createObjectStore('projects',{keyPath:'name'});
+        if(!db.objectStoreNames.contains('library')) db.createObjectStore('library',{keyPath:'path'});
+      };
+      rq.onsuccess = ()=>resolve(rq.result);
+      rq.onerror = ()=>reject(rq.error || new Error('Ошибка открытия IndexedDB'));
+      rq.onblocked = ()=>reject(new Error('IndexedDB заблокирована другой вкладкой'));
+    }catch(err){ reject(err); }
+  });
+  return dbPromise;
+}
+
+async function detectIndexedDB(){
+  if(idbChecked) return idbAvailable;
+  idbChecked = true;
+  try{
+    await Promise.race([
+      openDB(),
+      new Promise((_,rej)=> setTimeout(()=>rej(new Error('Таймаут открытия IndexedDB')), 4000))
+    ]);
+    idbAvailable = true;
+  }catch(err){
+    console.warn('IndexedDB недоступна:', err);
+    idbAvailable = false;
+    dbPromise = null;
+  }
+  return idbAvailable;
+}
+
+/* Все операции БД безопасны: при недоступности — тихий no-op / пустой результат */
+async function idbPut(store,key,value){
+  if(!idbAvailable) return undefined;
+  try{
+    const db = await openDB();
+    return await new Promise((res,rej)=>{
+      const tx = db.transaction(store,'readwrite');
+      const st = tx.objectStore(store);
+      const r = (key===undefined) ? st.put(value) : st.put(value,key);
+      r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+    });
+  }catch(err){ console.warn('idbPut:',err); idbDegrade(); return undefined; }
+}
+async function idbGet(store,key){
+  if(!idbAvailable) return undefined;
+  try{
+    const db = await openDB();
+    return await new Promise((res,rej)=>{
+      const r = db.transaction(store).objectStore(store).get(key);
+      r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+    });
+  }catch(err){ console.warn('idbGet:',err); idbDegrade(); return undefined; }
+}
+async function idbGetAll(store){
+  if(!idbAvailable) return [];
+  try{
+    const db = await openDB();
+    return await new Promise((res,rej)=>{
+      const r = db.transaction(store).objectStore(store).getAll();
+      r.onsuccess=()=>res(r.result||[]); r.onerror=()=>rej(r.error);
+    });
+  }catch(err){ console.warn('idbGetAll:',err); idbDegrade(); return []; }
+}
+async function idbDel(store,key){
+  if(!idbAvailable) return;
+  try{
+    const db = await openDB();
+    await new Promise((res,rej)=>{
+      const r = db.transaction(store,'readwrite').objectStore(store).delete(key);
+      r.onsuccess=()=>res(); r.onerror=()=>rej(r.error);
+    });
+  }catch(err){ console.warn('idbDel:',err); idbDegrade(); }
+}
+async function idbClear(store){
+  if(!idbAvailable) return;
+  try{
+    const db = await openDB();
+    await new Promise((res,rej)=>{
+      const r = db.transaction(store,'readwrite').objectStore(store).clear();
+      r.onsuccess=()=>res(); r.onerror=()=>rej(r.error);
+    });
+  }catch(err){ console.warn('idbClear:',err); idbDegrade(); }
+}
+/* Если БД сломалась уже в процессе работы — переключаемся в сессионный режим */
+function idbDegrade(){
+  if(!idbAvailable) return;
+  idbAvailable = false;
+  dbPromise = null;
+  applyStorageMode();
+  toast('IndexedDB стала недоступна — включён сессионный режим','warn',6000);
+}
+
+/* ---------------- State ---------------- */
+let settings = {
+  token:'',
+  folder:'/Books',
+  overwrite:true,
+  showAll:false,
+  blobDownload:false,
+  accent:'#00f0ff'
+};
+let library = [];      // {name,path,size,modified,ext}
+let queue = [];        // {id,file,name,status,progress,error}
+let uploading = false;
+let connOK = false;
+
+const ACCENTS = [
+  {c:'#00f0ff', n:'Циан'},
+  {c:'#ff2fd6', n:'Маджента'},
+  {c:'#9d4dff', n:'Фиолет'},
+  {c:'#39ff88', n:'Неон-зелёный'},
+  {c:'#ffc53d', n:'Янтарь'},
+  {c:'#ff3b5c', n:'Красный'}
+];
+
+/* ---------------- Helpers ---------------- */
+const $ = id => document.getElementById(id);
+function toast(msg, type='', ms=3500){
+  const t = document.createElement('div');
+  t.className = 'toast '+type;
+  t.textContent = msg;
+  $('toasts').appendChild(t);
+  setTimeout(()=>{ t.classList.add('hide'); setTimeout(()=>t.remove(),350); }, ms);
+}
+function fmtSize(b){
+  if(b==null) return '—';
+  if(b<1024) return b+' Б';
+  if(b<1048576) return (b/1024).toFixed(1)+' КБ';
+  if(b<1073741824) return (b/1048576).toFixed(1)+' МБ';
+  return (b/1073741824).toFixed(2)+' ГБ';
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  try{ return new Date(iso).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  catch(e){ return iso; }
+}
+function extOf(name){
+  const low = name.toLowerCase();
+  if(low.endsWith('.fb2.zip')) return 'fb2';
+  const p = low.split('.'); return p.length>1 ? p.pop() : '';
+}
+function extClass(ext){
+  if(['fb2'].includes(ext)) return 'ext-fb2';
+  if(['epub'].includes(ext)) return 'ext-epub';
+  if(['pdf'].includes(ext)) return 'ext-pdf';
+  if(['mobi','azw','azw3'].includes(ext)) return 'ext-mobi';
+  if(['djvu','djv'].includes(ext)) return 'ext-djvu';
+  return 'ext-other';
+}
+function isBook(name){ return BOOK_EXTS.includes(extOf(name)); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------------- Storage mode UI ---------------- */
+function applyStorageMode(){
+  document.body.classList.toggle('no-idb', !idbAvailable);
+  const badge = $('storageBadge');
+  if(idbAvailable){
+    badge.classList.remove('mem');
+    badge.innerHTML = 'хранилище: <b>IndexedDB</b>';
+    $('saveSettingsLabel').textContent = 'Сохранить';
+  }else{
+    badge.classList.add('mem');
+    badge.innerHTML = 'хранилище: <b>память (сессия)</b>';
+    $('saveSettingsLabel').textContent = 'Применить';
+    // на всякий случай закрываем модалку проектов, если была открыта
+    closeModal('modalProjects');
+  }
+}
+
+/* ---------------- Yandex.Disk REST API ---------------- */
+function authHeaders(extra){
+  if(!settings.token) throw new Error('OAuth-токен не задан. Откройте «Настройки».');
+  return Object.assign({'Authorization':'OAuth '+settings.token}, extra||{});
+}
+async function apiGet(path, params){
+  const qs = params ? '?'+new URLSearchParams(params).toString() : '';
+  const r = await fetch(API+path+qs, {headers:authHeaders()});
+  let body = null;
+  try{ body = await r.json(); }catch(e){}
+  if(!r.ok) throw new Error((body && (body.message||body.description)) || ('HTTP '+r.status));
+  return body;
+}
+async function apiDelete(path, params){
+  const qs = params ? '?'+new URLSearchParams(params).toString() : '';
+  const r = await fetch(API+path+qs, {method:'DELETE', headers:authHeaders()});
+  if(!r.ok && r.status!==204){
+    let body=null; try{ body=await r.json(); }catch(e){}
+    throw new Error((body && (body.message||body.description)) || ('HTTP '+r.status));
+  }
+  return true;
+}
+function xhrPut(url, file, onProgress){
+  return new Promise((resolve,reject)=>{
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url);
+    xhr.upload.onprogress = e=>{ if(e.lengthComputable) onProgress(e.loaded/e.total); };
+    xhr.onload = ()=> (xhr.status>=200 && xhr.status<300) ? resolve() : reject(new Error('HTTP '+xhr.status+' при загрузке файла'));
+    xhr.onerror = ()=> reject(new Error('Сетевая ошибка при загрузке файла'));
+    xhr.onabort = ()=> reject(new Error('Загрузка отменена'));
+    xhr.send(file);
+  });
+}
+async function waitOperation(opId, timeoutMs=120000){
+  const start = Date.now();
+  while(Date.now()-start < timeoutMs){
+    const op = await apiGet('/operations/'+encodeURIComponent(opId));
+    if(op.status==='success') return true;
+    if(op.status==='failure') throw new Error('Операция на диске завершилась ошибкой');
+    await new Promise(r=>setTimeout(r,1500));
+  }
+  throw new Error('Ожидание операции превысило таймаут');
+}
+function normalizeFolder(f){
+  let p = (f||'').trim();
+  if(!p) p = '/Books';
+  if(!p.startsWith('/')) p = '/'+p;
+  p = p.replace(/\/+$/,'');
+  return p || '/';
+}
+async function ensureFolder(){
+  const folder = normalizeFolder(settings.folder);
+  if(folder === '/') return folder;
+  try{ await apiGet('/resources', {path:folder, limit:1}); }
+  catch(e){
+    const r = await fetch(API+'/resources?'+new URLSearchParams({path:folder}), {method:'PUT', headers:authHeaders()});
+    if(!r.ok && r.status!==409){
+      let b=null; try{b=await r.json();}catch(x){}
+      throw new Error((b&&(b.message||b.description))||('Не удалось создать папку '+folder));
+    }
+    toast('Создана папка '+folder,'ok');
+  }
+  return folder;
+}
+
+async function uploadOneFile(file, onProgress){
+  const folder = await ensureFolder();
+  const targetPath = folder + '/' + file.name;
+  const up = await apiGet('/resources/upload', {path:targetPath, overwrite: settings.overwrite ? 'true':'false'});
+  if(!up || !up.href) throw new Error('Диск не выдал ссылку на загрузку');
+  await xhrPut(up.href, file, p=>onProgress(p*0.9));
+  onProgress(0.92);
+  if(up.operation_id){
+    await waitOperation(up.operation_id);
+  }
+  onProgress(1);
+  return targetPath;
+}
+
+async function fetchLibrary(){
+  const folder = normalizeFolder(settings.folder);
+  const items = [];
+  let offset = 0;
+  const limit = 1000;
+  while(true){
+    const res = await apiGet('/resources', {path:folder, limit:String(limit), offset:String(offset)});
+    const emb = res && res._embedded;
+    const chunk = (emb && emb.items) ? emb.items : [];
+    for(const it of chunk){
+      if(it.type==='file') items.push(it);
+    }
+    if(chunk.length < limit) break;
+    offset += limit;
+    if(offset > 10000) break;
+  }
+  return items.map(it=>({
+    name: it.name,
+    path: it.path,
+    size: it.size,
+    modified: it.modified,
+    created: it.created,
+    ext: extOf(it.name)
+  }));
+}
+
+async function getDiskInfo(){ return await apiGet(''); }
+function downloadByPath(path){ return apiGet('/resources/download', {path}); }
+
+/* ---------------- Persistence (деградирует до памяти) ---------------- */
+async function saveSettings(){
+  applyAccent(settings.accent);
+  $('targetFolder').textContent = normalizeFolder(settings.folder);
+  if(idbAvailable) await idbPut('kv','settings', settings);
+}
+async function loadSettings(){
+  if(idbAvailable){
+    const s = await idbGet('kv','settings');
+    if(s) settings = Object.assign(settings, s);
+  }
+  applyAccent(settings.accent);
+  $('targetFolder').textContent = normalizeFolder(settings.folder);
+}
+async function persistLibrary(){
+  if(!idbAvailable) return;
+  await idbClear('library');
+  for(const b of library) await idbPut('library', undefined, b);
+}
+async function loadCachedLibrary(){
+  library = idbAvailable ? await idbGetAll('library') : [];
+  renderLibrary();
+}
+
+/* ---------------- Accent ---------------- */
+function applyAccent(color){
+  document.documentElement.style.setProperty('--accent', color);
+  const r = document.documentElement;
+  r.style.setProperty('--panel-border', hexA(color,.14));
+  r.style.setProperty('--glow', `0 0 12px ${hexA(color,.45)},0 0 32px ${hexA(color,.15)}`);
+}
+function hexA(hex,a){
+  const h = hex.replace('#','');
+  const n = parseInt(h.length===3? h.split('').map(x=>x+x).join(''):h,16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+
+/* ---------------- Render: library ---------------- */
+function renderLibrary(){
+  const list = $('bookList');
+  const q = $('searchInput').value.trim().toLowerCase();
+  const fmtF = $('filterFmt').value;
+  const sort = $('sortBy').value;
+
+  let items = library.filter(b=> settings.showAll ? true : isBook(b.name));
+  if(q) items = items.filter(b=> b.name.toLowerCase().includes(q));
+  if(fmtF) items = items.filter(b=> b.ext===fmtF);
+
+  const cmp = {
+    'name-asc':(a,b)=>a.name.localeCompare(b.name,'ru'),
+    'name-desc':(a,b)=>b.name.localeCompare(a.name,'ru'),
+    'date-desc':(a,b)=>new Date(b.modified||0)-new Date(a.modified||0),
+    'date-asc':(a,b)=>new Date(a.modified||0)-new Date(b.modified||0),
+    'size-desc':(a,b)=>(b.size||0)-(a.size||0),
+    'size-asc':(a,b)=>(a.size||0)-(b.size||0)
+  }[sort];
+  items.sort(cmp);
+
+  const fmts = [...new Set(library.map(b=>b.ext).filter(Boolean))].sort();
+  const sel = $('filterFmt');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Все форматы</option>' + fmts.map(f=>`<option value="${esc(f)}">${esc(f.toUpperCase())}</option>`).join('');
+  sel.value = fmts.includes(cur) ? cur : '';
+
+  $('libCount').textContent = items.length;
+  $('statCount').innerHTML = 'книг: <b>'+items.length+'</b>';
+
+  if(!items.length){
+    list.innerHTML = `<div class="empty"><div class="big">🌌</div><div>${q||fmtF?'Ничего не найдено':'Библиотека пуста'}</div><small>${connOK?'Загрузите книги или смените папку/фильтр':'Настройте токен и нажмите «Обновить»'}</small></div>`;
+    return;
+  }
+  list.innerHTML = items.map(b=>`
+    <div class="book" data-path="${esc(b.path)}">
+      <div class="ext-badge ${extClass(b.ext)}">${esc((b.ext||'?').toUpperCase().slice(0,5))}</div>
+      <div class="info">
+        <div class="name" title="${esc(b.name)}">${esc(b.name)}</div>
+        <div class="meta">
+          <span>💾 ${fmtSize(b.size)}</span>
+          <span>🕒 ${fmtDate(b.modified)}</span>
+        </div>
+      </div>
+      <div class="acts">
+        <button class="btn sm" data-act="download" title="Скачать">⬇ Скачать</button>
+        <button class="btn sm purple" data-act="open" title="Открыть на Яндекс.Диске">🔗 Диск</button>
+        <button class="btn sm danger" data-act="delete" title="Удалить с диска">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ---------------- Render: queue ---------------- */
+function renderQueue(){
+  const box = $('queue');
+  box.innerHTML = queue.map(q=>`
+    <div class="q-item" id="q-${q.id}">
+      <div class="q-top">
+        <span class="q-name" title="${esc(q.file.name)}">${esc(q.file.name)}</span>
+        <span class="q-status"><span class="st-txt ${q.status}">${statusText(q)}</span> <button class="btn ghost sm" data-qdel="${q.id}" style="padding:2px 7px" title="Убрать">×</button></span>
+      </div>
+      <div class="progress"><div class="bar ${q.status==='done'?'done':q.status==='fail'?'fail':''}" style="width:${Math.round(q.progress*100)}%"></div></div>
+      ${q.error?`<div style="color:var(--err);font-size:12px;margin-top:6px;font-family:'JetBrains Mono',monospace">${esc(q.error)}</div>`:''}
+    </div>`).join('');
+  $('btnUploadAll').disabled = uploading || !queue.some(q=>q.status==='wait'||q.status==='fail');
+  $('btnClearQueue').disabled = uploading || queue.length===0;
+  box.querySelectorAll('[data-qdel]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id = Number(btn.getAttribute('data-qdel'));
+      queue = queue.filter(q=>q.id!==id);
+      renderQueue();
+    });
+  });
+}
+function statusText(q){
+  if(q.status==='wait') return 'в очереди';
+  if(q.status==='up') return Math.round(q.progress*100)+'%';
+  if(q.status==='done') return '✓ готово';
+  if(q.status==='fail') return '✗ ошибка';
+  return '';
+}
+
+/* ---------------- Upload flow ---------------- */
+let qid = 0;
+function addFiles(fileList){
+  let added = 0;
+  for(const f of fileList){
+    queue.push({id:++qid, file:f, status:'wait', progress:0, error:''});
+    added++;
+  }
+  if(added) toast(`Добавлено файлов: ${added}`,'ok');
+  renderQueue();
+}
+
+async function processQueue(){
+  if(uploading) return;
+  if(!settings.token){ toast('Сначала укажите OAuth-токен в настройках','err'); openModal('modalSettings'); return; }
+  const pending = queue.filter(q=>q.status==='wait'||q.status==='fail');
+  if(!pending.length) return;
+  uploading = true;
+  renderQueue();
+  let okCount=0, failCount=0;
+  for(const q of pending){
+    q.status='up'; q.progress=0; q.error='';
+    renderQueue();
+    try{
+      await uploadOneFile(q.file, p=>{
+        q.progress = p;
+        const el = document.querySelector(`#q-${q.id} .bar`);
+        const st = document.querySelector(`#q-${q.id} .st-txt`);
+        if(el) el.style.width = Math.round(p*100)+'%';
+        if(st) st.textContent = Math.round(p*100)+'%';
+      });
+      q.status='done'; q.progress=1; okCount++;
+      toast(`Загружено: ${q.file.name}`,'ok',2500);
+    }catch(err){
+      q.status='fail'; q.error = err.message; failCount++;
+      toast(`Ошибка: ${q.file.name} — ${err.message}`,'err',5000);
+    }
+    renderQueue();
+  }
+  uploading = false;
+  renderQueue();
+  if(okCount){
+    await refreshLibrary(false);
+    toast(`Готово. Загружено: ${okCount}${failCount?`, ошибок: ${failCount}`:''}`,'ok');
+  }
+}
+
+/* ---------------- Refresh / connection ---------------- */
+function setConn(ok, text){
+  connOK = ok;
+  const dot = $('connDot');
+  dot.className = 'dot ' + (ok?'on':'off');
+  $('connText').textContent = text;
+}
+async function refreshLibrary(silent){
+  if(!settings.token){
+    setConn(false,'токен не задан');
+    if(!silent){ toast('Укажите OAuth-токен в настройках','warn'); openModal('modalSettings'); }
+    return;
+  }
+  if(!silent) toast('Обновление библиотеки…','',2000);
+  $('bookList').innerHTML = `<div class="empty"><div class="big"><span class="spinner" style="width:36px;height:36px;border-width:3px"></span></div><div>Загрузка списка с диска…</div></div>`;
+  try{
+    const [items, info] = await Promise.all([fetchLibrary(), getDiskInfo().catch(()=>null)]);
+    library = items;
+    if(info && info.total_space){
+      $('statSpace').innerHTML = `диск: <b>${fmtSize(info.used_space||0)}</b> / ${fmtSize(info.total_space)}`;
+    }
+    setConn(true,'подключено · '+(info&&info.user? info.user.display_name||info.user.login : 'OK'));
+    $('lastSync').textContent = 'синхронизация: '+new Date().toLocaleTimeString('ru-RU');
+    await persistLibrary();
+    renderLibrary();
+    if(!silent) toast(`Библиотека обновлена: ${items.length} файл(ов)`,'ok');
+  }catch(err){
+    setConn(false,'ошибка: '+err.message);
+    renderLibrary();
+    toast('Не удалось обновить: '+err.message,'err',5000);
+  }
+}
+
+/* ---------------- Book actions ---------------- */
+async function onBookAction(path, act){
+  const book = library.find(b=>b.path===path);
+  if(!book) return;
+  if(act==='open'){
+    window.open('https://disk.yandex.ru/d/?path='+encodeURIComponent('/'+path.replace(/^disk:/,'')), '_blank');
+    return;
+  }
+  if(act==='delete'){
+    if(!confirm(`Удалить «${book.name}» с Яндекс.Диска?`)) return;
+    try{
+      await apiDelete('/resources',{path:book.path});
+      library = library.filter(b=>b.path!==path);
+      await persistLibrary();
+      renderLibrary();
+      toast('Удалено: '+book.name,'ok');
+    }catch(err){
+      toast('Ошибка удаления: '+err.message,'err',5000);
+    }
+    return;
+  }
+  if(act==='download'){
+    toast('Запрашиваю ссылку на скачивание…','',2000);
+    try{
+      const d = await downloadByPath(book.path);
+      if(!d || !d.href) throw new Error('Диск не вернул ссылку');
+      if(settings.blobDownload){
+        const r = await fetch(d.href);
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = book.name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 4000);
+        toast('Скачивание начато: '+book.name,'ok');
+      }else{
+        const a = document.createElement('a');
+        a.href = d.href; a.target='_blank'; a.rel='noopener';
+        document.body.appendChild(a); a.click(); a.remove();
+        toast('Открываю ссылку на скачивание','ok');
+      }
+    }catch(err){
+      toast('Ошибка скачивания: '+err.message,'err',5000);
+    }
+  }
+}
+
+/* ---------------- Modals ---------------- */
+function openModal(id){ $(id).classList.add('open'); }
+function closeModal(id){ const m=$(id); if(m) m.classList.remove('open'); }
+document.querySelectorAll('[data-close]').forEach(b=> b.addEventListener('click', ()=> closeModal(b.getAttribute('data-close'))));
+document.querySelectorAll('.modal-backdrop').forEach(bd=>{
+  bd.addEventListener('click', e=>{ if(e.target===bd) bd.classList.remove('open'); });
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-backdrop.open').forEach(m=>m.classList.remove('open')); });
+
+/* settings modal */
+function fillSettingsForm(){
+  $('setToken').value = settings.token;
+  $('setFolder').value = settings.folder;
+  $('setOverwrite').checked = !!settings.overwrite;
+  $('setShowAll').checked = !!settings.showAll;
+  $('setBlobDl').checked = !!settings.blobDownload;
+  renderSwatches();
+}
+function renderSwatches(){
+  $('accentSwatches').innerHTML = ACCENTS.map(a=>
+    `<div class="swatch ${a.c===settings.accent?'active':''}" style="background:${a.c};color:${a.c}" data-c="${a.c}" title="${a.n}"></div>`
+  ).join('');
+  $('accentSwatches').querySelectorAll('.swatch').forEach(sw=>{
+    sw.addEventListener('click',()=>{ settings.accent = sw.getAttribute('data-c'); applyAccent(settings.accent); renderSwatches(); });
+  });
+}
+$('btnSettings').addEventListener('click',()=>{ fillSettingsForm(); openModal('modalSettings'); });
+$('btnSaveSettings').addEventListener('click', async ()=>{
+  settings.token = $('setToken').value.trim();
+  settings.folder = normalizeFolder($('setFolder').value);
+  settings.overwrite = $('setOverwrite').checked;
+  settings.showAll = $('setShowAll').checked;
+  settings.blobDownload = $('setBlobDl').checked;
+  await saveSettings();
+  closeModal('modalSettings');
+  toast(idbAvailable ? 'Настройки сохранены в IndexedDB' : 'Настройки применены (только текущая сессия)','ok');
+  refreshLibrary(true);
+});
+$('btnToggleToken').addEventListener('click',()=>{
+  const inp = $('setToken');
+  inp.type = inp.type==='password' ? 'text':'password';
+});
+$('btnTestConn').addEventListener('click', async ()=>{
+  const tok = $('setToken').value.trim();
+  if(!tok){ toast('Введите токен','warn'); return; }
+  const saved = settings.token;
+  settings.token = tok;
+  $('btnTestConn').disabled = true;
+  $('btnTestConn').innerHTML = '<span class="spinner"></span> Проверка…';
+  try{
+    const info = await getDiskInfo();
+    setConn(true,'подключено · '+(info.user? info.user.display_name||info.user.login:'OK'));
+    toast('Соединение успешно! Диск: '+fmtSize(info.total_space),'ok');
+  }catch(err){
+    setConn(false,'ошибка: '+err.message);
+    toast('Ошибка соединения: '+err.message,'err',5000);
+  }finally{
+    settings.token = tok || saved;
+    $('btnTestConn').disabled = false;
+    $('btnTestConn').textContent = '⚡ Проверить соединение';
+  }
+});
+
+/* ---------------- Projects (требуют IndexedDB) ---------------- */
+async function listProjects(){
+  if(!idbAvailable) return [];
+  return (await idbGetAll('projects')).sort((a,b)=> new Date(b.savedAt)-new Date(a.savedAt));
+}
+async function renderProjects(){
+  const projs = await listProjects();
+  const box = $('projList');
+  if(!projs.length){
+    box.innerHTML = `<div class="empty" style="padding:22px"><div class="big">🗂</div><div>Проектов пока нет</div><small>Сохраните текущие настройки и библиотеку как проект</small></div>`;
+    return;
+  }
+  box.innerHTML = projs.map(p=>`
+    <div class="proj-item" data-name="${esc(p.name)}">
+      <div>
+        <div class="p-name">📁 ${esc(p.name)}</div>
+        <div class="p-meta">${fmtDate(p.savedAt)} · книг: ${p.library? p.library.length:0} · папка: ${esc(p.settings?p.settings.folder:'—')}</div>
+      </div>
+      <div class="p-acts">
+        <button class="btn sm purple" data-pact="load">Загрузить</button>
+        <button class="btn sm ghost" data-pact="export">⬇ JSON</button>
+        <button class="btn sm danger" data-pact="del">🗑</button>
+      </div>
+    </div>`).join('');
+  box.querySelectorAll('.proj-item').forEach(row=>{
+    const name = row.getAttribute('data-name');
+    row.querySelectorAll('[data-pact]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const act = btn.getAttribute('data-pact');
+        if(act==='load') await loadProject(name);
+        if(act==='del'){
+          if(confirm(`Удалить проект «${name}»?`)){
+            await idbDel('projects', name);
+            toast('Проект удалён','ok');
+            renderProjects();
+          }
+        }
+        if(act==='export'){
+          const p = await idbGet('projects', name);
+          if(p) downloadJSON(p, `neonshelf-project-${name}.json`);
+        }
+      });
+    });
+  });
+}
+$('btnProjects').addEventListener('click', async ()=>{
+  if(!idbAvailable){ toast('Проекты недоступны: IndexedDB отключена','warn'); return; }
+  await renderProjects(); openModal('modalProjects');
+});
+$('btnSaveProject').addEventListener('click', async ()=>{
+  if(!idbAvailable){ toast('Проекты недоступны: IndexedDB отключена','warn'); return; }
+  const name = $('projName').value.trim();
+  if(!name){ toast('Введите имя проекта','warn'); return; }
+  const proj = {
+    name,
+    savedAt: new Date().toISOString(),
+    settings: JSON.parse(JSON.stringify(settings)),
+    library: JSON.parse(JSON.stringify(library))
+  };
+  await idbPut('projects', undefined, proj);
+  $('projName').value='';
+  toast('Проект «'+name+'» сохранён в IndexedDB','ok');
+  renderProjects();
+});
+async function loadProject(name){
+  if(!idbAvailable) return;
+  const p = await idbGet('projects', name);
+  if(!p) return;
+  settings = Object.assign({}, settings, p.settings||{});
+  library = p.library || [];
+  await saveSettings();
+  await persistLibrary();
+  renderLibrary();
+  closeModal('modalProjects');
+  toast('Проект «'+name+'» загружен','ok');
+  refreshLibrary(true);
+}
+function downloadJSON(obj, filename){
+  const blob = new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+}
+$('btnImportProject').addEventListener('click', ()=> $('projFileInput').click());
+$('projFileInput').addEventListener('change', async e=>{
+  const f = e.target.files[0];
+  e.target.value='';
+  if(!f) return;
+  if(!idbAvailable){ toast('Импорт проектов недоступен без IndexedDB','warn'); return; }
+  try{
+    const text = await f.text();
+    const p = JSON.parse(text);
+    if(!p.name) p.name = f.name.replace(/\.json$/i,'');
+    if(!p.settings) throw new Error('В файле нет блока settings');
+    p.savedAt = p.savedAt || new Date().toISOString();
+    await idbPut('projects', undefined, p);
+    toast('Проект «'+p.name+'» импортирован','ok');
+    renderProjects();
+  }catch(err){
+    toast('Импорт не удался: '+err.message,'err',5000);
+  }
+});
+
+/* ---------------- Dropzone & file input ---------------- */
+const dz = $('dropzone');
+dz.addEventListener('click', ()=> $('fileInput').click());
+$('fileInput').addEventListener('change', e=>{ addFiles(e.target.files); e.target.value=''; });
+['dragenter','dragover'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.remove('drag'); }));
+dz.addEventListener('drop', e=>{ if(e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+document.addEventListener('dragover', e=>e.preventDefault());
+document.addEventListener('drop', e=>e.preventDefault());
+
+$('btnUploadAll').addEventListener('click', processQueue);
+$('btnClearQueue').addEventListener('click', ()=>{ queue=[]; renderQueue(); });
+$('btnRefresh').addEventListener('click', ()=> refreshLibrary(false));
+
+$('bookList').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-act]');
+  if(!btn) return;
+  const row = btn.closest('.book');
+  onBookAction(row.getAttribute('data-path'), btn.getAttribute('data-act'));
+});
+$('searchInput').addEventListener('input', renderLibrary);
+$('filterFmt').addEventListener('change', renderLibrary);
+$('sortBy').addEventListener('change', renderLibrary);
+
+/* ---------------- Init ---------------- */
+(async function init(){
+  try{
+    await detectIndexedDB();
+    applyStorageMode();
+    if(!idbAvailable){
+      toast('IndexedDB недоступна — приложение работает в сессионном режиме (без сохранения)','warn',7000);
+    }
+    await loadSettings();
+    await loadCachedLibrary();
+    renderQueue();
+    if(settings.token){
+      refreshLibrary(true);
+    }else{
+      setConn(false,'токен не задан');
+      setTimeout(()=>{ openModal('modalSettings'); toast('Добро пожаловать! Укажите OAuth-токен Яндекс.Диска','warn',6000); }, 400);
+    }
+  }catch(err){
+    console.error(err);
+    toast('Ошибка инициализации: '+err.message,'err',8000);
+  }
+})();
+</script>
+</body>
+</html>
