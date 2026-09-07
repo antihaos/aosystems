@@ -116,7 +116,7 @@ header{
   color:var(--text);background:rgba(0,240,255,.06);
   border:1px solid rgba(0,240,255,.35);
 }
-.icon-btn svg{width:19px;height:19px:19px;width:19px;height:19px}
+.icon-btn svg{width:19px;height:19px}
 .icon-btn:hover{background:rgba(0,240,255,.15);box-shadow:var(--glow);transform:translateY(-1px);color:#fff}
 .icon-btn.pink{border-color:rgba(255,47,214,.4);background:rgba(255,47,214,.07)}
 .icon-btn.pink:hover{background:rgba(255,47,214,.16);box-shadow:var(--glow2)}
@@ -264,7 +264,28 @@ select.neon-input option{background:#0a0d1e}
 .ext-other{color:#ff2fd6;border-color:rgba(255,47,214,.5);background:rgba(255,47,214,.08);text-shadow:0 0 10px rgba(255,47,214,.9);box-shadow:0 0 14px rgba(255,47,214,.15)}
 .book .info{flex:1;min-width:0}
 .book .info .name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.book .info .meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap}
+/* длинное имя — скроллируемое поле */
+.book .info .name.long{
+  background:rgba(5,8,20,.6);
+  border:1px solid rgba(0,240,255,.2);
+  border-radius:8px;
+  padding:5px 10px 5px 8px;
+  white-space:normal;
+  word-break:break-word;
+  overflow:visible auto;
+  max-height:4.2em;
+  line-height:1.35;
+  text-overflow:clip;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+  scrollbar-color:var(--accent) rgba(255,255,255,.05);
+  transition:border-color .2s, box-shadow .2s;
+}
+.book .info .name.long:hover{border-color:rgba(0,240,255,.55);box-shadow:inset 0 0 10px rgba(0,240,255,.08)}
+.book .info .name.long::-webkit-scrollbar{width:5px}
+.book .info .name.long::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:4px}
+.book .info .name.long::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--accent2));border-radius:4px;box-shadow:0 0 6px rgba(0,240,255,.6)}
+.book .info .meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;display:flex;gap:12px;flex-wrap:wrap}
 .book .acts{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
 
 .empty{
@@ -390,22 +411,21 @@ select.neon-input option{background:#0a0d1e}
   .panel h2{font-size:12px;letter-spacing:2px}
   .grid{gap:14px}
 
-  /* карточка книги: название на всю ширину, крупнее;
-     действия — отдельным рядом на всю ширину */
   .book{flex-wrap:wrap;gap:10px;padding:14px 12px}
   .book:hover{transform:none}
   .book .ext-badge{width:46px;height:46px;font-size:11px;border-radius:9px}
   .book .info{flex:1 1 calc(100% - 60px)}
-  .book .info .name{
-    font-size:18px;line-height:1.3;
-    white-space:normal;word-break:break-word;
-    overflow:visible;text-overflow:clip;
+  .book .info .name{font-size:18px;line-height:1.3}
+  .book .info .name.long{
+    font-size:17px;
+    max-height:4.6em;
+    padding:8px 10px 8px 8px;
+    -webkit-overflow-scrolling:touch;
   }
-  .book .info .meta{font-size:12px;margin-top:5px;gap:10px}
+  .book .info .meta{font-size:12px;margin-top:6px;gap:10px}
   .book .acts{width:100%;justify-content:stretch;gap:8px}
   .book .acts .btn{flex:1;justify-content:center;padding:11px 10px;font-size:14px;letter-spacing:1px}
 
-  /* тулбар: крупные поля, 16px против автозума iOS */
   .toolbar{gap:8px}
   .neon-input{font-size:16px;padding:11px 12px;min-width:0}
   #searchInput{flex:1 1 100%}
@@ -419,6 +439,150 @@ select.neon-input option{background:#0a0d1e}
   .proj-item .p-acts{margin-left:0;width:100%}
   .proj-item .p-acts .btn{flex:1;justify-content:center}
 }
+
+/* ============ E-INK ТЕМА ============
+   Высокий контраст, чёрное на белом, без анимаций, свечений,
+   градиентов и полупрозрачности — для экранов электронных книг. */
+body.eink{background:#fff;color:#000;font-weight:600}
+body.eink::before,body.eink::after{display:none}
+body.eink *{
+  animation:none !important;
+  transition:none !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  text-decoration-skip-ink:none;
+}
+body.eink .logo-mark{background:#fff;border:2px solid #000}
+body.eink .logo-mark svg{stroke:#000;filter:none}
+body.eink .logo h1{
+  background:none;color:#000;-webkit-text-fill-color:#000;
+  font-weight:900;
+}
+body.eink .ver-chip{color:#000;border:2px solid #000;background:#fff;-webkit-text-fill-color:#000;font-weight:700}
+body.eink .logo small{color:#333}
+body.eink header,
+body.eink .panel,
+body.eink .modal,
+body.eink #statusbar{
+  background:#fff;border:2px solid #000;border-radius:8px;
+}
+body.eink .panel h2,
+body.eink .panel h2.pink-t,
+body.eink .modal h3,
+body.eink .modal h3.pink-t{color:#000}
+body.eink .panel h2::after{background:#000;height:2px}
+body.eink .modal-backdrop{background:rgba(255,255,255,.85)}
+body.eink .modal .sub,
+body.eink .field label,
+body.eink .field .hint,
+body.eink .empty,
+body.eink .switch-row small,
+body.eink #statusbar,
+body.eink .disk-stats,
+body.eink .logo small{color:#333}
+body.eink .stat-bubble,
+body.eink .stat-bubble.mem,
+body.eink .stat-bubble.app-mode,
+body.eink .count-badge{
+  background:#fff;border:2px solid #000;color:#000;border-radius:6px;
+}
+body.eink .stat-bubble b,
+body.eink .stat-bubble.mem b,
+body.eink .stat-bubble.app-mode b,
+body.eink .count-badge{color:#000;-webkit-text-fill-color:#000;font-weight:800}
+body.eink .btn,
+body.eink .btn.pink,
+body.eink .btn.purple,
+body.eink .btn.ghost,
+body.eink .btn.danger,
+body.eink .icon-btn,
+body.eink .icon-btn.pink,
+body.eink .icon-btn.purple,
+body.eink .panel h2 .refresh-mini,
+body.eink .modal .close-x{
+  background:#fff;border:2px solid #000;color:#000;border-radius:6px;font-weight:800;
+}
+body.eink .btn:hover,
+body.eink .btn.pink:hover,
+body.eink .btn.purple:hover,
+body.eink .btn.ghost:hover,
+body.eink .btn.danger:hover,
+body.eink .icon-btn:hover,
+body.eink .panel h2 .refresh-mini:hover{
+  background:#000;color:#fff;transform:none;
+}
+body.eink .btn:hover svg,
+body.eink .icon-btn:hover svg{stroke:#fff}
+body.eink .btn:disabled{opacity:.45;background:#eee}
+body.eink .icon-btn::after{background:#fff;border:2px solid #000;color:#000}
+body.eink .neon-input{
+  background:#fff;border:2px solid #000;color:#000;border-radius:6px;font-weight:600;
+}
+body.eink .neon-input:focus{border-color:#000;outline:2px solid #000;outline-offset:1px}
+body.eink .neon-input::placeholder{color:#555}
+body.eink select.neon-input option{background:#fff;color:#000}
+body.eink #dropzone{
+  background:#fff;border:3px dashed #000;border-radius:8px;
+}
+body.eink #dropzone:hover,body.eink #dropzone.drag{background:#eee;border-color:#000}
+body.eink #dropzone .dz-icon{filter:none}
+body.eink #dropzone small{color:#333}
+body.eink .fmt{background:#fff;border:2px solid #000;color:#000;font-weight:700}
+body.eink .q-item{background:#fff;border:2px solid #000}
+body.eink .q-status .st-txt,
+body.eink .q-status .st-txt.wait,
+body.eink .q-status .st-txt.up,
+body.eink .q-status .st-txt.done,
+body.eink .q-status .st-txt.fail{color:#000}
+body.eink .progress{background:#ddd;border:1px solid #000;height:8px}
+body.eink .progress .bar,
+body.eink .progress .bar.done,
+body.eink .progress .bar.fail{background:#000}
+body.eink .book{background:#fff;border:2px solid #000;border-radius:8px}
+body.eink .book:hover{transform:none;border-color:#000;background:#f4f4f4}
+body.eink .ext-badge,
+body.eink .ext-fb2,body.eink .ext-epub,body.eink .ext-pdf,
+body.eink .ext-mobi,body.eink .ext-azw3,body.eink .ext-azw,
+body.eink .ext-djvu,body.eink .ext-other{
+  background:#fff;border:2px solid #000;color:#000;-webkit-text-fill-color:#000;border-radius:6px;
+}
+body.eink .book .info .name{color:#000}
+body.eink .book .info .name.long{
+  background:#fff;border:2px solid #000;color:#000;
+  scrollbar-color:#000 #ddd;
+}
+body.eink .book .info .name.long:hover{border-color:#000}
+body.eink .book .info .name.long::-webkit-scrollbar-track{background:#ddd}
+body.eink .book .info .name.long::-webkit-scrollbar-thumb{background:#000}
+body.eink .book .info .meta{color:#333}
+body.eink .empty{border:2px dashed #000;color:#333}
+body.eink .empty .big{filter:none}
+body.eink .spinner{border:3px solid #ccc;border-top-color:#000}
+body.eink .toggle .slider{background:#fff;border:2px solid #000}
+body.eink .toggle .slider::before{background:#999}
+body.eink .toggle input:checked + .slider{background:#000;border-color:#000}
+body.eink .toggle input:checked + .slider::before{background:#fff}
+body.eink .switch-row{border-bottom:1px solid #999}
+body.eink .proj-item{background:#fff;border:2px solid #000}
+body.eink .proj-item:hover{background:#f4f4f4;border-color:#000}
+body.eink .proj-item .p-meta{color:#333}
+body.eink .toast,
+body.eink .toast.ok,
+body.eink .toast.err,
+body.eink .toast.warn{
+  background:#fff;border:2px solid #000;color:#000;font-weight:700;
+}
+body.eink #statusbar .dot.on{background:#000}
+body.eink #statusbar .dot.off{background:#fff;border:2px solid #000}
+body.eink .idb-warn{background:#fff;border:2px solid #000;color:#000}
+body.eink .field .hint a{color:#000;text-decoration:underline}
+body.eink .swatch{border:2px solid #000}
+body.eink .swatch.active{border-color:#000;outline:2px solid #000;outline-offset:2px}
+body.eink .book-list::-webkit-scrollbar-track{background:#eee}
+body.eink .book-list::-webkit-scrollbar-thumb{background:#000}
+body.eink .modal::-webkit-scrollbar-thumb{background:#000}
 </style>
 </head>
 <body>
@@ -541,6 +705,7 @@ select.neon-input option{background:#0a0d1e}
         <button class="btn ghost sm" id="btnToggleToken" title="Показать/скрыть">👁</button>
       </div>
       <div class="hint">Получить токен: <a href="https://oauth.yandex.ru/" target="_blank" rel="noopener noreferrer">oauth.yandex.ru</a> (права «Яндекс.Диск»).
+        Также токен можно передать в URL: <b>?token=…</b> — он будет подхвачен при запуске и удалён из адресной строки.
         <span class="idb-only" style="display:inline">Хранится локально в IndexedDB.</span>
       </div>
     </div>
@@ -555,7 +720,7 @@ select.neon-input option{background:#0a0d1e}
       <label>Параметры</label>
       <div class="switch-row">
         <span>Папка приложения (app:/)<small>для токенов с доступом только к папке приложения. Путь выше будет внутри app:/</small></span>
-        <label class="toggle"><input type="checkbox" id="setAppFolder"><span class="slider"></span></label>
+        <label class="toggle"><input type="checkbox" id="setAppFolder" checked><span class="slider"></span></label>
       </div>
       <div class="switch-row">
         <span>Перезаписывать файлы<small>overwrite=true при совпадении имени</small></span>
@@ -565,13 +730,17 @@ select.neon-input option{background:#0a0d1e}
         <span>Показывать все файлы<small>не фильтровать список по книжным расширениям</small></span>
         <label class="toggle"><input type="checkbox" id="setShowAll"><span class="slider"></span></label>
       </div>
-      <div class="switch-row" style="border-bottom:none">
+      <div class="switch-row">
         <span>Фоновое скачивание<small>через скрытый iframe без Referer; если выключено — ссылка откроется в новой вкладке</small></span>
         <label class="toggle"><input type="checkbox" id="setBgDl" checked><span class="slider"></span></label>
       </div>
+      <div class="switch-row" style="border-bottom:none">
+        <span>Тема E-ink<small>высокий контраст, без анимаций и свечения — для экранов электронных книг</small></span>
+        <label class="toggle"><input type="checkbox" id="setEink"><span class="slider"></span></label>
+      </div>
     </div>
 
-    <div class="field">
+    <div class="field" id="accentField">
       <label>Неоновый акцент</label>
       <div class="accent-swatches" id="accentSwatches"></div>
     </div>
@@ -613,9 +782,10 @@ select.neon-input option{background:#0a0d1e}
    NEON SHELF — SPA для управления книгами на Яндекс.Диске
    ================================================================ */
 
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.6.0';
 const API = 'https://cloud-api.yandex.net/v1/disk';
 const BOOK_EXTS = ['fb2','epub','pdf','mobi','azw','azw3','djvu','djv','txt','rtf','zip','cbz','cbr','doc','docx','fb2.zip'];
+const LONG_NAME_THRESHOLD = 48;
 
 /* ---------------- IndexedDB ---------------- */
 const DB_NAME = 'neon-shelf-db', DB_VER = 1;
@@ -722,10 +892,11 @@ function idbDegrade(){
 let settings = {
   token:'',
   folder:'/Books',
-  useAppFolder:false,
+  useAppFolder:true,    // по умолчанию — папка приложения
   overwrite:true,
   showAll:false,
   bgDownload:true,
+  eink:false,
   accent:'#00f0ff'
 };
 let library = [];
@@ -786,6 +957,24 @@ function qs(params){
     .join('&');
 }
 
+/* ---------------- Токен из GET-параметра URL ----------------
+   Поддерживаются ?token=… и ?access_token=…
+   После чтения параметр удаляется из адресной строки. */
+function readTokenFromURL(){
+  try{
+    const url = new URL(location.href);
+    const tok = url.searchParams.get('token') || url.searchParams.get('access_token');
+    if(tok){
+      url.searchParams.delete('token');
+      url.searchParams.delete('access_token');
+      const rest = url.searchParams.toString();
+      history.replaceState(null, '', url.pathname + (rest ? '?'+rest : '') + url.hash);
+      return tok.trim();
+    }
+  }catch(e){ console.warn('URL token parse:', e); }
+  return null;
+}
+
 /* ---------------- Пути: обычный диск / папка приложения ---------------- */
 function normalizeFolder(f){
   let p = (f||'').trim();
@@ -809,7 +998,12 @@ function joinPath(base, name){
   return base + '/' + name;
 }
 
-/* ---------------- Storage mode UI ---------------- */
+/* ---------------- Theme / storage mode UI ---------------- */
+function applyTheme(){
+  document.body.classList.toggle('eink', !!settings.eink);
+  const af = $('accentField');
+  if(af) af.style.display = settings.eink ? 'none' : '';
+}
 function applyStorageMode(){
   document.body.classList.toggle('no-idb', !idbAvailable);
   const badge = $('storageBadge');
@@ -830,6 +1024,7 @@ function applyModeUI(){
   $('folderHint').textContent = settings.useAppFolder
     ? 'Режим app:/ — путь указывается внутри папки приложения (например /Books → app:/Books).'
     : 'Путь на диске, куда загружаются книги и откуда строится список.';
+  applyTheme();
 }
 
 /* ---------------- Yandex.Disk REST API ---------------- */
@@ -992,6 +1187,8 @@ async function settingsMigration(){
     delete settings.blobDownload;
   }
   if(typeof settings.bgDownload === 'undefined') settings.bgDownload = true;
+  if(typeof settings.useAppFolder === 'undefined') settings.useAppFolder = true;
+  if(typeof settings.eink === 'undefined') settings.eink = false;
   if(/^app:\/?/i.test((settings.folder||'').trim())){
     settings.useAppFolder = true;
   }
@@ -1053,11 +1250,13 @@ function renderLibrary(){
     list.innerHTML = `<div class="empty"><div class="big">🌌</div><div>${q||fmtF?'Ничего не найдено':'Библиотека пуста'}</div><small>${connOK?'Загрузите книги или смените папку/фильтр':'Настройте токен и нажмите «Обновить»'}</small></div>`;
     return;
   }
-  list.innerHTML = items.map(b=>`
+  list.innerHTML = items.map(b=>{
+    const isLong = b.name.length > LONG_NAME_THRESHOLD;
+    return `
     <div class="book" data-path="${esc(b.path)}">
       <div class="ext-badge ${extClass(b.ext)}">${esc((b.ext||'?').toUpperCase().slice(0,5))}</div>
       <div class="info">
-        <div class="name" title="${esc(b.name)}">${esc(b.name)}</div>
+        <div class="name${isLong?' long':''}" title="${esc(b.name)}">${esc(b.name)}</div>
         <div class="meta">
           <span>💾 ${fmtSize(b.size)}</span>
           <span>🕒 ${fmtDate(b.modified)}</span>
@@ -1067,7 +1266,8 @@ function renderLibrary(){
         <button class="btn sm" data-act="download" title="Скачать">⬇ Скачать</button>
         <button class="btn sm danger" data-act="delete" title="Удалить с диска">🗑</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 /* ---------------- Render: queue ---------------- */
@@ -1244,6 +1444,7 @@ function fillSettingsForm(){
   $('setOverwrite').checked = !!settings.overwrite;
   $('setShowAll').checked = !!settings.showAll;
   $('setBgDl').checked = settings.bgDownload !== false;
+  $('setEink').checked = !!settings.eink;
   applyModeUI();
   renderSwatches();
 }
@@ -1266,6 +1467,10 @@ $('setFolder').addEventListener('input', ()=>{
   settings.useAppFolder = $('setAppFolder').checked;
   applyModeUI();
 });
+$('setEink').addEventListener('change', ()=>{
+  settings.eink = $('setEink').checked;
+  applyTheme();
+});
 $('btnSaveSettings').addEventListener('click', async ()=>{
   settings.token = $('setToken').value.trim();
   settings.folder = $('setFolder').value;
@@ -1273,6 +1478,7 @@ $('btnSaveSettings').addEventListener('click', async ()=>{
   settings.overwrite = $('setOverwrite').checked;
   settings.showAll = $('setShowAll').checked;
   settings.bgDownload = $('setBgDl').checked;
+  settings.eink = $('setEink').checked;
   await saveSettings();
   closeModal('modalSettings');
   toast(idbAvailable ? 'Настройки сохранены в IndexedDB' : 'Настройки применены (только текущая сессия)','ok');
@@ -1317,7 +1523,7 @@ async function renderProjects(){
   }
   box.innerHTML = projs.map(p=>`
     <div class="proj-item" data-name="${esc(p.name)}">
-      <div>
+      <div style="min-width:0;flex:1">
         <div class="p-name">📁 ${esc(p.name)}</div>
         <div class="p-meta">${fmtDate(p.savedAt)} · книг: ${p.library? p.library.length:0} · папка: ${esc(p.settings?p.settings.folder:'—')}${p.settings&&p.settings.useAppFolder?' (app:/)':''}</div>
       </div>
@@ -1443,6 +1649,15 @@ $('sortBy').addEventListener('change', renderLibrary);
       toast('IndexedDB недоступна — приложение работает в сессионном режиме (без сохранения)','warn',7000);
     }
     await loadSettings();
+
+    // токен из GET-параметра URL имеет приоритет над сохранённым
+    const urlToken = readTokenFromURL();
+    if(urlToken){
+      settings.token = urlToken;
+      await saveSettings();
+      toast('Токен получен из URL и удалён из адресной строки','ok');
+    }
+
     await loadCachedLibrary();
     renderQueue();
     if(settings.token){
