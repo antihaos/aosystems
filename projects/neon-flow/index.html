@@ -367,7 +367,7 @@ g.edge.selected .edge-glow{opacity:.5}
     <div class="sb-right">
       <span id="sbNodes">0 блоков</span>
       <span id="zoomLabel">100%</span>
-      <span>NF v1.8</span>
+      <span>NF v1.9</span>
     </div>
   </footer>
 </div>
@@ -386,6 +386,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate = ts => { const d = new Date(ts); return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}); };
 const fmtTime = ts => new Date(ts).toLocaleTimeString('ru-RU');
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 function toast(msg, type = 'info', ms = 3200) {
   const t = document.createElement('div');
@@ -728,7 +729,7 @@ function updateSbMsg() {
 }
 function setSbMsg(t) { $('#sbMsg').textContent = t; }
 
-/* ================= АУДИО-УТИЛИТЫ (динамик, буфер, экспорт) ================= */
+/* ================= АУДИО-УТИЛИТЫ ================= */
 let localCtx = null;
 function getAudioCtx() {
   if (pipeline.ctx) return pipeline.ctx;
@@ -778,7 +779,7 @@ function recAppend(node, buf, sr) {
   b.phase = Math.max(0, t - buf.length);
   b.chunks.push(out.subarray(0, cnt).slice());
   b.total += cnt;
-  const cap = 16000 * 300; // максимум 5 минут
+  const cap = 16000 * 300;
   while (b.total > cap && b.chunks.length) { const c = b.chunks.shift(); b.total -= c.length; }
   if (Date.now() - b.lastUi > 1000) { b.lastUi = Date.now(); updateNodeSummary(node); }
 }
@@ -836,6 +837,98 @@ async function recExportMp3(node) {
     appendLog('warn', 'lamejs недоступен — экспорт в WAV');
     toast('lamejs недоступен — сохранено в WAV', 'warn', 4000);
   }
+}
+
+/* ================= ГОЛОС СИСТЕМЫ (speechSynthesis, совместимо с iOS/iPadOS) ================= */
+let ruVoices = [];
+function refreshVoices() {
+  try { ruVoices = speechSynthesis.getVoices().filter(v => (v.lang || '').toLowerCase().startsWith('ru')); } catch (e) {}
+}
+if ('speechSynthesis' in window) {
+  refreshVoices();
+  try { speechSynthesis.addEventListener('voiceschanged', refreshVoices); } catch (e) {}
+  // iOS: «пауза через 15 секунд» — сторожевой resume
+  setInterval(() => {
+    try { if (speechSynthesis.speaking && speechSynthesis.paused) speechSynthesis.resume(); } catch (e) {}
+  }, 4000);
+}
+const ttsState = { queue: [], speaking: false, unlocked: !IS_IOS };
+/* iOS требует первый вызов speak() внутри пользовательского жеста — «разблокировка» */
+function ttsUnlock() {
+  if (!('speechSynthesis' in window)) return;
+  if (ttsState.unlocked) return;
+  try {
+    const u = new SpeechSynthesisUtterance('\u00a0');
+    u.volume = 0.01;
+    u.rate = 2;
+    u.onend = () => { ttsState.unlocked = true; };
+    u.onerror = () => { ttsState.unlocked = true; };
+    speechSynthesis.speak(u);
+    ttsState.unlocked = true; // считаем разблокированным сразу после жеста
+    setTimeout(() => { try { speechSynthesis.resume(); } catch (e) {} }, 100);
+  } catch (e) { ttsState.unlocked = true; }
+}
+function pickVoice(pref) {
+  refreshVoices();
+  if (pref && pref !== 'auto') {
+    const v = ruVoices.find(x => x.name === pref);
+    if (v) return v;
+  }
+  return ruVoices[0] || null;
+}
+function splitSpeechText(t) {
+  const parts = String(t).match(/[^.!?…]+[.!?…]*/g) || [String(t)];
+  const out = [];
+  for (let p of parts) {
+    p = p.trim();
+    if (!p) continue;
+    while (p.length > 170) {
+      let cut = p.lastIndexOf(' ', 170);
+      if (cut < 40) cut = 170;
+      out.push(p.slice(0, cut));
+      p = p.slice(cut).trim();
+    }
+    out.push(p);
+  }
+  return out.length ? out : [String(t).slice(0, 300)];
+}
+function speak(text, p) {
+  if (!('speechSynthesis' in window)) { appendLog('warn', 'Синтез речи не поддерживается этим браузером'); return; }
+  try { refreshVoices(); } catch (e) {}
+  for (const chunk of splitSpeechText(text)) ttsState.queue.push({ text: chunk, p: p || {} });
+  pumpSpeech();
+}
+function pumpSpeech() {
+  if (!('speechSynthesis' in window)) return;
+  if (ttsState.speaking || !ttsState.queue.length) return;
+  const job = ttsState.queue.shift();
+  const u = new SpeechSynthesisUtterance(job.text);
+  u.lang = 'ru-RU';
+  u.rate = clamp(job.p.rate || 1, 0.5, 2);
+  u.pitch = clamp(job.p.pitch || 1, 0, 2);
+  u.volume = 1;
+  const v = pickVoice(job.p.voice);
+  if (v) u.voice = v;
+  ttsState.speaking = true;
+  let done = false;
+  const finish = () => { if (done) return; done = true; ttsState.speaking = false; setTimeout(pumpSpeech, 30); };
+  u.onend = finish;
+  u.onerror = finish;
+  try {
+    speechSynthesis.speak(u);
+    // iOS: принудительный resume сразу после speak
+    setTimeout(() => { try { if (speechSynthesis.paused) speechSynthesis.resume(); } catch (e) {} }, 150);
+  } catch (e) {
+    appendLog('err', 'Голос системы: ' + (e.message || e));
+    finish();
+  }
+}
+function ttsTest(node) {
+  ttsUnlock();
+  appendLog('say', '🔊 Тест голоса системы');
+  speak('Проверка голоса. Синтез речи работает.', node.params || {});
+  setLed(node.id, 'speak');
+  setTimeout(() => setLed(node.id, pipeline.running ? 'on' : ''), 2500);
 }
 
 /* ================= УЗЛЫ ================= */
@@ -904,7 +997,8 @@ function createNodeEl(node) {
       <button class="nbtn" data-act="rclear">✕</button>
       <button class="nbtn" data-act="rexp">💾 MP3</button>
     </div>` : ''}
-    ${node.type === 'spk' ? `<div class="nodebtns"><button class="nbtn" data-act="stest">🔊 Тест звука</button></div>` : ''}`;
+    ${node.type === 'spk' ? `<div class="nodebtns"><button class="nbtn" data-act="stest">🔊 Тест звука</button></div>` : ''}
+    ${node.type === 'tts' ? `<div class="nodebtns"><button class="nbtn" data-act="ttest">🔊 Тест голоса</button></div>` : ''}`;
   el.querySelector('.nsub').textContent = nodeSummary(node);
   const gear = el.querySelector('.ngear');
   gear.addEventListener('pointerdown', e => e.stopPropagation());
@@ -927,6 +1021,7 @@ function createNodeEl(node) {
       else if (act === 'rclear') recClear(node);
       else if (act === 'rexp') recExportMp3(node);
       else if (act === 'stest') spkTest(node);
+      else if (act === 'ttest') ttsTest(node);
     });
   });
   el.addEventListener('pointerdown', e => onNodePointerDown(e, node));
@@ -956,6 +1051,7 @@ function nodeCtxItems(node) {
     items.push({ label: '✕ Очистить буфер', fn: () => recClear(node) });
   }
   if (node.type === 'spk') items.push({ label: '🔊 Тест звука', fn: () => spkTest(node) });
+  if (node.type === 'tts') items.push({ label: '🔊 Тест голоса', fn: () => ttsTest(node) });
   items.push({ sep: true });
   items.push({ label: '🗑 Удалить блок', danger: true, fn: () => { removeNode(node.id); markDirty(); } });
   return items;
@@ -1332,14 +1428,6 @@ document.addEventListener('keydown', e => {
 });
 
 /* ================= НАСТРОЙКИ УЗЛА ================= */
-let ruVoices = [];
-function refreshVoices() {
-  try { ruVoices = speechSynthesis.getVoices().filter(v => (v.lang || '').toLowerCase().startsWith('ru')); } catch (e) {}
-}
-if ('speechSynthesis' in window) {
-  refreshVoices();
-  try { speechSynthesis.addEventListener('voiceschanged', refreshVoices); } catch (e) {}
-}
 function fieldHtml(d, v) {
   if (d.t === 'select') return `<div class="f-row"><label>${d.l}</label><select data-k="${d.k}">${d.o.map(o => `<option value="${esc(o)}" ${o == v ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select></div>`;
   if (d.t === 'textarea') return `<div class="f-row"><label>${d.l}</label><textarea data-k="${d.k}" rows="${d.rows || 5}" placeholder="${esc(d.ph || '')}">${esc(v)}</textarea></div>`;
@@ -1404,6 +1492,7 @@ function openNodeSettings(node) {
         const sel = body.querySelector('[data-k="voice"]');
         if (sel) {
           const cur = node.params.voice || 'auto';
+          refreshVoices();
           sel.innerHTML = '<option value="auto">auto — первый русский голос</option>' +
             ruVoices.map(v => `<option value="${esc(v.name)}">${esc(v.name)} (${esc(v.lang)})</option>`).join('');
           sel.value = cur;
@@ -1440,7 +1529,10 @@ function openNodeSettings(node) {
     if (node.type === 'tts') {
       const h = document.createElement('div');
       h.className = 'hint-box';
-      h.textContent = 'Голос операционной системы — качественный русский, но звучит только в динамиках устройства (нельзя отправить в транк). Для звука в граф/транк используйте «Нейро-речь (РУС)» или «Аудиофайл».';
+      h.innerHTML = 'Голос операционной системы — качественный русский, звучит в динамиках устройства (в транк не отправляется). ' +
+        (IS_IOS
+          ? '<b>iOS/iPadOS:</b> системе нужен однократный жест для разблокировки звука — нажмите «ЗАПУСК» или кнопку «Тест голоса» на блоке. Если русский голос не найден, установите его: Настройки → Основные → Словари/голоса, либо блок использует голос по умолчанию.'
+          : 'Кнопка «Тест голоса» на блоке проверяет озвучку.');
       body.appendChild(h);
     }
     if (node.type === 'rtts') {
@@ -1793,8 +1885,8 @@ function renderPalette() {
     `<div style="margin-top:14px;padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:11px;line-height:1.7">
       💡 Перетащите блок на холст или кликните для добавления.<br>
       🔗 Порты соединяются перетаскиванием или двумя касаниями.<br>
-      🗣 Русский звук в граф: «Нейро-речь (РУС)» или «Аудиофайл»; в динамики — «Динамик» и «Голос системы».<br>
-      🎙 «Аудиобуфер» записывает звук и экспортирует его в MP3.<br>
+      🗣 Русский звук: «Голос системы» (динамики) или «Нейро-речь (РУС)» (звук в граф/транк).<br>
+      📱 iPad/iPhone: нажмите «ЗАПУСК» или «Тест голоса» — системе нужен жест для разблокировки звука.<br>
       🗑 Удаление: ✕ на блоке, долгое нажатие (сенсор) или плавающая кнопка.</div>`;
   el.querySelectorAll('.pal-item').forEach(it => {
     it.addEventListener('dragstart', e => e.dataTransfer.setData('node-type', it.dataset.type));
@@ -1878,7 +1970,6 @@ function normalizeNodeParams(node) {
     }
   }
   if (node.type === 'merge' && node.params.count == null) node.params.count = 3;
-  if (node.type === 'ttsai') { node.type = 'rtts'; } // миграция со старого блока
 }
 function clearCanvas() {
   if (pipeline.running) stopPipeline();
@@ -2035,7 +2126,7 @@ function openAboutModal() {
       • Захват аудио: микрофон, генератор тона, SIP-транк (sip.js → WebRTC)<br>
       • DSP: усиление, гейт, полосовой фильтр, VAD<br>
       • Распознавание речи локально — <b>Whisper</b> через <b>transformers.js</b><br>
-      • 🗣 Два русских синтеза: системный голос (динамики) и нейро-синтез <b>MMS-TTS (ru)</b> с выдачей звука в граф/транк<br>
+      • 🗣 Два русских синтеза: системный голос (динамики, совместим с iOS/iPadOS) и нейро-синтез <b>MMS-TTS (ru)</b> с выдачей звука в граф/транк<br>
       • 🤖 Диалоговые графы: маршрутизатор с произвольным числом выходов, реплики, сценарии, паузы, слияние веток<br>
       • 🎙 Аудиобуфер: запись звука графа/линии, воспроизведение и экспорт в <b>MP3</b> (lamejs)<br>
       • Хранение проектов в IndexedDB, импорт/экспорт JSON<br>
@@ -2384,19 +2475,6 @@ function emitAudio(nodeId, portId, buf, sr) {
     }
   }
 }
-function speak(text, p) {
-  if (!('speechSynthesis' in window)) { appendLog('warn', 'Синтез речи не поддерживается этим браузером'); return; }
-  try {
-    refreshVoices();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ru-RU';
-    u.rate = clamp(p.rate || 1, 0.5, 2);
-    u.pitch = clamp(p.pitch || 1, 0, 2);
-    const v = (p.voice && p.voice !== 'auto') ? ruVoices.find(x => x.name === p.voice) : ruVoices[0];
-    if (v) u.voice = v;
-    speechSynthesis.speak(u);
-  } catch (e) { appendLog('err', 'TTS: ' + (e.message || e)); }
-}
 function playBufferIntoGraph(buf, sr, monitor) {
   const ctx = pipeline.ctx;
   if (!ctx || !pipeline.sendDest) return false;
@@ -2637,7 +2715,7 @@ async function startSipSource(p) {
     authorizationUsername: p.user,
     authorizationPassword: p.password || undefined,
     displayName: p.user,
-    userAgentString: 'NeonFlow/1.8',
+    userAgentString: 'NeonFlow/1.9',
     reconnectionAttempts: 0,
     logLevel: S.LogLevel ? S.LogLevel.Error : 'error'
   });
@@ -2686,6 +2764,7 @@ function setSrcStatus(txt, cls) {
 const runBtn = $('#runBtn');
 async function startPipeline() {
   if (pipeline.running) return;
+  ttsUnlock(); // iOS: разблокировка синтеза строго внутри жеста (клик по кнопке)
   runBtn.classList.add('starting');
   runBtn.innerHTML = '⏳ ПОДКЛЮЧЕНИЕ…';
   try {
@@ -2756,6 +2835,8 @@ async function stopPipeline(silent) {
   pipeline.timerIds = [];
   pipeline.textRts.clear();
   asrJobQueue = [];
+  ttsState.queue = [];
+  ttsState.speaking = false;
   try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch (e) {}
   runBtn.classList.remove('running', 'starting');
   runBtn.innerHTML = '▶ ЗАПУСК';
@@ -2899,8 +2980,7 @@ async function init() {
   updateEmptyHint();
   appendLog('info', 'NeonFlow готов. Соберите цепь блоков (или выберите пресет 🧩) и нажмите «ЗАПУСК».');
   appendLog('info', 'Русский звук: «Голос системы» (динамики) или «Нейро-речь (РУС)» — звук в граф, транк и буфер.');
-  appendLog('info', 'Аудиобуфер 🎙 пишет звук, проигрывает и экспортирует в MP3 прямо с кнопок блока.');
-  appendLog('info', 'Проверка звука: кнопка «Тест звука» на блоке «Динамик» работает без запуска пайплайна.');
+  if (IS_IOS) appendLog('warn', 'Обнаружен iOS/iPadOS: для звука нужен однократный жест — нажмите «ЗАПУСК» или кнопку «Тест голоса» на блоке «Голос системы».');
   setInterval(() => { if (dirty && project.name) saveProject(true); }, 15000);
   window.addEventListener('beforeunload', () => { if (dirty && project.name) saveProject(true); });
 }
