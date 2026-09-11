@@ -577,7 +577,7 @@ transition: border-color .3s, box-shadow .3s;
 .crossword-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .crossword-controls .quiz-button { margin-top: 0; }
 
-/* ================= ВИРТУАЛЬНЫЕ ХОЛСТЫ (БЕСКОНЕЧНЫЙ CANVAS WORKSPACE) ================= */
+/* ============ ВИРТУАЛЬНЫЕ ХОЛСТЫ: БЕСКОНЕЧНЫЙ CANVAS + СТАТУСБАР + РЕЖИМ ФОКУСА ============ */
 .canvas-fab {
 position: fixed; z-index: 900; width: 58px; height: 58px; border-radius: 50%;
 display: none; align-items: center; justify-content: center;
@@ -614,32 +614,33 @@ box-shadow: 0 0 34px rgba(0,240,255,0.35), 0 14px 48px rgba(0,0,0,0.65);
 .canvas-window.maximized { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
 .canvas-window.moving, .canvas-window.resizing { user-select: none; }
 .canvas-win-header {
-display: flex; align-items: center; gap: 8px; padding: 7px 10px; flex: 0 0 auto;
+display: flex; align-items: center; gap: 8px; padding: 6px 10px; flex: 0 0 auto;
 background: linear-gradient(90deg, rgba(0,240,255,0.12), rgba(185,103,255,0.08));
 border-bottom: 1px solid var(--border); cursor: move; touch-action: none; user-select: none;
 }
-.canvas-win-icon { font-size: 1.2em; line-height: 1; }
+.canvas-win-icon { font-size: 1.15em; line-height: 1; }
 .canvas-win-title {
-flex: 1; min-width: 0; font-weight: bold; color: #fff; font-size: 0.95em;
+flex: 1; min-width: 0; font-weight: bold; color: #fff; font-size: 0.9em;
 text-shadow: 0 0 8px var(--cyan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .canvas-win-btn {
-width: 28px; height: 28px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+width: 26px; height: 26px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
 background: transparent; border: 1px solid var(--border); color: var(--cyan); border-radius: 5px;
-cursor: pointer; font-size: 0.9em; line-height: 1; padding: 0; transition: all .2s; font-family: inherit;
+cursor: pointer; font-size: 0.85em; line-height: 1; padding: 0; transition: all .2s; font-family: inherit;
 }
 .canvas-win-btn:hover { background: rgba(0,240,255,0.18); box-shadow: 0 0 8px rgba(0,240,255,0.4); }
+.canvas-win-btn.active { background: rgba(0,240,255,0.25); border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,0.5); }
 .canvas-win-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.5); }
 .canvas-win-btn.danger:hover { background: rgba(255,42,109,0.18); box-shadow: 0 0 8px rgba(255,42,109,0.4); }
 .canvas-win-body { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
 .canvas-sidebar {
-width: 250px; flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column;
+width: 244px; flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column;
 border-right: 1px solid var(--border); background: rgba(0,0,0,0.22);
 }
 .canvas-side-head {
 display: flex; align-items: center; justify-content: space-between; gap: 6px;
-padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--cyan);
-font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; flex: 0 0 auto;
+padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--cyan);
+font-size: 0.78em; text-transform: uppercase; letter-spacing: 1px; flex: 0 0 auto;
 }
 .canvas-side-head .cnt { color: var(--muted); text-transform: none; letter-spacing: 0; font-size: 1em; }
 .canvas-list { flex: 1 1 auto; overflow-y: auto; padding: 6px; min-height: 40px; }
@@ -651,7 +652,7 @@ background: rgba(255,255,255,0.02);
 .canvas-item:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.25); }
 .canvas-item.active { border-color: var(--cyan); background: rgba(0,240,255,0.12); box-shadow: 0 0 10px rgba(0,240,255,0.35); }
 .canvas-item-info { flex: 1; min-width: 0; }
-.canvas-item-title { color: var(--text); font-size: 0.88em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.canvas-item-title { color: var(--text); font-size: 0.86em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .canvas-item.active .canvas-item-title { color: #fff; }
 .canvas-item-meta { color: var(--muted); font-size: 0.72em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .canvas-item-btns { display: flex; gap: 3px; flex: 0 0 auto; }
@@ -661,57 +662,52 @@ border-top: 1px solid var(--border); display: flex; flex-direction: column; gap:
 }
 .canvas-side-opts input[type="text"], .canvas-side-opts select {
 background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 6px;
-padding: 5px 7px; outline: none; font-family: inherit; font-size: 0.88em; width: 100%;
+padding: 5px 7px; outline: none; font-family: inherit; font-size: 0.86em; width: 100%;
 transition: border-color .3s, box-shadow .3s;
 }
 .canvas-side-opts input[type="text"]:focus, .canvas-side-opts select:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
 .canvas-side-opts input[type="color"] {
-width: 100%; height: 30px; padding: 2px; border: 1px solid var(--border); border-radius: 6px;
+width: 100%; height: 28px; padding: 2px; border: 1px solid var(--border); border-radius: 6px;
 background: #0a0c14; cursor: pointer;
 }
-.canvas-opt-label { color: var(--muted); font-size: 0.75em; text-transform: uppercase; letter-spacing: .6px; }
+.canvas-opt-label { color: var(--muted); font-size: 0.72em; text-transform: uppercase; letter-spacing: .6px; }
 .canvas-side-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
 .canvas-side-btn {
 padding: 6px 8px; background: rgba(0,240,255,0.08); border: 1px solid var(--border); color: var(--cyan);
-border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.8em; transition: all .25s;
+border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.78em; transition: all .25s;
 }
 .canvas-side-btn:hover:not(:disabled) { background: rgba(0,240,255,0.2); box-shadow: 0 0 8px rgba(0,240,255,.35); border-color: var(--cyan); }
 .canvas-side-btn.wide { grid-column: 1 / -1; }
 .canvas-side-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.45); background: rgba(255,42,109,0.08); }
 .canvas-side-btn.danger:hover:not(:disabled) { background: rgba(255,42,109,0.18); box-shadow: 0 0 8px rgba(255,42,109,.35); }
 .canvas-side-btn:disabled { opacity: .4; cursor: not-allowed; }
-.canvas-main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.canvas-main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; position: relative; }
 .canvas-toolbar {
-display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 7px 9px; flex: 0 0 auto;
+display: flex; gap: 5px; flex-wrap: wrap; align-items: center; padding: 5px 8px; flex: 0 0 auto;
 border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);
 }
-.canvas-tool-group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-.canvas-tool-sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 3px; }
+.canvas-tool-group { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
+.canvas-tool-sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 2px; }
 .tool-btn {
-min-width: 32px; height: 32px; padding: 0 7px; display: flex; align-items: center; justify-content: center;
+min-width: 30px; height: 30px; padding: 0 6px; display: flex; align-items: center; justify-content: center;
 background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 6px;
-cursor: pointer; font-size: 0.95em; line-height: 1; transition: all .2s; font-family: inherit;
+cursor: pointer; font-size: 0.92em; line-height: 1; transition: all .2s; font-family: inherit;
 }
 .tool-btn:hover:not(:disabled) { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.35); transform: translateY(-1px); }
 .tool-btn.active { background: rgba(0,240,255,0.18); border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,.45); }
 .tool-btn:disabled { opacity: .35; cursor: not-allowed; }
-.zoom-label {
-min-width: 56px; text-align: center; color: var(--cyan); font-size: 0.8em; font-weight: bold;
-padding: 0 4px; cursor: pointer; user-select: none;
+.color-dot-btn {
+width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer;
+display: flex; align-items: center; justify-content: center; padding: 0; background: transparent; transition: all .2s;
 }
-.zoom-label:hover { text-shadow: 0 0 8px var(--cyan); }
-.color-swatch {
-width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
-cursor: pointer; transition: all .2s; padding: 0;
-}
-.color-swatch:hover { transform: scale(1.15); }
-.color-swatch.active { border-color: #fff; box-shadow: 0 0 10px currentColor; transform: scale(1.15); }
-.canvas-color-input { width: 34px; height: 28px; padding: 1px; border: 1px solid var(--border); border-radius: 6px; background: #0a0c14; cursor: pointer; }
-.canvas-size-wrap { display: flex; align-items: center; gap: 5px; }
-.canvas-size-wrap input[type="range"] { width: 82px; accent-color: var(--cyan); cursor: pointer; }
-.canvas-size-val { color: var(--cyan); font-size: 0.8em; font-weight: bold; min-width: 24px; text-align: right; }
+.color-dot-btn:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.4); }
+.color-dot-inner { width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(255,255,255,.35); }
+.canvas-size-wrap { display: flex; align-items: center; gap: 4px; }
+.canvas-size-wrap input[type="range"] { width: 74px; accent-color: var(--cyan); cursor: pointer; }
+.canvas-size-val { color: var(--cyan); font-size: 0.78em; font-weight: bold; min-width: 20px; text-align: right; }
 .canvas-stage { flex: 1 1 auto; position: relative; min-height: 0; overflow: hidden; background: #05070f; }
-.canvas-stage canvas { position: absolute; left: 0; top: 0; display: block; touch-action: none; cursor: crosshair; }
+.canvas-stage canvas { position: absolute; left: 0; top: 0; display: block; touch-action: none; cursor: crosshair; outline: none; }
+.canvas-stage canvas:focus-visible { box-shadow: inset 0 0 0 1px rgba(0,240,255,.55); }
 .canvas-window.panning .canvas-stage canvas { cursor: grabbing !important; }
 .canvas-window.space-pan .canvas-stage canvas { cursor: grab !important; }
 .canvas-text-input {
@@ -724,16 +720,82 @@ position: absolute; inset: 0; display: flex; flex-direction: column; align-items
 gap: 12px; color: var(--muted); text-align: center; padding: 20px; z-index: 6; pointer-events: none;
 }
 .canvas-empty-hint button { pointer-events: auto; }
-.canvas-status {
-flex: 0 0 auto; display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
-padding: 4px 10px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.25);
-color: var(--muted); font-size: 0.78em; min-height: 26px;
+/* ---- единый лаконичный статусбар ---- */
+.canvas-statusbar {
+flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 3px 9px; min-height: 28px;
+border-top: 1px solid var(--border); background: rgba(0,0,0,0.4);
+color: var(--muted); font-size: 0.76em; white-space: nowrap; overflow: hidden;
+transition: opacity .35s ease, background .3s ease;
 }
-.canvas-status .st-item { white-space: nowrap; }
-.canvas-status .save-state { margin-left: auto; font-weight: bold; }
-.save-state.saving { color: var(--yellow); }
-.save-state.saved { color: var(--green); }
-.save-state.error { color: var(--pink); }
+.sb-seg { display: flex; align-items: center; gap: 5px; flex: 0 0 auto; }
+.sb-seg.grow { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.sb-name { color: var(--text); font-weight: bold; overflow: hidden; text-overflow: ellipsis; }
+.sb-dot { width: 10px; height: 10px; border-radius: 3px; border: 1px solid rgba(255,255,255,.4); flex: 0 0 auto; }
+.sb-spacer { flex: 1 1 auto; }
+.sb-mini {
+width: 19px; height: 19px; display: flex; align-items: center; justify-content: center;
+background: transparent; border: 1px solid var(--border); color: var(--cyan); border-radius: 4px;
+cursor: pointer; font-size: 0.95em; line-height: 1; padding: 0; transition: all .2s; font-family: inherit;
+}
+.sb-mini:hover { background: rgba(0,240,255,.18); box-shadow: 0 0 6px rgba(0,240,255,.4); }
+.zoom-label {
+min-width: 46px; text-align: center; color: var(--cyan); font-weight: bold; cursor: pointer; user-select: none;
+}
+.zoom-label:hover { text-shadow: 0 0 8px var(--cyan); }
+.sb-save { font-weight: bold; }
+.sb-save.saving { color: var(--yellow); }
+.sb-save.saved { color: var(--green); }
+.sb-save.error { color: var(--pink); }
+.sb-help-btn {
+width: 19px; height: 19px; border-radius: 50%; border: 1px solid var(--border); background: transparent;
+color: var(--muted); cursor: pointer; font-size: 0.95em; line-height: 1; display: flex;
+align-items: center; justify-content: center; transition: all .2s; font-family: inherit; padding: 0;
+}
+.sb-help-btn:hover { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 6px rgba(0,240,255,.4); }
+/* ---- всплывающие панели ---- */
+.canvas-popover {
+position: absolute; z-index: 45; display: none; background: rgba(10,14,26,0.97);
+border: 1px solid var(--border); border-radius: 8px; padding: 8px;
+box-shadow: 0 8px 28px rgba(0,0,0,.65), 0 0 14px rgba(0,240,255,.15);
+}
+.canvas-popover.open { display: block; animation: fadeIn .16s ease; }
+.swatch-grid { display: grid; grid-template-columns: repeat(4, 24px); gap: 6px; margin-bottom: 8px; }
+.color-swatch {
+width: 24px; height: 24px; border-radius: 5px; border: 2px solid rgba(255,255,255,0.18);
+cursor: pointer; transition: all .2s; padding: 0;
+}
+.color-swatch:hover { transform: scale(1.12); }
+.color-swatch.active { border-color: #fff; box-shadow: 0 0 10px currentColor; transform: scale(1.12); }
+.canvas-color-input { width: 100%; height: 28px; padding: 1px; border: 1px solid var(--border); border-radius: 6px; background: #0a0c14; cursor: pointer; }
+.popover-row { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 0.82em; color: var(--muted); }
+.help-popover { width: 330px; max-width: 88vw; color: var(--muted); font-size: 0.8em; line-height: 1.6; }
+.help-popover h5 { color: var(--cyan); font-size: 1em; margin: 7px 0 3px; text-transform: uppercase; letter-spacing: .6px; }
+.help-popover h5:first-child { margin-top: 0; }
+.help-popover kbd {
+background: #0a0c14; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px;
+color: var(--cyan); font-family: 'Courier New', monospace; font-size: 0.95em;
+}
+.help-popover ul { list-style: none; padding: 0; margin: 0; }
+.help-popover li { padding: 1px 0; }
+/* ---- режим фокуса на холсте ---- */
+.focus-toolbar {
+display: none; position: absolute; z-index: 44; top: 10px; left: 50%; transform: translateX(-50%);
+gap: 4px; padding: 5px 7px; align-items: center; flex-wrap: wrap; justify-content: center;
+max-width: 94%; background: rgba(10,14,26,0.82); border: 1px solid var(--border); border-radius: 10px;
+backdrop-filter: blur(6px); box-shadow: 0 6px 22px rgba(0,0,0,.55); transition: opacity .35s ease;
+}
+.canvas-window.focus-mode .focus-toolbar { display: flex; }
+.canvas-window.focus-mode .canvas-win-header,
+.canvas-window.focus-mode .canvas-sidebar,
+.canvas-window.focus-mode .canvas-toolbar { display: none; }
+.canvas-window.focus-mode .canvas-statusbar {
+position: absolute; left: 0; right: 0; bottom: 0; z-index: 43;
+background: rgba(5,7,15,0.62); backdrop-filter: blur(5px); border-top-color: rgba(0,240,255,.18);
+}
+.canvas-window.focus-mode .ui-idle .focus-toolbar,
+.canvas-window.focus-mode .ui-idle .canvas-statusbar { opacity: 0.07; }
+.canvas-window.focus-mode .focus-toolbar:hover,
+.canvas-window.focus-mode .canvas-statusbar:hover { opacity: 1 !important; }
 .resize-handle { position: absolute; z-index: 15; }
 .rh-n { top: 0; left: 16px; right: 16px; height: 6px; cursor: ns-resize; }
 .rh-s { bottom: 0; left: 16px; right: 16px; height: 6px; cursor: ns-resize; }
@@ -752,7 +814,9 @@ display: flex !important; transform: translateX(0); transition: transform .25s e
 box-shadow: 6px 0 24px rgba(0,0,0,.6); background: var(--panel);
 }
 .canvas-window.sidebar-closed .canvas-sidebar { transform: translateX(-108%); }
-.canvas-size-wrap input[type="range"] { width: 60px; }
+.canvas-window.focus-mode .canvas-sidebar { display: none !important; }
+.canvas-size-wrap input[type="range"] { width: 56px; }
+.sb-optional { display: none !important; }
 }
 @media (min-width: 721px) {
 .canvas-window.sidebar-closed .canvas-sidebar { display: none; }
@@ -1015,7 +1079,7 @@ const info = h('div', { class: 'app-info' });
 info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
 info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
 header.appendChild(info);
-header.appendChild(h('span', { class: 'app-version', textContent: 'v1.11.0' }));
+header.appendChild(h('span', { class: 'app-version', textContent: 'v1.12.0' }));
 return header;
 }
 function renderCourseHeader() {
@@ -3640,10 +3704,12 @@ helpDiv.innerHTML = `
 <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования). Для генерации подробных лекций используйте «Генерацию промпта».</p>
 <h4 style="color: #fff; margin-top: 10px;">🎨 Виртуальные холсты для заметок</h4>
 <p>Плавающая кнопка <strong>🎨</strong> (sticky-кнопка) доступна при загруженном курсе. Её можно <strong>перетащить</strong> в любое место экрана — позиция фиксируется и запоминается между сессиями; обычный клик (без перетаскивания) открывает рабочее окно холстов. Кнопка 🎨 также есть в заголовке каждого урока.</p>
-<p><strong>Бесконечный холст:</strong> рабочая область не имеет границ — рисовать можно в любом направлении, координаты не ограничены (в том числе отрицательные). Видимая область ограничена только окном; за её пределами штрихи не перерисовываются (оптимизация), но сохраняются. Точка начала координат (0;0) отмечена перекрестием осей, сетка бесконечная и адаптивная к масштабу.</p>
-<p><strong>Инструменты рисования:</strong> карандаш (✏), маркер-выделитель (🖍), ластик (⌫ — удаляет штрихи целиком), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯) и текст (T). Доступны палитра цветов, произвольный цвет, толщина линии, режим заливки фигур, отмена/повтор (Ctrl+Z / Ctrl+Y) и очистка холста. Горячие клавиши инструментов: P, H, E, L, A, R, O, T, V.</p>
-<p><strong>Перемещение и масштаб:</strong> инструмент «Рука» (✋, клавиша V) — перетаскивание; <strong>средняя кнопка мыши</strong> или <strong>удерживаемый пробел</strong> — временное перемещение любым инструментом; <strong>колесо мыши</strong> — панорамирование, <strong>Ctrl + колесо</strong> — зум к курсору; <strong>щипок двумя пальцами</strong> — масштабирование, два пальца — перемещение; стрелки ← ↑ → ↓ — панорамирование (с Shift — быстрее). Кнопки панели: <code>−</code>/<code>+</code> — зум, <code>%</code> — 100 %, <code>▣</code> — вписать всё содержимое, <code>1:1</code> — фактический размер, <code>⌂</code> — к началу координат. Клавиши: Ctrl + «+» / Ctrl + «−» / Ctrl + 0 (вписать) / Ctrl + 1 (100 %). Масштаб и позиция вида сохраняются для каждого холста отдельно.</p>
-<p><strong>Управление холстами:</strong> в левой панели — список холстов курса: создание, дублирование, удаление, переименование, привязка к конкретному уроку, цвет фона и сетка. Также доступны экспорт в PNG (экспортируется область вокруг всего содержимого), экспорт/импорт JSON холста.</p>
+<p><strong>Бесконечный холст:</strong> рабочая область не имеет границ — рисовать можно в любом направлении, координаты не ограничены (в том числе отрицательные). Начало координат (0;0) отмечено осями, сетка бесконечная и адаптивная к масштабу.</p>
+<p><strong>Лаконичный интерфейс и статусбар:</strong> вся служебная информация собрана в одной нижней строке — статусбаре: название холста и привязка к уроку, текущий инструмент с цветом и толщиной, координаты курсора, масштаб с кнопками <code>−</code>/<code>+</code>/<code>▣</code>, число штрихов, состояние автосохранения и кнопка <code>?</code> со шпаргалкой по горячим клавишам. Панель инструментов содержит только то, что нужно во время рисования; палитра цветов, произвольный цвет и заливка фигур спрятаны в компактное всплывающее окно по кнопке с цветовым индикатором.</p>
+<p><strong>Режим фокуса на холсте (🎯 или клавиша F):</strong> скрывает заголовок окна, боковую панель и панель инструментов, разворачивает окно на весь экран и оставляет только холст, полупрозрачный статусбар и мини-панель инструментов. Через ~2 секунды бездействия интерфейс плавно растворяется, чтобы ничего не отвлекало от рисования; достаточно пошевелить мышью или навести курсор на панели. Выход — <code>F</code>, <code>Esc</code> или кнопка <code>⤡</code>. В этом режиме <code>Tab</code> не уводит фокус на элементы интерфейса — фокус удерживается на холсте, поэтому горячие клавиши работают сразу после клика по любой кнопке.</p>
+<p><strong>Инструменты рисования:</strong> карандаш (✏), маркер-выделитель (🖍), ластик (⌫ — удаляет штрихи целиком), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯), текст (T), рука (✋). Горячие клавиши: P, H, E, L, A, R, O, T, V. Отмена/повтор: Ctrl+Z / Ctrl+Y, сохранить: Ctrl+S.</p>
+<p><strong>Перемещение и масштаб:</strong> инструмент «Рука» (V) · средняя кнопка мыши · пробел + мышь · колесо (панорама) · Ctrl + колесо (зум к курсору) · щипок двумя пальцами · стрелки (Shift — быстрее). Кнопки: <code>−</code>/<code>+</code> — зум, <code>%</code> — 100 %, <code>▣</code> — вписать содержимое, <code>⌂</code> — к началу координат. Клавиши: Ctrl + «+» / Ctrl + «−» / Ctrl + 0 / Ctrl + 1. Масштаб и позиция вида сохраняются для каждого холста отдельно.</p>
+<p><strong>Управление холстами:</strong> в левой панели — список холстов курса: создание, дублирование, удаление, переименование, привязка к уроку, цвет фона и сетка; экспорт PNG (по границам содержимого), экспорт/импорт JSON холста.</p>
 <p><strong>Окно холста</strong> можно перемещать за заголовок, изменять его размер за края и углы, разворачивать на весь экран (⤢) и переводить в нативный полноэкранный режим (⛶), сворачивать (—) и закрывать (×). Позиция и размер окна запоминаются.</p>
 <p><strong>Хранение:</strong> все штрихи хранятся как векторные последовательности абсолютных координат бесконечной плоскости в поле <code>meta.canvases</code> описания курса и автоматически сохраняются в IndexedDB вместе с курсом. Формат записи (version 2):</p>
 <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>"canvases": [
@@ -3819,7 +3885,7 @@ return prompt;
 }
 
 // =====================================================================
-// == ВИРТУАЛЬНЫЕ ХОЛСТЫ ДЛЯ ЗАМЕТОК (БЕСКОНЕЧНАЯ ПЛОСКОСТЬ + ЗУМ/ПАН) ==
+// == ВИРТУАЛЬНЫЕ ХОЛСТЫ: БЕСКОНЕЧНАЯ ПЛОСКОСТЬ, СТАТУСБАР, ФОКУС-РЕЖИМ ==
 // =====================================================================
 const CANVAS_FAB_POS_KEY = 'lms_canvas_fab_pos';
 const CANVAS_WIN_POS_KEY = 'lms_canvas_win_pos';
@@ -3875,7 +3941,6 @@ if (typeof rec.title !== 'string' || !rec.title) rec.title = 'Холст';
 if (!Array.isArray(rec.strokes)) rec.strokes = [];
 const version = Number(rec.version) || 1;
 if (version < CANVAS_VERSION) {
-// миграция: нормализованные координаты 0..1 -> абсолютные координаты бесконечной плоскости
 rec.strokes.forEach(s => {
 if (!s || typeof s !== 'object' || !Array.isArray(s.points)) return;
 s.points = s.points.map(p => {
@@ -3889,7 +3954,7 @@ s.fontSize = Number(s.fontSize) * LEGACY_PAGE_H;
 rec.view = null;
 rec.version = CANVAS_VERSION;
 }
-rec.strokes = rec.strokes.filter(s => s && typeof s === 'object' && Array.isArray(s.points) && s.points.length > 0);
+rec.strokes = rec.strokes.filter(s => s && typeof s === 'object' && Array.isArray(s.points));
 rec.strokes.forEach(s => { s.points = s.points.filter(validStrokePoint).map(p => [Number(p[0]), Number(p[1])]); });
 rec.strokes = rec.strokes.filter(s => s.points.length > 0);
 if (typeof rec.background !== 'string') rec.background = '#0a0c14';
@@ -3922,7 +3987,7 @@ a.remove();
 setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
 
-// ---------- Плавающая (sticky) кнопка открытия холстов ----------
+// ---------- Плавающая (sticky) кнопка ----------
 function createCanvasFab() {
 if (canvasFab) return canvasFab;
 const fab = h('button', {
@@ -3933,8 +3998,7 @@ title: 'Виртуальные холсты — перетащите, чтобы
 fab.appendChild(h('span', { textContent: '🎨' }));
 const badge = h('span', { class: 'fab-badge' });
 fab.appendChild(badge);
-const hint = h('span', { class: 'fab-hint', textContent: 'Холсты заметок · перетащите меня' });
-fab.appendChild(hint);
+fab.appendChild(h('span', { class: 'fab-hint', textContent: 'Холсты заметок · перетащите меня' }));
 document.body.appendChild(fab);
 canvasFab = fab;
 let fabDrag = null;
@@ -3966,11 +4030,8 @@ if (!fabDrag) return;
 const wasMoved = fabDrag.moved;
 fabDrag = null;
 fab.classList.remove('dragging');
-if (wasMoved) {
-saveCanvasFabPosition();
-} else {
-openCanvasWorkspace();
-}
+if (wasMoved) saveCanvasFabPosition();
+else openCanvasWorkspace();
 };
 fab.addEventListener('pointerup', fabRelease);
 fab.addEventListener('pointercancel', fabRelease);
@@ -4004,8 +4065,8 @@ if (!canvasFab) return;
 let pos = null;
 try { pos = JSON.parse(localStorage.getItem(CANVAS_FAB_POS_KEY) || 'null'); } catch (e) {}
 const size = canvasFab.offsetWidth || 58;
-let x = (pos && isFinite(pos.x)) ? pos.x : (window.innerWidth - size - 24);
-let y = (pos && isFinite(pos.y)) ? pos.y : (window.innerHeight - size - 24);
+const x = (pos && isFinite(pos.x)) ? pos.x : (window.innerWidth - size - 24);
+const y = (pos && isFinite(pos.y)) ? pos.y : (window.innerHeight - size - 24);
 canvasFab.style.left = x + 'px';
 canvasFab.style.top = y + 'px';
 clampCanvasFabPosition();
@@ -4078,14 +4139,19 @@ let pinch = null;
 let userAdjustedView = false;
 let staticDirty = true;
 let rafPending = false;
+let focusMode = false;
+let focusAddedMaximize = false;
+let idleTimer = null;
+let uiHovered = false;
 const pointers = new Map();
 const view = { scale: 1, x: 0, y: 0 };
 const historyMap = {};
 const bboxCache = new WeakMap();
 const staticCanvas = document.createElement('canvas');
 const sctx = staticCanvas.getContext('2d');
-const stageCanvas = h('canvas');
+const stageCanvas = h('canvas', { tabindex: '0' });
 const mctx = stageCanvas.getContext('2d');
+const toolButtonSets = [];
 
 function history(id) {
 if (!historyMap[id]) historyMap[id] = { undo: [], redo: [] };
@@ -4105,11 +4171,12 @@ function winBtn(symbol, title, danger) {
 return h('button', { class: 'canvas-win-btn' + (danger ? ' danger' : ''), type: 'button', title: title, textContent: symbol });
 }
 const sidebarBtn = winBtn('🗂', 'Показать/скрыть панель холстов');
+const focusBtn = winBtn('🎯', 'Режим фокуса на холсте (F) — скрыть интерфейс');
 const maxBtn = winBtn('⤢', 'Развернуть на весь экран / восстановить');
 const fsBtn = winBtn('⛶', 'Полноэкранный режим');
 const minBtn = winBtn('—', 'Свернуть окно');
 const closeBtn = winBtn('×', 'Закрыть окно', true);
-[sidebarBtn, maxBtn, fsBtn, minBtn, closeBtn].forEach(b => header.appendChild(b));
+[sidebarBtn, focusBtn, maxBtn, fsBtn, minBtn, closeBtn].forEach(b => header.appendChild(b));
 root.appendChild(header);
 
 // ---------- Тело окна ----------
@@ -4123,7 +4190,7 @@ sideHead.appendChild(h('span', { textContent: 'Холсты курса' }));
 const countEl = h('span', { class: 'cnt', textContent: '0' });
 sideHead.appendChild(countEl);
 sidebar.appendChild(sideHead);
-const filterRow = h('label', { class: 'checkbox-label', style: 'padding:6px 10px; font-size:0.82em;' });
+const filterRow = h('label', { class: 'checkbox-label', style: 'padding:6px 10px; font-size:0.8em;' });
 const filterLesson = h('input', { type: 'checkbox' });
 filterRow.appendChild(filterLesson);
 filterRow.appendChild(h('span', { textContent: 'Только холсты текущего урока' }));
@@ -4140,7 +4207,7 @@ sideOpts.appendChild(titleInput);
 sideOpts.appendChild(h('div', { class: 'canvas-opt-label', textContent: 'Привязка' }));
 const lessonSelect = h('select');
 sideOpts.appendChild(lessonSelect);
-const linkNowRow = h('label', { class: 'checkbox-label', style: 'font-size:0.82em;' });
+const linkNowRow = h('label', { class: 'checkbox-label', style: 'font-size:0.8em;' });
 const linkNowCheck = h('input', { type: 'checkbox' });
 linkNowRow.appendChild(linkNowCheck);
 linkNowRow.appendChild(h('span', { textContent: 'Новые холсты привязывать к текущему уроку' }));
@@ -4148,14 +4215,14 @@ sideOpts.appendChild(linkNowRow);
 sideOpts.appendChild(h('div', { class: 'canvas-opt-label', textContent: 'Цвет фона холста' }));
 const bgInput = h('input', { type: 'color' });
 sideOpts.appendChild(bgInput);
-const gridRow = h('label', { class: 'checkbox-label', style: 'font-size:0.82em;' });
+const gridRow = h('label', { class: 'checkbox-label', style: 'font-size:0.8em;' });
 const gridCheck = h('input', { type: 'checkbox' });
 gridRow.appendChild(gridCheck);
 gridRow.appendChild(h('span', { textContent: 'Показывать бесконечную сетку' }));
 sideOpts.appendChild(gridRow);
 const sideBtns = h('div', { class: 'canvas-side-btns' });
 const dupBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '⧉ Дублировать' });
-const pngBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '🖼 Экспорт PNG' });
+const pngBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '🖼 PNG' });
 const expBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '⬇ JSON' });
 const impBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '⬆ Импорт' });
 const clearBtn = h('button', { class: 'canvas-side-btn danger', type: 'button', textContent: '✖ Очистить' });
@@ -4170,99 +4237,199 @@ body.appendChild(sidebar);
 // --- Основная область ---
 const main = h('div', { class: 'canvas-main' });
 body.appendChild(main);
+
+// --- Компактная панель инструментов ---
 const toolbar = h('div', { class: 'canvas-toolbar' });
 main.appendChild(toolbar);
-const toolGroup = h('div', { class: 'canvas-tool-group' });
-toolbar.appendChild(toolGroup);
-const toolButtons = {};
-CANVAS_TOOL_LIST.forEach(t => {
+function makeToolButton(t) {
 const b = h('button', {
-class: 'tool-btn' + (t.id === tool ? ' active' : ''),
-type: 'button',
+class: 'tool-btn', type: 'button',
 title: t.name + ' (' + t.hotkey.toUpperCase() + ')',
 textContent: t.label
 });
-b.addEventListener('click', () => setTool(t.id));
-toolGroup.appendChild(b);
-toolButtons[t.id] = b;
+b.addEventListener('click', () => { setTool(t.id); focusStage(); });
+return b;
+}
+const toolGroupMain = h('div', { class: 'canvas-tool-group' });
+const mapMain = {};
+CANVAS_TOOL_LIST.forEach(t => {
+const b = makeToolButton(t);
+mapMain[t.id] = b;
+toolGroupMain.appendChild(b);
 });
+toolButtonSets.push(mapMain);
+toolbar.appendChild(toolGroupMain);
 toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
-
-// --- Группа масштаба и перемещения (бесконечный холст) ---
-const viewGroup = h('div', { class: 'canvas-tool-group' });
-const zoomOutBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Уменьшить масштаб (Ctrl + "-")', textContent: '−' });
-const zoomLabel = h('span', { class: 'zoom-label', title: 'Масштаб 100 % (Ctrl + 1)', textContent: '100%' });
-const zoomInBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Увеличить масштаб (Ctrl + "+")', textContent: '＋' });
-const zoomFitBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Вписать всё содержимое (Ctrl + 0)', textContent: '▣' });
-const zoom100Btn = h('button', { class: 'tool-btn', type: 'button', title: 'Фактический размер 1:1', textContent: '1:1' });
-const homeBtn = h('button', { class: 'tool-btn', type: 'button', title: 'К началу координат (0;0)', textContent: '⌂' });
-zoomOutBtn.addEventListener('click', () => zoomBy(1 / 1.25, null));
-zoomInBtn.addEventListener('click', () => zoomBy(1.25, null));
-zoomFitBtn.addEventListener('click', () => zoomFitContent());
-zoom100Btn.addEventListener('click', () => setZoom(1, null));
-homeBtn.addEventListener('click', () => goHome());
-zoomLabel.addEventListener('click', () => setZoom(1, null));
-[zoomOutBtn, zoomLabel, zoomInBtn, zoomFitBtn, zoom100Btn, homeBtn].forEach(el => viewGroup.appendChild(el));
-toolbar.appendChild(viewGroup);
-toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
-
 const colorGroup = h('div', { class: 'canvas-tool-group' });
-const colorInput = h('input', { type: 'color', class: 'canvas-color-input', title: 'Произвольный цвет' });
-colorInput.value = '#00f0ff';
-colorInput.addEventListener('input', () => { syncSwatches(); });
-colorGroup.appendChild(colorInput);
+const colorDotBtn = h('button', { class: 'color-dot-btn', type: 'button', title: 'Цвет, палитра и заливка фигур' });
+const colorDotInner = h('span', { class: 'color-dot-inner' });
+colorDotBtn.appendChild(colorDotInner);
+colorGroup.appendChild(colorDotBtn);
+const sizeWrap = h('div', { class: 'canvas-size-wrap' });
+const sizeInput = h('input', { type: 'range', min: '1', max: '60', step: '1', value: '3', title: 'Толщина линии' });
+const sizeVal = h('span', { class: 'canvas-size-val', textContent: '3' });
+sizeInput.addEventListener('input', () => { sizeVal.textContent = sizeInput.value; updateToolStatus(); });
+sizeWrap.appendChild(sizeInput);
+sizeWrap.appendChild(sizeVal);
+colorGroup.appendChild(sizeWrap);
+toolbar.appendChild(colorGroup);
+toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
+const histGroup = h('div', { class: 'canvas-tool-group' });
+const undoBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Отменить (Ctrl+Z)', textContent: '↶' });
+const redoBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Повторить (Ctrl+Y)', textContent: '↷' });
+undoBtn.addEventListener('click', () => { doUndo(); focusStage(); });
+redoBtn.addEventListener('click', () => { doRedo(); focusStage(); });
+histGroup.appendChild(undoBtn);
+histGroup.appendChild(redoBtn);
+toolbar.appendChild(histGroup);
+toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
+const uiGroup = h('div', { class: 'canvas-tool-group' });
+const focusBtn2 = h('button', { class: 'tool-btn', type: 'button', title: 'Режим фокуса на холсте (F) — скрыть панели', textContent: '🎯' });
+focusBtn2.addEventListener('click', () => { toggleFocusMode(); focusStage(); });
+uiGroup.appendChild(focusBtn2);
+toolbar.appendChild(uiGroup);
+
+// --- Всплывающая панель цвета ---
+const colorPopover = h('div', { class: 'canvas-popover color-popover' });
+const swatchGrid = h('div', { class: 'swatch-grid' });
 const swatchEls = [];
 CANVAS_SWATCHES.forEach(col => {
 const sw = h('button', { class: 'color-swatch', type: 'button', title: col });
 sw.style.background = col;
 sw.style.color = col;
-sw.addEventListener('click', () => { colorInput.value = col; syncSwatches(); });
-colorGroup.appendChild(sw);
+sw.addEventListener('click', () => { colorInput.value = col; syncSwatches(); focusStage(); });
+swatchGrid.appendChild(sw);
 swatchEls.push(sw);
 });
-toolbar.appendChild(colorGroup);
-toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
-const sizeWrap = h('div', { class: 'canvas-size-wrap' });
-sizeWrap.appendChild(h('span', { style: 'color:var(--muted); font-size:0.8em;', textContent: 'Толщина' }));
-const sizeInput = h('input', { type: 'range', min: '1', max: '60', step: '1', value: '3', title: 'Толщина линии (в единицах холста)' });
-const sizeVal = h('span', { class: 'canvas-size-val', textContent: '3' });
-sizeInput.addEventListener('input', () => { sizeVal.textContent = sizeInput.value; });
-sizeWrap.appendChild(sizeInput);
-sizeWrap.appendChild(sizeVal);
-toolbar.appendChild(sizeWrap);
-const fillRow = h('label', { class: 'checkbox-label', style: 'font-size:0.82em;' });
+colorPopover.appendChild(swatchGrid);
+const colorInput = h('input', { type: 'color', class: 'canvas-color-input', title: 'Произвольный цвет' });
+colorInput.value = '#00f0ff';
+colorInput.addEventListener('input', () => { syncSwatches(); });
+colorPopover.appendChild(colorInput);
+const fillRow = h('label', { class: 'checkbox-label popover-row' });
 const fillCheck = h('input', { type: 'checkbox' });
 fillRow.appendChild(fillCheck);
 fillRow.appendChild(h('span', { textContent: 'Заливка фигур' }));
-toolbar.appendChild(fillRow);
-toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
-const histGroup = h('div', { class: 'canvas-tool-group' });
-const undoBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Отменить (Ctrl+Z)', textContent: '↶' });
-const redoBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Повторить (Ctrl+Y)', textContent: '↷' });
-undoBtn.addEventListener('click', () => doUndo());
-redoBtn.addEventListener('click', () => doRedo());
-histGroup.appendChild(undoBtn);
-histGroup.appendChild(redoBtn);
-toolbar.appendChild(histGroup);
+colorPopover.appendChild(fillRow);
+main.appendChild(colorPopover);
+colorDotBtn.addEventListener('click', (e) => {
+e.stopPropagation();
+const willOpen = !colorPopover.classList.contains('open');
+closePopovers();
+if (willOpen) {
+colorPopover.style.top = (toolbar.offsetHeight + 4) + 'px';
+colorPopover.style.left = Math.max(6, colorDotBtn.offsetLeft) + 'px';
+colorPopover.classList.add('open');
+}
+});
 
+// --- Сцена ---
 const stage = h('div', { class: 'canvas-stage' });
 stage.appendChild(stageCanvas);
 main.appendChild(stage);
 
-const status = h('div', { class: 'canvas-status' });
-const stTool = h('span', { class: 'st-item', textContent: 'Инструмент: —' });
-const stZoom = h('span', { class: 'st-item', textContent: 'Масштаб: 100%' });
-const stPos = h('span', { class: 'st-item', textContent: 'x: — y: —' });
-const stCount = h('span', { class: 'st-item', textContent: 'Штрихов: 0' });
-const stName = h('span', { class: 'st-item', textContent: '' });
-const stSave = h('span', { class: 'save-state', textContent: '' });
-[stTool, stZoom, stPos, stCount, stName, stSave].forEach(e => status.appendChild(e));
-main.appendChild(status);
-main.appendChild(h('div', {
-class: 'canvas-status',
-style: 'border-top:none; padding-top:0; min-height:auto;',
-textContent: '∞ Бесконечный холст. Перемещение: ✋ (V) · средняя кнопка мыши · пробел + мышь · колесо · стрелки. Масштаб: Ctrl + колесо · щипок · − / + / ▣ / 1:1 / ⌂'
-}));
+// --- Мини-панель для режима фокуса ---
+const focusToolbar = h('div', { class: 'focus-toolbar' });
+const focusExitBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Выйти из режима фокуса (F / Esc)', textContent: '⤡' });
+focusExitBtn.addEventListener('click', () => { toggleFocusMode(false); focusStage(); });
+focusToolbar.appendChild(focusExitBtn);
+focusToolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
+const mapFocus = {};
+CANVAS_TOOL_LIST.forEach(t => {
+const b = makeToolButton(t);
+mapFocus[t.id] = b;
+focusToolbar.appendChild(b);
+});
+toolButtonSets.push(mapFocus);
+focusToolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
+const focusUndo = h('button', { class: 'tool-btn', type: 'button', title: 'Отменить (Ctrl+Z)', textContent: '↶' });
+const focusRedo = h('button', { class: 'tool-btn', type: 'button', title: 'Повторить (Ctrl+Y)', textContent: '↷' });
+focusUndo.addEventListener('click', () => { doUndo(); focusStage(); });
+focusRedo.addEventListener('click', () => { doRedo(); focusStage(); });
+focusToolbar.appendChild(focusUndo);
+focusToolbar.appendChild(focusRedo);
+main.appendChild(focusToolbar);
+
+// --- Всплывающая шпаргалка ---
+const helpPopover = h('div', { class: 'canvas-popover help-popover' });
+helpPopover.innerHTML = `
+<h5>Инструменты</h5>
+<ul>
+<li><kbd>P</kbd> карандаш · <kbd>H</kbd> маркер · <kbd>E</kbd> ластик</li>
+<li><kbd>L</kbd> линия · <kbd>A</kbd> стрелка · <kbd>R</kbd> прямоугольник</li>
+<li><kbd>O</kbd> эллипс · <kbd>T</kbd> текст · <kbd>V</kbd> рука</li>
+</ul>
+<h5>Холст</h5>
+<ul>
+<li>Панорама: колесо мыши · <kbd>Space</kbd>+мышь · средняя кнопка · стрелки</li>
+<li>Зум: <kbd>Ctrl</kbd>+колесо · щипок · <kbd>Ctrl +</kbd> / <kbd>Ctrl -</kbd></li>
+<li><kbd>Ctrl 0</kbd> вписать · <kbd>Ctrl 1</kbd> 100 %</li>
+</ul>
+<h5>Прочее</h5>
+<ul>
+<li><kbd>Ctrl Z</kbd> / <kbd>Ctrl Y</kbd> отмена и повтор · <kbd>Ctrl S</kbd> сохранить</li>
+<li><kbd>F</kbd> режим фокуса · <kbd>Esc</kbd> выход из фокуса</li>
+<li><kbd>?</kbd> эта шпаргалка</li>
+</ul>`;
+main.appendChild(helpPopover);
+
+// --- Единый лаконичный статусбар ---
+const statusbar = h('div', { class: 'canvas-statusbar' });
+const sbName = h('span', { class: 'sb-seg grow sb-name', textContent: '∞ холст' });
+const sbToolDot = h('span', { class: 'sb-dot' });
+const sbTool = h('span', { class: 'sb-seg', title: 'Текущий инструмент, цвет и толщина' });
+sbTool.appendChild(sbToolDot);
+const sbToolText = h('span', { textContent: '—' });
+sbTool.appendChild(sbToolText);
+const sbPos = h('span', { class: 'sb-seg sb-optional', textContent: 'x: — y: —' });
+const sbZoomGroup = h('span', { class: 'sb-seg' });
+const sbZoomOut = h('button', { class: 'sb-mini', type: 'button', title: 'Уменьшить (Ctrl + "-")', textContent: '−' });
+const sbZoomLabel = h('span', { class: 'zoom-label', title: '100 % (Ctrl + 1)', textContent: '100%' });
+const sbZoomIn = h('button', { class: 'sb-mini', type: 'button', title: 'Увеличить (Ctrl + "+")', textContent: '＋' });
+const sbZoomFit = h('button', { class: 'sb-mini', type: 'button', title: 'Вписать содержимое (Ctrl + 0)', textContent: '▣' });
+const sbHome = h('button', { class: 'sb-mini', type: 'button', title: 'К началу координат (0;0)', textContent: '⌂' });
+sbZoomOut.addEventListener('click', () => { zoomBy(1 / 1.25, null); focusStage(); });
+sbZoomIn.addEventListener('click', () => { zoomBy(1.25, null); focusStage(); });
+sbZoomFit.addEventListener('click', () => { zoomFitContent(); focusStage(); });
+sbHome.addEventListener('click', () => { goHome(); focusStage(); });
+sbZoomLabel.addEventListener('click', () => { setZoom(1, null); focusStage(); });
+[sbZoomOut, sbZoomLabel, sbZoomIn, sbZoomFit, sbHome].forEach(el => sbZoomGroup.appendChild(el));
+const sbCount = h('span', { class: 'sb-seg sb-optional', textContent: '0 штрихов' });
+const sbSpacer = h('span', { class: 'sb-spacer' });
+const sbSave = h('span', { class: 'sb-seg sb-save', textContent: '' });
+const sbHelpBtn = h('button', { class: 'sb-help-btn', type: 'button', title: 'Горячие клавиши (?)', textContent: '?' });
+sbHelpBtn.addEventListener('click', (e) => {
+e.stopPropagation();
+const willOpen = !helpPopover.classList.contains('open');
+closePopovers();
+if (willOpen) {
+helpPopover.style.bottom = (statusbar.offsetHeight + 6) + 'px';
+helpPopover.style.right = '8px';
+helpPopover.style.top = 'auto';
+helpPopover.classList.add('open');
+}
+});
+[sbName, sbTool, sbPos, sbZoomGroup, sbCount, sbSpacer, sbSave, sbHelpBtn].forEach(el => statusbar.appendChild(el));
+main.appendChild(statusbar);
+
+function closePopovers() {
+colorPopover.classList.remove('open');
+helpPopover.classList.remove('open');
+}
+document.addEventListener('pointerdown', (e) => {
+if (!root.contains(e.target)) { closePopovers(); return; }
+if (e.target.closest('.canvas-popover') || e.target.closest('.color-dot-btn') || e.target.closest('.sb-help-btn')) return;
+closePopovers();
+});
+
+// ---------- Фокус на холсте, а не на элементах интерфейса ----------
+function focusStage() {
+try { stageCanvas.focus({ preventScroll: true }); } catch (e) { stageCanvas.focus(); }
+}
+root.addEventListener('click', (e) => {
+if (e.target.closest('input, textarea, select, .canvas-popover')) return;
+focusStage();
+});
 
 // ---------- Ручки изменения размера окна ----------
 ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].forEach(dir => {
@@ -4370,20 +4537,19 @@ if (window.innerWidth <= 720) root.classList.add('sidebar-closed');
 sidebarBtn.addEventListener('click', () => {
 root.classList.toggle('sidebar-closed');
 setTimeout(resizeSurface, 260);
+focusStage();
 });
 maxBtn.addEventListener('click', () => {
 root.classList.toggle('maximized');
 maxBtn.textContent = root.classList.contains('maximized') ? '🗗' : '⤢';
 setTimeout(resizeSurface, 30);
 saveWinRect();
+focusStage();
 });
 fsBtn.addEventListener('click', () => {
 try {
-if (document.fullscreenElement) {
-document.exitFullscreen();
-} else if (root.requestFullscreen) {
-root.requestFullscreen();
-}
+if (document.fullscreenElement) document.exitFullscreen();
+else if (root.requestFullscreen) root.requestFullscreen();
 } catch (e) { console.warn('Fullscreen недоступен:', e); }
 });
 document.addEventListener('fullscreenchange', () => {
@@ -4392,6 +4558,50 @@ setTimeout(resizeSurface, 60);
 });
 minBtn.addEventListener('click', () => hideWindow());
 closeBtn.addEventListener('click', () => hideWindow());
+focusBtn.addEventListener('click', () => { toggleFocusMode(); focusStage(); });
+
+// ---------- РЕЖИМ ФОКУСА НА ХОЛСТЕ ----------
+function toggleFocusMode(force) {
+const next = (typeof force === 'boolean') ? force : !focusMode;
+if (next === focusMode) return;
+focusMode = next;
+closePopovers();
+if (focusMode) {
+focusAddedMaximize = !root.classList.contains('maximized');
+root.classList.add('focus-mode');
+if (focusAddedMaximize) {
+root.classList.add('maximized');
+maxBtn.textContent = '🗗';
+}
+focusBtn.classList.add('active');
+focusBtn2.classList.add('active');
+wakeUI();
+} else {
+root.classList.remove('focus-mode');
+root.classList.remove('ui-idle');
+if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+if (focusAddedMaximize) {
+root.classList.remove('maximized');
+maxBtn.textContent = '⤢';
+focusAddedMaximize = false;
+}
+focusBtn.classList.remove('active');
+focusBtn2.classList.remove('active');
+}
+setTimeout(resizeSurface, 40);
+}
+function wakeUI() {
+root.classList.remove('ui-idle');
+if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+if (!focusMode || uiHovered) return;
+idleTimer = setTimeout(() => {
+if (focusMode && !uiHovered) root.classList.add('ui-idle');
+}, 2200);
+}
+[statusbar, focusToolbar].forEach(el => {
+el.addEventListener('pointerenter', () => { uiHovered = true; root.classList.remove('ui-idle'); if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; } });
+el.addEventListener('pointerleave', () => { uiHovered = false; wakeUI(); });
+});
 
 // ---------- КООРДИНАТЫ: ЭКРАН ↔ БЕСКОНЕЧНАЯ ПЛОСКОСТЬ ----------
 function stageCoords(clientX, clientY) {
@@ -4401,9 +4611,6 @@ return [clientX - rect.left, clientY - rect.top];
 function screenToDoc(sx, sy) {
 return [(sx - view.x) / view.scale, (sy - view.y) / view.scale];
 }
-function docToScreen(dx, dy) {
-return [dx * view.scale + view.x, dy * view.scale + view.y];
-}
 function eventToDoc(e) {
 const sc = stageCoords(e.clientX, e.clientY);
 return screenToDoc(sc[0], sc[1]);
@@ -4412,12 +4619,7 @@ function eraserRadiusDoc() {
 return Math.max(6, (parseInt(sizeInput.value, 10) || 3) * 1.6) / view.scale;
 }
 function docRectFor(vw, vh, v) {
-return {
-x0: (0 - v.x) / v.scale,
-y0: (0 - v.y) / v.scale,
-x1: (vw - v.x) / v.scale,
-y1: (vh - v.y) / v.scale
-};
+return { x0: (0 - v.x) / v.scale, y0: (0 - v.y) / v.scale, x1: (vw - v.x) / v.scale, y1: (vh - v.y) / v.scale };
 }
 function visibleDocRect() { return docRectFor(W, H, view); }
 function rectsIntersect(a, b) {
@@ -4434,10 +4636,8 @@ if (s.tool === 'text') {
 const p = s.points[0] || [0, 0];
 const fs = Math.max(6, Number(s.fontSize) || 16);
 const wApprox = String(s.text || '').length * fs * 0.62;
-minX = Number(p[0]) - pad;
-minY = Number(p[1]) - pad;
-maxX = Number(p[0]) + wApprox + pad;
-maxY = Number(p[1]) + fs + pad;
+minX = Number(p[0]) - pad; minY = Number(p[1]) - pad;
+maxX = Number(p[0]) + wApprox + pad; maxY = Number(p[1]) + fs + pad;
 } else {
 s.points.forEach(p => {
 const x = Number(p[0]), y = Number(p[1]);
@@ -4470,23 +4670,20 @@ return { x0: x0, y0: y0, x1: x1, y1: y1 };
 // ---------- МАСШТАБ И ПАН ----------
 function updateZoomLabel() {
 const p = view.scale * 100;
-zoomLabel.textContent = (p >= 100 ? Math.round(p) : p.toFixed(p >= 10 ? 1 : 2)) + '%';
-stZoom.textContent = 'Масштаб: ' + zoomLabel.textContent;
+const txt = (p >= 100 ? Math.round(p) : p.toFixed(p >= 10 ? 1 : 2)) + '%';
+sbZoomLabel.textContent = txt;
 }
 function clampScale(s) { return Math.max(MIN_SCALE, Math.min(MAX_SCALE, s)); }
 function setZoom(newScale, anchor) {
 const s = clampScale(newScale);
 const ax = anchor ? anchor.x : W / 2;
 const ay = anchor ? anchor.y : H / 2;
-const d = screenToDocWith(ax, ay, view);
+const d = screenToDoc(ax, ay);
 view.scale = s;
 view.x = ax - d[0] * s;
 view.y = ay - d[1] * s;
 userAdjustedView = true;
 afterViewChange();
-}
-function screenToDocWith(sx, sy, v) {
-return [(sx - v.x) / v.scale, (sy - v.y) / v.scale];
 }
 function zoomBy(factor, anchor) { setZoom(view.scale * factor, anchor); }
 function zoomFitContent() {
@@ -4524,11 +4721,7 @@ invalidateStatic();
 function saveViewToRecord() {
 const rec = activeRecord();
 if (!rec) return;
-rec.view = {
-scale: view.scale,
-cx: (W / 2 - view.x) / view.scale,
-cy: (H / 2 - view.y) / view.scale
-};
+rec.view = { scale: view.scale, cx: (W / 2 - view.x) / view.scale, cy: (H / 2 - view.y) / view.scale };
 scheduleSave();
 }
 function restoreViewFromRecord(rec) {
@@ -4565,7 +4758,7 @@ view.scale = 1;
 view.x = W / 2;
 view.y = H / 2;
 } else if (oldW > 1 && oldH > 1) {
-const cDoc = screenToDoc(oldW / 2, oldH / 2);
+const cDoc = [(oldW / 2 - view.x) / view.scale, (oldH / 2 - view.y) / view.scale];
 view.x = W / 2 - cDoc[0] * view.scale;
 view.y = H / 2 - cDoc[1] * view.scale;
 }
@@ -4585,12 +4778,9 @@ return m * pow;
 }
 function drawInfiniteGrid(ctx, vw, vh, v, rec) {
 if (rec && rec.showGrid === false) return;
-const targetPx = 40;
-const step = niceStep(targetPx / v.scale);
+const step = niceStep(40 / v.scale);
 const r = docRectFor(vw, vh, v);
-const countX = (r.x1 - r.x0) / step;
-const countY = (r.y1 - r.y0) / step;
-if (countX > 2000 || countY > 2000) return;
+if ((r.x1 - r.x0) / step > 2000 || (r.y1 - r.y0) / step > 2000) return;
 ctx.save();
 ctx.lineWidth = 1;
 ctx.strokeStyle = 'rgba(0,240,255,0.07)';
@@ -4598,14 +4788,12 @@ ctx.beginPath();
 let x = Math.floor(r.x0 / step) * step;
 for (; x <= r.x1; x += step) {
 const sx = Math.round(x * v.scale + v.x) + 0.5;
-ctx.moveTo(sx, 0);
-ctx.lineTo(sx, vh);
+ctx.moveTo(sx, 0); ctx.lineTo(sx, vh);
 }
 let y = Math.floor(r.y0 / step) * step;
 for (; y <= r.y1; y += step) {
 const sy = Math.round(y * v.scale + v.y) + 0.5;
-ctx.moveTo(0, sy);
-ctx.lineTo(vw, sy);
+ctx.moveTo(0, sy); ctx.lineTo(vw, sy);
 }
 ctx.stroke();
 const major = step * 5;
@@ -4614,14 +4802,12 @@ ctx.beginPath();
 let mx = Math.floor(r.x0 / major) * major;
 for (; mx <= r.x1; mx += major) {
 const sx = Math.round(mx * v.scale + v.x) + 0.5;
-ctx.moveTo(sx, 0);
-ctx.lineTo(sx, vh);
+ctx.moveTo(sx, 0); ctx.lineTo(sx, vh);
 }
 let my = Math.floor(r.y0 / major) * major;
 for (; my <= r.y1; my += major) {
 const sy = Math.round(my * v.scale + v.y) + 0.5;
-ctx.moveTo(0, sy);
-ctx.lineTo(vw, sy);
+ctx.moveTo(0, sy); ctx.lineTo(vw, sy);
 }
 ctx.stroke();
 const ox = Math.round(v.x) + 0.5;
@@ -4774,10 +4960,7 @@ if (rafPending) return;
 rafPending = true;
 requestAnimationFrame(() => {
 rafPending = false;
-if (staticDirty) {
-staticDirty = false;
-renderStatic();
-}
+if (staticDirty) { staticDirty = false; renderStatic(); }
 render();
 });
 }
@@ -4790,7 +4973,7 @@ emptyBtn.addEventListener('click', () => createNewCanvas());
 emptyHint.appendChild(emptyBtn);
 stage.appendChild(emptyHint);
 
-// ---------- Ластик (удаление штрихов) ----------
+// ---------- Ластик ----------
 function distToSegmentDoc(px, py, x1, y1, x2, y2) {
 const dx = x2 - x1, dy = y2 - y1;
 const len2 = dx * dx + dy * dy;
@@ -4800,9 +4983,8 @@ return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 function strokeHit(s, dx, dy, rDoc) {
 if (!s || !Array.isArray(s.points) || s.points.length === 0) return false;
-const bb = strokeBBox(s);
 const probe = { x0: dx - rDoc, y0: dy - rDoc, x1: dx + rDoc, y1: dy + rDoc };
-if (!rectsIntersect(bb, probe)) return false;
+if (!rectsIntersect(strokeBBox(s), probe)) return false;
 const tol = (Number(s.size) || 3) / 2 + rDoc;
 if (s.tool === 'text') {
 const p = s.points[0];
@@ -4868,11 +5050,7 @@ const pts = [...pointers.values()];
 const rect = stageCanvas.getBoundingClientRect();
 const cx = (pts[0].x + pts[1].x) / 2 - rect.left;
 const cy = (pts[0].y + pts[1].y) / 2 - rect.top;
-pinch = {
-dist: Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y)),
-ax: cx, ay: cy,
-scale: view.scale, vx: view.x, vy: view.y
-};
+pinch = { dist: Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y)), ax: cx, ay: cy, scale: view.scale, vx: view.x, vy: view.y };
 if (strokeHistoryPushed) {
 const rec = activeRecord();
 if (rec) {
@@ -4895,8 +5073,7 @@ const rect = stageCanvas.getBoundingClientRect();
 const dist = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
 const cx = (pts[0].x + pts[1].x) / 2 - rect.left;
 const cy = (pts[0].y + pts[1].y) / 2 - rect.top;
-const factor = dist / pinch.dist;
-const newScale = clampScale(pinch.scale * factor);
+const newScale = clampScale(pinch.scale * (dist / pinch.dist));
 const docX = (pinch.ax - pinch.vx) / pinch.scale;
 const docY = (pinch.ay - pinch.vy) / pinch.scale;
 view.scale = newScale;
@@ -4913,15 +5090,13 @@ root.classList.remove('panning');
 saveViewToRecord();
 }
 
-// ---------- Колесо мыши: пан / зум ----------
+// ---------- Колесо мыши ----------
 stageCanvas.addEventListener('wheel', (e) => {
 e.preventDefault();
 const sc = stageCoords(e.clientX, e.clientY);
-if (e.ctrlKey || e.metaKey) {
-zoomBy(Math.exp(-e.deltaY * 0.01), { x: sc[0], y: sc[1] });
-} else {
-panBy(-e.deltaX, -e.deltaY);
-}
+if (e.ctrlKey || e.metaKey) zoomBy(Math.exp(-e.deltaY * 0.01), { x: sc[0], y: sc[1] });
+else panBy(-e.deltaX, -e.deltaY);
+wakeUI();
 }, { passive: false });
 
 // ---------- Рисование ----------
@@ -4945,22 +5120,15 @@ stageCanvas.addEventListener('pointerdown', (e) => {
 const sc = stageCoords(e.clientX, e.clientY);
 lastPointerScreen = { x: sc[0], y: sc[1] };
 pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-if (pointers.size === 2) {
-e.preventDefault();
-beginPinch();
-return;
-}
+wakeUI();
+if (pointers.size === 2) { e.preventDefault(); beginPinch(); return; }
 const rec = activeRecord();
 if (!rec) return;
 const isMiddle = (e.pointerType === 'mouse' && e.button === 1);
-const wantPan = (tool === 'pan') || spaceDown || isMiddle;
-if (wantPan) {
-e.preventDefault();
-beginPan(e);
-return;
-}
+if ((tool === 'pan') || spaceDown || isMiddle) { e.preventDefault(); beginPan(e); return; }
 if (e.pointerType === 'mouse' && e.button !== 0) return;
 e.preventDefault();
+closePopovers();
 try { stageCanvas.setPointerCapture(e.pointerId); } catch (err) {}
 const p = eventToDoc(e);
 if (tool === 'text') { openTextInput(p, sc); return; }
@@ -4990,20 +5158,15 @@ invalidateStatic();
 return;
 }
 const d = screenToDoc(sc[0], sc[1]);
-stPos.textContent = 'x: ' + Math.round(d[0]) + ' y: ' + Math.round(d[1]);
+sbPos.textContent = 'x: ' + Math.round(d[0]) + '  y: ' + Math.round(d[1]);
 if (!drawing) { if (tool === 'eraser') requestRender(); return; }
 const rec = activeRecord();
 if (!rec) return;
-if (erasing) {
-eraseAt(d[0], d[1]);
-invalidateStatic();
-return;
-}
+if (erasing) { eraseAt(d[0], d[1]); invalidateStatic(); return; }
 if (!currentStroke) return;
 if (currentStroke.tool === 'pencil' || currentStroke.tool === 'highlighter') {
 const last = currentStroke.points[currentStroke.points.length - 1];
-const threshold = 1.2 / view.scale;
-if (Math.hypot(d[0] - last[0], d[1] - last[1]) < threshold) return;
+if (Math.hypot(d[0] - last[0], d[1] - last[1]) < 1.2 / view.scale) return;
 currentStroke.points.push([d[0], d[1]]);
 } else {
 currentStroke.points[1] = [d[0], d[1]];
@@ -5036,13 +5199,8 @@ const a = currentStroke.points[0];
 const b = currentStroke.points[1];
 if (Math.hypot(b[0] - a[0], b[1] - a[1]) * view.scale < 3) keep = false;
 }
-if (keep) {
-rec.strokes = rec.strokes.concat([currentStroke]);
-} else {
-const hh = history(rec.id);
-hh.undo.pop();
-hh.redo.length = 0;
-}
+if (keep) rec.strokes = rec.strokes.concat([currentStroke]);
+else { const hh = history(rec.id); hh.undo.pop(); hh.redo.length = 0; }
 }
 currentStroke = null;
 invalidateStatic();
@@ -5052,7 +5210,7 @@ updateHistoryButtons();
 stageCanvas.addEventListener('pointerup', endStroke);
 stageCanvas.addEventListener('pointercancel', endStroke);
 stageCanvas.addEventListener('pointerleave', () => {
-if (!drawing && !panning) stPos.textContent = 'x: — y: —';
+if (!drawing && !panning) sbPos.textContent = 'x: — y: —';
 });
 stageCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
 stageCanvas.addEventListener('dblclick', (e) => {
@@ -5084,14 +5242,13 @@ finished = true;
 const value = inp.value.trim();
 const color = colorInput.value;
 inp.remove();
+focusStage();
 if (!value) return;
 const cur = activeRecord();
 if (!cur) return;
 pushHistory(cur);
 cur.strokes = cur.strokes.concat([{
-tool: 'text',
-color: color,
-text: value,
+tool: 'text', color: color, text: value,
 fontSize: fsScreen / Math.max(0.0001, view.scale),
 points: [[p[0], p[1]]]
 }]);
@@ -5101,7 +5258,7 @@ afterChange(cur);
 inp.addEventListener('keydown', (e) => {
 e.stopPropagation();
 if (e.key === 'Enter') { e.preventDefault(); commit(); }
-else if (e.key === 'Escape') { finished = true; inp.remove(); }
+else if (e.key === 'Escape') { finished = true; inp.remove(); focusStage(); }
 });
 inp.addEventListener('blur', commit);
 }
@@ -5132,14 +5289,18 @@ updateHistoryButtons();
 function updateHistoryButtons() {
 const rec = activeRecord();
 const hh = rec ? history(rec.id) : { undo: [], redo: [] };
-undoBtn.disabled = hh.undo.length === 0;
-redoBtn.disabled = hh.redo.length === 0;
+const noUndo = hh.undo.length === 0;
+const noRedo = hh.redo.length === 0;
+undoBtn.disabled = noUndo;
+redoBtn.disabled = noRedo;
+focusUndo.disabled = noUndo;
+focusRedo.disabled = noRedo;
 }
 
 // ---------- Сохранение ----------
 function setSaveState(kind, text) {
-stSave.className = 'save-state' + (kind ? ' ' + kind : '');
-stSave.textContent = text || '';
+sbSave.className = 'sb-seg sb-save' + (kind ? ' ' + kind : '');
+sbSave.textContent = text || '';
 }
 function afterChange(rec) {
 rec.updatedAt = new Date().toISOString();
@@ -5148,23 +5309,31 @@ refreshListMeta();
 scheduleSave();
 }
 function scheduleSave() {
-setSaveState('saving', 'Сохранение…');
+setSaveState('saving', 'сохранение…');
 if (saveTimer) clearTimeout(saveTimer);
 saveTimer = setTimeout(() => { saveTimer = null; doSave(); }, 600);
 }
 function doSave() {
 if (!course) return;
 Promise.resolve(persistCanvases())
-.then(() => setSaveState('saved', '✔ Сохранено в курс'))
-.catch((e) => { console.warn('Ошибка сохранения холстов:', e); setSaveState('error', '✖ Ошибка сохранения'); });
+.then(() => setSaveState('saved', '✔ сохранено'))
+.catch((e) => { console.warn('Ошибка сохранения холстов:', e); setSaveState('error', '✖ ошибка'); });
+}
+function updateToolStatus() {
+const info = CANVAS_TOOL_LIST.find(t => t.id === tool);
+sbToolText.textContent = (info ? info.name : tool) + ' · ' + (parseInt(sizeInput.value, 10) || 3) + ' px';
+sbToolDot.style.background = colorInput.value;
+colorDotInner.style.background = colorInput.value;
 }
 function updateStatus() {
 const rec = activeRecord();
-const toolInfo = CANVAS_TOOL_LIST.find(t => t.id === tool);
-stTool.textContent = 'Инструмент: ' + (toolInfo ? toolInfo.name : tool);
-stCount.textContent = 'Штрихов: ' + (rec ? rec.strokes.length : 0);
-stName.textContent = rec ? ('∞ «' + rec.title + '»' + (rec.lessonId ? ' · 📎 ' + lessonTitleById(rec.lessonId) : ' · весь курс')) : '';
+sbName.textContent = rec
+? ('∞ «' + rec.title + '»' + (rec.lessonId ? ' · 📎 ' + lessonTitleById(rec.lessonId) : ''))
+: '∞ холст';
+sbName.title = rec ? (rec.title + (rec.lessonId ? ' — привязан к уроку: ' + lessonTitleById(rec.lessonId) : ' — весь курс')) : '';
+sbCount.textContent = (rec ? rec.strokes.length : 0) + ' штрихов';
 titleEl.textContent = 'Холсты · ' + ((course && course.meta.title) || 'курс') + (rec ? ' · ' + rec.title : '');
+updateToolStatus();
 updateZoomLabel();
 }
 
@@ -5218,7 +5387,6 @@ if (!rec) return;
 const metaEl = row.querySelector('.canvas-item-meta');
 if (metaEl) metaEl.textContent = itemMeta(rec);
 });
-updateStatus();
 }
 function refreshLessonOptions() {
 lessonSelect.innerHTML = '';
@@ -5285,9 +5453,7 @@ if (!confirm('Удалить холст «' + (rec.title || 'Без назван
 const idx = list.findIndex(c => c.id === id);
 list.splice(idx, 1);
 delete historyMap[id];
-if (activeId === id) {
-activeId = list.length > 0 ? list[Math.max(0, idx - 1)].id : null;
-}
+if (activeId === id) activeId = list.length > 0 ? list[Math.max(0, idx - 1)].id : null;
 refreshList();
 refreshOptions();
 const cur = activeRecord();
@@ -5316,20 +5482,13 @@ const bw = Math.max(64, bb.x1 - bb.x0 + pad * 2);
 const bh = Math.max(64, bb.y1 - bb.y0 + pad * 2);
 let exScale = 2;
 const MAXPIX = 4096;
-if (bw * exScale > MAXPIX || bh * exScale > MAXPIX) {
-exScale = Math.max(0.2, Math.min(MAXPIX / bw, MAXPIX / bh));
-}
+if (bw * exScale > MAXPIX || bh * exScale > MAXPIX) exScale = Math.max(0.2, Math.min(MAXPIX / bw, MAXPIX / bh));
 const c = document.createElement('canvas');
 c.width = Math.round(bw * exScale);
 c.height = Math.round(bh * exScale);
 const ctx = c.getContext('2d');
 ctx.setTransform(exScale, 0, 0, exScale, 0, 0);
-const exportView = {
-scale: exScale,
-x: -(bb.x0 - pad) * exScale,
-y: -(bb.y0 - pad) * exScale
-};
-paintScene(ctx, bw, bh, exportView, rec);
+paintScene(ctx, bw, bh, { scale: exScale, x: -(bb.x0 - pad) * exScale, y: -(bb.y0 - pad) * exScale }, rec);
 c.toBlob((blob) => {
 if (!blob) { alert('Не удалось сформировать PNG.'); return; }
 downloadBlob(blob, slugify(rec.title || 'canvas') + '.png');
@@ -5338,8 +5497,7 @@ downloadBlob(blob, slugify(rec.title || 'canvas') + '.png');
 function exportJSON() {
 const rec = activeRecord();
 if (!rec) return;
-const blob = new Blob([JSON.stringify(rec, null, 2)], { type: 'application/json' });
-downloadBlob(blob, slugify(rec.title || 'canvas') + '.canvas.json');
+downloadBlob(new Blob([JSON.stringify(rec, null, 2)], { type: 'application/json' }), slugify(rec.title || 'canvas') + '.canvas.json');
 }
 importInput.addEventListener('change', () => {
 const file = importInput.files && importInput.files[0];
@@ -5350,8 +5508,7 @@ reader.onload = () => {
 try {
 const data = JSON.parse(String(reader.result));
 const items = Array.isArray(data) ? data : [data];
-let added = 0;
-let firstId = null;
+let added = 0, firstId = null;
 items.forEach(it => {
 const norm = normalizeCanvasRecord(it);
 if (!norm) return;
@@ -5373,7 +5530,7 @@ alert('Ошибка импорта холста: ' + e.message);
 reader.onerror = () => alert('Не удалось прочитать файл.');
 reader.readAsText(file);
 });
-newBtn.addEventListener('click', () => createNewCanvas());
+newBtn.addEventListener('click', () => { createNewCanvas(); focusStage(); });
 dupBtn.addEventListener('click', () => { const rec = activeRecord(); if (rec) duplicateCanvas(rec.id); });
 delBtn.addEventListener('click', () => { const rec = activeRecord(); if (rec) deleteCanvas(rec.id); });
 clearBtn.addEventListener('click', () => clearCanvas());
@@ -5387,6 +5544,7 @@ if (!rec) return;
 rec.title = titleInput.value;
 refreshListMeta();
 refreshList();
+updateStatus();
 scheduleSave();
 });
 lessonSelect.addEventListener('change', () => {
@@ -5415,8 +5573,8 @@ scheduleSave();
 // ---------- Инструменты ----------
 function setTool(id) {
 tool = id;
-CANVAS_TOOL_LIST.forEach(t => {
-if (toolButtons[t.id]) toolButtons[t.id].classList.toggle('active', t.id === id);
+toolButtonSets.forEach(map => {
+Object.keys(map).forEach(k => map[k].classList.toggle('active', k === id));
 });
 if (id === 'pan') stageCanvas.style.cursor = 'grab';
 else if (id === 'eraser') stageCanvas.style.cursor = 'cell';
@@ -5428,6 +5586,7 @@ requestRender();
 function syncSwatches() {
 const cur = colorInput.value.toLowerCase();
 swatchEls.forEach((sw, i) => sw.classList.toggle('active', CANVAS_SWATCHES[i].toLowerCase() === cur));
+updateToolStatus();
 }
 colorInput.addEventListener('change', syncSwatches);
 syncSwatches();
@@ -5441,13 +5600,11 @@ if (!isVisible()) return;
 const t = e.target;
 const inField = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
 if (e.code === 'Space' && !inField) {
-if (!spaceDown) {
-spaceDown = true;
-root.classList.add('space-pan');
-}
+if (!spaceDown) { spaceDown = true; root.classList.add('space-pan'); }
 e.preventDefault();
 }
 if (inField) return;
+if (focusMode && e.key === 'Tab') { e.preventDefault(); focusStage(); return; }
 const k = (e.key || '').toLowerCase();
 if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); doUndo(); return; }
 if ((e.ctrlKey || e.metaKey) && (k === 'y' || (e.shiftKey && k === 'z'))) { e.preventDefault(); doRedo(); return; }
@@ -5456,7 +5613,24 @@ if ((e.ctrlKey || e.metaKey) && (k === '=' || k === '+')) { e.preventDefault(); 
 if ((e.ctrlKey || e.metaKey) && (k === '-' || k === '_')) { e.preventDefault(); zoomBy(1 / 1.25, null); return; }
 if ((e.ctrlKey || e.metaKey) && k === '0') { e.preventDefault(); zoomFitContent(); return; }
 if ((e.ctrlKey || e.metaKey) && k === '1') { e.preventDefault(); setZoom(1, null); return; }
-if (e.altKey && k === 'escape') { e.preventDefault(); hideWindow(); return; }
+if (k === 'escape') {
+if (colorPopover.classList.contains('open') || helpPopover.classList.contains('open')) { e.preventDefault(); closePopovers(); focusStage(); return; }
+if (focusMode) { e.preventDefault(); toggleFocusMode(false); focusStage(); return; }
+if (e.altKey) { e.preventDefault(); hideWindow(); return; }
+}
+if (!e.ctrlKey && !e.metaKey && !e.altKey && k === 'f') { e.preventDefault(); toggleFocusMode(); focusStage(); return; }
+if (!e.ctrlKey && !e.metaKey && !e.altKey && (k === '?' || (e.shiftKey && k === '/'))) {
+e.preventDefault();
+if (helpPopover.classList.contains('open')) { closePopovers(); }
+else {
+closePopovers();
+helpPopover.style.bottom = (statusbar.offsetHeight + 6) + 'px';
+helpPopover.style.right = '8px';
+helpPopover.style.top = 'auto';
+helpPopover.classList.add('open');
+}
+return;
+}
 if (!e.ctrlKey && !e.metaKey && !e.altKey && HOTKEYS[k]) { e.preventDefault(); setTool(HOTKEYS[k]); return; }
 if (!e.ctrlKey && !e.metaKey && !e.altKey && (k === 'arrowleft' || k === 'arrowright' || k === 'arrowup' || k === 'arrowdown')) {
 e.preventDefault();
@@ -5468,10 +5642,7 @@ if (k === 'arrowdown') panBy(0, -stepPx);
 }
 });
 document.addEventListener('keyup', (e) => {
-if (e.code === 'Space') {
-spaceDown = false;
-root.classList.remove('space-pan');
-}
+if (e.code === 'Space') { spaceDown = false; root.classList.remove('space-pan'); }
 });
 window.addEventListener('blur', () => {
 spaceDown = false;
@@ -5482,26 +5653,21 @@ root.classList.remove('space-pan');
 function isVisible() { return root.classList.contains('visible'); }
 function showWindow() {
 root.classList.add('visible');
-requestAnimationFrame(() => { resizeSurface(); });
+requestAnimationFrame(() => { resizeSurface(); focusStage(); wakeUI(); });
 }
 function hideWindow() {
 if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; doSave(); }
+closePopovers();
 root.classList.remove('visible');
 }
 function open(initialId) {
 if (!course) return;
 normalizeAllCanvases();
 const list = getCourseCanvases();
-if (list.length === 0) {
-createNewCanvas();
-} else if (initialId && list.some(c => c.id === initialId)) {
-selectCanvas(initialId);
-} else if (!list.some(c => c.id === activeId)) {
-selectCanvas(list[0].id);
-} else {
-refreshList();
-refreshOptions();
-}
+if (list.length === 0) createNewCanvas();
+else if (initialId && list.some(c => c.id === initialId)) selectCanvas(initialId);
+else if (!list.some(c => c.id === activeId)) selectCanvas(list[0].id);
+else { refreshList(); refreshOptions(); }
 refreshLessonOptions();
 refreshOptions();
 showWindow();
@@ -5511,6 +5677,7 @@ function handleCourseChange() {
 activeId = null;
 Object.keys(historyMap).forEach(k => delete historyMap[k]);
 if (isVisible()) hideWindow();
+if (focusMode) toggleFocusMode(false);
 if (course && !Array.isArray(course.meta.canvases)) course.meta.canvases = [];
 normalizeAllCanvases();
 userAdjustedView = false;
@@ -5530,11 +5697,12 @@ const ro = new ResizeObserver(() => resizeSurface());
 ro.observe(stage);
 }
 window.addEventListener('resize', () => { if (isVisible()) resizeSurface(); });
+stage.addEventListener('pointermove', wakeUI);
 refreshLessonOptions();
 refreshList();
 refreshOptions();
 updateHistoryButtons();
-updateZoomLabel();
+updateStatus();
 setSaveState('', '');
 
 return {
@@ -5642,7 +5810,7 @@ cvWrap.appendChild(b);
 lessonContainer.appendChild(cvWrap);
 }
 if (editMode) {
-lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его, переместить, добавить новый или удалить. Кнопка 🎨 открывает бесконечный холст для рукописных заметок.' }));
+lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его, переместить, добавить новый или удалить. Кнопка 🎨 открывает бесконечный холст для заметок.' }));
 }
 const content = h('div', { class: 'lesson-content' });
 if (editMode) {
