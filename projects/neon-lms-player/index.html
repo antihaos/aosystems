@@ -576,6 +576,179 @@ transition: border-color .3s, box-shadow .3s;
 .crossword-feedback { margin-top: 10px; font-weight: bold; }
 .crossword-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .crossword-controls .quiz-button { margin-top: 0; }
+
+/* ================= ВИРТУАЛЬНЫЕ ХОЛСТЫ (CANVAS WORKSPACE) ================= */
+.canvas-fab {
+position: fixed; z-index: 900; width: 58px; height: 58px; border-radius: 50%;
+display: none; align-items: center; justify-content: center;
+background: linear-gradient(135deg, rgba(0,240,255,0.28), rgba(185,103,255,0.28));
+border: 1px solid var(--cyan); color: var(--cyan); font-size: 1.55em; line-height: 1;
+cursor: grab; touch-action: none; user-select: none;
+box-shadow: 0 0 18px rgba(0,240,255,0.45);
+transition: box-shadow .3s, border-color .3s, transform .15s;
+}
+.canvas-fab.visible { display: flex; }
+.canvas-fab:hover { box-shadow: 0 0 28px rgba(0,240,255,0.85); transform: scale(1.07); }
+.canvas-fab.dragging { cursor: grabbing; transform: scale(1.12); border-color: var(--purple); box-shadow: 0 0 30px rgba(185,103,255,0.85); }
+.canvas-fab .fab-badge {
+position: absolute; top: -6px; right: -6px; min-width: 21px; height: 21px; padding: 0 5px;
+border-radius: 11px; background: var(--pink); color: #0a0e1a; font-size: 12px; font-weight: bold;
+display: none; align-items: center; justify-content: center;
+box-shadow: 0 0 10px rgba(255,42,109,0.7); font-family: 'Segoe UI', sans-serif;
+}
+.canvas-fab .fab-badge.visible { display: flex; }
+.canvas-fab .fab-hint {
+position: absolute; bottom: 66px; left: 50%; transform: translateX(-50%);
+white-space: nowrap; background: #0a0c14; border: 1px solid var(--border); color: var(--muted);
+padding: 4px 10px; border-radius: 6px; font-size: 12px; opacity: 0; pointer-events: none;
+transition: opacity .25s; font-family: 'Segoe UI', sans-serif;
+}
+.canvas-fab:hover .fab-hint { opacity: 1; }
+.canvas-window {
+position: fixed; z-index: 950; left: 40px; top: 40px; width: 980px; height: 640px;
+display: none; flex-direction: column; background: var(--panel);
+border: 1px solid var(--cyan); border-radius: 12px; overflow: hidden;
+box-shadow: 0 0 34px rgba(0,240,255,0.35), 0 14px 48px rgba(0,0,0,0.65);
+}
+.canvas-window.visible { display: flex; animation: slideUp .22s ease; }
+.canvas-window.maximized { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
+.canvas-window.moving, .canvas-window.resizing { user-select: none; }
+.canvas-win-header {
+display: flex; align-items: center; gap: 8px; padding: 7px 10px; flex: 0 0 auto;
+background: linear-gradient(90deg, rgba(0,240,255,0.12), rgba(185,103,255,0.08));
+border-bottom: 1px solid var(--border); cursor: move; touch-action: none; user-select: none;
+}
+.canvas-win-icon { font-size: 1.2em; line-height: 1; }
+.canvas-win-title {
+flex: 1; min-width: 0; font-weight: bold; color: #fff; font-size: 0.95em;
+text-shadow: 0 0 8px var(--cyan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.canvas-win-btn {
+width: 28px; height: 28px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+background: transparent; border: 1px solid var(--border); color: var(--cyan); border-radius: 5px;
+cursor: pointer; font-size: 0.9em; line-height: 1; padding: 0; transition: all .2s; font-family: inherit;
+}
+.canvas-win-btn:hover { background: rgba(0,240,255,0.18); box-shadow: 0 0 8px rgba(0,240,255,0.4); }
+.canvas-win-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.5); }
+.canvas-win-btn.danger:hover { background: rgba(255,42,109,0.18); box-shadow: 0 0 8px rgba(255,42,109,0.4); }
+.canvas-win-body { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
+.canvas-sidebar {
+width: 250px; flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column;
+border-right: 1px solid var(--border); background: rgba(0,0,0,0.22);
+}
+.canvas-side-head {
+display: flex; align-items: center; justify-content: space-between; gap: 6px;
+padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--cyan);
+font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; flex: 0 0 auto;
+}
+.canvas-side-head .cnt { color: var(--muted); text-transform: none; letter-spacing: 0; font-size: 1em; }
+.canvas-list { flex: 1 1 auto; overflow-y: auto; padding: 6px; min-height: 40px; }
+.canvas-item {
+display: flex; align-items: center; gap: 6px; padding: 6px 8px; margin-bottom: 5px;
+border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all .2s;
+background: rgba(255,255,255,0.02);
+}
+.canvas-item:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.25); }
+.canvas-item.active { border-color: var(--cyan); background: rgba(0,240,255,0.12); box-shadow: 0 0 10px rgba(0,240,255,0.35); }
+.canvas-item-info { flex: 1; min-width: 0; }
+.canvas-item-title { color: var(--text); font-size: 0.88em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.canvas-item.active .canvas-item-title { color: #fff; }
+.canvas-item-meta { color: var(--muted); font-size: 0.72em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.canvas-item-btns { display: flex; gap: 3px; flex: 0 0 auto; }
+.canvas-side-opts {
+flex: 0 0 auto; max-height: 52%; overflow-y: auto; padding: 8px 10px;
+border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px;
+}
+.canvas-side-opts input[type="text"], .canvas-side-opts select {
+background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+padding: 5px 7px; outline: none; font-family: inherit; font-size: 0.88em; width: 100%;
+transition: border-color .3s, box-shadow .3s;
+}
+.canvas-side-opts input[type="text"]:focus, .canvas-side-opts select:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
+.canvas-side-opts input[type="color"] {
+width: 100%; height: 30px; padding: 2px; border: 1px solid var(--border); border-radius: 6px;
+background: #0a0c14; cursor: pointer;
+}
+.canvas-opt-label { color: var(--muted); font-size: 0.75em; text-transform: uppercase; letter-spacing: .6px; }
+.canvas-side-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.canvas-side-btn {
+padding: 6px 8px; background: rgba(0,240,255,0.08); border: 1px solid var(--border); color: var(--cyan);
+border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 0.8em; transition: all .25s;
+}
+.canvas-side-btn:hover:not(:disabled) { background: rgba(0,240,255,0.2); box-shadow: 0 0 8px rgba(0,240,255,.35); border-color: var(--cyan); }
+.canvas-side-btn.wide { grid-column: 1 / -1; }
+.canvas-side-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.45); background: rgba(255,42,109,0.08); }
+.canvas-side-btn.danger:hover:not(:disabled) { background: rgba(255,42,109,0.18); box-shadow: 0 0 8px rgba(255,42,109,.35); }
+.canvas-side-btn:disabled { opacity: .4; cursor: not-allowed; }
+.canvas-main { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.canvas-toolbar {
+display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 7px 9px; flex: 0 0 auto;
+border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02);
+}
+.canvas-tool-group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.canvas-tool-sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 3px; }
+.tool-btn {
+min-width: 32px; height: 32px; padding: 0 7px; display: flex; align-items: center; justify-content: center;
+background: transparent; border: 1px solid var(--border); color: var(--text); border-radius: 6px;
+cursor: pointer; font-size: 0.95em; line-height: 1; transition: all .2s; font-family: inherit;
+}
+.tool-btn:hover:not(:disabled) { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.35); transform: translateY(-1px); }
+.tool-btn.active { background: rgba(0,240,255,0.18); border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(0,240,255,.45); }
+.tool-btn:disabled { opacity: .35; cursor: not-allowed; }
+.color-swatch {
+width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2);
+cursor: pointer; transition: all .2s; padding: 0;
+}
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.active { border-color: #fff; box-shadow: 0 0 10px currentColor; transform: scale(1.15); }
+.canvas-color-input { width: 34px; height: 28px; padding: 1px; border: 1px solid var(--border); border-radius: 6px; background: #0a0c14; cursor: pointer; }
+.canvas-size-wrap { display: flex; align-items: center; gap: 5px; }
+.canvas-size-wrap input[type="range"] { width: 82px; accent-color: var(--cyan); cursor: pointer; }
+.canvas-size-val { color: var(--cyan); font-size: 0.8em; font-weight: bold; min-width: 24px; text-align: right; }
+.canvas-stage { flex: 1 1 auto; position: relative; min-height: 0; overflow: hidden; background: #05070f; }
+.canvas-stage canvas { position: absolute; left: 0; top: 0; display: block; touch-action: none; cursor: crosshair; }
+.canvas-text-input {
+position: absolute; z-index: 8; background: rgba(10,12,20,0.85); border: 1px dashed var(--cyan);
+border-radius: 4px; padding: 2px 5px; outline: none; font-family: 'Segoe UI', Tahoma, sans-serif;
+min-width: 140px; box-shadow: 0 0 12px rgba(0,240,255,.4);
+}
+.canvas-empty-hint {
+position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+gap: 12px; color: var(--muted); text-align: center; padding: 20px;
+}
+.canvas-status {
+flex: 0 0 auto; display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+padding: 4px 10px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.25);
+color: var(--muted); font-size: 0.78em; min-height: 26px;
+}
+.canvas-status .st-item { white-space: nowrap; }
+.canvas-status .save-state { margin-left: auto; font-weight: bold; }
+.save-state.saving { color: var(--yellow); }
+.save-state.saved { color: var(--green); }
+.save-state.error { color: var(--pink); }
+.resize-handle { position: absolute; z-index: 15; }
+.rh-n { top: 0; left: 16px; right: 16px; height: 6px; cursor: ns-resize; }
+.rh-s { bottom: 0; left: 16px; right: 16px; height: 6px; cursor: ns-resize; }
+.rh-e { right: 0; top: 16px; bottom: 16px; width: 6px; cursor: ew-resize; }
+.rh-w { left: 0; top: 16px; bottom: 16px; width: 6px; cursor: ew-resize; }
+.rh-ne { top: 0; right: 0; width: 16px; height: 16px; cursor: nesw-resize; }
+.rh-nw { top: 0; left: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+.rh-se { bottom: 0; right: 0; width: 16px; height: 16px; cursor: nwse-resize; }
+.rh-sw { bottom: 0; left: 0; width: 16px; height: 16px; cursor: nesw-resize; }
+.canvas-window.maximized .resize-handle { display: none; }
+
+@media (max-width: 720px) {
+.canvas-sidebar {
+position: absolute; left: 0; top: 0; height: 100%; width: 240px; z-index: 30;
+display: flex !important; transform: translateX(0); transition: transform .25s ease;
+box-shadow: 6px 0 24px rgba(0,0,0,.6); background: var(--panel);
+}
+.canvas-window.sidebar-closed .canvas-sidebar { transform: translateX(-108%); }
+.canvas-size-wrap input[type="range"] { width: 60px; }
+}
+@media (min-width: 721px) {
+.canvas-window.sidebar-closed .canvas-sidebar { display: none; }
+}
 @media (max-width: 600px) {
 .columns { flex-direction: column; }
 .carousel-btn { font-size: 1.5em; padding: 0 8px; }
@@ -589,6 +762,7 @@ transition: border-color .3s, box-shadow .3s;
 .glossary-term { min-width: 0; }
 .crossword-cell { width: 28px; height: 28px; }
 .model3d-control-row > label { min-width: 100%; }
+.canvas-fab { width: 50px; height: 50px; font-size: 1.3em; }
 }
 </style>
 </head>
@@ -725,6 +899,7 @@ function setCourse(newCourse) {
 course = newCourse;
 if (!course.meta) course.meta = {};
 if (!Array.isArray(course.lessons)) course.lessons = [];
+if (!Array.isArray(course.meta.canvases)) course.meta.canvases = [];
 currentLessonId = null;
 const key = getCourseKey(course);
 completedLessons = new Set(courseProgress[key] || []);
@@ -734,6 +909,7 @@ updateSavedCoursesList();
 if (courseManagerPanel) {
 courseManagerPanel.style.display = 'none';
 }
+onCourseChangedForCanvas();
 }
 async function loadCourseFromObject(courseData, recordId) {
 if (!courseData || typeof courseData !== 'object' || Array.isArray(courseData) || !courseData.meta || !courseData.lessons) {
@@ -831,7 +1007,7 @@ const info = h('div', { class: 'app-info' });
 info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
 info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
 header.appendChild(info);
-header.appendChild(h('span', { class: 'app-version', textContent: 'v1.8.2' }));
+header.appendChild(h('span', { class: 'app-version', textContent: 'v1.9.0' }));
 return header;
 }
 function renderCourseHeader() {
@@ -868,6 +1044,8 @@ const badges = h('div', { class: 'badges' });
 if (course.meta.author) badges.appendChild(h('span', { class: 'badge', textContent: 'Автор: ' + course.meta.author }));
 if (course.meta.duration) badges.appendChild(h('span', { class: 'badge', textContent: 'Длительность: ' + course.meta.duration }));
 if (course.meta.level) badges.appendChild(h('span', { class: 'badge', textContent: 'Уровень: ' + course.meta.level }));
+const canvasesCount = (course.meta && Array.isArray(course.meta.canvases)) ? course.meta.canvases.length : 0;
+if (canvasesCount > 0) badges.appendChild(h('span', { class: 'badge', textContent: '🎨 Холстов: ' + canvasesCount }));
 header.appendChild(badges);
 return header;
 }
@@ -935,7 +1113,8 @@ description: "Описание курса",
 author: "",
 duration: "",
 level: "",
-theme: {}
+theme: {},
+canvases: []
 },
 lessons: [
 {
@@ -3447,10 +3626,28 @@ helpDiv.innerHTML = `
 <p>Переключатель в верхней панели позволяет выбрать режим: <strong>✏ Режим редактирования</strong> — доступны панели редактирования блоков; <strong>👁 Режим просмотра</strong> — чистый просмотр без кнопок редактирования. Выбранный режим запоминается.</p>
 <h4 style="color: #fff; margin-top: 10px;">Структура курса</h4>
 <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>{
-"meta": { "title": "...", "description": "...", "author": "...", "theme": { ... } },
+"meta": { "title": "...", "description": "...", "author": "...", "theme": { ... }, "canvases": [ ... ] },
 "lessons": [ { "id": "lesson-1", "title": "...", "blocks": [ ... ] } ]
 }</code></pre>
 <p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования). Для генерации подробных лекций используйте «Генерацию промпта».</p>
+<h4 style="color: #fff; margin-top: 10px;">🎨 Виртуальные холсты для заметок</h4>
+<p>Плавающая кнопка <strong>🎨</strong> (sticky-кнопка) доступна при загруженном курсе. Её можно <strong>перетащить</strong> в любое место экрана — позиция фиксируется и запоминается между сессиями; обычный клик (без перетаскивания) открывает рабочее окно холстов.</p>
+<p><strong>Инструменты рисования:</strong> карандаш (✏), маркер-выделитель (🖍), ластик (⌫ — удаляет штрихи целиком), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯) и текст (T). Доступны палитра цветов, произвольный цвет, толщина линии, режим заливки фигур, отмена/повтор (Ctrl+Z / Ctrl+Y) и очистка холста. Горячие клавиши инструментов: P, H, E, L, A, R, O, T.</p>
+<p><strong>Управление холстами:</strong> в левой панели — список холстов курса: создание, дублирование, удаление, переименование, привязка к конкретному уроку, цвет фона и сетка. Также доступны экспорт в PNG, экспорт/импорт JSON холста.</p>
+<p><strong>Окно холста</strong> можно перемещать за заголовок, изменять его размер за края и углы, разворачивать на весь экран (⤢) и переводить в нативный полноэкранный режим (⛶), сворачивать (—) и закрывать (×). Позиция и размер окна запоминаются.</p>
+<p><strong>Хранение:</strong> все штрихи хранятся как векторные последовательности нормализованных координат в поле <code>meta.canvases</code> описания курса и автоматически сохраняются в IndexedDB вместе с курсом. Формат записи:</p>
+<pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>"canvases": [
+{
+"id": "cv-...", "title": "Холст 1", "lessonId": null,
+"background": "#0a0c14", "showGrid": true,
+"createdAt": "...", "updatedAt": "...",
+"strokes": [
+{ "tool": "pencil", "color": "#00f0ff", "size": 3, "points": [[0.12,0.3],[0.14,0.33]] },
+{ "tool": "rect", "color": "#ff2a6d", "size": 2, "fill": true, "points": [[0.2,0.2],[0.5,0.6]] },
+{ "tool": "text", "color": "#ffffff", "text": "Заметка", "fontSize": 0.03, "points": [[0.3,0.1]] }
+]
+}
+]</code></pre>
 <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
 <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>.</p>
 <h4 style="color: #fff; margin-top: 10px;">Аудио и видео</h4>
@@ -3597,10 +3794,10 @@ const prompt = `Ты — эксперт по созданию интеракти
 - Блоки кода преимущественно размещай внутри блока modal.
 - JSON должен быть валидным, без комментариев, и строго соответствовать схеме ниже.
 - Обязательно включи в курс блоки quiz, fill-blank и хотя бы одну диаграмму (chart или pie).
-- Метаданные заполни реалистично; в качестве автора укажи себя (например, "AI Assistant").
+- Метаданные заполни реалистично; в качестве автора укажи себя (например, "AI Assistant"). Поле meta.canvases оставь пустым массивом [].
 Верни ТОЛЬКО валидный JSON курса вида:
 {
-"meta": { "title": "...", "description": "...", "author": "...", "duration": "...", "level": "...", "theme": {} },
+"meta": { "title": "...", "description": "...", "author": "...", "duration": "...", "level": "...", "theme": {}, "canvases": [] },
 "lessons": [ { "id": "lesson-1", "title": "...", "description": "...", "blocks": [ ... ] } ]
 }
 Схема:
@@ -3608,6 +3805,1258 @@ ${schema}
 Сгенерируй только валидный JSON курса, без пояснений и без комментариев.`;
 return prompt;
 }
+
+// =====================================================================
+// ============ ВИРТУАЛЬНЫЕ ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК ==============
+// =====================================================================
+const CANVAS_FAB_POS_KEY = 'lms_canvas_fab_pos';
+const CANVAS_WIN_POS_KEY = 'lms_canvas_win_pos';
+const CANVAS_TOOL_LIST = [
+{ id: 'pencil', label: '✏', name: 'Карандаш', hotkey: 'p' },
+{ id: 'highlighter', label: '🖍', name: 'Маркер', hotkey: 'h' },
+{ id: 'eraser', label: '⌫', name: 'Ластик', hotkey: 'e' },
+{ id: 'line', label: '╱', name: 'Линия', hotkey: 'l' },
+{ id: 'arrow', label: '↗', name: 'Стрелка', hotkey: 'a' },
+{ id: 'rect', label: '▭', name: 'Прямоугольник', hotkey: 'r' },
+{ id: 'ellipse', label: '◯', name: 'Эллипс', hotkey: 'o' },
+{ id: 'text', label: 'T', name: 'Текст', hotkey: 't' }
+];
+const CANVAS_SWATCHES = ['#00f0ff', '#ff2a6d', '#05ffa1', '#b967ff', '#ffd700', '#ff8c42', '#7aa2ff', '#ffffff'];
+let canvasFab = null;
+let canvasWorkspace = null;
+
+function getCourseCanvases() {
+if (!course) return [];
+if (!course.meta) course.meta = {};
+if (!Array.isArray(course.meta.canvases)) course.meta.canvases = [];
+return course.meta.canvases;
+}
+function createCanvasRecord(title) {
+const list = getCourseCanvases();
+const nowIso = new Date().toISOString();
+return {
+id: 'cv-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7),
+title: title || ('Холст ' + (list.length + 1)),
+createdAt: nowIso,
+updatedAt: null,
+background: '#0a0c14',
+showGrid: true,
+lessonId: null,
+strokes: []
+};
+}
+function normalizeCanvasRecord(rec) {
+if (!rec || typeof rec !== 'object') return null;
+if (!rec.id) rec.id = 'cv-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+if (typeof rec.title !== 'string' || !rec.title) rec.title = 'Холст';
+if (!Array.isArray(rec.strokes)) rec.strokes = [];
+rec.strokes = rec.strokes.filter(s => s && typeof s === 'object' && Array.isArray(s.points));
+if (typeof rec.background !== 'string') rec.background = '#0a0c14';
+if (typeof rec.showGrid !== 'boolean') rec.showGrid = true;
+if (rec.lessonId == null) rec.lessonId = null;
+return rec;
+}
+async function persistCanvases() {
+if (!course) return;
+await persistCourse();
+updateCanvasFab();
+}
+function lessonTitleById(id) {
+if (!course || !id) return '';
+const found = course.lessons.find(l => l.id === id);
+return found ? (found.title || found.id) : id;
+}
+function downloadBlob(blob, filename) {
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = filename;
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+// ---------- Плавающая (sticky) кнопка открытия холстов ----------
+function createCanvasFab() {
+if (canvasFab) return canvasFab;
+const fab = h('button', {
+class: 'canvas-fab',
+type: 'button',
+title: 'Виртуальные холсты — перетащите, чтобы закрепить кнопку в удобном месте'
+});
+fab.appendChild(h('span', { textContent: '🎨' }));
+const badge = h('span', { class: 'fab-badge' });
+fab.appendChild(badge);
+const hint = h('span', { class: 'fab-hint', textContent: 'Холсты заметок · перетащите меня' });
+fab.appendChild(hint);
+document.body.appendChild(fab);
+canvasFab = fab;
+let fabDrag = null;
+fab.addEventListener('pointerdown', (e) => {
+if (e.button !== 0 && e.pointerType === 'mouse') return;
+const rect = fab.getBoundingClientRect();
+fabDrag = { startX: e.clientX, startY: e.clientY, origLeft: rect.left, origTop: rect.top, moved: false };
+try { fab.setPointerCapture(e.pointerId); } catch (err) {}
+});
+fab.addEventListener('pointermove', (e) => {
+if (!fabDrag) return;
+const dx = e.clientX - fabDrag.startX;
+const dy = e.clientY - fabDrag.startY;
+if (!fabDrag.moved && Math.abs(dx) + Math.abs(dy) < 6) return;
+fabDrag.moved = true;
+fab.classList.add('dragging');
+const size = fab.offsetWidth || 58;
+let nx = fabDrag.origLeft + dx;
+let ny = fabDrag.origTop + dy;
+nx = Math.max(4, Math.min(nx, window.innerWidth - size - 4));
+ny = Math.max(4, Math.min(ny, window.innerHeight - size - 4));
+fab.style.left = nx + 'px';
+fab.style.top = ny + 'px';
+fab.style.right = 'auto';
+fab.style.bottom = 'auto';
+});
+const fabRelease = () => {
+if (!fabDrag) return;
+const wasMoved = fabDrag.moved;
+fabDrag = null;
+fab.classList.remove('dragging');
+if (wasMoved) {
+saveCanvasFabPosition();
+} else {
+openCanvasWorkspace();
+}
+};
+fab.addEventListener('pointerup', fabRelease);
+fab.addEventListener('pointercancel', fabRelease);
+window.addEventListener('resize', () => { clampCanvasFabPosition(); });
+restoreCanvasFabPosition();
+return fab;
+}
+function saveCanvasFabPosition() {
+if (!canvasFab) return;
+try {
+const rect = canvasFab.getBoundingClientRect();
+localStorage.setItem(CANVAS_FAB_POS_KEY, JSON.stringify({ x: Math.round(rect.left), y: Math.round(rect.top) }));
+} catch (e) {}
+}
+function clampCanvasFabPosition() {
+if (!canvasFab) return;
+const size = canvasFab.offsetWidth || 58;
+let x = parseFloat(canvasFab.style.left);
+let y = parseFloat(canvasFab.style.top);
+if (!isFinite(x)) x = window.innerWidth - size - 24;
+if (!isFinite(y)) y = window.innerHeight - size - 24;
+x = Math.max(4, Math.min(x, Math.max(4, window.innerWidth - size - 4)));
+y = Math.max(4, Math.min(y, Math.max(4, window.innerHeight - size - 4)));
+canvasFab.style.left = x + 'px';
+canvasFab.style.top = y + 'px';
+canvasFab.style.right = 'auto';
+canvasFab.style.bottom = 'auto';
+}
+function restoreCanvasFabPosition() {
+if (!canvasFab) return;
+let pos = null;
+try { pos = JSON.parse(localStorage.getItem(CANVAS_FAB_POS_KEY) || 'null'); } catch (e) {}
+const size = canvasFab.offsetWidth || 58;
+let x = (pos && isFinite(pos.x)) ? pos.x : (window.innerWidth - size - 24);
+let y = (pos && isFinite(pos.y)) ? pos.y : (window.innerHeight - size - 24);
+canvasFab.style.left = x + 'px';
+canvasFab.style.top = y + 'px';
+clampCanvasFabPosition();
+}
+function updateCanvasFab() {
+if (!canvasFab) createCanvasFab();
+if (!canvasFab) return;
+canvasFab.classList.toggle('visible', !!course);
+const badge = canvasFab.querySelector('.fab-badge');
+if (badge) {
+const count = course ? getCourseCanvases().length : 0;
+if (count > 0) { badge.textContent = String(count); badge.classList.add('visible'); }
+else badge.classList.remove('visible');
+}
+clampCanvasFabPosition();
+}
+function openCanvasWorkspace(canvasId) {
+if (!course) {
+alert('Холсты привязываются к курсу. Сначала загрузите курс («Управление курсами»).');
+return;
+}
+if (!canvasWorkspace) {
+canvasWorkspace = createCanvasWorkspace();
+document.body.appendChild(canvasWorkspace.root);
+}
+canvasWorkspace.open(canvasId);
+}
+function onCourseChangedForCanvas() {
+updateCanvasFab();
+if (canvasWorkspace) canvasWorkspace.handleCourseChange();
+}
+function onLessonChangedForCanvas() {
+updateCanvasFab();
+if (canvasWorkspace) canvasWorkspace.handleLessonChange();
+}
+
+// ---------- Рабочее окно холстов ----------
+function createCanvasWorkspace() {
+const root = h('div', { class: 'canvas-window' });
+root.setAttribute('role', 'dialog');
+root.setAttribute('aria-label', 'Виртуальные холсты курса');
+let activeId = null;
+let W = 1, H = 1;
+let tool = 'pencil';
+let drawing = false;
+let erasing = false;
+let currentStroke = null;
+let lastPointer = null;
+let saveTimer = null;
+const historyMap = {};
+const baseCanvas = document.createElement('canvas');
+const bctx = baseCanvas.getContext('2d');
+const stageCanvas = h('canvas');
+const mctx = stageCanvas.getContext('2d');
+
+function history(id) {
+if (!historyMap[id]) historyMap[id] = { undo: [], redo: [] };
+return historyMap[id];
+}
+function activeRecord() {
+const list = getCourseCanvases();
+return list.find(c => c.id === activeId) || null;
+}
+
+// ---------- Заголовок окна ----------
+const header = h('div', { class: 'canvas-win-header' });
+header.appendChild(h('span', { class: 'canvas-win-icon', textContent: '🎨' }));
+const titleEl = h('span', { class: 'canvas-win-title', textContent: 'Виртуальные холсты' });
+header.appendChild(titleEl);
+function winBtn(symbol, title, danger) {
+const b = h('button', { class: 'canvas-win-btn' + (danger ? ' danger' : ''), type: 'button', title: title, textContent: symbol });
+return b;
+}
+const sidebarBtn = winBtn('🗂', 'Показать/скрыть панель холстов');
+const maxBtn = winBtn('⤢', 'Развернуть на весь экран / восстановить');
+const fsBtn = winBtn('⛶', 'Полноэкранный режим');
+const minBtn = winBtn('—', 'Свернуть окно');
+const closeBtn = winBtn('×', 'Закрыть окно', true);
+[sidebarBtn, maxBtn, fsBtn, minBtn, closeBtn].forEach(b => header.appendChild(b));
+root.appendChild(header);
+
+// ---------- Тело окна ----------
+const body = h('div', { class: 'canvas-win-body' });
+root.appendChild(body);
+
+// --- Боковая панель ---
+const sidebar = h('div', { class: 'canvas-sidebar' });
+const sideHead = h('div', { class: 'canvas-side-head' });
+sideHead.appendChild(h('span', { textContent: 'Холсты курса' }));
+const countEl = h('span', { class: 'cnt', textContent: '0' });
+sideHead.appendChild(countEl);
+sidebar.appendChild(sideHead);
+const filterRow = h('label', { class: 'checkbox-label', style: 'padding:6px 10px; font-size:0.82em;' });
+const filterLesson = h('input', { type: 'checkbox' });
+filterRow.appendChild(filterLesson);
+filterRow.appendChild(h('span', { textContent: 'Только холсты текущего урока' }));
+sidebar.appendChild(filterRow);
+const listEl = h('div', { class: 'canvas-list' });
+sidebar.appendChild(listEl);
+const newBtn = h('button', { class: 'canvas-side-btn wide', type: 'button', textContent: '＋ Создать холст', style: 'margin:6px 10px; width:auto;' });
+sidebar.appendChild(newBtn);
+
+const sideOpts = h('div', { class: 'canvas-side-opts' });
+sideOpts.appendChild(h('div', { class: 'form-section-title', textContent: 'Текущий холст' }));
+sideOpts.appendChild(h('div', { class: 'canvas-opt-label', textContent: 'Название' }));
+const titleInput = h('input', { type: 'text', placeholder: 'Название холста' });
+sideOpts.appendChild(titleInput);
+sideOpts.appendChild(h('div', { class: 'canvas-opt-label', textContent: 'Привязка' }));
+const lessonSelect = h('select');
+sideOpts.appendChild(lessonSelect);
+const linkNowRow = h('label', { class: 'checkbox-label', style: 'font-size:0.82em;' });
+const linkNowCheck = h('input', { type: 'checkbox' });
+linkNowRow.appendChild(linkNowCheck);
+linkNowRow.appendChild(h('span', { textContent: 'Новые холсты привязывать к текущему уроку' }));
+sideOpts.appendChild(linkNowRow);
+sideOpts.appendChild(h('div', { class: 'canvas-opt-label', textContent: 'Цвет фона холста' }));
+const bgInput = h('input', { type: 'color' });
+sideOpts.appendChild(bgInput);
+const gridRow = h('label', { class: 'checkbox-label', style: 'font-size:0.82em;' });
+const gridCheck = h('input', { type: 'checkbox' });
+gridRow.appendChild(gridCheck);
+gridRow.appendChild(h('span', { textContent: 'Показывать сетку' }));
+sideOpts.appendChild(gridRow);
+const sideBtns = h('div', { class: 'canvas-side-btns' });
+const dupBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '⧉ Дублировать' });
+const pngBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '🖼 Экспорт PNG' });
+const expBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '⬇ JSON' });
+const impBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '⬆ Импорт' });
+const clearBtn = h('button', { class: 'canvas-side-btn danger', type: 'button', textContent: '✖ Очистить' });
+const delBtn = h('button', { class: 'canvas-side-btn danger', type: 'button', textContent: '🗑 Удалить' });
+[dupBtn, pngBtn, expBtn, impBtn, clearBtn, delBtn].forEach(b => sideBtns.appendChild(b));
+sideOpts.appendChild(sideBtns);
+const importInput = h('input', { type: 'file', accept: '.json,application/json', style: 'display:none' });
+sideOpts.appendChild(importInput);
+sidebar.appendChild(sideOpts);
+body.appendChild(sidebar);
+
+// --- Основная область ---
+const main = h('div', { class: 'canvas-main' });
+body.appendChild(main);
+const toolbar = h('div', { class: 'canvas-toolbar' });
+main.appendChild(toolbar);
+const toolGroup = h('div', { class: 'canvas-tool-group' });
+toolbar.appendChild(toolGroup);
+const toolButtons = {};
+CANVAS_TOOL_LIST.forEach(t => {
+const b = h('button', {
+class: 'tool-btn' + (t.id === tool ? ' active' : ''),
+type: 'button',
+title: t.name + ' (' + t.hotkey.toUpperCase() + ')',
+textContent: t.label
+});
+b.addEventListener('click', () => setTool(t.id));
+toolGroup.appendChild(b);
+toolButtons[t.id] = b;
+});
+toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
+const colorGroup = h('div', { class: 'canvas-tool-group' });
+const colorInput = h('input', { type: 'color', class: 'canvas-color-input', title: 'Произвольный цвет' });
+colorInput.value = '#00f0ff';
+colorInput.addEventListener('input', () => { syncSwatches(); });
+colorGroup.appendChild(colorInput);
+const swatchEls = [];
+CANVAS_SWATCHES.forEach(col => {
+const sw = h('button', { class: 'color-swatch', type: 'button', title: col });
+sw.style.background = col;
+sw.style.color = col;
+sw.addEventListener('click', () => { colorInput.value = col; syncSwatches(); });
+colorGroup.appendChild(sw);
+swatchEls.push(sw);
+});
+toolbar.appendChild(colorGroup);
+toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
+const sizeWrap = h('div', { class: 'canvas-size-wrap' });
+sizeWrap.appendChild(h('span', { style: 'color:var(--muted); font-size:0.8em;', textContent: 'Толщина' }));
+const sizeInput = h('input', { type: 'range', min: '1', max: '40', step: '1', value: '3', title: 'Толщина линии' });
+const sizeVal = h('span', { class: 'canvas-size-val', textContent: '3' });
+sizeInput.addEventListener('input', () => { sizeVal.textContent = sizeInput.value; });
+sizeWrap.appendChild(sizeInput);
+sizeWrap.appendChild(sizeVal);
+toolbar.appendChild(sizeWrap);
+const fillRow = h('label', { class: 'checkbox-label', style: 'font-size:0.82em;' });
+const fillCheck = h('input', { type: 'checkbox' });
+fillRow.appendChild(fillCheck);
+fillRow.appendChild(h('span', { textContent: 'Заливка фигур' }));
+toolbar.appendChild(fillRow);
+toolbar.appendChild(h('div', { class: 'canvas-tool-sep' }));
+const histGroup = h('div', { class: 'canvas-tool-group' });
+const undoBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Отменить (Ctrl+Z)', textContent: '↶' });
+const redoBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Повторить (Ctrl+Y)', textContent: '↷' });
+undoBtn.addEventListener('click', () => doUndo());
+redoBtn.addEventListener('click', () => doRedo());
+histGroup.appendChild(undoBtn);
+histGroup.appendChild(redoBtn);
+toolbar.appendChild(histGroup);
+
+const stage = h('div', { class: 'canvas-stage' });
+stage.appendChild(stageCanvas);
+main.appendChild(stage);
+
+const status = h('div', { class: 'canvas-status' });
+const stTool = h('span', { class: 'st-item', textContent: 'Инструмент: —' });
+const stPos = h('span', { class: 'st-item', textContent: 'x: — y: —' });
+const stCount = h('span', { class: 'st-item', textContent: 'Штрихов: 0' });
+const stName = h('span', { class: 'st-item', textContent: '' });
+const stSave = h('span', { class: 'save-state', textContent: '' });
+[stTool, stPos, stCount, stName, stSave].forEach(e => status.appendChild(e));
+main.appendChild(status);
+
+// ---------- Ручки изменения размера окна ----------
+['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].forEach(dir => {
+const handle = h('div', { class: 'resize-handle rh-' + dir, dataset: { dir: dir } });
+handle.addEventListener('pointerdown', (e) => startResize(e, dir, handle));
+root.appendChild(handle);
+});
+function startResize(e, dir, el) {
+if (root.classList.contains('maximized')) return;
+e.preventDefault();
+e.stopPropagation();
+const start = root.getBoundingClientRect();
+const sx = e.clientX, sy = e.clientY;
+const minW = 320, minH = 240;
+try { el.setPointerCapture(e.pointerId); } catch (err) {}
+root.classList.add('resizing');
+function move(ev) {
+const dx = ev.clientX - sx;
+const dy = ev.clientY - sy;
+let x = start.left, y = start.top, w = start.width, hh = start.height;
+if (dir.indexOf('e') !== -1) w = Math.max(minW, start.width + dx);
+if (dir.indexOf('s') !== -1) hh = Math.max(minH, start.height + dy);
+if (dir.indexOf('w') !== -1) { w = Math.max(minW, start.width - dx); x = start.left + (start.width - w); }
+if (dir.indexOf('n') !== -1) { hh = Math.max(minH, start.height - dy); y = start.top + (start.height - hh); }
+x = Math.max(0, Math.min(x, window.innerWidth - 80));
+y = Math.max(0, Math.min(y, window.innerHeight - 40));
+w = Math.min(w, window.innerWidth - x);
+hh = Math.min(hh, window.innerHeight - y);
+root.style.left = x + 'px';
+root.style.top = y + 'px';
+root.style.width = w + 'px';
+root.style.height = hh + 'px';
+}
+function up() {
+root.classList.remove('resizing');
+el.removeEventListener('pointermove', move);
+el.removeEventListener('pointerup', up);
+el.removeEventListener('pointercancel', up);
+saveWinRect();
+resizeSurface();
+}
+el.addEventListener('pointermove', move);
+el.addEventListener('pointerup', up);
+el.addEventListener('pointercancel', up);
+}
+
+// ---------- Перемещение окна ----------
+let winDrag = null;
+header.addEventListener('pointerdown', (e) => {
+if (e.target.closest('button')) return;
+if (root.classList.contains('maximized')) return;
+if (e.button !== 0 && e.pointerType === 'mouse') return;
+const rect = root.getBoundingClientRect();
+winDrag = { dx: e.clientX - rect.left, dy: e.clientY - rect.top, w: rect.width, hgt: rect.height };
+try { header.setPointerCapture(e.pointerId); } catch (err) {}
+root.classList.add('moving');
+e.preventDefault();
+});
+header.addEventListener('pointermove', (e) => {
+if (!winDrag) return;
+let nx = e.clientX - winDrag.dx;
+let ny = e.clientY - winDrag.dy;
+nx = Math.max(-(winDrag.w - 90), Math.min(nx, window.innerWidth - 90));
+ny = Math.max(0, Math.min(ny, window.innerHeight - 40));
+root.style.left = nx + 'px';
+root.style.top = ny + 'px';
+});
+const headerUp = () => {
+if (!winDrag) return;
+winDrag = null;
+root.classList.remove('moving');
+saveWinRect();
+};
+header.addEventListener('pointerup', headerUp);
+header.addEventListener('pointercancel', headerUp);
+
+// ---------- Геометрия окна ----------
+function loadWinRect() {
+try {
+const r = JSON.parse(localStorage.getItem(CANVAS_WIN_POS_KEY) || 'null');
+if (r && isFinite(r.w) && isFinite(r.h)) return r;
+} catch (e) {}
+const w = Math.min(1040, Math.max(320, window.innerWidth - 80));
+const hh = Math.min(680, Math.max(280, window.innerHeight - 80));
+return { x: Math.max(10, (window.innerWidth - w) / 2), y: Math.max(10, (window.innerHeight - hh) / 2), w: w, h: hh };
+}
+function applyWinRect() {
+const r = loadWinRect();
+root.style.left = Math.max(0, Math.min(r.x, window.innerWidth - 100)) + 'px';
+root.style.top = Math.max(0, Math.min(r.y, window.innerHeight - 60)) + 'px';
+root.style.width = Math.min(r.w, window.innerWidth) + 'px';
+root.style.height = Math.min(r.h, window.innerHeight) + 'px';
+}
+function saveWinRect() {
+if (root.classList.contains('maximized')) return;
+try {
+const r = root.getBoundingClientRect();
+localStorage.setItem(CANVAS_WIN_POS_KEY, JSON.stringify({ x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) }));
+} catch (e) {}
+}
+applyWinRect();
+if (window.innerWidth <= 720) root.classList.add('sidebar-closed');
+
+// ---------- Кнопки заголовка ----------
+sidebarBtn.addEventListener('click', () => {
+root.classList.toggle('sidebar-closed');
+setTimeout(resizeSurface, 260);
+});
+maxBtn.addEventListener('click', () => {
+root.classList.toggle('maximized');
+maxBtn.textContent = root.classList.contains('maximized') ? '🗗' : '⤢';
+setTimeout(resizeSurface, 30);
+saveWinRect();
+});
+fsBtn.addEventListener('click', () => {
+try {
+if (document.fullscreenElement) {
+document.exitFullscreen();
+} else if (root.requestFullscreen) {
+root.requestFullscreen();
+}
+} catch (e) { console.warn('Fullscreen недоступен:', e); }
+});
+document.addEventListener('fullscreenchange', () => {
+fsBtn.textContent = document.fullscreenElement ? '🗗' : '⛶';
+setTimeout(resizeSurface, 60);
+});
+minBtn.addEventListener('click', () => hideWindow());
+closeBtn.addEventListener('click', () => hideWindow());
+
+// ---------- Рендеринг ----------
+function resizeSurface() {
+const rect = stage.getBoundingClientRect();
+if (rect.width < 2 || rect.height < 2) return;
+const dpr = window.devicePixelRatio || 1;
+W = Math.max(1, Math.floor(rect.width));
+H = Math.max(1, Math.floor(rect.height));
+stageCanvas.width = Math.floor(W * dpr);
+stageCanvas.height = Math.floor(H * dpr);
+stageCanvas.style.width = W + 'px';
+stageCanvas.style.height = H + 'px';
+mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+baseCanvas.width = Math.floor(W * dpr);
+baseCanvas.height = Math.floor(H * dpr);
+bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+renderBase();
+render();
+}
+function drawGrid(ctx) {
+ctx.save();
+ctx.strokeStyle = 'rgba(0,240,255,0.07)';
+ctx.lineWidth = 1;
+const step = 32;
+ctx.beginPath();
+for (let x = step; x < W; x += step) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); }
+for (let y = step; y < H; y += step) { ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); }
+ctx.stroke();
+ctx.restore();
+}
+function drawArrowHead(ctx, x1, y1, x2, y2, lw) {
+const ang = Math.atan2(y2 - y1, x2 - x1);
+const len = Math.max(9, lw * 3.6);
+ctx.beginPath();
+ctx.moveTo(x2, y2);
+ctx.lineTo(x2 - len * Math.cos(ang - Math.PI / 7), y2 - len * Math.sin(ang - Math.PI / 7));
+ctx.lineTo(x2 - len * Math.cos(ang + Math.PI / 7), y2 - len * Math.sin(ang + Math.PI / 7));
+ctx.closePath();
+ctx.fill();
+}
+function drawStroke(ctx, s) {
+if (!s || !Array.isArray(s.points) || s.points.length === 0) return;
+const alpha = (s.opacity == null ? 1 : Number(s.opacity));
+ctx.save();
+ctx.lineJoin = 'round';
+ctx.lineCap = (s.tool === 'highlighter') ? 'butt' : 'round';
+ctx.strokeStyle = s.color || '#00f0ff';
+ctx.fillStyle = s.color || '#00f0ff';
+ctx.lineWidth = Math.max(0.5, Number(s.size) || 3);
+ctx.globalAlpha = isFinite(alpha) ? alpha : 1;
+if (s.tool === 'text') {
+const p = s.points[0];
+const fs = Math.max(8, (Number(s.fontSize) || 0.025) * H);
+ctx.font = fs + "px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+ctx.textBaseline = 'top';
+ctx.fillText(String(s.text || ''), p[0] * W, p[1] * H);
+ctx.restore();
+return;
+}
+const P = s.points.map(p => [Number(p[0]) * W, Number(p[1]) * H]);
+const a = P[0];
+const b = P[P.length - 1];
+if (s.tool === 'line' || s.tool === 'arrow') {
+ctx.beginPath();
+ctx.moveTo(a[0], a[1]);
+ctx.lineTo(b[0], b[1]);
+ctx.stroke();
+if (s.tool === 'arrow') drawArrowHead(ctx, a[0], a[1], b[0], b[1], ctx.lineWidth);
+} else if (s.tool === 'rect') {
+const x = Math.min(a[0], b[0]);
+const y = Math.min(a[1], b[1]);
+const w = Math.abs(b[0] - a[0]);
+const hh = Math.abs(b[1] - a[1]);
+if (s.fill) {
+const ga = ctx.globalAlpha;
+ctx.globalAlpha = ga * 0.22;
+ctx.fillRect(x, y, w, hh);
+ctx.globalAlpha = ga;
+}
+ctx.strokeRect(x, y, w, hh);
+} else if (s.tool === 'ellipse') {
+const cx = (a[0] + b[0]) / 2;
+const cy = (a[1] + b[1]) / 2;
+const rx = Math.max(0.5, Math.abs(b[0] - a[0]) / 2);
+const ry = Math.max(0.5, Math.abs(b[1] - a[1]) / 2);
+ctx.beginPath();
+if (ctx.ellipse) ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+else ctx.arc(cx, cy, Math.max(rx, ry), 0, Math.PI * 2);
+if (s.fill) {
+const ga = ctx.globalAlpha;
+ctx.globalAlpha = ga * 0.22;
+ctx.fill();
+ctx.globalAlpha = ga;
+}
+ctx.stroke();
+} else {
+ctx.beginPath();
+ctx.moveTo(P[0][0], P[0][1]);
+if (P.length < 3) {
+if (P.length === 1) { ctx.lineTo(P[0][0] + 0.6, P[0][1] + 0.6); }
+else { ctx.lineTo(P[1][0], P[1][1]); }
+} else {
+for (let i = 1; i < P.length - 1; i++) {
+const mx = (P[i][0] + P[i + 1][0]) / 2;
+const my = (P[i][1] + P[i + 1][1]) / 2;
+ctx.quadraticCurveTo(P[i][0], P[i][1], mx, my);
+}
+ctx.lineTo(P[P.length - 1][0], P[P.length - 1][1]);
+}
+ctx.stroke();
+}
+ctx.restore();
+}
+function renderBase() {
+bctx.clearRect(0, 0, W, H);
+const rec = activeRecord();
+if (!rec) return;
+rec.strokes.forEach(s => drawStroke(bctx, s));
+}
+function render() {
+if (!mctx) return;
+const rec = activeRecord();
+mctx.clearRect(0, 0, W, H);
+mctx.fillStyle = (rec && rec.background) || '#0a0c14';
+mctx.fillRect(0, 0, W, H);
+if (!rec || rec.showGrid !== false) drawGrid(mctx);
+mctx.drawImage(baseCanvas, 0, 0, W, H);
+if (currentStroke) drawStroke(mctx, currentStroke);
+if (tool === 'eraser' && lastPointer) {
+mctx.save();
+mctx.strokeStyle = 'rgba(255,42,109,0.9)';
+mctx.lineWidth = 1.5;
+mctx.beginPath();
+mctx.arc(lastPointer[0], lastPointer[1], eraserRadius(), 0, Math.PI * 2);
+mctx.stroke();
+mctx.restore();
+}
+emptyHint.style.display = rec ? 'none' : 'flex';
+}
+function eraserRadius() {
+return Math.max(6, (parseInt(sizeInput.value, 10) || 3) * 1.6);
+}
+
+// ---------- Пустое состояние ----------
+const emptyHint = h('div', { class: 'canvas-empty-hint' });
+emptyHint.appendChild(h('div', { textContent: '🎨 В этом курсе пока нет холстов для заметок.' }));
+const emptyBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '＋ Создать первый холст' });
+emptyBtn.addEventListener('click', () => createNewCanvas());
+emptyHint.appendChild(emptyBtn);
+stage.appendChild(emptyHint);
+
+// ---------- Взаимодействие с холстом ----------
+function toNorm(e) {
+const rect = stageCanvas.getBoundingClientRect();
+const w = Math.max(1, rect.width);
+const hh = Math.max(1, rect.height);
+let nx = (e.clientX - rect.left) / w;
+let ny = (e.clientY - rect.top) / hh;
+nx = Math.max(0, Math.min(1, nx));
+ny = Math.max(0, Math.min(1, ny));
+return [nx, ny];
+}
+function distToSegment(px, py, x1, y1, x2, y2) {
+const dx = x2 - x1, dy = y2 - y1;
+const len2 = dx * dx + dy * dy;
+let t = len2 === 0 ? 0 : ((px - x1) * dx + (py - y1) * dy) / len2;
+t = Math.max(0, Math.min(1, t));
+return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+function strokeHit(s, nx, ny, rPx) {
+if (!s || !Array.isArray(s.points) || s.points.length === 0) return false;
+const px = nx * W, py = ny * H;
+const tol = (Number(s.size) || 3) / 2 + rPx;
+if (s.tool === 'text') {
+const p = s.points[0];
+const fs = Math.max(8, (Number(s.fontSize) || 0.025) * H);
+const wApprox = String(s.text || '').length * fs * 0.55;
+return px >= p[0] * W - rPx && px <= p[0] * W + wApprox + rPx && py >= p[1] * H - rPx && py <= p[1] * H + fs + rPx;
+}
+const a = s.points[0];
+const b = s.points[s.points.length - 1];
+if (s.tool === 'line' || s.tool === 'arrow') {
+return distToSegment(px, py, a[0] * W, a[1] * H, b[0] * W, b[1] * H) <= tol;
+}
+if (s.tool === 'rect') {
+const x1 = Math.min(a[0], b[0]) * W, y1 = Math.min(a[1], b[1]) * H;
+const x2 = Math.max(a[0], b[0]) * W, y2 = Math.max(a[1], b[1]) * H;
+if (s.fill && px >= x1 && px <= x2 && py >= y1 && py <= y2) return true;
+return distToSegment(px, py, x1, y1, x2, y1) <= tol ||
+distToSegment(px, py, x2, y1, x2, y2) <= tol ||
+distToSegment(px, py, x2, y2, x1, y2) <= tol ||
+distToSegment(px, py, x1, y2, x1, y1) <= tol;
+}
+if (s.tool === 'ellipse') {
+const cx = (a[0] + b[0]) / 2 * W, cy = (a[1] + b[1]) / 2 * H;
+const rx = Math.max(1, Math.abs(b[0] - a[0]) / 2 * W);
+const ry = Math.max(1, Math.abs(b[1] - a[1]) / 2 * H);
+const v = Math.pow((px - cx) / rx, 2) + Math.pow((py - cy) / ry, 2);
+if (s.fill && v <= 1) return true;
+return Math.abs(Math.sqrt(v) - 1) * Math.min(rx, ry) <= tol;
+}
+for (let i = 0; i < s.points.length; i++) {
+const p = s.points[i];
+if (i > 0) {
+const q = s.points[i - 1];
+if (distToSegment(px, py, q[0] * W, q[1] * H, p[0] * W, p[1] * H) <= tol) return true;
+} else if (Math.hypot(p[0] * W - px, p[1] * H - py) <= tol) return true;
+}
+return false;
+}
+function eraseAt(nx, ny) {
+const rec = activeRecord();
+if (!rec) return;
+const rPx = eraserRadius();
+const kept = rec.strokes.filter(s => !strokeHit(s, nx, ny, rPx));
+if (kept.length !== rec.strokes.length) rec.strokes = kept;
+}
+function makeStroke(t, p) {
+const s = { tool: t, color: colorInput.value, size: parseInt(sizeInput.value, 10) || 3, points: [p] };
+if (t === 'highlighter') { s.opacity = 0.3; s.size = Math.max(8, s.size * 4); }
+if (t === 'rect' || t === 'ellipse' || t === 'line' || t === 'arrow') {
+s.points = [p, [p[0], p[1]]];
+s.fill = !!fillCheck.checked;
+}
+return s;
+}
+function pushHistory(rec) {
+const hh = history(rec.id);
+hh.undo.push(rec.strokes);
+if (hh.undo.length > 100) hh.undo.shift();
+hh.redo.length = 0;
+updateHistoryButtons();
+}
+stageCanvas.addEventListener('pointerdown', (e) => {
+const rec = activeRecord();
+if (!rec) return;
+if (e.pointerType === 'mouse' && e.button !== 0) return;
+e.preventDefault();
+try { stageCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+const p = toNorm(e);
+lastPointer = [(p[0] * W), (p[1] * H)];
+if (tool === 'text') { openTextInput(p); return; }
+drawing = true;
+pushHistory(rec);
+if (tool === 'eraser') {
+erasing = true;
+eraseAt(p[0], p[1]);
+renderBase();
+render();
+} else {
+currentStroke = makeStroke(tool, p);
+render();
+}
+});
+stageCanvas.addEventListener('pointermove', (e) => {
+const p = toNorm(e);
+lastPointer = [p[0] * W, p[1] * H];
+stPos.textContent = 'x: ' + Math.round(p[0] * 100) + '% y: ' + Math.round(p[1] * 100) + '%';
+if (!drawing) { if (tool === 'eraser') render(); return; }
+const rec = activeRecord();
+if (!rec) return;
+if (erasing) {
+eraseAt(p[0], p[1]);
+renderBase();
+render();
+return;
+}
+if (!currentStroke) return;
+if (currentStroke.tool === 'pencil' || currentStroke.tool === 'highlighter') {
+const last = currentStroke.points[currentStroke.points.length - 1];
+const dx = (p[0] - last[0]) * W;
+const dy = (p[1] - last[1]) * H;
+if (dx * dx + dy * dy < 1.6) return;
+currentStroke.points.push(p);
+} else {
+currentStroke.points[1] = p;
+}
+render();
+});
+const endStroke = () => {
+if (!drawing) return;
+drawing = false;
+const rec = activeRecord();
+if (erasing) {
+erasing = false;
+renderBase();
+render();
+if (rec) afterChange(rec);
+return;
+}
+if (currentStroke && rec) {
+let keep = true;
+if (currentStroke.tool === 'pencil' || currentStroke.tool === 'highlighter') {
+if (currentStroke.points.length === 1) {
+currentStroke.points.push([
+Math.min(1, currentStroke.points[0][0] + 0.002),
+Math.min(1, currentStroke.points[0][1] + 0.002)
+]);
+}
+} else {
+const a = currentStroke.points[0];
+const b = currentStroke.points[1];
+if (Math.hypot((b[0] - a[0]) * W, (b[1] - a[1]) * H) < 3) keep = false;
+}
+if (keep) {
+rec.strokes = rec.strokes.concat([currentStroke]);
+} else {
+const hh = history(rec.id);
+hh.undo.pop();
+hh.redo.length = 0;
+}
+}
+currentStroke = null;
+renderBase();
+render();
+if (rec) afterChange(rec);
+updateHistoryButtons();
+};
+stageCanvas.addEventListener('pointerup', endStroke);
+stageCanvas.addEventListener('pointercancel', endStroke);
+stageCanvas.addEventListener('pointerleave', () => { stPos.textContent = 'x: — y: —'; });
+
+function openTextInput(p) {
+const rec = activeRecord();
+if (!rec) return;
+const existing = stage.querySelector('.canvas-text-input');
+if (existing) existing.remove();
+const fsPx = Math.max(14, (parseInt(sizeInput.value, 10) || 3) * 5);
+const inp = h('input', { type: 'text', class: 'canvas-text-input', placeholder: 'Текст → Enter' });
+inp.style.left = Math.max(2, p[0] * W) + 'px';
+inp.style.top = Math.max(2, p[1] * H) + 'px';
+inp.style.color = colorInput.value;
+inp.style.fontSize = fsPx + 'px';
+inp.style.maxWidth = Math.max(120, W - p[0] * W - 8) + 'px';
+stage.appendChild(inp);
+setTimeout(() => inp.focus(), 10);
+let finished = false;
+const commit = () => {
+if (finished) return;
+finished = true;
+const value = inp.value.trim();
+const color = colorInput.value;
+inp.remove();
+if (!value) return;
+const cur = activeRecord();
+if (!cur) return;
+pushHistory(cur);
+cur.strokes = cur.strokes.concat([{
+tool: 'text',
+color: color,
+text: value,
+fontSize: fsPx / Math.max(1, H),
+points: [p]
+}]);
+renderBase();
+render();
+afterChange(cur);
+};
+inp.addEventListener('keydown', (e) => {
+e.stopPropagation();
+if (e.key === 'Enter') { e.preventDefault(); commit(); }
+else if (e.key === 'Escape') { finished = true; inp.remove(); }
+});
+inp.addEventListener('blur', commit);
+}
+
+// ---------- История ----------
+function doUndo() {
+const rec = activeRecord();
+if (!rec) return;
+const hh = history(rec.id);
+if (hh.undo.length === 0) return;
+hh.redo.push(rec.strokes);
+rec.strokes = hh.undo.pop();
+renderBase();
+render();
+afterChange(rec);
+updateHistoryButtons();
+}
+function doRedo() {
+const rec = activeRecord();
+if (!rec) return;
+const hh = history(rec.id);
+if (hh.redo.length === 0) return;
+hh.undo.push(rec.strokes);
+rec.strokes = hh.redo.pop();
+renderBase();
+render();
+afterChange(rec);
+updateHistoryButtons();
+}
+function updateHistoryButtons() {
+const rec = activeRecord();
+const hh = rec ? history(rec.id) : { undo: [], redo: [] };
+undoBtn.disabled = hh.undo.length === 0;
+redoBtn.disabled = hh.redo.length === 0;
+}
+
+// ---------- Сохранение ----------
+function setSaveState(kind, text) {
+stSave.className = 'save-state' + (kind ? ' ' + kind : '');
+stSave.textContent = text || '';
+}
+function afterChange(rec) {
+rec.updatedAt = new Date().toISOString();
+updateStatus();
+refreshListMeta();
+scheduleSave();
+}
+function scheduleSave() {
+setSaveState('saving', 'Сохранение…');
+if (saveTimer) clearTimeout(saveTimer);
+saveTimer = setTimeout(() => { saveTimer = null; doSave(); }, 500);
+}
+function doSave() {
+if (!course) return;
+Promise.resolve(persistCanvases())
+.then(() => setSaveState('saved', '✔ Сохранено в курс'))
+.catch((e) => { console.warn('Ошибка сохранения холстов:', e); setSaveState('error', '✖ Ошибка сохранения'); });
+}
+function updateStatus() {
+const rec = activeRecord();
+const toolInfo = CANVAS_TOOL_LIST.find(t => t.id === tool);
+stTool.textContent = 'Инструмент: ' + (toolInfo ? toolInfo.name : tool);
+stCount.textContent = 'Штрихов: ' + (rec ? rec.strokes.length : 0);
+stName.textContent = rec ? ('«' + rec.title + '»' + (rec.lessonId ? ' · 📎 ' + lessonTitleById(rec.lessonId) : ' · весь курс')) : '';
+titleEl.textContent = 'Холсты · ' + ((course && course.meta.title) || 'курс') + (rec ? ' · ' + rec.title : '');
+}
+
+// ---------- Список холстов ----------
+function refreshList() {
+listEl.innerHTML = '';
+const all = getCourseCanvases();
+const visible = filterLesson.checked ? all.filter(c => !c.lessonId || c.lessonId === currentLessonId) : all;
+countEl.textContent = filterLesson.checked ? (visible.length + ' / ' + all.length) : String(all.length);
+if (visible.length === 0) {
+listEl.appendChild(h('p', { class: 'form-hint', style: 'padding:6px;', textContent: all.length === 0 ? 'Холстов пока нет.' : 'Нет холстов, соответствующих фильтру.' }));
+}
+visible.forEach(rec => {
+const row = h('div', { class: 'canvas-item' + (rec.id === activeId ? ' active' : '') });
+const info = h('div', { class: 'canvas-item-info' });
+info.appendChild(h('div', { class: 'canvas-item-title', textContent: rec.title || 'Без названия' }));
+info.appendChild(h('div', { class: 'canvas-item-meta', textContent: itemMeta(rec) }));
+row.appendChild(info);
+const btns = h('div', { class: 'canvas-item-btns' });
+const dupMini = h('button', { class: 'mini-btn', type: 'button', title: 'Дублировать холст', textContent: '⧉' });
+dupMini.addEventListener('click', (e) => { e.stopPropagation(); duplicateCanvas(rec.id); });
+const delMini = h('button', { class: 'mini-btn danger', type: 'button', title: 'Удалить холст', textContent: '🗑' });
+delMini.addEventListener('click', (e) => { e.stopPropagation(); deleteCanvas(rec.id); });
+btns.appendChild(dupMini);
+btns.appendChild(delMini);
+row.appendChild(btns);
+row.addEventListener('click', () => selectCanvas(rec.id));
+listEl.appendChild(row);
+});
+updateCanvasFab();
+}
+function itemMeta(rec) {
+const n = Array.isArray(rec.strokes) ? rec.strokes.length : 0;
+let m = n + ' ' + pluralStrokes(n);
+if (rec.lessonId) m += ' · 📎 ' + lessonTitleById(rec.lessonId);
+return m;
+}
+function pluralStrokes(n) {
+const m10 = n % 10, m100 = n % 100;
+if (m10 === 1 && m100 !== 11) return 'штрих';
+if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return 'штриха';
+return 'штрихов';
+}
+function refreshListMeta() {
+const rows = listEl.querySelectorAll('.canvas-item');
+const all = getCourseCanvases();
+const visible = filterLesson.checked ? all.filter(c => !c.lessonId || c.lessonId === currentLessonId) : all;
+rows.forEach((row, i) => {
+const rec = visible[i];
+if (!rec) return;
+const metaEl = row.querySelector('.canvas-item-meta');
+if (metaEl) metaEl.textContent = itemMeta(rec);
+});
+updateStatus();
+}
+function refreshLessonOptions() {
+lessonSelect.innerHTML = '';
+lessonSelect.appendChild(h('option', { value: '', textContent: '📎 Весь курс (без привязки)' }));
+if (course) {
+course.lessons.forEach(l => {
+lessonSelect.appendChild(h('option', { value: l.id, textContent: '📎 ' + (l.title || l.id) }));
+});
+}
+}
+function refreshOptions() {
+const rec = activeRecord();
+const has = !!rec;
+[titleInput, lessonSelect, bgInput, gridCheck, dupBtn, pngBtn, expBtn, impBtn, clearBtn, delBtn].forEach(el => { el.disabled = !has; });
+if (!rec) {
+titleInput.value = '';
+lessonSelect.value = '';
+updateStatus();
+return;
+}
+titleInput.value = rec.title || '';
+lessonSelect.value = rec.lessonId || '';
+bgInput.value = /^#[0-9a-f]{6}$/i.test(rec.background || '') ? rec.background : '#0a0c14';
+gridCheck.checked = rec.showGrid !== false;
+updateStatus();
+}
+function selectCanvas(id) {
+activeId = id;
+refreshList();
+refreshOptions();
+renderBase();
+render();
+updateHistoryButtons();
+}
+
+// ---------- Операции с холстами ----------
+function createNewCanvas() {
+if (!course) return;
+const rec = createCanvasRecord();
+if (linkNowCheck.checked && currentLessonId) rec.lessonId = currentLessonId;
+getCourseCanvases().push(rec);
+selectCanvas(rec.id);
+doSave();
+}
+function duplicateCanvas(id) {
+const list = getCourseCanvases();
+const src = list.find(c => c.id === id);
+if (!src) return;
+const copy = JSON.parse(JSON.stringify(src));
+copy.id = 'cv-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+copy.title = (src.title || 'Холст') + ' (копия)';
+copy.createdAt = new Date().toISOString();
+copy.updatedAt = copy.createdAt;
+list.push(copy);
+selectCanvas(copy.id);
+doSave();
+}
+function deleteCanvas(id) {
+const list = getCourseCanvases();
+const rec = list.find(c => c.id === id);
+if (!rec) return;
+if (!confirm('Удалить холст «' + (rec.title || 'Без названия') + '» вместе со всеми заметками?')) return;
+const idx = list.findIndex(c => c.id === id);
+list.splice(idx, 1);
+delete historyMap[id];
+if (activeId === id) {
+activeId = list.length > 0 ? list[Math.max(0, idx - 1)].id : null;
+}
+refreshList();
+refreshOptions();
+renderBase();
+render();
+updateHistoryButtons();
+doSave();
+}
+function clearCanvas() {
+const rec = activeRecord();
+if (!rec) return;
+if (!confirm('Очистить холст «' + rec.title + '»? Действие можно отменить (Ctrl+Z).')) return;
+pushHistory(rec);
+rec.strokes = [];
+renderBase();
+render();
+afterChange(rec);
+}
+function exportPNG() {
+const rec = activeRecord();
+if (!rec) return;
+const scale = 2;
+const c = document.createElement('canvas');
+c.width = Math.max(1, W * scale);
+c.height = Math.max(1, H * scale);
+const ctx = c.getContext('2d');
+ctx.setTransform(scale, 0, 0, scale, 0, 0);
+ctx.fillStyle = rec.background || '#0a0c14';
+ctx.fillRect(0, 0, W, H);
+if (rec.showGrid !== false) drawGrid(ctx);
+rec.strokes.forEach(s => drawStroke(ctx, s));
+c.toBlob((blob) => {
+if (!blob) { alert('Не удалось сформировать PNG.'); return; }
+downloadBlob(blob, slugify(rec.title || 'canvas') + '.png');
+}, 'image/png');
+}
+function exportJSON() {
+const rec = activeRecord();
+if (!rec) return;
+const blob = new Blob([JSON.stringify(rec, null, 2)], { type: 'application/json' });
+downloadBlob(blob, slugify(rec.title || 'canvas') + '.canvas.json');
+}
+importInput.addEventListener('change', () => {
+const file = importInput.files && importInput.files[0];
+importInput.value = '';
+if (!file || !course) return;
+const reader = new FileReader();
+reader.onload = () => {
+try {
+const data = JSON.parse(String(reader.result));
+const items = Array.isArray(data) ? data : [data];
+let added = 0;
+let firstId = null;
+items.forEach(it => {
+const norm = normalizeCanvasRecord(it);
+if (!norm) return;
+norm.id = 'cv-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+norm.title = (norm.title || 'Импортированный холст');
+getCourseCanvases().push(norm);
+if (!firstId) firstId = norm.id;
+added++;
+});
+if (added === 0) { alert('В файле не найдено ни одного холста.'); return; }
+refreshList();
+if (firstId) selectCanvas(firstId);
+doSave();
+} catch (e) {
+alert('Ошибка импорта холста: ' + e.message);
+}
+};
+reader.onerror = () => alert('Не удалось прочитать файл.');
+reader.readAsText(file);
+});
+newBtn.addEventListener('click', () => createNewCanvas());
+dupBtn.addEventListener('click', () => { const rec = activeRecord(); if (rec) duplicateCanvas(rec.id); });
+delBtn.addEventListener('click', () => { const rec = activeRecord(); if (rec) deleteCanvas(rec.id); });
+clearBtn.addEventListener('click', () => clearCanvas());
+pngBtn.addEventListener('click', () => exportPNG());
+expBtn.addEventListener('click', () => exportJSON());
+impBtn.addEventListener('click', () => importInput.click());
+filterLesson.addEventListener('change', () => refreshList());
+titleInput.addEventListener('input', () => {
+const rec = activeRecord();
+if (!rec) return;
+rec.title = titleInput.value;
+refreshListMeta();
+refreshList();
+scheduleSave();
+});
+lessonSelect.addEventListener('change', () => {
+const rec = activeRecord();
+if (!rec) return;
+rec.lessonId = lessonSelect.value || null;
+refreshList();
+updateStatus();
+scheduleSave();
+});
+bgInput.addEventListener('input', () => {
+const rec = activeRecord();
+if (!rec) return;
+rec.background = bgInput.value;
+render();
+scheduleSave();
+});
+gridCheck.addEventListener('change', () => {
+const rec = activeRecord();
+if (!rec) return;
+rec.showGrid = gridCheck.checked;
+render();
+scheduleSave();
+});
+
+// ---------- Инструменты ----------
+function setTool(id) {
+tool = id;
+CANVAS_TOOL_LIST.forEach(t => {
+if (toolButtons[t.id]) toolButtons[t.id].classList.toggle('active', t.id === id);
+});
+stageCanvas.style.cursor = id === 'eraser' ? 'cell' : (id === 'text' ? 'text' : 'crosshair');
+updateStatus();
+render();
+}
+function syncSwatches() {
+const cur = colorInput.value.toLowerCase();
+swatchEls.forEach((sw, i) => sw.classList.toggle('active', CANVAS_SWATCHES[i].toLowerCase() === cur));
+}
+colorInput.addEventListener('change', syncSwatches);
+syncSwatches();
+setTool('pencil');
+
+// ---------- Горячие клавиши ----------
+const HOTKEYS = {};
+CANVAS_TOOL_LIST.forEach(t => { HOTKEYS[t.hotkey] = t.id; });
+document.addEventListener('keydown', (e) => {
+if (!isVisible()) return;
+const t = e.target;
+if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+const k = (e.key || '').toLowerCase();
+if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); doUndo(); return; }
+if ((e.ctrlKey || e.metaKey) && (k === 'y' || (e.shiftKey && k === 'z'))) { e.preventDefault(); doRedo(); return; }
+if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); doSave(); return; }
+if (e.altKey && k === 'escape') { e.preventDefault(); hideWindow(); return; }
+if (!e.ctrlKey && !e.metaKey && !e.altKey && HOTKEYS[k]) { e.preventDefault(); setTool(HOTKEYS[k]); }
+});
+
+// ---------- Видимость окна ----------
+function isVisible() { return root.classList.contains('visible'); }
+function showWindow() {
+root.classList.add('visible');
+requestAnimationFrame(() => { resizeSurface(); });
+}
+function hideWindow() {
+if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; doSave(); }
+root.classList.remove('visible');
+}
+function open(initialId) {
+if (!course) return;
+const list = getCourseCanvases();
+list.forEach(normalizeCanvasRecord);
+if (list.length === 0) {
+createNewCanvas();
+} else if (initialId && list.some(c => c.id === initialId)) {
+selectCanvas(initialId);
+} else if (!list.some(c => c.id === activeId)) {
+selectCanvas(list[0].id);
+} else {
+refreshList();
+refreshOptions();
+}
+refreshLessonOptions();
+refreshOptions();
+showWindow();
+setTimeout(resizeSurface, 30);
+}
+function handleCourseChange() {
+activeId = null;
+Object.keys(historyMap).forEach(k => delete historyMap[k]);
+if (isVisible()) hideWindow();
+if (course && (!Array.isArray(course.meta.canvases))) course.meta.canvases = [];
+refreshLessonOptions();
+refreshList();
+refreshOptions();
+renderBase();
+render();
+}
+function handleLessonChange() {
+refreshLessonOptions();
+refreshOptions();
+refreshList();
+}
+
+if (window.ResizeObserver) {
+const ro = new ResizeObserver(() => resizeSurface());
+ro.observe(stage);
+}
+window.addEventListener('resize', () => { if (isVisible()) resizeSurface(); });
+refreshLessonOptions();
+refreshList();
+refreshOptions();
+updateHistoryButtons();
+setSaveState('', '');
+
+return {
+root: root,
+open: open,
+close: hideWindow,
+isVisible: isVisible,
+handleCourseChange: handleCourseChange,
+handleLessonChange: handleLessonChange
+};
+}
+
 function renderBaseUI() {
 app.appendChild(renderAppHeader());
 const buttonsContainer = h('div', { style: 'display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; align-items:center;' });
@@ -3620,6 +5069,14 @@ buttonsContainer.appendChild(helpBtn);
 const promptBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Генерация промпта', type: 'button' });
 promptBtn.addEventListener('click', openPromptGenerator);
 buttonsContainer.appendChild(promptBtn);
+const canvasOpenBtn = h('button', {
+class: 'toggle-manager-btn',
+textContent: '🎨 Холсты',
+type: 'button',
+title: 'Открыть виртуальные холсты для рукописных заметок (плавающая кнопка 🎨 — то же самое)'
+});
+canvasOpenBtn.addEventListener('click', () => openCanvasWorkspace());
+buttonsContainer.appendChild(canvasOpenBtn);
 buttonsContainer.appendChild(renderModeToggle());
 app.appendChild(buttonsContainer);
 courseManagerPanel = renderCourseManager();
@@ -3673,10 +5130,29 @@ textContent: '✎'
 lessonEditBtn.addEventListener('click', () => openLessonEditor(lesson));
 lessonTitleRow.appendChild(lessonEditBtn);
 }
+const lessonCanvasBtn = h('button', {
+class: 'lesson-edit-btn',
+type: 'button',
+title: 'Открыть холст для заметок к этому уроку',
+textContent: '🎨'
+});
+lessonCanvasBtn.addEventListener('click', () => openCanvasWorkspaceForLesson(lesson.id));
+lessonTitleRow.appendChild(lessonCanvasBtn);
 lessonContainer.appendChild(lessonTitleRow);
 if (lesson.description) lessonContainer.appendChild(h('p', { class: 'text', textContent: lesson.description }));
+const lessonCanvases = getCourseCanvases().filter(c => c.lessonId === lesson.id);
+if (lessonCanvases.length > 0) {
+const cvWrap = h('div', { class: 'callout callout-info' });
+cvWrap.appendChild(h('h4', { textContent: '🎨 Холсты с заметками к этому уроку (' + lessonCanvases.length + ')' }));
+lessonCanvases.forEach(rec => {
+const b = h('button', { class: 'quiz-button', type: 'button', textContent: 'Открыть: ' + (rec.title || 'Холст') });
+b.addEventListener('click', () => openCanvasWorkspace(rec.id));
+cvWrap.appendChild(b);
+});
+lessonContainer.appendChild(cvWrap);
+}
 if (editMode) {
-lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его, переместить, добавить новый или удалить.' }));
+lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его, переместить, добавить новый или удалить. Кнопка 🎨 открывает холст для рукописных заметок.' }));
 }
 const content = h('div', { class: 'lesson-content' });
 if (editMode) {
@@ -3747,6 +5223,23 @@ navContainer.appendChild(nextBtn);
 lessonContainer.appendChild(navContainer);
 app.appendChild(lessonContainer);
 postProcess(lessonContainer);
+onLessonChangedForCanvas();
+}
+function openCanvasWorkspaceForLesson(lessonId) {
+if (!course) { openCanvasWorkspace(); return; }
+const list = getCourseCanvases();
+const linked = list.filter(c => c.lessonId === lessonId);
+if (linked.length > 0) { openCanvasWorkspace(linked[0].id); return; }
+if (!canvasWorkspace) {
+canvasWorkspace = createCanvasWorkspace();
+document.body.appendChild(canvasWorkspace.root);
+}
+canvasWorkspace.open(null);
+const rec = createCanvasRecord(lessonTitleById(lessonId) ? ('Заметки: ' + lessonTitleById(lessonId)) : 'Холст урока');
+rec.lessonId = lessonId;
+list.push(rec);
+canvasWorkspace.open(rec.id);
+persistCanvases().catch(e => console.warn('Не удалось сохранить холст:', e));
 }
 function processMath(element) {
 if (window.renderMathInElement) {
@@ -4628,6 +6121,7 @@ return element;
 }
 async function init() {
 await openDB().catch(e => console.warn('IndexedDB не доступна', e));
+createCanvasFab();
 renderInitialState();
 const urlParams = new URLSearchParams(window.location.search);
 const autoUrl = urlParams.get('url') || urlParams.get('source') || urlParams.get('course');
