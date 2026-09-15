@@ -577,7 +577,50 @@ transition: border-color .3s, box-shadow .3s;
 .crossword-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .crossword-controls .quiz-button { margin-top: 0; }
 
-/* ============ ВИРТУАЛЬНЫЕ ХОЛСТЫ: БЕСКОНЕЧНЫЙ CANVAS + СТАТУСБАР + РЕЖИМ ФОКУСА ============ */
+/* ============ ГЕНЕРАТОР / РЕДАКТОР ПРОМПТОВ ============ */
+.prompt-gen-modal { max-width: 940px; max-height: 88vh; }
+.pg-tabs { display: flex; gap: 6px; margin: 12px 0 14px; flex-wrap: wrap; }
+.pg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pg-field { display: flex; flex-direction: column; gap: 4px; }
+.pg-field.full { grid-column: 1 / -1; }
+.pg-field > label { color: var(--muted); font-size: 0.82em; }
+.pg-field input, .pg-field select, .pg-field textarea {
+background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+padding: 6px 8px; outline: none; font-family: inherit; font-size: 0.92em; width: 100%;
+transition: border-color .3s, box-shadow .3s;
+}
+.pg-field input:focus, .pg-field select:focus, .pg-field textarea:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
+.pg-field textarea.tpl { min-height: 250px; font-family: 'Courier New', monospace; font-size: 0.82em; line-height: 1.5; resize: vertical; }
+.pg-field textarea.result { min-height: 330px; font-family: 'Courier New', monospace; font-size: 0.82em; line-height: 1.5; resize: vertical; }
+.pg-field textarea.extra { min-height: 78px; resize: vertical; }
+.pg-radio-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.pg-radio {
+display: flex; align-items: center; gap: 8px; padding: 9px 14px; flex: 1 1 220px;
+border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .25s; font-size: 0.9em;
+}
+.pg-radio:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.25); }
+.pg-radio input { accent-color: var(--cyan); width: 16px; height: 16px; }
+.pg-radio.active { border-color: var(--cyan); background: rgba(0,240,255,0.1); box-shadow: 0 0 12px rgba(0,240,255,.3); }
+.pg-radio small { display: block; color: var(--muted); font-size: 0.85em; }
+.pg-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 8px; }
+.pg-chip {
+padding: 2px 8px; border: 1px solid var(--border); border-radius: 12px;
+background: rgba(0,240,255,0.06); color: var(--cyan); font-family: 'Courier New', monospace;
+font-size: 0.75em; cursor: pointer; transition: all .2s;
+}
+.pg-chip:hover { background: rgba(0,240,255,0.22); box-shadow: 0 0 8px rgba(0,240,255,.4); transform: translateY(-1px); }
+.pg-note { color: var(--muted); font-size: 0.82em; margin: 6px 0; }
+.pg-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.pg-btn-row .quiz-button, .pg-btn-row .copy-btn { margin-top: 0; margin-left: 0; }
+.pg-counter { color: var(--muted); font-size: 0.8em; align-self: center; margin-left: auto; }
+.pg-section-title {
+color: var(--cyan); font-size: 0.76em; text-transform: uppercase; letter-spacing: 1px;
+border-bottom: 1px solid var(--border); padding-bottom: 4px; margin: 14px 0 10px;
+}
+.pg-section-title:first-child { margin-top: 0; }
+.pg-hidden { display: none !important; }
+
+/* ============ ВИРТУАЛЬНЫЕ ХОЛСТЫ ============ */
 .canvas-fab {
 position: fixed; z-index: 900; width: 58px; height: 58px; border-radius: 50%;
 display: none; align-items: center; justify-content: center;
@@ -720,7 +763,6 @@ position: absolute; inset: 0; display: flex; flex-direction: column; align-items
 gap: 12px; color: var(--muted); text-align: center; padding: 20px; z-index: 6; pointer-events: none;
 }
 .canvas-empty-hint button { pointer-events: auto; }
-/* ---- единый лаконичный статусбар ---- */
 .canvas-statusbar {
 flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 3px 9px; min-height: 28px;
 border-top: 1px solid var(--border); background: rgba(0,0,0,0.4);
@@ -738,9 +780,7 @@ background: transparent; border: 1px solid var(--border); color: var(--cyan); bo
 cursor: pointer; font-size: 0.95em; line-height: 1; padding: 0; transition: all .2s; font-family: inherit;
 }
 .sb-mini:hover { background: rgba(0,240,255,.18); box-shadow: 0 0 6px rgba(0,240,255,.4); }
-.zoom-label {
-min-width: 46px; text-align: center; color: var(--cyan); font-weight: bold; cursor: pointer; user-select: none;
-}
+.zoom-label { min-width: 46px; text-align: center; color: var(--cyan); font-weight: bold; cursor: pointer; user-select: none; }
 .zoom-label:hover { text-shadow: 0 0 8px var(--cyan); }
 .sb-save { font-weight: bold; }
 .sb-save.saving { color: var(--yellow); }
@@ -752,7 +792,6 @@ color: var(--muted); cursor: pointer; font-size: 0.95em; line-height: 1; display
 align-items: center; justify-content: center; transition: all .2s; font-family: inherit; padding: 0;
 }
 .sb-help-btn:hover { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 6px rgba(0,240,255,.4); }
-/* ---- всплывающие панели ---- */
 .canvas-popover {
 position: absolute; z-index: 45; display: none; background: rgba(10,14,26,0.97);
 border: 1px solid var(--border); border-radius: 8px; padding: 8px;
@@ -777,7 +816,6 @@ color: var(--cyan); font-family: 'Courier New', monospace; font-size: 0.95em;
 }
 .help-popover ul { list-style: none; padding: 0; margin: 0; }
 .help-popover li { padding: 1px 0; }
-/* ---- режим фокуса на холсте ---- */
 .focus-toolbar {
 display: none; position: absolute; z-index: 44; top: 10px; left: 50%; transform: translateX(-50%);
 gap: 4px; padding: 5px 7px; align-items: center; flex-wrap: wrap; justify-content: center;
@@ -820,6 +858,10 @@ box-shadow: 6px 0 24px rgba(0,0,0,.6); background: var(--panel);
 }
 @media (min-width: 721px) {
 .canvas-window.sidebar-closed .canvas-sidebar { display: none; }
+}
+@media (max-width: 700px) {
+.pg-grid { grid-template-columns: 1fr; }
+.prompt-gen-modal { max-height: 92vh; }
 }
 @media (max-width: 600px) {
 .columns { flex-direction: column; }
@@ -1079,7 +1121,7 @@ const info = h('div', { class: 'app-info' });
 info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
 info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
 header.appendChild(info);
-header.appendChild(h('span', { class: 'app-version', textContent: 'v1.12.0' }));
+header.appendChild(h('span', { class: 'app-version', textContent: 'v1.13.0' }));
 return header;
 }
 function renderCourseHeader() {
@@ -3701,23 +3743,26 @@ helpDiv.innerHTML = `
 "meta": { "title": "...", "description": "...", "author": "...", "theme": { ... }, "canvases": [ ... ] },
 "lessons": [ { "id": "lesson-1", "title": "...", "blocks": [ ... ] } ]
 }</code></pre>
-<p><strong>Создание нового курса:</strong> используйте редактор JSON через кнопку "Новый курс" (доступна в режиме редактирования). Для генерации подробных лекций используйте «Генерацию промпта».</p>
+<h4 style="color: #fff; margin-top: 10px;">🧠 Генератор и редактор промптов</h4>
+<p>Кнопка <strong>«Генерация промпта»</strong> открывает мастер из трёх вкладок:</p>
+<p><strong>⚙ Параметры</strong> — режим генерации: <code>Весь курс</code> (полный JSON курса со всеми уроками) или <code>Один урок</code> (JSON одного урока — удобно досоздавать или переписывать отдельные занятия уже существующего курса). Здесь же задаются тема, язык, количество уроков, минимум блоков в уроке, автор/длительность/уровень, номер и тема урока, его роль (первый / основной / итоговый), контекст курса и произвольные дополнительные требования.</p>
+<p><strong>📝 Шаблоны</strong> — оба промпта (для курса и для урока) <strong>полностью редактируются</strong>. Доступные подстановки вставляются кликом по «чипам»: <code>{{TOPIC}}</code>, <code>{{LANGUAGE}}</code>, <code>{{LESSONS_COUNT}}</code>, <code>{{BLOCKS_PER_LESSON}}</code>, <code>{{LESSON_NUMBER}}</code>, <code>{{LESSON_TITLE}}</code>, <code>{{LESSON_POSITION}}</code>, <code>{{COURSE_CONTEXT}}</code>, <code>{{AUTHOR}}</code>, <code>{{DURATION}}</code>, <code>{{LEVEL}}</code>, <code>{{EXTRA}}</code>, <code>{{SCHEMA}}</code>. Подстановка <code>{{SCHEMA}}</code> формируется <em>автоматически</em> из актуальных схем блоков плеера, поэтому промпт всегда соответствует последним изменениям. Шаблоны сохраняются в браузере; есть кнопки «Сбросить к стандартным», «Экспорт» и «Импорт» шаблонов, а также просмотр текущей автосхемы.</p>
+<p><strong>👁 Результат</strong> — собранный промпт, который можно дополнительно отредактировать вручную, скопировать в буфер или скачать как <code>.txt</code>. Параметры и результат сохраняются между запусками.</p>
+<p>В режиме редактирования рядом с заголовком урока есть кнопка <strong>🧠</strong> — она сразу открывает генератор в режиме «Один урок» с подставленными номером, темой урока и контекстом курса.</p>
 <h4 style="color: #fff; margin-top: 10px;">🎨 Виртуальные холсты для заметок</h4>
-<p>Плавающая кнопка <strong>🎨</strong> (sticky-кнопка) доступна при загруженном курсе. Её можно <strong>перетащить</strong> в любое место экрана — позиция фиксируется и запоминается между сессиями; обычный клик (без перетаскивания) открывает рабочее окно холстов. Кнопка 🎨 также есть в заголовке каждого урока.</p>
+<p>Плавающая кнопка <strong>🎨</strong> (sticky-кнопка) доступна при загруженном курсе. Её можно <strong>перетащить</strong> в любое место экрана — позиция фиксируется и запоминается между сессиями; обычный клик (без перетаскивания) открывает рабочее окно холстов.</p>
 <p><strong>Бесконечный холст:</strong> рабочая область не имеет границ — рисовать можно в любом направлении, координаты не ограничены (в том числе отрицательные). Начало координат (0;0) отмечено осями, сетка бесконечная и адаптивная к масштабу.</p>
-<p><strong>Лаконичный интерфейс и статусбар:</strong> вся служебная информация собрана в одной нижней строке — статусбаре: название холста и привязка к уроку, текущий инструмент с цветом и толщиной, координаты курсора, масштаб с кнопками <code>−</code>/<code>+</code>/<code>▣</code>, число штрихов, состояние автосохранения и кнопка <code>?</code> со шпаргалкой по горячим клавишам. Панель инструментов содержит только то, что нужно во время рисования; палитра цветов, произвольный цвет и заливка фигур спрятаны в компактное всплывающее окно по кнопке с цветовым индикатором.</p>
-<p><strong>Режим фокуса на холсте (🎯 или клавиша F):</strong> скрывает заголовок окна, боковую панель и панель инструментов, разворачивает окно на весь экран и оставляет только холст, полупрозрачный статусбар и мини-панель инструментов. Через ~2 секунды бездействия интерфейс плавно растворяется, чтобы ничего не отвлекало от рисования; достаточно пошевелить мышью или навести курсор на панели. Выход — <code>F</code>, <code>Esc</code> или кнопка <code>⤡</code>. В этом режиме <code>Tab</code> не уводит фокус на элементы интерфейса — фокус удерживается на холсте, поэтому горячие клавиши работают сразу после клика по любой кнопке.</p>
-<p><strong>Инструменты рисования:</strong> карандаш (✏), маркер-выделитель (🖍), ластик (⌫ — удаляет штрихи целиком), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯), текст (T), рука (✋). Горячие клавиши: P, H, E, L, A, R, O, T, V. Отмена/повтор: Ctrl+Z / Ctrl+Y, сохранить: Ctrl+S.</p>
-<p><strong>Перемещение и масштаб:</strong> инструмент «Рука» (V) · средняя кнопка мыши · пробел + мышь · колесо (панорама) · Ctrl + колесо (зум к курсору) · щипок двумя пальцами · стрелки (Shift — быстрее). Кнопки: <code>−</code>/<code>+</code> — зум, <code>%</code> — 100 %, <code>▣</code> — вписать содержимое, <code>⌂</code> — к началу координат. Клавиши: Ctrl + «+» / Ctrl + «−» / Ctrl + 0 / Ctrl + 1. Масштаб и позиция вида сохраняются для каждого холста отдельно.</p>
-<p><strong>Управление холстами:</strong> в левой панели — список холстов курса: создание, дублирование, удаление, переименование, привязка к уроку, цвет фона и сетка; экспорт PNG (по границам содержимого), экспорт/импорт JSON холста.</p>
-<p><strong>Окно холста</strong> можно перемещать за заголовок, изменять его размер за края и углы, разворачивать на весь экран (⤢) и переводить в нативный полноэкранный режим (⛶), сворачивать (—) и закрывать (×). Позиция и размер окна запоминаются.</p>
-<p><strong>Хранение:</strong> все штрихи хранятся как векторные последовательности абсолютных координат бесконечной плоскости в поле <code>meta.canvases</code> описания курса и автоматически сохраняются в IndexedDB вместе с курсом. Формат записи (version 2):</p>
+<p><strong>Лаконичный интерфейс и статусбар:</strong> вся служебная информация собрана в одной нижней строке — название холста и привязка к уроку, инструмент с цветом и толщиной, координаты курсора, масштаб с кнопками <code>−</code>/<code>+</code>/<code>▣</code>/<code>⌂</code>, число штрихов, состояние автосохранения и кнопка <code>?</code> со шпаргалкой. Палитра цветов и заливка фигур спрятаны во всплывающее окно по кнопке с цветовым индикатором.</p>
+<p><strong>Режим фокуса на холсте (🎯 или клавиша F):</strong> скрывает заголовок окна, боковую панель и панель инструментов, разворачивает окно на весь экран и оставляет только холст, полупрозрачный статусбар и мини-панель инструментов. Через ~2 секунды бездействия интерфейс растворяется; выход — <code>F</code>, <code>Esc</code> или <code>⤡</code>. В этом режиме <code>Tab</code> не уводит фокус на элементы интерфейса — фокус удерживается на холсте, поэтому горячие клавиши работают сразу после клика по любой кнопке.</p>
+<p><strong>Инструменты:</strong> карандаш (✏), маркер (🖍), ластик (⌫), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯), текст (T), рука (✋). Горячие клавиши: P, H, E, L, A, R, O, T, V; Ctrl+Z / Ctrl+Y / Ctrl+S.</p>
+<p><strong>Перемещение и масштаб:</strong> «Рука» (V) · средняя кнопка мыши · пробел + мышь · колесо (панорама) · Ctrl + колесо (зум к курсору) · щипок двумя пальцами · стрелки (Shift — быстрее). <code>▣</code> — вписать содержимое, <code>⌂</code> — к началу координат, <code>Ctrl 0</code> / <code>Ctrl 1</code>. Вид каждого холста запоминается.</p>
+<p><strong>Управление холстами:</strong> создание, дублирование, удаление, переименование, привязка к уроку, цвет фона, сетка, экспорт PNG (по границам содержимого), экспорт/импорт JSON.</p>
+<p><strong>Хранение:</strong> штрихи хранятся как векторные последовательности абсолютных координат в поле <code>meta.canvases</code> описания курса и автоматически сохраняются в IndexedDB вместе с курсом. Формат (version 2):</p>
 <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>"canvases": [
 {
 "id": "cv-...", "version": 2, "title": "Холст 1", "lessonId": null,
 "background": "#0a0c14", "showGrid": true,
 "view": { "scale": 1, "cx": 0, "cy": 0 },
-"createdAt": "...", "updatedAt": "...",
 "strokes": [
 { "tool": "pencil", "color": "#00f0ff", "size": 3, "points": [[-120.5, 40], [-96, 58.2]] },
 { "tool": "rect", "color": "#ff2a6d", "size": 2, "fill": true, "points": [[10, 20], [320, 210]] },
@@ -3725,17 +3770,14 @@ helpDiv.innerHTML = `
 ]
 }
 ]</code></pre>
-<p>Старые холсты (version 1, нормализованные координаты 0…1) автоматически конвертируются в абсолютные координаты при загрузке.</p>
 <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
 <p>Откройте урок в режиме редактирования и наведите курсор на любой блок — появится панель инструментов: <code>✎</code> — редактировать блок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить новый блок после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>.</p>
 <h4 style="color: #fff; margin-top: 10px;">Аудио и видео</h4>
-<p>Блоки <code>video</code> и <code>audio</code> поддерживают поля: <code>src</code> (URL медиафайла), <code>caption</code>, <code>mimeType</code> (определяется автоматически по расширению, если не задан), <code>speedControl</code> (переключатель скорости), <code>loop</code>, <code>muted</code>, <code>autoplay</code> (для видео автозапуск включается без звука из-за ограничений браузеров). Видео масштабируется на всю ширину блока; при ошибке загрузки отображается предупреждение со ссылкой.</p>
+<p>Блоки <code>video</code> и <code>audio</code> поддерживают поля: <code>src</code>, <code>caption</code>, <code>mimeType</code> (определяется автоматически по расширению), <code>speedControl</code>, <code>loop</code>, <code>muted</code>, <code>autoplay</code> (для видео автозапуск включается без звука). При ошибке загрузки отображается предупреждение со ссылкой.</p>
 <h4 style="color: #fff; margin-top: 10px;">Размеры и масштабирование блоков</h4>
-<p>Любой блок поддерживает поля <code>width</code>, <code>height</code>, <code>maxWidth</code>, <code>maxHeight</code>, <code>minWidth</code>, <code>minHeight</code> и флаг <code>autoScale</code> (по умолчанию включён). Для медиаблоков размеры применяются непосредственно к медиаэлементу с сохранением пропорций. Для контейнерных блоков при заданной высоте включается внутренняя прокрутка, поэтому содержимое не перекрывает последующие блоки.</p>
-<h4 style="color: #fff; margin-top: 10px;">График функции (тип <code>graph</code>)</h4>
-<p>2D (<code>y = f(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), параметрические кривые (<code>parametric: true</code> + <code>paramX/paramY/paramZ</code>). Интерактивные параметры — массив <code>params</code> отображаются как слайдеры.</p>
-<h4 style="color: #fff; margin-top: 10px;">3D объект (тип <code>model3d</code>)</h4>
-<p>Просмотр 3D-моделей <code>.glb</code>/<code>.gltf</code>: по URL (поле <code>src</code>) или из локального файла. В панели доступно управление освещением: пресеты (<code>lightPreset</code>: studio, warm, cold, night, neon), интенсивность и цвет ключевого света (<code>lightIntensity</code>, <code>lightColor</code>), интенсивность и цвет рассеянного света (<code>ambientIntensity</code>, <code>ambientColor</code>), цвет фона (<code>background</code>), автовращение (<code>autoRotate</code>) и видимость сетки (<code>showGrid</code>).</p>
+<p>Любой блок поддерживает поля <code>width</code>, <code>height</code>, <code>maxWidth</code>, <code>maxHeight</code>, <code>minWidth</code>, <code>minHeight</code> и флаг <code>autoScale</code> (по умолчанию включён).</p>
+<h4 style="color: #fff; margin-top: 10px;">График функции (тип <code>graph</code>) и 3D (<code>model3d</code>)</h4>
+<p>2D (<code>y = f(x)</code>), 3D-поверхность (<code>z = f(x,y)</code>), параметрические кривые (<code>parametric: true</code> + <code>paramX/paramY/paramZ</code>), интерактивные параметры <code>params</code>. Просмотр 3D-моделей <code>.glb</code>/<code>.gltf</code> по URL или из файла с управлением освещением (пресеты studio/warm/cold/night/neon, ключевой и рассеянный свет, фон, автовращение, сетка).</p>
 <h4 style="color: #fff; margin-top: 10px;">Дополнительные типы блоков</h4>
 <p><code>flashcards</code>, <code>checklist</code>, <code>quote</code>, <code>glossary</code>, <code>equation</code>, <code>youtube</code>, <code>kanban</code>, <code>stats</code>, <code>countdown</code>, <code>tree</code>, <code>truefalse</code>, <code>divider</code>, <code>download</code>, <code>hotspots</code>, <code>crossword</code>.</p>
 `;
@@ -3746,146 +3788,646 @@ overlay.addEventListener('click', (e) => {
 if (e.target === overlay) overlay.remove();
 });
 }
-function openPromptGenerator() {
-const overlay = h('div', { class: 'modal-overlay' });
-const content = h('div', { class: 'modal-content' });
-const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
-closeBtn.addEventListener('click', () => overlay.remove());
-content.appendChild(closeBtn);
-content.appendChild(h('h3', { textContent: 'Генератор промпта для LLM', class: 'heading' }));
-const topicRow = h('div', { style: 'display:flex; gap:10px; margin:15px 0;' });
-const topicInput = h('input', { type: 'text', placeholder: 'Введите тему курса', class: 'fill-blank-input', style: 'flex:1;' });
-const generateBtn = h('button', { class: 'quiz-button', textContent: 'Сгенерировать промпт', type: 'button' });
-topicRow.appendChild(topicInput);
-topicRow.appendChild(generateBtn);
-content.appendChild(topicRow);
-const promptArea = h('textarea', { class: 'prompt-textarea', placeholder: 'Здесь появится промпт...' });
-content.appendChild(promptArea);
-const copyRow = h('div', { style: 'display:flex; gap:10px; margin-top:10px;' });
-const copyBtn = h('button', { class: 'copy-btn', textContent: 'Копировать в буфер', type: 'button' });
-copyBtn.addEventListener('click', async () => {
-if (!promptArea.value) {
-alert('Промпт пуст. Сначала сгенерируйте.');
-return;
+
+// =====================================================================
+// ======== ГЕНЕРАТОР И РЕДАКТОР ПРОМПТОВ (КУРС / ОДИН УРОК) ==========
+// =====================================================================
+const PROMPT_TPL_COURSE_KEY = 'lms_prompt_tpl_course_v3';
+const PROMPT_TPL_LESSON_KEY = 'lms_prompt_tpl_lesson_v3';
+const PROMPT_SETTINGS_KEY = 'lms_prompt_settings_v3';
+const PROMPT_PLACEHOLDERS_COURSE = [
+'{{TOPIC}}', '{{LANGUAGE}}', '{{LESSONS_COUNT}}', '{{BLOCKS_PER_LESSON}}',
+'{{AUTHOR}}', '{{DURATION}}', '{{LEVEL}}', '{{EXTRA}}', '{{SCHEMA}}'
+];
+const PROMPT_PLACEHOLDERS_LESSON = [
+'{{TOPIC}}', '{{LESSON_TITLE}}', '{{LESSON_NUMBER}}', '{{LESSONS_COUNT}}', '{{LESSON_POSITION}}',
+'{{COURSE_CONTEXT}}', '{{BLOCKS_PER_LESSON}}', '{{LANGUAGE}}', '{{AUTHOR}}',
+'{{DURATION}}', '{{LEVEL}}', '{{EXTRA}}', '{{SCHEMA}}'
+];
+const LESSON_POSITION_TEXT = {
+first: 'первый урок курса — обзорный: введение в тему, карта курса, ключевые понятия и определения, мотивация обучающегося, обзор инструментов и методов',
+middle: 'основной (срединный) урок курса — глубокое раскрытие темы: теория, примеры, иллюстрации, практические задания и контроль понимания',
+last: 'итоговый урок курса — обобщение и систематизация материала, итоговая проверка знаний (quiz, multi-quiz, crossword), выводы, практические рекомендации и направления дальнейшего изучения'
+};
+function shortFieldLabel(f) {
+const parts = String(f.label || f.key).split('—');
+const txt = (parts.length > 1 ? parts.slice(1).join('—') : parts[0]).trim();
+return (txt.replace(/["\\\n\r]/g, '').substring(0, 44)) || f.key;
 }
+function exampleForField(f) {
+if (!f) return '""';
+if (f.type === 'select') return JSON.stringify((f.options && f.options[0]) || '');
+if (f.type === 'checkbox') return 'true';
+if (f.type === 'number') {
+if (f.key === 'correct') return '0';
+if (f.key === 'level') return '2';
+if (f.key === 'value' || f.key === 'default') return '1';
+if (f.key === 'seconds') return '300';
+if (f.key === 'points') return '300';
+if (f.min !== undefined) return String(f.min);
+return '10';
+}
+if (f.type === 'blocks' || f.type === 'treelist') return '[ ...блоки... ]';
+if (f.type === 'json') return '{ "1": "ответ" }';
+if (f.type === 'array') {
+const is = f.itemSchema || { kind: 'string' };
+if (is.kind === 'string') return '["' + shortFieldLabel(f) + ' 1", "' + shortFieldLabel(f) + ' 2"]';
+if (is.kind === 'number') return '[0, 2]';
+if (is.kind === 'array') return '[["ячейка 1", "ячейка 2"]]';
+if (is.kind === 'blocks') return '[ ...блоки... ]';
+if (is.kind === 'object') {
+const inner = (is.fields || []).map(sf => `"${sf.key}": ${exampleForField(sf)}`).join(', ');
+return '[{ ' + inner + ' }]';
+}
+return '[]';
+}
+return '"' + shortFieldLabel(f) + '"';
+}
+function buildSchemaText() {
+const lines = [];
+let i = 1;
+Object.keys(BLOCK_SCHEMAS).forEach(type => {
+const parts = BLOCK_SCHEMAS[type].filter(f => f.key && !f.section).map(f => `"${f.key}": ${exampleForField(f)}`);
+lines.push(i + '. ' + type + ': { "type": "' + type + '"' + (parts.length ? ', ' + parts.join(', ') : '') + ' }');
+i++;
+});
+lines.push('');
+lines.push('ОПЦИИ РАЗМЕРА ДЛЯ ЛЮБОГО БЛОКА: ' + COMMON_SIZE_FIELDS.filter(f => f.key).map(f => f.key).join(', ') + ', а также autoScale (по умолчанию true).');
+lines.push('СТРУКТУРА УРОКА: { "id": "lesson-1", "title": "...", "description": "...", "blocks": [ ... ] }.');
+lines.push('ПОЛЯ meta КУРСА: title, description, author, duration, level, theme ({} — используется тема плеера), canvases ([] — виртуальные холсты для рукописных заметок; заполняются плеером, всегда оставляй пустым массивом).');
+lines.push('');
+lines.push('ВАЖНЫЕ УТОЧНЕНИЯ ПО БЛОКАМ:');
+lines.push('- video/audio: mimeType можно не указывать — он определится по расширению; autoplay для видео включается без звука; для внешних файлов нужен CORS.');
+lines.push('- graph: mode "2d" → equation вида "y = f(x)"; mode "3d" → "z = f(x,y)"; parametric true → paramX/paramY/paramZ как функции t и поля tMin/tMax; params — массив слайдеров { name, value, min, max, step }, имена параметров чувствительны к регистру и подставляются прямо в уравнение.');
+lines.push('- model3d: src — URL .glb/.gltf; lightPreset — studio|warm|cold|night|neon; lightColor/lightIntensity (0–3) — ключевой свет; ambientColor/ambientIntensity (0–3) — рассеянный свет; background — цвет фона; showGrid, autoRotate.');
+lines.push('- fill-blank: пропуски в тексте записываются как двойные фигурные скобки с номером — 1, 2 и т.д. в двойных скобках; answers — объект, где ключи совпадают с номерами пропусков.');
+lines.push('- equation: latex без ограничителей $$; в JSON обратные слэши удваиваются (например "x = \\\\frac{-b}{2a}").');
+lines.push('- hotspots: координаты x/y — проценты (0–100) от размеров изображения.');
+lines.push('- crossword: слова размещаются на общей сетке через row/col (с 0) и direction "across"|"down"; пересечения должны совпадать по буквам.');
+lines.push('- mermaid: код диаграммы (graph TD, flowchart, sequenceDiagram, mindmap и т. п.) без markdown-обёрток.');
+lines.push('- svg: полноценная разметка <svg xmlns="http://www.w3.org/2000/svg" viewBox="...">...</svg>.');
+return lines.join('\n');
+}
+function defaultCourseTemplate() {
+return [
+'Ты — эксперт по разработке интерактивных образовательных курсов, методист и технический писатель.',
+'Задача: создать подробный, глубокий и методически выверенный учебный курс (конспект лекций) на тему «{{TOPIC}}» в формате JSON для плеера NEON LMS PLAYER.',
+'',
+'=== ЭТАП 1. ИССЛЕДОВАНИЕ ТЕМЫ ===',
+'- Перед написанием каждого урока выполни поиск информации в интернете по нескольким независимым источникам.',
+'- Опирайся на авторитетные материалы: учебники и учебные пособия, научные статьи и обзоры, официальные документации и руководства, государственные и международные стандарты (ГОСТ, ISO, IEC, RFC), открытые курсы ведущих университетов.',
+'- На каждый урок используй не менее 3–5 различных источников.',
+'- В конце каждого урока обязательно добавь раздел «Источники» (блок section или callout со списком): название источника и его полный реальный URL.',
+'',
+'=== ЭТАП 2. ТРЕБОВАНИЯ К ССЫЛКАМ ===',
+'- Все URL (источники, изображения, видео, аудио, 3D-модели) должны быть получены реальным поиском и вести на существующие страницы или файлы.',
+'- ЗАПРЕЩЕНО выдумывать, угадывать и конструировать URL — используй только адреса, реально найденные в результатах поиска.',
+'- Для блоков video и audio указывай прямые ссылки на медиафайлы (.mp4/.webm, .mp3/.ogg/.wav/.m4a). Поле mimeType не указывай, если тип файла неизвестен.',
+'- Если достоверный источник найти не удалось — не указывай ссылку вовсе; замени иллюстрацию блоком svg, mermaid или graph.',
+'',
+'=== ЭТАП 3. СТРУКТУРА КУРСА ===',
+'- Количество уроков: {{LESSONS_COUNT}}.',
+'- Первый урок — обзорный (введение, карта курса, ключевые понятия, glossary), последний — итоговый (обобщение, итоговая проверка, выводы).',
+'- В каждом уроке не менее {{BLOCKS_PER_LESSON}} блоков.',
+'- Схема урока: введение → основная часть (section с вложенными блоками) → определения (glossary, callout) → иллюстрации (mermaid, svg, image, hotspots, graph, table) → практика и самопроверка (quiz, multi-quiz, fill-blank, truefalse, match, sort) → краткие итоги → источники.',
+'- Уроки должны быть логически связаны: каждый следующий опирается на предыдущий, без повторов одного и того же материала.',
+'',
+'=== ЭТАП 4. ОФОРМЛЕНИЕ И РАЗНООБРАЗИЕ ===',
+'- Язык изложения: {{LANGUAGE}}.',
+'- Используй разнообразные типы блоков из схемы ниже; не повторяй один и тот же тип более 3 раз подряд.',
+'- Формулы оформляй синтаксисом KaTeX: внутри блоков text через одинарные или двойные доллары, либо отдельным блоком equation (поле latex без ограничителей).',
+'- Структуры, процессы и классификации визуализируй блоками mermaid и svg; зависимости и функции — блоком graph (2d/3d, при необходимости с интерактивными params).',
+'- Блоки кода размещай преимущественно внутри блока modal, чтобы не перегружать ленту урока.',
+'- Для длинных перечней и справочных данных используй accordion, tabs, steps, tree, table.',
+'- Обязательный минимум на курс: не менее 3 блоков quiz, 1 fill-blank, 1 multi-quiz или match, 1 диаграмма (chart или pie), 1 mermaid, 1 svg, 1 timeline или steps.',
+'- Каждый урок заверши блоком checklist («Что нужно уметь после урока») и/или flashcards для запоминания терминов.',
+'',
+'=== ЭТАП 5. КАЧЕСТВА JSON ===',
+'- JSON должен быть строго валидным: двойные кавычки, без комментариев, без завершающих запятых, без неэкранированных переводов строк внутри строк.',
+'- В строках JSON используй \\n для переносов и двойной обратный слэш для LaTeX-команд.',
+'- meta.theme оставь пустым объектом {} — оформление задаётся темой плеера.',
+'- meta.canvases ОБЯЗАТЕЛЬНО оставь пустым массивом [] — это поле виртуальных холстов для рукописных заметок, плеер заполняет его сам.',
+'',
+'=== ЭТАП 6. МЕТАДАННЫЕ КУРСА ===',
+'- meta.title: «{{TOPIC}}» (допустимо уточняющее продолжение).',
+'- meta.description: 2–3 предложения о содержании и целевой аудитории курса.',
+'- meta.author: «{{AUTHOR}}»; meta.duration: «{{DURATION}}»; meta.level: «{{LEVEL}}».',
+'',
+'=== ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ ЗАКАЗЧИКА ===',
+'{{EXTRA}}',
+'',
+'=== ФОРМАТ ОТВЕТА ===',
+'Верни ТОЛЬКО валидный JSON курса — без пояснений, без markdown-обёрток и без текста до или после объекта:',
+'{',
+'  "meta": { "title": "...", "description": "...", "author": "...", "duration": "...", "level": "...", "theme": {}, "canvases": [] },',
+'  "lessons": [ { "id": "lesson-1", "title": "...", "description": "...", "blocks": [ ... ] } ]',
+'}',
+'',
+'=== СХЕМА БЛОКОВ ПЛЕЕРА ===',
+'{{SCHEMA}}'
+].join('\n');
+}
+function defaultLessonTemplate() {
+return [
+'Ты — эксперт по разработке интерактивных образовательных курсов, методист и технический писатель.',
+'Задача: создать ОДИН урок «{{LESSON_TITLE}}» для курса «{{TOPIC}}» в формате JSON для плеера NEON LMS PLAYER.',
+'Нужен только объект урока, а не весь курс.',
+'',
+'=== КОНТЕКСТ КУРСА ===',
+'{{COURSE_CONTEXT}}',
+'',
+'=== ПАРАМЕТРЫ УРОКА ===',
+'- Номер урока в курсе: {{LESSON_NUMBER}} из {{LESSONS_COUNT}}.',
+'- Роль урока: {{LESSON_POSITION}}.',
+'- Язык изложения: {{LANGUAGE}}.',
+'- Минимальное количество блоков: {{BLOCKS_PER_LESSON}}.',
+'- Урок должен быть самодостаточным, но согласованным с контекстом курса: не повторяй материал соседних уроков и опирайся на уже введённые понятия.',
+'',
+'=== ЭТАП 1. ИССЛЕДОВАНИЕ ТЕМЫ ===',
+'- Перед написанием урока выполни поиск информации в интернете по теме урока и используй не менее 3–5 независимых авторитетных источников (учебники, научные статьи, официальные документации, стандарты ГОСТ/ISO/IEC/RFC, открытые университетские курсы).',
+'- В конце урока обязательно добавь раздел «Источники» (блок section или callout со списком): название и полный реальный URL.',
+'',
+'=== ЭТАП 2. ТРЕБОВАНИЯ К ССЫЛКАМ ===',
+'- Все URL должны быть получены реальным поиском и вести на существующие страницы или файлы.',
+'- ЗАПРЕЩЕНО выдумывать или конструировать URL.',
+'- Для video и audio указывай прямые ссылки на медиафайлы (.mp4/.webm, .mp3/.ogg/.wav/.m4a); mimeType не указывай, если тип неизвестен.',
+'- Нет достоверного источника — не указывай ссылку; замени иллюстрацию блоком svg, mermaid или graph.',
+'',
+'=== ЭТАП 3. СТРУКТУРА УРОКА ===',
+'1) Введение: зачем нужен материал, связь с предыдущими уроками (heading + text или callout).',
+'2) Основные разделы: несколько блоков section с вложенными блоками (text, list, table, glossary, svg, mermaid, graph, image, hotspots).',
+'3) Определения и ключевые термины: glossary и/или flip-card / flashcards.',
+'4) Практика и самопроверка: quiz (не менее 2), multi-quiz или match, fill-blank, truefalse, sort или crossword.',
+'5) Итоги: краткие выводы (callout variant "success"), checklist «Что нужно уметь», при необходимости stats или kanban.',
+'6) Источники.',
+'',
+'=== ЭТАП 4. ОФОРМЛЕНИЕ ===',
+'- Используй разнообразные типы блоков из схемы ниже; не повторяй один тип более 3 раз подряд.',
+'- Формулы — синтаксисом KaTeX (внутри text или блоком equation, поле latex без ограничителей).',
+'- Структуры и процессы — mermaid и svg; зависимости — graph (2d/3d, при необходимости params).',
+'- Блоки кода размещай преимущественно внутри modal.',
+'- Длинные перечни оформляй через accordion, tabs, steps, tree.',
+'',
+'=== ЭТАП 5. КАЧЕСТВА JSON ===',
+'- JSON строго валидный: двойные кавычки, без комментариев и завершающих запятых, переносы строк внутри строк только как \\n, обратные слэши LaTeX удваиваются.',
+'- Поле id урока: "lesson-{{LESSON_NUMBER}}" (или согласованный с курсом идентификатор).',
+'',
+'=== ДОПОЛНИТЕЛЬНЫЕ ТРЕБОВАНИЯ ЗАКАЗЧИКА ===',
+'{{EXTRA}}',
+'',
+'=== ФОРМАТ ОТВЕТА ===',
+'Верни ТОЛЬКО валидный JSON объекта урока — без пояснений и без markdown-обёрток:',
+'{',
+'  "id": "lesson-{{LESSON_NUMBER}}",',
+'  "title": "{{LESSON_TITLE}}",',
+'  "description": "...",',
+'  "blocks": [ ... ]',
+'}',
+'',
+'=== СХЕМА БЛОКОВ ПЛЕЕРА ===',
+'{{SCHEMA}}'
+].join('\n');
+}
+function loadPromptSettings() {
+const def = {
+mode: 'course',
+topic: '',
+language: 'русский',
+lessonsMin: 10,
+lessonsMax: 15,
+blocksPerLesson: 30,
+author: 'AI Assistant',
+duration: '',
+level: '',
+extra: '',
+lessonNumber: 1,
+lessonTitle: '',
+lessonPosition: 'middle',
+courseContext: ''
+};
 try {
-if (navigator.clipboard && navigator.clipboard.writeText) {
-await navigator.clipboard.writeText(promptArea.value);
-} else {
-promptArea.select();
-document.execCommand('copy');
+const saved = JSON.parse(localStorage.getItem(PROMPT_SETTINGS_KEY) || 'null');
+if (saved && typeof saved === 'object') return Object.assign(def, saved);
+} catch (e) {}
+return def;
 }
-alert('Промпт скопирован в буфер обмена!');
+function savePromptSettings(s) {
+try { localStorage.setItem(PROMPT_SETTINGS_KEY, JSON.stringify(s)); } catch (e) {}
+}
+function loadPromptTemplates() {
+let courseTpl = null, lessonTpl = null;
+try { courseTpl = localStorage.getItem(PROMPT_TPL_COURSE_KEY); } catch (e) {}
+try { lessonTpl = localStorage.getItem(PROMPT_TPL_LESSON_KEY); } catch (e) {}
+return {
+course: (typeof courseTpl === 'string' && courseTpl.trim()) ? courseTpl : defaultCourseTemplate(),
+lesson: (typeof lessonTpl === 'string' && lessonTpl.trim()) ? lessonTpl : defaultLessonTemplate()
+};
+}
+function savePromptTemplates(t) {
+try {
+localStorage.setItem(PROMPT_TPL_COURSE_KEY, t.course);
+localStorage.setItem(PROMPT_TPL_LESSON_KEY, t.lesson);
+} catch (e) {}
+}
+function buildCourseContextText(settings) {
+if (settings.courseContext && String(settings.courseContext).trim()) return String(settings.courseContext).trim();
+const lines = [];
+if (course && course.meta) {
+lines.push('Курс: «' + (course.meta.title || '') + '»');
+if (course.meta.description) lines.push('Описание курса: ' + course.meta.description);
+if (course.meta.level) lines.push('Уровень: ' + course.meta.level);
+if (course.meta.author) lines.push('Автор: ' + course.meta.author);
+if (Array.isArray(course.lessons) && course.lessons.length) {
+lines.push('Состав курса:');
+course.lessons.forEach((l, i) => lines.push((i + 1) + '. ' + (l.title || l.id)));
+}
+} else {
+lines.push('Курс: «' + (settings.topic || 'название курса не задано') + '»');
+}
+if (settings.lessonNumber) {
+lines.push('Готовится урок №' + settings.lessonNumber + ' из ' + (settings.lessonsMax || settings.lessonsMin || '?') + '.');
+}
+lines.push('Требование: урок должен быть стилистически и терминологически согласован с остальными уроками курса.');
+return lines.join('\n');
+}
+function renderPromptTemplate(tpl, s) {
+const total = (Number(s.lessonsMax) || Number(s.lessonsMin) || 10);
+const minL = Number(s.lessonsMin) || total;
+const lessonsCountText = (s.mode === 'lesson')
+? String(total)
+: (minL === total ? String(total) : ('от ' + minL + ' до ' + total));
+const map = {
+TOPIC: (s.topic || '').trim() || 'указанной теме',
+LANGUAGE: (s.language || 'русский').trim() || 'русский',
+LESSONS_COUNT: lessonsCountText,
+BLOCKS_PER_LESSON: String(Number(s.blocksPerLesson) || 30),
+AUTHOR: (s.author || '').trim() || 'AI Assistant',
+DURATION: (s.duration || '').trim() || 'указать реалистичную оценку длительности',
+LEVEL: (s.level || '').trim() || 'указать уровень (начальный / средний / продвинутый)',
+EXTRA: (s.extra || '').trim() || '— дополнительных требований нет; следуй общим правилам выше.',
+LESSON_NUMBER: String(Number(s.lessonNumber) || 1),
+LESSON_TITLE: (s.lessonTitle || '').trim() || (s.topic || '').trim() || 'Тема урока',
+LESSON_POSITION: LESSON_POSITION_TEXT[s.lessonPosition] || LESSON_POSITION_TEXT.middle,
+COURSE_CONTEXT: buildCourseContextText(s),
+SCHEMA: buildSchemaText()
+};
+return String(tpl).replace(/\{\{\s*([A-Z0-9_]+)\s*\}\}/g, (m, key) => (key in map ? map[key] : m));
+}
+function insertAtCursor(textarea, text) {
+const start = (typeof textarea.selectionStart === 'number') ? textarea.selectionStart : textarea.value.length;
+const end = (typeof textarea.selectionEnd === 'number') ? textarea.selectionEnd : start;
+textarea.value = textarea.value.slice(0, start) + text + textarea.value.slice(end);
+textarea.focus();
+textarea.selectionStart = textarea.selectionEnd = start + text.length;
+}
+function openPromptGenerator(preset) {
+const allowedKeys = ['mode', 'topic', 'language', 'lessonsMin', 'lessonsMax', 'blocksPerLesson', 'author', 'duration', 'level', 'extra', 'lessonNumber', 'lessonTitle', 'lessonPosition', 'courseContext'];
+const settings = loadPromptSettings();
+if (preset && typeof preset === 'object' && !(typeof Event !== 'undefined' && preset instanceof Event)) {
+allowedKeys.forEach(k => { if (preset[k] !== undefined) settings[k] = preset[k]; });
+}
+const templates = loadPromptTemplates();
+const overlay = h('div', { class: 'modal-overlay' });
+const content = h('div', { class: 'modal-content prompt-gen-modal' });
+const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
+closeBtn.addEventListener('click', () => { persistAll(); overlay.remove(); });
+content.appendChild(closeBtn);
+content.appendChild(h('h3', { textContent: '🧠 Генератор и редактор промптов для LLM', class: 'heading' }));
+content.appendChild(h('p', { class: 'pg-note', textContent: 'Промпты можно свободно корректировать: шаблоны сохраняются в браузере, а схема блоков подставляется автоматически и всегда соответствует текущим возможностям плеера.' }));
+const tabsRow = h('div', { class: 'pg-tabs' });
+const tabParams = h('button', { class: 'editor-tab-btn active', type: 'button', textContent: '⚙ Параметры' });
+const tabTemplates = h('button', { class: 'editor-tab-btn', type: 'button', textContent: '📝 Шаблоны промптов' });
+const tabResult = h('button', { class: 'editor-tab-btn', type: 'button', textContent: '👁 Результат' });
+tabsRow.appendChild(tabParams);
+tabsRow.appendChild(tabTemplates);
+tabsRow.appendChild(tabResult);
+content.appendChild(tabsRow);
+const panelParams = h('div', { class: 'pg-panel' });
+const panelTemplates = h('div', { class: 'pg-panel pg-hidden' });
+const panelResult = h('div', { class: 'pg-panel pg-hidden' });
+content.appendChild(panelParams);
+content.appendChild(panelTemplates);
+content.appendChild(panelResult);
+
+// ---------- ВКЛАДКА: ПАРАМЕТРЫ ----------
+panelParams.appendChild(h('div', { class: 'pg-section-title', textContent: 'Режим генерации' }));
+const modeRow = h('div', { class: 'pg-radio-row' });
+const modeCourseLabel = h('label', { class: 'pg-radio' });
+const modeCourseRadio = h('input', { type: 'radio', name: 'pg-mode', value: 'course' });
+modeCourseLabel.appendChild(modeCourseRadio);
+const modeCourseText = h('span');
+modeCourseText.appendChild(h('span', { textContent: '📚 Весь курс' }));
+modeCourseText.appendChild(h('small', { textContent: 'JSON курса целиком: meta + все уроки' }));
+modeCourseLabel.appendChild(modeCourseText);
+const modeLessonLabel = h('label', { class: 'pg-radio' });
+const modeLessonRadio = h('input', { type: 'radio', name: 'pg-mode', value: 'lesson' });
+modeLessonLabel.appendChild(modeLessonRadio);
+const modeLessonText = h('span');
+modeLessonText.appendChild(h('span', { textContent: '📄 Только один урок' }));
+modeLessonText.appendChild(h('small', { textContent: 'JSON одного урока — для добавления или перезаписи занятия' }));
+modeLessonLabel.appendChild(modeLessonText);
+modeRow.appendChild(modeCourseLabel);
+modeRow.appendChild(modeLessonLabel);
+panelParams.appendChild(modeRow);
+panelParams.appendChild(h('div', { class: 'pg-section-title', textContent: 'Общие параметры' }));
+const gridCommon = h('div', { class: 'pg-grid' });
+function addField(grid, labelText, controlEl, full) {
+const field = h('div', { class: 'pg-field' + (full ? ' full' : '') });
+field.appendChild(h('label', { textContent: labelText }));
+field.appendChild(controlEl);
+grid.appendChild(field);
+return controlEl;
+}
+const topicInput = h('input', { type: 'text', placeholder: 'Например: Основы электротехники' });
+topicInput.value = settings.topic || '';
+addField(gridCommon, 'Тема курса {{TOPIC}}', topicInput, true);
+const languageInput = h('input', { type: 'text', placeholder: 'русский' });
+languageInput.value = settings.language || 'русский';
+addField(gridCommon, 'Язык изложения {{LANGUAGE}}', languageInput);
+const authorInput = h('input', { type: 'text', placeholder: 'AI Assistant' });
+authorInput.value = settings.author || '';
+addField(gridCommon, 'Автор курса {{AUTHOR}}', authorInput);
+const durationInput = h('input', { type: 'text', placeholder: '12 часов' });
+durationInput.value = settings.duration || '';
+addField(gridCommon, 'Длительность {{DURATION}}', durationInput);
+const levelInput = h('input', { type: 'text', placeholder: 'средний' });
+levelInput.value = settings.level || '';
+addField(gridCommon, 'Уровень {{LEVEL}}', levelInput);
+const lessonsMinInput = h('input', { type: 'number', min: '1', max: '100' });
+lessonsMinInput.value = String(settings.lessonsMin || 10);
+addField(gridCommon, 'Уроков в курсе: минимум', lessonsMinInput);
+const lessonsMaxInput = h('input', { type: 'number', min: '1', max: '100' });
+lessonsMaxInput.value = String(settings.lessonsMax || 15);
+addField(gridCommon, 'Уроков в курсе: максимум (в режиме урока — всего уроков)', lessonsMaxInput);
+const blocksInput = h('input', { type: 'number', min: '1', max: '300' });
+blocksInput.value = String(settings.blocksPerLesson || 30);
+addField(gridCommon, 'Минимум блоков в уроке {{BLOCKS_PER_LESSON}}', blocksInput);
+panelParams.appendChild(gridCommon);
+const lessonGroup = h('div', { class: 'pg-lesson-group' });
+lessonGroup.appendChild(h('div', { class: 'pg-section-title', textContent: 'Параметры одного урока' }));
+const gridLesson = h('div', { class: 'pg-grid' });
+const lessonNumberInput = h('input', { type: 'number', min: '1', max: '200' });
+lessonNumberInput.value = String(settings.lessonNumber || 1);
+addField(gridLesson, 'Номер урока {{LESSON_NUMBER}}', lessonNumberInput);
+const lessonPositionSelect = h('select');
+lessonPositionSelect.appendChild(h('option', { value: 'first', textContent: 'Первый (обзорный)' }));
+lessonPositionSelect.appendChild(h('option', { value: 'middle', textContent: 'Основной (срединный)' }));
+lessonPositionSelect.appendChild(h('option', { value: 'last', textContent: 'Итоговый (завершающий)' }));
+lessonPositionSelect.value = settings.lessonPosition || 'middle';
+addField(gridLesson, 'Роль урока {{LESSON_POSITION}}', lessonPositionSelect);
+const lessonTitleInput = h('input', { type: 'text', placeholder: 'Например: Законы Кирхгофа' });
+lessonTitleInput.value = settings.lessonTitle || '';
+addField(gridLesson, 'Тема урока {{LESSON_TITLE}}', lessonTitleInput, true);
+const courseContextInput = h('textarea', { class: 'extra', placeholder: 'Если не заполнено, контекст будет собран автоматически из загруженного курса' });
+courseContextInput.value = settings.courseContext || '';
+addField(gridLesson, 'Контекст курса {{COURSE_CONTEXT}}', courseContextInput, true);
+const contextAutoBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⟳ Заполнить контекст из загруженного курса', style: 'margin-top:0;' });
+contextAutoBtn.addEventListener('click', () => {
+const tmp = collectSettings();
+tmp.courseContext = '';
+courseContextInput.value = buildCourseContextText(tmp);
+});
+gridLesson.appendChild(contextAutoBtn);
+lessonGroup.appendChild(gridLesson);
+panelParams.appendChild(lessonGroup);
+panelParams.appendChild(h('div', { class: 'pg-section-title', textContent: 'Дополнительные требования {{EXTRA}}' }));
+const extraInput = h('textarea', { class: 'extra', placeholder: 'Например: сделать упор на практику, добавить задачи с производственными кейсами, избегать сложной математики, добавить блок hotspots со схемой устройства...' });
+extraInput.value = settings.extra || '';
+panelParams.appendChild(extraInput);
+
+// ---------- ВКЛАДКА: ШАБЛОНЫ ----------
+panelTemplates.appendChild(h('div', { class: 'pg-section-title', textContent: 'Шаблон промпта: ВЕСЬ КУРС' }));
+panelTemplates.appendChild(h('p', { class: 'pg-note', textContent: 'Клик по подстановке вставит её в текст шаблона в позицию курсора. Шаблоны сохраняются автоматически.' }));
+const chipsCourse = h('div', { class: 'pg-chips' });
+const courseTplArea = h('textarea', { class: 'tpl', spellcheck: 'false' });
+courseTplArea.value = templates.course;
+PROMPT_PLACEHOLDERS_COURSE.forEach(ph => {
+const chip = h('button', { class: 'pg-chip', type: 'button', textContent: ph, title: 'Вставить ' + ph });
+chip.addEventListener('click', () => insertAtCursor(courseTplArea, ph));
+chipsCourse.appendChild(chip);
+});
+panelTemplates.appendChild(chipsCourse);
+panelTemplates.appendChild(courseTplArea);
+panelTemplates.appendChild(h('div', { class: 'pg-section-title', textContent: 'Шаблон промпта: ОДИН УРОК' }));
+const chipsLesson = h('div', { class: 'pg-chips' });
+const lessonTplArea = h('textarea', { class: 'tpl', spellcheck: 'false' });
+lessonTplArea.value = templates.lesson;
+PROMPT_PLACEHOLDERS_LESSON.forEach(ph => {
+const chip = h('button', { class: 'pg-chip', type: 'button', textContent: ph, title: 'Вставить ' + ph });
+chip.addEventListener('click', () => insertAtCursor(lessonTplArea, ph));
+chipsLesson.appendChild(chip);
+});
+panelTemplates.appendChild(chipsLesson);
+panelTemplates.appendChild(lessonTplArea);
+const tplBtnRow = h('div', { class: 'pg-btn-row' });
+const tplSaveBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '💾 Сохранить шаблоны' });
+const tplResetBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⟲ Сбросить к стандартным' });
+const tplExportBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬇ Экспорт' });
+const tplImportBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬆ Импорт' });
+const schemaBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '{{SCHEMA}} Показать автосхему' });
+tplSaveBtn.addEventListener('click', () => {
+savePromptTemplates({ course: courseTplArea.value, lesson: lessonTplArea.value });
+alert('Шаблоны промптов сохранены.');
+});
+tplResetBtn.addEventListener('click', () => {
+if (!confirm('Заменить оба шаблона стандартными? Текущие правки будут потеряны.')) return;
+courseTplArea.value = defaultCourseTemplate();
+lessonTplArea.value = defaultLessonTemplate();
+savePromptTemplates({ course: courseTplArea.value, lesson: lessonTplArea.value });
+});
+tplExportBtn.addEventListener('click', () => {
+const payload = { course: courseTplArea.value, lesson: lessonTplArea.value, exportedAt: new Date().toISOString() };
+const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'lms-prompts.json';
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(() => URL.revokeObjectURL(url), 2000);
+});
+const tplImportInput = h('input', { type: 'file', accept: '.json,application/json', style: 'display:none' });
+tplImportInput.addEventListener('change', () => {
+const file = tplImportInput.files && tplImportInput.files[0];
+tplImportInput.value = '';
+if (!file) return;
+const reader = new FileReader();
+reader.onload = () => {
+try {
+const data = JSON.parse(String(reader.result));
+if (typeof data.course === 'string' && data.course.trim()) courseTplArea.value = data.course;
+if (typeof data.lesson === 'string' && data.lesson.trim()) lessonTplArea.value = data.lesson;
+savePromptTemplates({ course: courseTplArea.value, lesson: lessonTplArea.value });
+alert('Шаблоны импортированы.');
+} catch (e) {
+alert('Ошибка импорта шаблонов: ' + e.message);
+}
+};
+reader.onerror = () => alert('Не удалось прочитать файл.');
+reader.readAsText(file);
+});
+tplImportBtn.addEventListener('click', () => tplImportInput.click());
+const schemaPreview = h('textarea', { class: 'tpl pg-hidden', spellcheck: 'false', readonly: 'readonly' });
+schemaBtn.addEventListener('click', () => {
+const isHidden = schemaPreview.classList.contains('pg-hidden');
+if (isHidden) schemaPreview.value = buildSchemaText();
+schemaPreview.classList.toggle('pg-hidden', !isHidden);
+schemaBtn.textContent = isHidden ? '{{SCHEMA}} Скрыть автосхему' : '{{SCHEMA}} Показать автосхему';
+});
+tplBtnRow.appendChild(tplSaveBtn);
+tplBtnRow.appendChild(tplResetBtn);
+tplBtnRow.appendChild(tplExportBtn);
+tplBtnRow.appendChild(tplImportBtn);
+tplBtnRow.appendChild(schemaBtn);
+tplBtnRow.appendChild(tplImportInput);
+panelTemplates.appendChild(tplBtnRow);
+panelTemplates.appendChild(schemaPreview);
+
+// ---------- ВКЛАДКА: РЕЗУЛЬТАТ ----------
+panelResult.appendChild(h('div', { class: 'pg-section-title', textContent: 'Готовый промпт (можно править вручную)' }));
+const resultArea = h('textarea', { class: 'result', spellcheck: 'false' });
+panelResult.appendChild(resultArea);
+const resultBtnRow = h('div', { class: 'pg-btn-row' });
+const regenBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⟳ Сгенерировать заново' });
+const copyResultBtn = h('button', { class: 'copy-btn', type: 'button', textContent: 'Копировать в буфер' });
+const downloadResultBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬇ Скачать .txt' });
+const counter = h('span', { class: 'pg-counter', textContent: '' });
+regenBtn.addEventListener('click', () => doGenerate(false));
+copyResultBtn.addEventListener('click', async () => {
+if (!resultArea.value.trim()) { alert('Промпт пуст — сначала сгенерируйте его.'); return; }
+try {
+if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(resultArea.value);
+else { resultArea.select(); document.execCommand('copy'); }
+copyResultBtn.textContent = '✔ Скопировано';
+setTimeout(() => { copyResultBtn.textContent = 'Копировать в буфер'; }, 1800);
 } catch (e) {
 alert('Не удалось скопировать: ' + e.message);
 }
 });
-copyRow.appendChild(copyBtn);
-content.appendChild(copyRow);
-generateBtn.addEventListener('click', () => {
-const topic = topicInput.value.trim() || 'выбранной теме';
-promptArea.value = generatePrompt(topic);
+downloadResultBtn.addEventListener('click', () => {
+if (!resultArea.value.trim()) { alert('Промпт пуст — сначала сгенерируйте его.'); return; }
+const s = collectSettings();
+const name = 'prompt-' + (s.mode === 'lesson' ? ('lesson-' + (s.lessonNumber || 1)) : 'course') + '-' + slugify(s.topic || s.lessonTitle || 'tema').substring(0, 40) + '.txt';
+const blob = new Blob([resultArea.value], { type: 'text/plain;charset=utf-8' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = name;
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(() => URL.revokeObjectURL(url), 2000);
 });
+resultBtnRow.appendChild(regenBtn);
+resultBtnRow.appendChild(copyResultBtn);
+resultBtnRow.appendChild(downloadResultBtn);
+resultBtnRow.appendChild(counter);
+panelResult.appendChild(resultBtnRow);
+
+// ---------- ЛОГИКА ----------
+function collectSettings() {
+return {
+mode: modeLessonRadio.checked ? 'lesson' : 'course',
+topic: topicInput.value,
+language: languageInput.value,
+lessonsMin: parseInt(lessonsMinInput.value, 10) || 1,
+lessonsMax: parseInt(lessonsMaxInput.value, 10) || 1,
+blocksPerLesson: parseInt(blocksInput.value, 10) || 30,
+author: authorInput.value,
+duration: durationInput.value,
+level: levelInput.value,
+extra: extraInput.value,
+lessonNumber: parseInt(lessonNumberInput.value, 10) || 1,
+lessonTitle: lessonTitleInput.value,
+lessonPosition: lessonPositionSelect.value,
+courseContext: courseContextInput.value
+};
+}
+function persistAll() {
+savePromptSettings(collectSettings());
+savePromptTemplates({ course: courseTplArea.value, lesson: lessonTplArea.value });
+}
+function updateModeUI() {
+const isLesson = modeLessonRadio.checked;
+modeLessonLabel.classList.toggle('active', isLesson);
+modeCourseLabel.classList.toggle('active', !isLesson);
+lessonGroup.classList.toggle('pg-hidden', !isLesson);
+}
+function updateCounter() {
+const len = resultArea.value.length;
+counter.textContent = len ? (len.toLocaleString('ru-RU') + ' симв.') : '';
+}
+function doGenerate(switchToResult) {
+persistAll();
+const s = collectSettings();
+const tpl = s.mode === 'lesson' ? lessonTplArea.value : courseTplArea.value;
+resultArea.value = renderPromptTemplate(tpl, s);
+updateCounter();
+if (switchToResult !== false) showTab('result');
+}
+function showTab(name) {
+[['params', panelParams, tabParams], ['templates', panelTemplates, tabTemplates], ['result', panelResult, tabResult]].forEach(([key, panel, btn]) => {
+const active = (key === name);
+panel.classList.toggle('pg-hidden', !active);
+btn.classList.toggle('active', active);
+});
+if (name === 'result' && !resultArea.value.trim()) doGenerate(false);
+}
+tabParams.addEventListener('click', () => showTab('params'));
+tabTemplates.addEventListener('click', () => showTab('templates'));
+tabResult.addEventListener('click', () => showTab('result'));
+modeCourseRadio.addEventListener('change', updateModeUI);
+modeLessonRadio.addEventListener('change', updateModeUI);
+[topicInput, languageInput, lessonsMinInput, lessonsMaxInput, blocksInput, authorInput, durationInput, levelInput,
+extraInput, lessonNumberInput, lessonTitleInput, lessonPositionSelect, courseContextInput].forEach(el => {
+el.addEventListener('change', () => savePromptSettings(collectSettings()));
+});
+let tplSaveTimer = null;
+[courseTplArea, lessonTplArea].forEach(el => {
+el.addEventListener('input', () => {
+if (tplSaveTimer) clearTimeout(tplSaveTimer);
+tplSaveTimer = setTimeout(() => savePromptTemplates({ course: courseTplArea.value, lesson: lessonTplArea.value }), 600);
+});
+});
+resultArea.addEventListener('input', updateCounter);
+modeCourseRadio.checked = settings.mode !== 'lesson';
+modeLessonRadio.checked = settings.mode === 'lesson';
+updateModeUI();
+const bottomRow = h('div', { style: 'display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;' });
+const generateBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🚀 Сгенерировать промпт' });
+generateBtn.addEventListener('click', () => doGenerate(true));
+const closeBtn2 = h('button', { class: 'quiz-button', type: 'button', textContent: 'Закрыть' });
+closeBtn2.addEventListener('click', () => { persistAll(); overlay.remove(); });
+bottomRow.appendChild(generateBtn);
+bottomRow.appendChild(closeBtn2);
+content.appendChild(bottomRow);
 overlay.appendChild(content);
 document.body.appendChild(overlay);
 overlay.addEventListener('click', (e) => {
-if (e.target === overlay) overlay.remove();
+if (e.target === overlay) { persistAll(); overlay.remove(); }
 });
+showTab('params');
 }
-function generatePrompt(topic) {
-const schema = `ТИПЫ БЛОКОВ:
-1. section: { "type": "section", "title": "Заголовок секции", "children": [ ...блоки... ] }
-2. heading: { "type": "heading", "level": 2, "text": "Текст заголовка" }
-3. text: { "type": "text", "text": "Текст абзаца" }
-4. image: { "type": "image", "src": "URL", "caption": "Подпись" }
-5. video: { "type": "video", "src": "URL видео (.mp4, .webm, .ogg)", "poster": "URL постера", "caption": "Подпись", "mimeType": "video/mp4", "speedControl": true, "loop": false, "muted": false, "autoplay": false }
-// mimeType можно не указывать — он определится по расширению. Не указывайте неправильный mimeType.
-6. audio: { "type": "audio", "src": "URL аудио (.mp3, .ogg, .wav, .m4a)", "caption": "Подпись", "mimeType": "audio/mpeg", "speedControl": true, "loop": false, "autoplay": false }
-7. list: { "type": "list", "ordered": false, "items": ["Элемент 1", "Элемент 2"] }
-8. code: { "type": "code", "language": "javascript", "code": "текст кода" }
-9. callout: { "type": "callout", "variant": "info", "title": "Заголовок", "text": "Текст", "children": [ ...блоки... ] }
-10. tabs: { "type": "tabs", "tabs": [ { "label": "Вкладка", "content": [ ...блоки... ] } ] }
-11. accordion: { "type": "accordion", "items": [ { "title": "Заголовок", "content": [ ...блоки... ] } ] }
-12. quiz: { "type": "quiz", "question": "Вопрос", "options": ["Вариант 1", "Вариант 2"], "correct": 0, "explanation": "Пояснение" }
-13. multi-quiz: { "type": "multi-quiz", "question": "Вопрос", "options": ["A", "B", "C"], "correct": [0, 2], "explanation": "Пояснение" }
-14. match: { "type": "match", "instruction": "Сопоставьте", "pairs": [ { "left": "Термин", "right": "Определение" } ] }
-15. sort: { "type": "sort", "instruction": "Расставьте по порядку", "items": ["Пункт 1", "Пункт 2"], "correctOrder": ["Пункт 2", "Пункт 1"] }
-16. fill-blank: { "type": "fill-blank", "instruction": "Заполните пропуски", "text": "Текст с {{1}} и {{2}}", "answers": { "1": "ответ1", "2": "ответ2" } }
-17. flip-card: { "type": "flip-card", "front": "Вопрос", "back": "Ответ" }
-18. poll: { "type": "poll", "question": "Вопрос опроса", "options": ["Вариант 1", "Вариант 2"] }
-19. compare: { "type": "compare", "left": [ ...блоки... ], "right": [ ...блоки... ] }
-20. slider: { "type": "slider", "label": "Оцените", "min": 0, "max": 10, "default": 5 }
-21. timeline: { "type": "timeline", "items": [ { "title": "Событие", "description": "Описание" } ] }
-22. steps: { "type": "steps", "steps": [ { "title": "Шаг 1", "content": [ ...блоки... ] } ] }
-23. embed: { "type": "embed", "src": "URL для iframe" }
-24. columns: { "type": "columns", "columns": [ { "blocks": [ ...блоки... ] } ] }
-25. carousel: { "type": "carousel", "items": [ { "image": "URL", "caption": "Подпись" }, { "content": [ ...блоки... ] } ] }
-26. before-after: { "type": "before-after", "before": "URL до", "after": "URL после" }
-27. table: { "type": "table", "headers": ["Колонка 1"], "rows": [ ["Ячейка 1", "Ячейка 2"] ] }
-28. chart: { "type": "chart", "title": "Заголовок", "labels": ["Метка 1"], "values": [80, 20] }
-29. pie: { "type": "pie", "title": "Заголовок", "segments": [ { "label": "Сегмент", "value": 50, "color": "#ff0000" } ] }
-30. modal: { "type": "modal", "buttonText": "Открыть", "content": [ ...блоки... ], "text": "или простой текст" }
-31. tooltip: { "type": "tooltip", "text": "Наведите на меня", "tooltipText": "Подсказка" }
-32. mermaid: { "type": "mermaid", "code": "graph TD; A-->B;" }
-33. drag-sort: { "type": "drag-sort", "instruction": "Перетащите", "items": ["Элемент 1"], "correctOrder": ["Элемент 1"] }
-34. progress-tracker: { "type": "progress-tracker", "tasks": [ { "label": "Задача 1" } ] }
-35. svg: { "type": "svg", "code": "<svg xmlns='http://www.w3.org/2000/svg'>...</svg>", "caption": "Подпись" }
-36. html: { "type": "html", "code": "<div>...</div>" }
-37. graph: { "type": "graph", "title": "График", "mode": "2d", "parametric": false, "equation": "a*sin(x)", "rangeMin": -10, "rangeMax": 10, "points": 300, "params": [ { "name": "a", "value": 1, "min": 0, "max": 5, "step": 0.1 } ] }
-38. model3d: { "type": "model3d", "src": "https://example.com/model.glb", "caption": "Подпись", "height": "450px", "background": "#0a0c14", "autoRotate": true, "lightPreset": "studio", "lightColor": "#ffffff", "lightIntensity": 0.9, "ambientColor": "#ffffff", "ambientIntensity": 1.0, "showGrid": true }
-// Освещение: lightPreset — "studio" | "warm" | "cold" | "night" | "neon"; поля lightColor/lightIntensity (0–3) — ключевой свет, ambientColor/ambientIntensity (0–3) — рассеянный свет, background — цвет фона, showGrid — сетка. Индивидуальные значения перекрывают пресет.
-39. flashcards: { "type": "flashcards", "title": "Колода карточек", "cards": [ { "front": "Вопрос", "back": "Ответ" } ] }
-40. checklist: { "type": "checklist", "title": "Чек-лист", "items": ["Пункт 1", "Пункт 2"] }
-41. quote: { "type": "quote", "text": "Текст цитаты", "author": "Автор" }
-42. glossary: { "type": "glossary", "title": "Глоссарий", "items": [ { "term": "Термин", "definition": "Определение" } ] }
-43. equation: { "type": "equation", "latex": "x = \\\\frac{-b \\\\pm \\\\sqrt{b^2-4ac}}{2a}", "caption": "Подпись" }
-44. youtube: { "type": "youtube", "videoId": "ID видео или ссылка", "caption": "Подпись" }
-45. kanban: { "type": "kanban", "title": "Доска", "columns": [ { "title": "Колонка", "cards": ["Карточка 1"] } ] }
-46. stats: { "type": "stats", "title": "Показатели", "items": [ { "value": "42%", "label": "Подпись" } ] }
-47. countdown: { "type": "countdown", "title": "Таймер", "seconds": 300, "label": "Подпись" }
-48. tree: { "type": "tree", "title": "Дерево", "items": [ { "text": "Узел", "children": [ { "text": "Потомок" } ] } ] }
-49. truefalse: { "type": "truefalse", "question": "Утверждение", "answer": true, "explanation": "Пояснение" }
-50. divider: { "type": "divider", "style": "line" }
-51. download: { "type": "download", "src": "URL файла", "label": "Скачать", "fileName": "file.pdf" }
-52. hotspots: { "type": "hotspots", "src": "URL изображения", "caption": "Подпись", "hotspots": [ { "x": 25, "y": 40, "label": "Название точки", "text": "Описание точки", "color": "#00f0ff" } ] }
-53. crossword: { "type": "crossword", "title": "Кроссворд", "words": [ { "word": "СЛОВО", "hint": "Определение", "direction": "across", "row": 0, "col": 0 } ] }
-РАЗМЕРЫ БЛОКОВ: любой блок может содержать поля width, height, maxWidth, maxHeight, minWidth, minHeight и флаг autoScale (по умолчанию true).`;
-const prompt = `Ты — эксперт по созданию интерактивных образовательных курсов и опытный методист. Твоя задача — создать подробный, глубокий и хорошо структурированный учебный курс (конспект лекций) на тему "${topic}" в формате JSON для LMS-плеера.
-=== ЭТАП 1. ПОДГОТОВКА МАТЕРИАЛА: ПОИСК ИСТОЧНИКОВ ===
-- Перед написанием КАЖДОГО урока обязательно выполни поиск информации в интернете на различных сайтах.
-- Опирайся преимущественно на авторитетные источники: учебники и учебные пособия, научные статьи, официальные инструкции и руководства, техническую документацию, государственные и международные стандарты (ГОСТ, ISO, IEC, RFC и т. п.).
-- Для каждого урока используй не менее 3–5 различных независимых источников.
-- В конец каждого урока добавь раздел «Источники» (блок section или callout со списком): для каждого источника укажи его название и полный реальный URL.
-=== ЭТАП 2. ТРЕБОВАНИЯ К URL ===
-- Все URL (источники, изображения, видео, аудио, 3D-модели) должны быть найдены реальным поиском в интернете и вести на существующие страницы файлов.
-- ЗАПРЕЩЕНО выдумывать, угадывать или конструировать URL — используй только адреса, реально полученные в результатах поиска.
-- Для блоков video и audio используй прямые ссылки на медиафайлы с расширениями .mp4/.webm (видео) и .mp3/.ogg/.wav/.m4a (аудио). Не указывай mimeType, если не уверен в типе файла.
-- Если достоверный источник найти не удалось — лучше не указывать ссылку, чем приводить несуществующую.
-=== ЭТАП 3. СТРУКТУРА И ГЛУБИНА ЛЕКЦИЙ ===
-- Курс должен содержать 10–15 уроков-лекций; каждый урок — не менее 30 блоков.
-- Каждый урок оформляй как полноценную подробную лекцию: введение, основная часть (блоки section), определения (glossary, callout), иллюстрации (image, hotspots, svg, mermaid, graph, table), контроль понимания (quiz, fill-blank, truefalse, match, crossword), итоги и источники.
-- Первый урок сделай обзорным, последний — итоговым.
-=== ЭТАП 4. ТРЕБОВАНИЯ К ОФОРМЛЕНИЮ (БЛОКИ) ===
-- Используй разнообразные типы блоков из схемы ниже.
-- Отдавай предпочтение иллюстрациям mermaid и svg для визуализации структур и процессов.
-- Формулы оформляй синтаксисом KaTeX внутри текстовых блоков или отдельным блоком equation.
-- Блоки кода преимущественно размещай внутри блока modal.
-- JSON должен быть валидным, без комментариев, и строго соответствовать схеме ниже.
-- Обязательно включи в курс блоки quiz, fill-blank и хотя бы одну диаграмму (chart или pie).
-- Метаданные заполни реалистично; в качестве автора укажи себя (например, "AI Assistant"). Поле meta.canvases оставь пустым массивом [].
-Верни ТОЛЬКО валидный JSON курса вида:
-{
-"meta": { "title": "...", "description": "...", "author": "...", "duration": "...", "level": "...", "theme": {}, "canvases": [] },
-"lessons": [ { "id": "lesson-1", "title": "...", "description": "...", "blocks": [ ... ] } ]
-}
-Схема:
-${schema}
-Сгенерируй только валидный JSON курса, без пояснений и без комментариев.`;
-return prompt;
+function openPromptForLesson(lesson, index) {
+const preset = {
+mode: 'lesson',
+topic: (course && course.meta && course.meta.title) ? course.meta.title : '',
+lessonNumber: index + 1,
+lessonTitle: lesson.title || lesson.id || '',
+lessonPosition: index === 0 ? 'first' : (index === course.lessons.length - 1 ? 'last' : 'middle'),
+lessonsMax: course.lessons.length || 15,
+lessonsMin: course.lessons.length || 10,
+author: (course && course.meta && course.meta.author) ? course.meta.author : 'AI Assistant',
+level: (course && course.meta && course.meta.level) ? course.meta.level : '',
+duration: (course && course.meta && course.meta.duration) ? course.meta.duration : '',
+courseContext: ''
+};
+openPromptGenerator(preset);
 }
 
 // =====================================================================
-// == ВИРТУАЛЬНЫЕ ХОЛСТЫ: БЕСКОНЕЧНАЯ ПЛОСКОСТЬ, СТАТУСБАР, ФОКУС-РЕЖИМ ==
+// == ВИРТУАЛЬНЫЕ ХОЛСТЫ: БЕСКОНЕЧНАЯ ПЛОСКОСТЬ, СТАТУСБАР, ФОКУС =====
 // =====================================================================
 const CANVAS_FAB_POS_KEY = 'lms_canvas_fab_pos';
 const CANVAS_WIN_POS_KEY = 'lms_canvas_win_pos';
@@ -3947,9 +4489,7 @@ s.points = s.points.map(p => {
 if (!validStrokePoint(p)) return null;
 return [Number(p[0]) * LEGACY_PAGE_W, Number(p[1]) * LEGACY_PAGE_H];
 }).filter(Boolean);
-if (s.tool === 'text' && s.fontSize != null) {
-s.fontSize = Number(s.fontSize) * LEGACY_PAGE_H;
-}
+if (s.tool === 'text' && s.fontSize != null) s.fontSize = Number(s.fontSize) * LEGACY_PAGE_H;
 });
 rec.view = null;
 rec.version = CANVAS_VERSION;
@@ -3986,8 +4526,6 @@ a.click();
 a.remove();
 setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
-
-// ---------- Плавающая (sticky) кнопка ----------
 function createCanvasFab() {
 if (canvasFab) return canvasFab;
 const fab = h('button', {
@@ -4118,8 +4656,6 @@ function onLessonChangedForCanvas() {
 updateCanvasFab();
 if (canvasWorkspace) canvasWorkspace.handleLessonChange();
 }
-
-// ---------- Рабочее окно холстов ----------
 function createCanvasWorkspace() {
 const root = h('div', { class: 'canvas-window' });
 root.setAttribute('role', 'dialog');
@@ -4152,7 +4688,6 @@ const sctx = staticCanvas.getContext('2d');
 const stageCanvas = h('canvas', { tabindex: '0' });
 const mctx = stageCanvas.getContext('2d');
 const toolButtonSets = [];
-
 function history(id) {
 if (!historyMap[id]) historyMap[id] = { undo: [], redo: [] };
 return historyMap[id];
@@ -4161,8 +4696,6 @@ function activeRecord() {
 const list = getCourseCanvases();
 return list.find(c => c.id === activeId) || null;
 }
-
-// ---------- Заголовок окна ----------
 const header = h('div', { class: 'canvas-win-header' });
 header.appendChild(h('span', { class: 'canvas-win-icon', textContent: '🎨' }));
 const titleEl = h('span', { class: 'canvas-win-title', textContent: 'Виртуальные холсты' });
@@ -4178,12 +4711,8 @@ const minBtn = winBtn('—', 'Свернуть окно');
 const closeBtn = winBtn('×', 'Закрыть окно', true);
 [sidebarBtn, focusBtn, maxBtn, fsBtn, minBtn, closeBtn].forEach(b => header.appendChild(b));
 root.appendChild(header);
-
-// ---------- Тело окна ----------
 const body = h('div', { class: 'canvas-win-body' });
 root.appendChild(body);
-
-// --- Боковая панель ---
 const sidebar = h('div', { class: 'canvas-sidebar' });
 const sideHead = h('div', { class: 'canvas-side-head' });
 sideHead.appendChild(h('span', { textContent: 'Холсты курса' }));
@@ -4233,12 +4762,8 @@ const importInput = h('input', { type: 'file', accept: '.json,application/json',
 sideOpts.appendChild(importInput);
 sidebar.appendChild(sideOpts);
 body.appendChild(sidebar);
-
-// --- Основная область ---
 const main = h('div', { class: 'canvas-main' });
 body.appendChild(main);
-
-// --- Компактная панель инструментов ---
 const toolbar = h('div', { class: 'canvas-toolbar' });
 main.appendChild(toolbar);
 function makeToolButton(t) {
@@ -4288,8 +4813,6 @@ const focusBtn2 = h('button', { class: 'tool-btn', type: 'button', title: 'Ре�
 focusBtn2.addEventListener('click', () => { toggleFocusMode(); focusStage(); });
 uiGroup.appendChild(focusBtn2);
 toolbar.appendChild(uiGroup);
-
-// --- Всплывающая панель цвета ---
 const colorPopover = h('div', { class: 'canvas-popover color-popover' });
 const swatchGrid = h('div', { class: 'swatch-grid' });
 const swatchEls = [];
@@ -4322,13 +4845,9 @@ colorPopover.style.left = Math.max(6, colorDotBtn.offsetLeft) + 'px';
 colorPopover.classList.add('open');
 }
 });
-
-// --- Сцена ---
 const stage = h('div', { class: 'canvas-stage' });
 stage.appendChild(stageCanvas);
 main.appendChild(stage);
-
-// --- Мини-панель для режима фокуса ---
 const focusToolbar = h('div', { class: 'focus-toolbar' });
 const focusExitBtn = h('button', { class: 'tool-btn', type: 'button', title: 'Выйти из режима фокуса (F / Esc)', textContent: '⤡' });
 focusExitBtn.addEventListener('click', () => { toggleFocusMode(false); focusStage(); });
@@ -4349,31 +4868,28 @@ focusRedo.addEventListener('click', () => { doRedo(); focusStage(); });
 focusToolbar.appendChild(focusUndo);
 focusToolbar.appendChild(focusRedo);
 main.appendChild(focusToolbar);
-
-// --- Всплывающая шпаргалка ---
 const helpPopover = h('div', { class: 'canvas-popover help-popover' });
-helpPopover.innerHTML = `
-<h5>Инструменты</h5>
-<ul>
-<li><kbd>P</kbd> карандаш · <kbd>H</kbd> маркер · <kbd>E</kbd> ластик</li>
-<li><kbd>L</kbd> линия · <kbd>A</kbd> стрелка · <kbd>R</kbd> прямоугольник</li>
-<li><kbd>O</kbd> эллипс · <kbd>T</kbd> текст · <kbd>V</kbd> рука</li>
-</ul>
-<h5>Холст</h5>
-<ul>
-<li>Панорама: колесо мыши · <kbd>Space</kbd>+мышь · средняя кнопка · стрелки</li>
-<li>Зум: <kbd>Ctrl</kbd>+колесо · щипок · <kbd>Ctrl +</kbd> / <kbd>Ctrl -</kbd></li>
-<li><kbd>Ctrl 0</kbd> вписать · <kbd>Ctrl 1</kbd> 100 %</li>
-</ul>
-<h5>Прочее</h5>
-<ul>
-<li><kbd>Ctrl Z</kbd> / <kbd>Ctrl Y</kbd> отмена и повтор · <kbd>Ctrl S</kbd> сохранить</li>
-<li><kbd>F</kbd> режим фокуса · <kbd>Esc</kbd> выход из фокуса</li>
-<li><kbd>?</kbd> эта шпаргалка</li>
-</ul>`;
+helpPopover.innerHTML = [
+'<h5>Инструменты</h5>',
+'<ul>',
+'<li><kbd>P</kbd> карандаш · <kbd>H</kbd> маркер · <kbd>E</kbd> ластик</li>',
+'<li><kbd>L</kbd> линия · <kbd>A</kbd> стрелка · <kbd>R</kbd> прямоугольник</li>',
+'<li><kbd>O</kbd> эллипс · <kbd>T</kbd> текст · <kbd>V</kbd> рука</li>',
+'</ul>',
+'<h5>Холст</h5>',
+'<ul>',
+'<li>Панорама: колесо мыши · <kbd>Space</kbd>+мышь · средняя кнопка · стрелки</li>',
+'<li>Зум: <kbd>Ctrl</kbd>+колесо · щипок · <kbd>Ctrl +</kbd> / <kbd>Ctrl -</kbd></li>',
+'<li><kbd>Ctrl 0</kbd> вписать · <kbd>Ctrl 1</kbd> 100 %</li>',
+'</ul>',
+'<h5>Прочее</h5>',
+'<ul>',
+'<li><kbd>Ctrl Z</kbd> / <kbd>Ctrl Y</kbd> отмена и повтор · <kbd>Ctrl S</kbd> сохранить</li>',
+'<li><kbd>F</kbd> режим фокуса · <kbd>Esc</kbd> выход из фокуса</li>',
+'<li><kbd>?</kbd> эта шпаргалка</li>',
+'</ul>'
+].join('');
 main.appendChild(helpPopover);
-
-// --- Единый лаконичный статусбар ---
 const statusbar = h('div', { class: 'canvas-statusbar' });
 const sbName = h('span', { class: 'sb-seg grow sb-name', textContent: '∞ холст' });
 const sbToolDot = h('span', { class: 'sb-dot' });
@@ -4411,7 +4927,6 @@ helpPopover.classList.add('open');
 });
 [sbName, sbTool, sbPos, sbZoomGroup, sbCount, sbSpacer, sbSave, sbHelpBtn].forEach(el => statusbar.appendChild(el));
 main.appendChild(statusbar);
-
 function closePopovers() {
 colorPopover.classList.remove('open');
 helpPopover.classList.remove('open');
@@ -4421,8 +4936,6 @@ if (!root.contains(e.target)) { closePopovers(); return; }
 if (e.target.closest('.canvas-popover') || e.target.closest('.color-dot-btn') || e.target.closest('.sb-help-btn')) return;
 closePopovers();
 });
-
-// ---------- Фокус на холсте, а не на элементах интерфейса ----------
 function focusStage() {
 try { stageCanvas.focus({ preventScroll: true }); } catch (e) { stageCanvas.focus(); }
 }
@@ -4430,8 +4943,6 @@ root.addEventListener('click', (e) => {
 if (e.target.closest('input, textarea, select, .canvas-popover')) return;
 focusStage();
 });
-
-// ---------- Ручки изменения размера окна ----------
 ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].forEach(dir => {
 const handle = h('div', { class: 'resize-handle rh-' + dir, dataset: { dir: dir } });
 handle.addEventListener('pointerdown', (e) => startResize(e, dir, handle));
@@ -4475,8 +4986,6 @@ el.addEventListener('pointermove', move);
 el.addEventListener('pointerup', up);
 el.addEventListener('pointercancel', up);
 }
-
-// ---------- Перемещение окна ----------
 let winDrag = null;
 header.addEventListener('pointerdown', (e) => {
 if (e.target.closest('button')) return;
@@ -4505,8 +5014,6 @@ saveWinRect();
 };
 header.addEventListener('pointerup', headerUp);
 header.addEventListener('pointercancel', headerUp);
-
-// ---------- Геометрия окна ----------
 function loadWinRect() {
 try {
 const r = JSON.parse(localStorage.getItem(CANVAS_WIN_POS_KEY) || 'null');
@@ -4532,8 +5039,6 @@ localStorage.setItem(CANVAS_WIN_POS_KEY, JSON.stringify({ x: Math.round(r.left),
 }
 applyWinRect();
 if (window.innerWidth <= 720) root.classList.add('sidebar-closed');
-
-// ---------- Кнопки заголовка ----------
 sidebarBtn.addEventListener('click', () => {
 root.classList.toggle('sidebar-closed');
 setTimeout(resizeSurface, 260);
@@ -4559,8 +5064,6 @@ setTimeout(resizeSurface, 60);
 minBtn.addEventListener('click', () => hideWindow());
 closeBtn.addEventListener('click', () => hideWindow());
 focusBtn.addEventListener('click', () => { toggleFocusMode(); focusStage(); });
-
-// ---------- РЕЖИМ ФОКУСА НА ХОЛСТЕ ----------
 function toggleFocusMode(force) {
 const next = (typeof force === 'boolean') ? force : !focusMode;
 if (next === focusMode) return;
@@ -4569,10 +5072,7 @@ closePopovers();
 if (focusMode) {
 focusAddedMaximize = !root.classList.contains('maximized');
 root.classList.add('focus-mode');
-if (focusAddedMaximize) {
-root.classList.add('maximized');
-maxBtn.textContent = '🗗';
-}
+if (focusAddedMaximize) { root.classList.add('maximized'); maxBtn.textContent = '🗗'; }
 focusBtn.classList.add('active');
 focusBtn2.classList.add('active');
 wakeUI();
@@ -4580,11 +5080,7 @@ wakeUI();
 root.classList.remove('focus-mode');
 root.classList.remove('ui-idle');
 if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
-if (focusAddedMaximize) {
-root.classList.remove('maximized');
-maxBtn.textContent = '⤢';
-focusAddedMaximize = false;
-}
+if (focusAddedMaximize) { root.classList.remove('maximized'); maxBtn.textContent = '⤢'; focusAddedMaximize = false; }
 focusBtn.classList.remove('active');
 focusBtn2.classList.remove('active');
 }
@@ -4602,8 +5098,6 @@ if (focusMode && !uiHovered) root.classList.add('ui-idle');
 el.addEventListener('pointerenter', () => { uiHovered = true; root.classList.remove('ui-idle'); if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; } });
 el.addEventListener('pointerleave', () => { uiHovered = false; wakeUI(); });
 });
-
-// ---------- КООРДИНАТЫ: ЭКРАН ↔ БЕСКОНЕЧНАЯ ПЛОСКОСТЬ ----------
 function stageCoords(clientX, clientY) {
 const rect = stageCanvas.getBoundingClientRect();
 return [clientX - rect.left, clientY - rect.top];
@@ -4621,12 +5115,9 @@ return Math.max(6, (parseInt(sizeInput.value, 10) || 3) * 1.6) / view.scale;
 function docRectFor(vw, vh, v) {
 return { x0: (0 - v.x) / v.scale, y0: (0 - v.y) / v.scale, x1: (vw - v.x) / v.scale, y1: (vh - v.y) / v.scale };
 }
-function visibleDocRect() { return docRectFor(W, H, view); }
 function rectsIntersect(a, b) {
 return a.x1 >= b.x0 && a.x0 <= b.x1 && a.y1 >= b.y0 && a.y0 <= b.y1;
 }
-
-// ---------- ОГРАНИЧИВАЮЩИЕ РАМКИ И ОТБОР ВИДИМОГО ----------
 function strokeBBox(s) {
 let bb = bboxCache.get(s);
 if (bb) return bb;
@@ -4666,12 +5157,9 @@ if (bb.y1 > y1) y1 = bb.y1;
 if (!isFinite(x0)) return null;
 return { x0: x0, y0: y0, x1: x1, y1: y1 };
 }
-
-// ---------- МАСШТАБ И ПАН ----------
 function updateZoomLabel() {
 const p = view.scale * 100;
-const txt = (p >= 100 ? Math.round(p) : p.toFixed(p >= 10 ? 1 : 2)) + '%';
-sbZoomLabel.textContent = txt;
+sbZoomLabel.textContent = (p >= 100 ? Math.round(p) : p.toFixed(p >= 10 ? 1 : 2)) + '%';
 }
 function clampScale(s) { return Math.max(MIN_SCALE, Math.min(MAX_SCALE, s)); }
 function setZoom(newScale, anchor) {
@@ -4738,8 +5226,6 @@ userAdjustedView = false;
 }
 updateZoomLabel();
 }
-
-// ---------- РЕНДЕР БЕСКОНЕЧНОГО ХОЛСТА ----------
 function resizeSurface() {
 const rect = stage.getBoundingClientRect();
 if (rect.width < 2 || rect.height < 2) return;
@@ -4964,16 +5450,12 @@ if (staticDirty) { staticDirty = false; renderStatic(); }
 render();
 });
 }
-
-// ---------- Пустое состояние ----------
 const emptyHint = h('div', { class: 'canvas-empty-hint' });
 emptyHint.appendChild(h('div', { textContent: '🎨 В этом курсе пока нет холстов для заметок.' }));
 const emptyBtn = h('button', { class: 'canvas-side-btn', type: 'button', textContent: '＋ Создать первый холст' });
 emptyBtn.addEventListener('click', () => createNewCanvas());
 emptyHint.appendChild(emptyBtn);
 stage.appendChild(emptyHint);
-
-// ---------- Ластик ----------
 function distToSegmentDoc(px, py, x1, y1, x2, y2) {
 const dx = x2 - x1, dy = y2 - y1;
 const len2 = dx * dx + dy * dy;
@@ -5030,8 +5512,6 @@ const rDoc = eraserRadiusDoc();
 const kept = rec.strokes.filter(s => !strokeHit(s, dx, dy, rDoc));
 if (kept.length !== rec.strokes.length) rec.strokes = kept;
 }
-
-// ---------- ЖЕСТЫ: ПАН И ПИНЧ ----------
 function beginPan(e) {
 panning = { id: e.pointerId, sx: e.clientX, sy: e.clientY, ox: view.x, oy: view.y };
 try { stageCanvas.setPointerCapture(e.pointerId); } catch (err) {}
@@ -5089,8 +5569,6 @@ pinch = null;
 root.classList.remove('panning');
 saveViewToRecord();
 }
-
-// ---------- Колесо мыши ----------
 stageCanvas.addEventListener('wheel', (e) => {
 e.preventDefault();
 const sc = stageCoords(e.clientX, e.clientY);
@@ -5098,8 +5576,6 @@ if (e.ctrlKey || e.metaKey) zoomBy(Math.exp(-e.deltaY * 0.01), { x: sc[0], y: sc
 else panBy(-e.deltaX, -e.deltaY);
 wakeUI();
 }, { passive: false });
-
-// ---------- Рисование ----------
 function makeStroke(t, p) {
 const s = { tool: t, color: colorInput.value, size: parseInt(sizeInput.value, 10) || 3, points: [p] };
 if (t === 'highlighter') { s.opacity = 0.3; s.size = Math.max(8, s.size * 4); }
@@ -5219,7 +5695,6 @@ const sc = stageCoords(e.clientX, e.clientY);
 zoomBy(1.6, { x: sc[0], y: sc[1] });
 }
 });
-
 function openTextInput(p, sc) {
 const rec = activeRecord();
 if (!rec) return;
@@ -5262,8 +5737,6 @@ else if (e.key === 'Escape') { finished = true; inp.remove(); focusStage(); }
 });
 inp.addEventListener('blur', commit);
 }
-
-// ---------- История ----------
 function doUndo() {
 const rec = activeRecord();
 if (!rec) return;
@@ -5296,8 +5769,6 @@ redoBtn.disabled = noRedo;
 focusUndo.disabled = noUndo;
 focusRedo.disabled = noRedo;
 }
-
-// ---------- Сохранение ----------
 function setSaveState(kind, text) {
 sbSave.className = 'sb-seg sb-save' + (kind ? ' ' + kind : '');
 sbSave.textContent = text || '';
@@ -5336,8 +5807,6 @@ titleEl.textContent = 'Холсты · ' + ((course && course.meta.title) || 'к
 updateToolStatus();
 updateZoomLabel();
 }
-
-// ---------- Список холстов ----------
 function refreshList() {
 listEl.innerHTML = '';
 const all = getCourseCanvases();
@@ -5421,8 +5890,6 @@ restoreViewFromRecord(activeRecord());
 invalidateStatic();
 updateHistoryButtons();
 }
-
-// ---------- Операции с холстами ----------
 function createNewCanvas() {
 if (!course) return;
 const rec = createCanvasRecord();
@@ -5569,8 +6036,6 @@ rec.showGrid = gridCheck.checked;
 invalidateStatic();
 scheduleSave();
 });
-
-// ---------- Инструменты ----------
 function setTool(id) {
 tool = id;
 toolButtonSets.forEach(map => {
@@ -5591,8 +6056,6 @@ updateToolStatus();
 colorInput.addEventListener('change', syncSwatches);
 syncSwatches();
 setTool('pencil');
-
-// ---------- Горячие клавиши ----------
 const HOTKEYS = {};
 CANVAS_TOOL_LIST.forEach(t => { HOTKEYS[t.hotkey] = t.id; });
 document.addEventListener('keydown', (e) => {
@@ -5621,7 +6084,7 @@ if (e.altKey) { e.preventDefault(); hideWindow(); return; }
 if (!e.ctrlKey && !e.metaKey && !e.altKey && k === 'f') { e.preventDefault(); toggleFocusMode(); focusStage(); return; }
 if (!e.ctrlKey && !e.metaKey && !e.altKey && (k === '?' || (e.shiftKey && k === '/'))) {
 e.preventDefault();
-if (helpPopover.classList.contains('open')) { closePopovers(); }
+if (helpPopover.classList.contains('open')) closePopovers();
 else {
 closePopovers();
 helpPopover.style.bottom = (statusbar.offsetHeight + 6) + 'px';
@@ -5648,8 +6111,6 @@ window.addEventListener('blur', () => {
 spaceDown = false;
 root.classList.remove('space-pan');
 });
-
-// ---------- Видимость окна ----------
 function isVisible() { return root.classList.contains('visible'); }
 function showWindow() {
 root.classList.add('visible');
@@ -5691,7 +6152,6 @@ refreshLessonOptions();
 refreshOptions();
 refreshList();
 }
-
 if (window.ResizeObserver) {
 const ro = new ResizeObserver(() => resizeSurface());
 ro.observe(stage);
@@ -5704,7 +6164,6 @@ refreshOptions();
 updateHistoryButtons();
 updateStatus();
 setSaveState('', '');
-
 return {
 root: root,
 open: open,
@@ -5724,14 +6183,14 @@ buttonsContainer.appendChild(toggleBtn);
 const helpBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Справка', type: 'button' });
 helpBtn.addEventListener('click', openHelpModal);
 buttonsContainer.appendChild(helpBtn);
-const promptBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Генерация промпта', type: 'button' });
-promptBtn.addEventListener('click', openPromptGenerator);
+const promptBtn = h('button', { class: 'toggle-manager-btn', textContent: 'Генерация промпта', type: 'button', title: 'Генератор и редактор промптов: весь курс или один урок' });
+promptBtn.addEventListener('click', () => openPromptGenerator());
 buttonsContainer.appendChild(promptBtn);
 const canvasOpenBtn = h('button', {
 class: 'toggle-manager-btn',
 textContent: '🎨 Холсты',
 type: 'button',
-title: 'Открыть бесконечные виртуальные холсты для рукописных заметок (плавающая кнопка 🎨 — то же самое)'
+title: 'Открыть бесконечные виртуальные холсты для рукописных заметок'
 });
 canvasOpenBtn.addEventListener('click', () => openCanvasWorkspace());
 buttonsContainer.appendChild(canvasOpenBtn);
@@ -5775,6 +6234,7 @@ renderInitialState();
 app.appendChild(backBtn);
 const lesson = course.lessons.find(l => l.id === lessonId);
 if (!lesson) return;
+const lessonIndex = course.lessons.findIndex(l => l.id === lessonId);
 const lessonContainer = h('div', { class: 'lesson-container' });
 const lessonTitleRow = h('div', { class: 'lesson-title-row' });
 lessonTitleRow.appendChild(h('h2', { class: 'heading', textContent: lesson.title || lesson.id }));
@@ -5787,6 +6247,14 @@ textContent: '✎'
 });
 lessonEditBtn.addEventListener('click', () => openLessonEditor(lesson));
 lessonTitleRow.appendChild(lessonEditBtn);
+const lessonPromptBtn = h('button', {
+class: 'lesson-edit-btn',
+type: 'button',
+title: 'Сгенерировать промпт для этого урока',
+textContent: '🧠'
+});
+lessonPromptBtn.addEventListener('click', () => openPromptForLesson(lesson, lessonIndex));
+lessonTitleRow.appendChild(lessonPromptBtn);
 }
 const lessonCanvasBtn = h('button', {
 class: 'lesson-edit-btn',
@@ -5810,7 +6278,7 @@ cvWrap.appendChild(b);
 lessonContainer.appendChild(cvWrap);
 }
 if (editMode) {
-lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его, переместить, добавить новый или удалить. Кнопка 🎨 открывает бесконечный холст для заметок.' }));
+lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок, чтобы отредактировать его, переместить, добавить новый или удалить. ✎ — JSON урока, 🧠 — промпт для этого урока, 🎨 — холст для заметок.' }));
 }
 const content = h('div', { class: 'lesson-content' });
 if (editMode) {
@@ -5848,7 +6316,6 @@ if (nav) nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }, 100);
 });
 lessonContainer.appendChild(completeBtn);
-const lessonIndex = course.lessons.findIndex(l => l.id === lessonId);
 const navContainer = h('div', { style: 'display: flex; gap: 10px; margin-top: 20px; justify-content: space-between; flex-wrap: wrap;' });
 const prevBtn = h('button', {
 class: 'quiz-button',
