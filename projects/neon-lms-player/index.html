@@ -765,7 +765,7 @@ cursor: pointer; font-size: 0.85em; line-height: 1; padding: 0; transition: all 
 .canvas-win-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.5); }
 .canvas-win-btn.danger:hover { background: rgba(255,42,109,0.18); box-shadow: 0 0 8px rgba(255,42,109,0.4); }
 .canvas-win-body { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
-/* ---------- САЙДБАР СПИСКА ХОЛСТОВ (оптимизированная вёрстка) ---------- */
+/* ---------- САЙДБАР СПИСКА ХОЛСТОВ ---------- */
 .canvas-sidebar {
 width: 254px; flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column;
 border-right: 1px solid var(--border); background: rgba(0,0,0,0.22); overflow: hidden;
@@ -1269,7 +1269,7 @@ const info = h('div', { class: 'app-info' });
 info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
 info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
 header.appendChild(info);
-header.appendChild(h('span', { class: 'app-version', textContent: 'v1.17.1' }));
+header.appendChild(h('span', { class: 'app-version', textContent: 'v1.17.2' }));
 return header;
 }
 function renderCourseHeader() {
@@ -2716,7 +2716,7 @@ const block = blocks[blockIndex];
 if (!block) return;
 const label = (block.type || 'блок') + (block.text ? ': "' + String(block.text).substring(0, 40) + '"' : '');
 if (!confirm(`Удалить блок ${blockIndex + 1} (${label})?`)) return;
-const boundKey = blockCanvasKey(lesson.id, blockIndex, block);
+const boundKey = blockCanvasKey(lesson.id, String(blockIndex), block);
 const boundCanvas = findCanvasByBlockId(boundKey);
 blocks.splice(blockIndex, 1);
 try {
@@ -2747,7 +2747,7 @@ toolbar.appendChild(editBtn);
 const blockCanvasBtn = h('button', { class: 'block-tool-btn', type: 'button', title: 'Холст рукописных заметок, привязанный к этому блоку', textContent: '🎨' });
 blockCanvasBtn.addEventListener('click', (e) => {
 e.stopPropagation();
-openCanvasForBlock(lesson.id, blockIndex, block, null);
+openCanvasForBlock(lesson.id, String(blockIndex), block, null);
 });
 toolbar.appendChild(blockCanvasBtn);
 const upBtn = h('button', { class: 'block-tool-btn', type: 'button', title: 'Переместить выше', textContent: '↑', disabled: blockIndex === 0 });
@@ -2767,7 +2767,7 @@ return toolbar;
 function renderLessonBlocksEditable(lesson, container) {
 const blocks = ensureLessonBlocks(lesson);
 blocks.forEach((block, idx) => {
-const rendered = renderBlock(block, idx, true);
+const rendered = renderBlock(block, idx, true, String(idx));
 if (!rendered) return;
 const wrapper = h('div', { class: 'block-wrapper' });
 wrapper.appendChild(createBlockToolbar(lesson, idx));
@@ -3479,7 +3479,7 @@ setStatus('Укажите URL модели или откройте локаль�
 }
 return element;
 }
-function renderFlashcardsBlock(block) {
+function renderFlashcardsBlock(block, basePath) {
 const element = h('div', { class: 'flashcards-block' });
 if (block.title) element.appendChild(h('h4', { class: 'heading', textContent: block.title }));
 const cards = Array.isArray(block.cards) ? block.cards.filter(c => c && typeof c === 'object') : [];
@@ -3506,22 +3506,22 @@ nav.appendChild(counter);
 nav.appendChild(nextBtn);
 element.appendChild(nav);
 element.appendChild(h('p', { class: 'form-hint', style: 'text-align:center;', textContent: 'Нажмите на карточку, чтобы перевернуть.' }));
-function fillSide(node, value) {
+function fillSide(node, value, subPath) {
 node.innerHTML = '';
 if (typeof value === 'string' || typeof value === 'number') {
 node.appendChild(document.createTextNode(String(value)));
 } else if (Array.isArray(value)) {
-renderBlocks(value, node);
+renderBlocks(value, node, false, subPath);
 } else if (value && value.type) {
-const el = renderBlock(value, 0, false);
+const el = renderBlock(value, 0, false, (subPath || '0') + '.0');
 if (el) node.appendChild(el);
 }
 }
 function update() {
 cardEl.classList.remove('flipped');
 const card = cards[idx];
-fillSide(front, card.front);
-fillSide(back, card.back);
+fillSide(front, card.front, (basePath || '0') + '.fr');
+fillSide(back, card.back, (basePath || '0') + '.bk');
 counter.textContent = (idx + 1) + ' / ' + cards.length;
 prevBtn.disabled = idx === 0;
 nextBtn.disabled = idx === cards.length - 1;
@@ -4053,10 +4053,12 @@ helpDiv.innerHTML = `
 <ul style="margin-left:20px;">
 <li><strong>К курсу</strong> — холст без привязки, виден во всех уроках;</li>
 <li><strong>К уроку</strong> — поле «Привязка» в панели холстов или кнопка 🎨 в заголовке урока;</li>
-<li><strong>К блоку</strong> — холст привязывается автоматически при нажатии 🎨 в панели инструментов блока (поле <code>blockId</code>), либо атрибутами блока <code>"canvas": true</code>, <code>"canvasId": "..."</code>, <code>"canvasLabel": "..."</code>. <strong>В режиме просмотра</strong> значок <strong>🎨</strong> размещается в правом верхнем углу области <em>любого</em> блока, у которого есть привязанный холст (в том числе созданный кнопкой 🎨 без атрибута <code>canvas</code>). Зелёный счётчик на значке — количество заметок; полупрозрачный значок означает, что холст пуст или ещё не создан.</li>
+<li><strong>К блоку</strong> — холст привязывается автоматически при нажатии 🎨 в панели инструментов блока (поле <code>blockId</code>), либо атрибутами блока <code>"canvas": true</code>, <code>"canvasId": "..."</code>, <code>"canvasLabel": "..."</code>.</li>
 </ul>
+<p><strong>Как формируется ключ привязки (<code>blockId</code>):</strong> если у блока задан <code>id</code> — ключ <code>b:&lt;id&gt;</code>; иначе ключ строится по <em>полному пути</em> блока в уроке: <code>b:&lt;id-урока&gt;#&lt;путь&gt;</code>, например <code>b:lesson-1#3</code> для четвёртого блока верхнего уровня или <code>b:lesson-1#3.0.1</code> для вложенного блока (секция → вкладка → блок). Такой путь уникален, поэтому холст никогда не «прилипает» к нескольким блокам и значок 🎨 не дублируется. Автоматическая привязка по пути доступна блокам верхнего уровня, а также любым блокам с собственным <code>id</code> или <code>canvasId</code>.</p>
+<p><strong>В режиме просмотра</strong> значок <strong>🎨</strong> размещается в правом верхнем углу области блока и показывается <em>только один раз</em> — у того блока, к которому холст realmente привязан. Зелёный счётчик — количество заметок; полупрозрачный значок означает пустой или ещё не созданный холст.</p>
 <p><strong>Сайдбар холстов:</strong> список с фильтром «только текущий урок», кнопка создания, сворачиваемая панель «Свойства холста» (название, привязка к уроку и блоку, фон, сетка, область экспорта PNG, дублирование/экспорт/импорт/очистка/удаление).</p>
-<p><strong>Лаконичный интерфейс и статусбар:</strong> холст и его привязки (📎 урок, 🧩 блок), инструмент с цветом и толщиной, координаты, масштаб (<code>−</code>/<code>+</code>/<code>▣</code>/<code>⌂</code>), число штрихов, автосохранение и кнопка <code>?</code>.</p>
+<p><strong>Статусбар:</strong> холст и его привязки (📎 урок, 🧩 блок), инструмент с цветом и толщиной, координаты, масштаб (<code>−</code>/<code>+</code>/<code>▣</code>/<code>⌂</code>), число штрихов, автосохранение и кнопка <code>?</code>.</p>
 <p><strong>Режим фокуса (🎯 или F):</strong> скрывает интерфейс и разворачивает окно; через ~2 секунды бездействия панели растворяются. Выход — <code>F</code>, <code>Esc</code> или <code>⤡</code>.</p>
 <p><strong>Инструменты:</strong> карандаш (✏), маркер (🖍), ластик (⌫), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯), текст (T), рука (✋). Горячие клавиши: P, H, E, L, A, R, O, T, V; Ctrl+Z / Ctrl+Y / Ctrl+S.</p>
 <p><strong>Перемещение и масштаб:</strong> «Рука» (V) · средняя кнопка мыши · пробел + мышь · колесо (панорама) · Ctrl + колесо (зум к курсору) · щипок · стрелки (Shift — быстрее).</p>
@@ -4169,7 +4171,7 @@ lines.push('- hotspots: координаты x/y — проценты (0–100) 
 lines.push('- crossword: слова размещаются на общей сетке через row/col (с 0) и direction "across"|"down"; буквы в пересечениях должны совпадать.');
 lines.push('- mermaid: код диаграммы (graph TD, flowchart, sequenceDiagram, mindmap и т. п.) без markdown-обёрток.');
 lines.push('- svg: полноценная разметка <svg xmlns="http://www.w3.org/2000/svg" viewBox="...">...</svg>.');
-lines.push('- canvas/canvasId/canvasLabel: добавляйте к блокам, где студенту полезно делать рукописные пометки (задачи, схемы, таблицы, длинные определения, graph, svg, crossword).');
+lines.push('- canvas/canvasId/canvasLabel: добавляйте к блокам ВЕРХНЕГО УРОВНЯ урока (или блокам с уникальным полем id), где студенту полезно делать рукописные пометки (задачи, схемы, таблицы, длинные определения, graph, svg, crossword). Один холст на блок — не дублируйте атрибуты у вложенных блоков.');
 return lines.join('\n');
 }
 function defaultCourseTemplate() {
@@ -4203,8 +4205,8 @@ return [
 '- Структуры, процессы и классификации визуализируй блоками mermaid и svg; зависимости и функции — блоком graph (2d/3d, при необходимости с интерактивными params).',
 '- Блоки кода размещай преимущественно внутри блока modal, чтобы не перегружать ленту урока.',
 '- Для длинных перечней и справочных данных используй accordion, tabs, steps, tree, table.',
-'- ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК: к блокам, где студенту полезно рисовать или решать вручную (задачи, расчёты, схемы, графики, кроссворды, длинные определения), добавляй атрибут "canvas": true и осмысленный "canvasLabel" (например "Решение задачи на холсте", "Схема своими руками"). В режиме просмотра значок 🎨 появится в правом верхнем углу области такого блока. Если один холст должен быть общим для нескольких блоков — задай им одинаковый "canvasId". Сам массив meta.canvases при этом остаётся пустым: холсты создаёт плеер.',
-'- Обязательный минимум на курс: не менее 3 блоков quiz, 1 fill-blank, 1 multi-quiz или match, 1 диаграмма (chart или pie), 1 mermaid, 1 svg, 1 timeline или steps, не менее 3 блоков с "canvas": true.',
+'- ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК: атрибут "canvas": true добавляй ТОЛЬКО к блокам верхнего уровня урока (массив blocks) или к блокам с уникальным полем "id". Не ставь "canvas": true одновременно на родительский блок (section, tabs, accordion) и на его вложенные блоки — это приведёт к дублированию значков. Рядом с "canvas": true задавай осмысленный "canvasLabel" (например "Решение задачи на холсте"). Если один холст должен быть общим для нескольких блоков — задай им одинаковый "canvasId". В режиме просмотра значок 🎨 появится в правом верхнем углу области такого блока. Массив meta.canvases при этом остаётся пустым: холсты создаёт плеер.',
+'- Обязательный минимум на курс: не менее 3 блоков quiz, 1 fill-blank, 1 multi-quiz или match, 1 диаграмма (chart или pie), 1 mermaid, 1 svg, 1 timeline или steps, не менее 3 блоков верхнего уровня с "canvas": true.',
 '- Каждый урок заверши блоком checklist («Что нужно уметь после урока») и/или flashcards для запоминания терминов.',
 '',
 '=== ЭТАП 5. КАЧЕСТВА JSON ===',
@@ -4272,8 +4274,8 @@ return [
 '- Структуры и процессы — mermaid и svg; зависимости — graph (2d/3d, при необходимости params).',
 '- Блоки кода размещай преимущественно внутри modal.',
 '- Длинные перечни оформляй через accordion, tabs, steps, tree.',
-'- ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК: к блокам, где студенту полезно рисовать или решать вручную (задачи, расчёты, схемы, графики, кроссворды), добавляй атрибут "canvas": true и осмысленный "canvasLabel" (например "Решение на холсте"). В режиме просмотра значок 🎨 отобразится в правом верхнем углу области блока. Для общего холста нескольких блоков используй одинаковый "canvasId". Массив meta.canvases курса при этом не изменяется — холсты создаёт плеер.',
-'- Минимум для урока: не менее 2 блоков с "canvas": true (если тема предполагает решение задач или схемы).',
+'- ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК: атрибут "canvas": true ставь ТОЛЬКО на блоки верхнего уровня урока или на блоки с уникальным "id". Не дублируй его на родительском и вложенных блоках одновременно — иначе значок 🎨 появится несколько раз. Добавляй осмысленный "canvasLabel" (например "Решение на холсте"). Для общего холста нескольких блоков используй одинаковый "canvasId". Массив meta.canvases курса при этом не изменяется — холсты создаёт плеер.',
+'- Минимум для урока: не менее 2 блоков верхнего уровня с "canvas": true (если тема предполагает решение задач или схемы).',
 '',
 '=== ЭТАП 5. КАЧЕСТВА JSON ===',
 '- JSON строго валидный: двойные кавычки, без комментариев и завершающих запятых, переносы строк внутри строк только как \\n, обратные слэши LaTeX удваиваются.',
@@ -4974,7 +4976,7 @@ canvasRow.appendChild(resetFabBtn);
 canvasRow.appendChild(resetWinBtn);
 canvasRow.appendChild(closeCanvasWinBtn);
 pCanvas.appendChild(canvasRow);
-pCanvas.appendChild(h('p', { class: 'pg-note', textContent: 'Заметки холстов хранятся в meta.canvases курса и сохраняются вместе с курсом (IndexedDB), в том числе при публикации в gist. Холсты могут быть привязаны к курсу, к уроку (lessonId) или к конкретному блоку (blockId / атрибуты canvas и canvasId блока). В режиме просмотра значок 🎨 отображается в правом верхнем углу области любого блока с привязанным холстом.' }));
+pCanvas.appendChild(h('p', { class: 'pg-note', textContent: 'Заметки холстов хранятся в meta.canvases курса и сохраняются вместе с курсом (IndexedDB), в том числе при публикации в gist. Привязка к блоку хранится в поле blockId: b:<id-блока> либо b:<id-урока>#<путь блока> — путь уникален, поэтому один холст не может «прилипнуть» к нескольким блокам.' }));
 const pData = panels['data'];
 pData.appendChild(h('div', { class: 'pg-section-title', textContent: 'Сохранённые курсы' }));
 const dataStats = h('p', { class: 'pg-note', textContent: 'Загрузка статистики…' });
@@ -5474,13 +5476,25 @@ a.click();
 a.remove();
 setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
-// ---------- Привязка холстов к блокам лекций ----------
-function blockCanvasKey(lessonId, blockIndex, block) {
-if (block && block.id) return 'b:' + String(block.id);
-return 'b:' + String(lessonId == null ? '' : lessonId) + '#' + String(blockIndex);
+// =====================================================================
+// ====== ПРИВЯЗКА ХОЛСТОВ К БЛОКАМ: УНИКАЛЬНЫЙ КЛЮЧ ПО ПУТИ БЛОКА =====
+// =====================================================================
+// blockPath — ПОЛНЫЙ путь блока внутри урока:
+//   верхний уровень: "0", "1", "2" ...
+//   вложенные:       "2.0", "2.1.3", "2.t0.1" (вкладка), "2.a1" (аккордеон),
+//                    "2.c0" (колонка), "2.s1" (шаг), "2.l"/"2.r" (compare),
+//                    "2.fr"/"2.bk" (стороны карточки) и т. д.
+// Для блоков верхнего уровня ключ совпадает со старым форматом b:<lesson>#<index>,
+// поэтому уже созданные привязки продолжают работать.
+function blockCanvasKey(lessonId, blockPath, block) {
+if (block && typeof block.id === 'string' && block.id.trim() !== '') return 'b:' + block.id.trim();
+return 'b:' + String(lessonId == null ? '' : lessonId) + '#' + String(blockPath == null ? '' : blockPath);
 }
 function blockExplicitCanvasId(block) {
 return (block && typeof block.canvasId === 'string' && block.canvasId.trim()) ? block.canvasId.trim() : '';
+}
+function blockOwnId(block) {
+return (block && typeof block.id === 'string' && block.id.trim() !== '') ? block.id.trim() : '';
 }
 function findCanvasById(id) {
 if (!id) return null;
@@ -5493,24 +5507,31 @@ return getCourseCanvases().find(c => c.blockId && c.blockId === blockId) || null
 function blockCanvasRequested(block) {
 if (!block || typeof block !== 'object') return false;
 if (block.canvas === true || block.canvas === 'true') return true;
-if (typeof block.canvasId === 'string' && block.canvasId.trim()) return true;
+if (blockExplicitCanvasId(block)) return true;
 return false;
 }
-function resolveBlockCanvas(lessonId, blockIndex, block) {
+function resolveBlockCanvas(lessonId, blockPath, block) {
 const explicitId = blockExplicitCanvasId(block);
 if (explicitId) return findCanvasById(explicitId);
-return findCanvasByBlockId(blockCanvasKey(lessonId, blockIndex, block));
+return findCanvasByBlockId(blockCanvasKey(lessonId, blockPath, block));
 }
-// Есть ли у блока привязанный холст (независимо от атрибута "canvas")
-function hasBoundCanvas(lessonId, blockIndex, block) {
+// Холст может быть привязан только к блоку с однозначным ключом:
+// блок верхнего уровня урока, блок с собственным id или блок с явным canvasId.
+function blockCanBindCanvas(block, isTopLevel) {
+if (isTopLevel === true) return true;
+if (blockExplicitCanvasId(block) !== '') return true;
+if (blockOwnId(block) !== '') return true;
+return false;
+}
+function hasBoundCanvas(lessonId, blockPath, block) {
 if (!course) return false;
-return !!resolveBlockCanvas(lessonId, blockIndex, block);
+return !!resolveBlockCanvas(lessonId, blockPath, block);
 }
-function ensureCanvasForBlock(lessonId, blockIndex, block, label) {
+function ensureCanvasForBlock(lessonId, blockPath, block, label) {
 if (!course) return null;
 normalizeAllCanvases();
 const explicitId = blockExplicitCanvasId(block);
-const bKey = blockCanvasKey(lessonId, blockIndex, block);
+const bKey = blockCanvasKey(lessonId, blockPath, block);
 const defaultTitle = label || ('Заметки: ' + (block ? describeBlock(block) : bKey));
 if (explicitId) {
 let rec = findCanvasById(explicitId);
@@ -5534,16 +5555,22 @@ persistCanvases().catch(e => console.warn('Не удалось сохранит�
 }
 return rec;
 }
-function openCanvasForBlock(lessonId, blockIndex, block, label) {
+function openCanvasForBlock(lessonId, blockPath, block, label) {
 if (!course) {
 alert('Холсты привязываются к курсу. Сначала загрузите курс («Управление курсами»).');
 return;
 }
-const rec = ensureCanvasForBlock(lessonId, blockIndex, block, label);
+const rec = ensureCanvasForBlock(lessonId, blockPath, block, label);
 if (rec) openCanvasWorkspace(rec.id);
 }
 // ---------- РЕЕСТР ЗНАЧКОВ ЗАМЕТОК, ВСТРОЕННЫХ В БЛОКИ ----------
 const blockCanvasBadges = new Set();
+// Холсты, уже показанные в текущем проходе рендеринга урока (защита от дублей
+// при совпадении ключей, например при повторяющихся id блоков).
+let renderedAutoCanvases = new Set();
+function resetRenderedAutoCanvases() {
+renderedAutoCanvases = new Set();
+}
 function refreshBlockCanvasBadges() {
 blockCanvasBadges.forEach(entry => {
 if (!entry || !entry.btn || !entry.btn.isConnected) { blockCanvasBadges.delete(entry); return; }
@@ -5551,7 +5578,7 @@ try { entry.refresh(); } catch (e) {}
 });
 }
 // ---------- ПАНЕЛЬ ХОЛСТА ПОД БЛОКОМ (РЕЖИМ РЕДАКТИРОВАНИЯ) ----------
-function attachBlockCanvasBar(element, block, idx) {
+function attachBlockCanvasBar(element, block, blockPath) {
 const wrap = h('div', { class: 'block-canvas-wrap' });
 wrap.appendChild(element);
 const bar = h('div', { class: 'block-canvas-bar' });
@@ -5564,27 +5591,27 @@ btn.appendChild(h('span', { textContent: '🎨' }));
 btn.appendChild(h('span', { textContent: label }));
 const countSpan = h('span', { class: 'block-canvas-count' });
 function refreshCount() {
-const rec = resolveBlockCanvas(currentLessonId, idx, block);
+const rec = resolveBlockCanvas(currentLessonId, blockPath, block);
 const n = (rec && Array.isArray(rec.strokes)) ? rec.strokes.length : 0;
 countSpan.textContent = n > 0 ? ('· ' + n + ' ' + pluralStrokes(n)) : '· пусто';
 }
 refreshCount();
 btn.appendChild(countSpan);
 btn.addEventListener('click', () => {
-openCanvasForBlock(currentLessonId, idx, block, label);
+openCanvasForBlock(currentLessonId, blockPath, block, label);
 setTimeout(refreshCount, 700);
 });
 bar.appendChild(btn);
 const explicitId = blockExplicitCanvasId(block);
 bar.appendChild(h('span', {
 class: 'block-canvas-hint',
-textContent: explicitId ? ('общий холст: ' + explicitId) : ('привязка: ' + blockCanvasKey(currentLessonId, idx, block))
+textContent: explicitId ? ('общий холст: ' + explicitId) : ('привязка: ' + blockCanvasKey(currentLessonId, blockPath, block))
 }));
 wrap.appendChild(bar);
 return wrap;
 }
 // ---------- ЗНАЧОК «🎨» ВНУТРИ ОБЛАСТИ БЛОКА (РЕЖИМ ПРОСМОТРА) ----------
-function attachBlockCanvasFloat(element, block, idx) {
+function attachBlockCanvasFloat(element, block, blockPath) {
 const host = h('div', { class: 'block-canvas-host' });
 host.appendChild(element);
 const label = (typeof block.canvasLabel === 'string' && block.canvasLabel.trim())
@@ -5599,7 +5626,7 @@ const tipEl = h('span', { class: 'bcf-tip', textContent: label });
 btn.appendChild(tipEl);
 btn.style.display = 'none';
 function resolveRec() {
-return explicitId ? findCanvasById(explicitId) : resolveBlockCanvas(currentLessonId, idx, block);
+return explicitId ? findCanvasById(explicitId) : resolveBlockCanvas(currentLessonId, blockPath, block);
 }
 const entry = { btn: btn, refresh: refresh };
 function refresh() {
@@ -5632,7 +5659,7 @@ refresh();
 btn.addEventListener('click', (e) => {
 e.stopPropagation();
 e.preventDefault();
-openCanvasForBlock(currentLessonId, idx, block, label);
+openCanvasForBlock(currentLessonId, blockPath, block, label);
 setTimeout(refresh, 700);
 });
 host.appendChild(btn);
@@ -5827,7 +5854,7 @@ const closeBtn = winBtn('×', 'Закрыть окно', true);
 root.appendChild(header);
 const body = h('div', { class: 'canvas-win-body' });
 root.appendChild(body);
-// ---------- САЙДБАР: СПИСОК ХОЛСТОВ + СВОЙСТВА (оптимизированная вёрстка) ----------
+// ---------- САЙДБАР: СПИСОК ХОЛСТОВ + СВОЙСТВА ----------
 const sidebar = h('div', { class: 'canvas-sidebar' });
 const sideHead = h('div', { class: 'canvas-side-head' });
 sideHead.appendChild(h('span', { textContent: 'Холсты курса' }));
@@ -5865,7 +5892,7 @@ sideOpts.appendChild(lessonSelect);
 sideOpts.appendChild(h('div', { class: 'canvas-opt-label', textContent: 'Привязка к блоку (blockId)' }));
 const blockIdInput = h('input', { type: 'text', placeholder: '— не привязан —', spellcheck: 'false' });
 sideOpts.appendChild(blockIdInput);
-sideOpts.appendChild(h('div', { class: 'canvas-opt-hint', textContent: 'Ключ блока: b:<id-блока> или b:<id-урока>#<номер>. Привязка создаётся кнопкой 🎨 у блока или атрибутом canvas/canvasId.' }));
+sideOpts.appendChild(h('div', { class: 'canvas-opt-hint', textContent: 'Ключ блока: b:<id-блока> или b:<id-урока>#<путь блока>. Привязка создаётся кнопкой 🎨 у блока или атрибутом canvas/canvasId.' }));
 const linkNowRow = h('label', { class: 'canvas-check-row' });
 const linkNowCheck = h('input', { type: 'checkbox' });
 linkNowCheck.checked = !!canvasPrefs.linkToLesson;
@@ -7429,6 +7456,8 @@ if (!course) return;
 currentLessonId = lessonId;
 app.innerHTML = '';
 renderBaseUI();
+// сбрасываем учёт уже показанных «автопривязанных» холстов перед рендером урока
+resetRenderedAutoCanvases();
 const backBtn = h('button', { class: 'back-btn', textContent: '← К списку занятий', type: 'button' });
 backBtn.addEventListener('click', () => {
 currentLessonId = null;
@@ -7484,9 +7513,13 @@ cvWrap.appendChild(b);
 });
 lessonContainer.appendChild(cvWrap);
 }
-const blocksWithCanvasCount = lessonBlocks.filter((b, i) => b && (blockCanvasRequested(b) || hasBoundCanvas(lesson.id, i, b))).length;
+const blocksWithCanvasCount = lessonBlocks.filter((b, i) => {
+if (!b) return false;
+if (!blockCanBindCanvas(b, true)) return false;
+return blockCanvasRequested(b) || hasBoundCanvas(lesson.id, String(i), b);
+}).length;
 if (editMode) {
-lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок: ✎ — редактировать JSON блока, 🎨 — холст заметок для этого блока, ↑/↓ — переместить, ＋ — добавить блок, 🗑 — удалить. В режиме просмотра значок 🎨 показывается в правом верхнем углу области любого блока, у которого есть привязанный холст.' }));
+lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '💡 Наведите курсор на любой блок: ✎ — редактировать JSON блока, 🎨 — холст заметок для этого блока, ↑/↓ — переместить, ＋ — добавить блок, 🗑 — удалить. В режиме просмотра значок 🎨 показывается в правом верхнем углу области блока, у которого есть привязанный холст.' }));
 } else if (blocksWithCanvasCount > 0) {
 lessonContainer.appendChild(h('p', { class: 'editor-hint', textContent: '🎨 К ' + blocksWithCanvasCount + ' блок(ам) этого урока привязаны холсты для заметок — значок 🎨 находится в правом верхнем углу области блока (счётчик показывает число заметок).' }));
 }
@@ -7497,7 +7530,7 @@ const addBlockBtn = h('button', { class: 'add-block-btn', type: 'button', textCo
 addBlockBtn.addEventListener('click', () => openAddBlockEditor(lesson, ensureLessonBlocks(lesson).length));
 content.appendChild(addBlockBtn);
 } else {
-renderBlocks(lessonBlocks, content, true);
+renderBlocks(lessonBlocks, content, true, '');
 }
 lessonContainer.appendChild(content);
 const completeBtn = h('button', {
@@ -7593,24 +7626,25 @@ function postProcess(container) {
 processMath(container);
 renderMermaidDiagrams(container);
 }
-// isTopLevel = true только для блоков верхнего уровня урока:
-// автоматическая привязка холста по индексу допустима лишь для них,
-// иначе вложенные блоки (вкладки, секции, колонки) могли бы «подхватить»
-// холст одноимённого по индексу блока верхнего уровня.
-function renderBlocks(blocks, container, isTopLevel) {
+// parentPath — путь родительского контейнера; путь дочернего блока = parentPath + '.' + idx.
+// isTopLevel = true только для блоков верхнего уровня урока.
+function renderBlocks(blocks, container, isTopLevel, parentPath) {
 if (!Array.isArray(blocks)) return;
+const base = (parentPath === undefined || parentPath === null) ? '' : String(parentPath);
 blocks.forEach((block, idx) => {
-const element = renderBlock(block, idx, !!isTopLevel);
+const childPath = base === '' ? String(idx) : (base + '.' + idx);
+const element = renderBlock(block, idx, !!isTopLevel, childPath);
 if (element) container.appendChild(element);
 });
 }
-function renderContentOrText(value, container) {
+function renderContentOrText(value, container, basePath) {
+const base = (basePath === undefined || basePath === null || basePath === '') ? '0' : String(basePath);
 if (typeof value === 'string' || typeof value === 'number') {
 container.appendChild(document.createTextNode(String(value)));
 } else if (Array.isArray(value)) {
-renderBlocks(value, container);
+renderBlocks(value, container, false, base);
 } else if (value && value.type) {
-const el = renderBlock(value, 0, false);
+const el = renderBlock(value, 0, false, base + '.0');
 if (el) container.appendChild(el);
 }
 }
@@ -7712,8 +7746,9 @@ element.style.overflow = 'auto';
 }
 }
 }
-function renderBlock(block, idx, isTopLevel) {
+function renderBlock(block, idx, isTopLevel, blockPath) {
 if (!block || typeof block !== 'object') return null;
+const bPath = (blockPath === undefined || blockPath === null || blockPath === '') ? String(idx) : String(blockPath);
 let element;
 switch (block.type) {
 case 'section':
@@ -7721,7 +7756,7 @@ element = h('section', { class: 'block-section', id: block.id || slugify(block.t
 element.appendChild(h('h2', { class: 'section-title', textContent: block.title != null ? String(block.title) : 'Секция' }));
 if (block.children) {
 const content = h('div', { class: 'section-content' });
-renderBlocks(block.children, content);
+renderBlocks(block.children, content, false, bPath);
 element.appendChild(content);
 }
 break;
@@ -7798,7 +7833,7 @@ element = h('div', { class: `callout callout-${block.variant || 'info'}` });
 if (block.title) element.appendChild(h('h4', { textContent: block.title }));
 if (block.children) {
 const content = h('div');
-renderBlocks(block.children, content);
+renderBlocks(block.children, content, false, bPath);
 element.appendChild(content);
 } else if (block.text) {
 element.appendChild(h('p', { textContent: block.text }));
@@ -7812,7 +7847,7 @@ const panelContainer = h('div', { class: 'tab-panels' });
 (Array.isArray(block.tabs) ? block.tabs : []).forEach((tab, tabIdx) => {
 const btn = h('button', { class: 'tab-button' + (tabIdx === 0 ? ' active' : ''), textContent: tab.label, type: 'button' });
 const panel = h('div', { class: 'tab-panel' + (tabIdx === 0 ? ' active' : '') });
-renderBlocks(tab.content || [], panel);
+renderBlocks(tab.content || [], panel, false, bPath + '.t' + tabIdx);
 btn.addEventListener('click', () => {
 btnContainer.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
 panelContainer.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -7828,14 +7863,14 @@ break;
 }
 case 'accordion': {
 element = h('div', { class: 'accordion' });
-(Array.isArray(block.items) ? block.items : []).forEach((item) => {
+(Array.isArray(block.items) ? block.items : []).forEach((item, accIdx) => {
 const itemEl = h('div', { class: 'accordion-item' });
 const header = h('button', { class: 'accordion-header', type: 'button' });
 header.appendChild(h('span', { textContent: item.title != null ? String(item.title) : '' }));
 header.appendChild(h('span', { class: 'icon', textContent: '+' }));
 const body = h('div', { class: 'accordion-body' });
 const inner = h('div', { class: 'accordion-body-inner' });
-renderBlocks(item.content || [], inner);
+renderBlocks(item.content || [], inner, false, bPath + '.a' + accIdx);
 body.appendChild(inner);
 header.addEventListener('click', () => {
 const isOpen = itemEl.classList.contains('open');
@@ -8036,10 +8071,10 @@ case 'flip-card': {
 element = h('div', { class: 'flip-card' });
 const inner = h('div', { class: 'flip-card-inner' });
 const front = h('div', { class: 'flip-card-front' });
-renderContentOrText(block.front != null ? block.front : '?', front);
+renderContentOrText(block.front != null ? block.front : '?', front, bPath + '.fr');
 inner.appendChild(front);
 const back = h('div', { class: 'flip-card-back' });
-renderContentOrText(block.back != null ? block.back : '?', back);
+renderContentOrText(block.back != null ? block.back : '?', back, bPath + '.bk');
 inner.appendChild(back);
 element.appendChild(inner);
 element.addEventListener('click', () => element.classList.toggle('flipped'));
@@ -8076,12 +8111,12 @@ break;
 case 'compare': {
 element = h('div', { class: 'compare-container' });
 const left = h('div', { class: 'compare-left' });
-if (block.left) renderBlocks(block.left, left);
+if (block.left) renderBlocks(block.left, left, false, bPath + '.l');
 element.appendChild(left);
 const divider = h('div', { class: 'compare-divider' });
 element.appendChild(divider);
 const right = h('div', { class: 'compare-right' });
-if (block.right) renderBlocks(block.right, right);
+if (block.right) renderBlocks(block.right, right, false, bPath + '.r');
 element.appendChild(right);
 setupCompareDrag(element, left, divider);
 break;
@@ -8123,7 +8158,7 @@ stepsHeader.appendChild(btn);
 });
 stepsContent.innerHTML = '';
 if (stepsArr[currentStep]) {
-renderBlocks(stepsArr[currentStep].content || [], stepsContent);
+renderBlocks(stepsArr[currentStep].content || [], stepsContent, false, bPath + '.s' + currentStep);
 }
 };
 if (stepsArr.length > 0) {
@@ -8142,9 +8177,9 @@ break;
 }
 case 'columns': {
 element = h('div', { class: 'columns' });
-(Array.isArray(block.columns) ? block.columns : []).forEach(col => {
+(Array.isArray(block.columns) ? block.columns : []).forEach((col, colIdx) => {
 const colDiv = h('div', { class: 'column' });
-renderBlocks(col.blocks || [], colDiv);
+renderBlocks(col.blocks || [], colDiv, false, bPath + '.c' + colIdx);
 element.appendChild(colDiv);
 });
 break;
@@ -8153,10 +8188,10 @@ case 'carousel': {
 element = h('div', { class: 'carousel' });
 const carouselItems = Array.isArray(block.items) ? block.items : [];
 const track = h('div', { class: 'carousel-track' });
-const slides = carouselItems.map(item => {
+const slides = carouselItems.map((item, slideIdx) => {
 const slide = h('div', { class: 'carousel-slide' });
 if (item.content) {
-renderBlocks(item.content, slide);
+renderBlocks(item.content, slide, false, bPath + '.' + slideIdx);
 } else if (item.image) {
 slide.appendChild(h('img', { src: item.image, alt: item.caption || '' }));
 if (item.caption) slide.appendChild(h('div', { class: 'figure', textContent: item.caption }));
@@ -8285,7 +8320,7 @@ const content = h('div', { class: 'modal-content' });
 const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
 closeBtn.addEventListener('click', () => overlay.remove());
 content.appendChild(closeBtn);
-if (block.content) renderBlocks(block.content, content);
+if (block.content) renderBlocks(block.content, content, false, bPath + '.m');
 else if (block.text) content.appendChild(h('p', { textContent: block.text }));
 overlay.appendChild(content);
 document.body.appendChild(overlay);
@@ -8381,7 +8416,7 @@ case 'model3d':
 element = renderModel3DBlock(block);
 break;
 case 'flashcards':
-element = renderFlashcardsBlock(block);
+element = renderFlashcardsBlock(block, bPath);
 break;
 case 'checklist':
 element = renderChecklistBlock(block);
@@ -8440,14 +8475,30 @@ else applySizing(block, element, false);
 } else if (block.type !== 'youtube') {
 applySizing(block, element, false);
 }
-// Значок/панель холста: показываем, если холст запрошен атрибутом ИЛИ
-// если к блоку уже привязан холст (создан кнопкой 🎨 в режиме редактирования).
-const canvasRequested = blockCanvasRequested(block);
-const canvasBound = hasBoundCanvas(currentLessonId, idx, block);
-if (canvasRequested || canvasBound) {
+// ------- ПРИВЯЗКА ХОЛСТА: строго один значок на один холст -------
+const explicitId = blockExplicitCanvasId(block);
+const canBind = blockCanBindCanvas(block, isTopLevel === true);
+const requested = blockCanvasRequested(block);
+let attachCanvasUI = false;
+if (canBind && requested) {
+// холст запрошен атрибутом canvas / canvasId
+attachCanvasUI = true;
+} else if (canBind && hasBoundCanvas(currentLessonId, bPath, block)) {
+// холст уже привязан (создан кнопкой 🎨 в режиме редактирования)
+attachCanvasUI = true;
+}
+if (attachCanvasUI) {
+const rec = resolveBlockCanvas(currentLessonId, bPath, block);
+if (!explicitId && rec) {
+// авто-привязка (без явного canvasId) должна встречаться только один раз
+if (renderedAutoCanvases.has(rec.id)) attachCanvasUI = false;
+else renderedAutoCanvases.add(rec.id);
+}
+}
+if (attachCanvasUI) {
 element = editMode
-? attachBlockCanvasBar(element, block, idx)
-: attachBlockCanvasFloat(element, block, idx);
+? attachBlockCanvasBar(element, block, bPath)
+: attachBlockCanvasFloat(element, block, bPath);
 }
 }
 return element;
