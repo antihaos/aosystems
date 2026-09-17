@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Neon Mermaid Studio — WYSIWYG редактор диаграмм</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.0.18/400.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.0.18/500.css">
@@ -37,6 +37,7 @@ svg.ico{width:17px;height:17px;flex:0 0 auto}
 
 /* Режим без IndexedDB: скрываем всё, что связано с хранилищем */
 body.no-storage [data-need-db]{display:none !important}
+.mobile-only{display:none !important}
 
 /* ============ APP SHELL ============ */
 #app{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
@@ -49,19 +50,28 @@ body.no-storage [data-need-db]{display:none !important}
   box-shadow:0 1px 0 color-mix(in srgb,var(--accent) 14%,transparent),0 8px 30px rgba(0,0,0,.45);
   z-index:100;
 }
-.brand{display:flex;align-items:center;gap:9px;padding-right:8px;flex:0 0 auto}
+.brand{display:flex;align-items:center;gap:9px;padding-right:8px;flex:0 0 auto;min-width:0}
 .logo-mark{
-  width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+  width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer;
   background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 22%,#0a0f1c),#0c1222);
   border:1px solid color-mix(in srgb,var(--accent) 50%,transparent);color:var(--accent);
   box-shadow:0 0 14px color-mix(in srgb,var(--accent) 35%,transparent),inset 0 0 10px color-mix(in srgb,var(--accent) 12%,transparent);
+  transition:.2s;animation:logoPulse 3.2s ease-in-out infinite;
 }
-.logo-mark svg{width:16px;height:16px}
+.logo-mark:hover{transform:scale(1.06);box-shadow:0 0 22px color-mix(in srgb,var(--accent) 55%,transparent),inset 0 0 12px color-mix(in srgb,var(--accent) 20%,transparent)}
+@keyframes logoPulse{0%,100%{box-shadow:0 0 12px color-mix(in srgb,var(--accent) 30%,transparent),inset 0 0 10px color-mix(in srgb,var(--accent) 12%,transparent)}50%{box-shadow:0 0 20px color-mix(in srgb,var(--accent) 50%,transparent),inset 0 0 12px color-mix(in srgb,var(--accent) 18%,transparent)}}
+.logo-mark svg{width:17px;height:17px}
 .logo-text{font-weight:700;font-size:14px;letter-spacing:2px;white-space:nowrap;
   background:linear-gradient(90deg,var(--accent),#8ab6ff 55%,var(--accent2));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 0 10px color-mix(in srgb,var(--accent) 40%,transparent));}
 .logo-text span{font-weight:400;opacity:.85}
+.ver-badge{
+  font:600 9.5px 'JetBrains Mono';color:var(--accent);white-space:nowrap;flex:0 0 auto;
+  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);padding:2px 7px;border-radius:99px;letter-spacing:.5px;
+  background:color-mix(in srgb,var(--accent) 8%,transparent);
+  box-shadow:0 0 10px color-mix(in srgb,var(--accent) 18%,transparent);
+}
 #menus{display:flex;gap:2px;align-items:center;min-width:0}
 .menu-wrap{position:relative;flex:0 0 auto}
 .menu{
@@ -112,6 +122,7 @@ body.no-storage [data-need-db]{display:none !important}
   box-shadow:0 0 12px color-mix(in srgb,var(--accent) 22%,transparent),inset 0 0 8px color-mix(in srgb,var(--accent) 8%,transparent);
 }
 .ibtn:disabled{opacity:.32;pointer-events:none}
+.ibtn.danger{color:#ff8fa3}
 .ibtn.danger:hover{color:var(--err);border-color:#ff547055;background:#ff547012}
 .ibtn.sm{height:26px;min-width:26px;padding:0 6px}
 .ibtn.sm svg{width:14px;height:14px}
@@ -141,6 +152,10 @@ body.no-storage [data-need-db]{display:none !important}
 .zoom-label{min-width:52px;font:600 12px 'JetBrains Mono';color:#b9c9e8}
 .dir-select{width:auto;max-width:180px;height:32px;padding:0 8px;font-size:12px;flex:0 0 auto}
 
+/* ---- Mobile dock (нижняя панель инструментов) ---- */
+#mobileDock{display:none}
+.dk-sep{width:1px;height:26px;background:var(--line);flex:0 0 auto;margin:0 2px}
+
 /* ---- Main ---- */
 #main{flex:1;display:flex;min-height:0;position:relative}
 #sidebarLeft,#panelRight{
@@ -151,6 +166,7 @@ body.no-storage [data-need-db]{display:none !important}
 #panelRight{width:332px;border-left:1px solid var(--line)}
 #main.left-collapsed #sidebarLeft{display:none}
 #main.right-collapsed #panelRight{display:none}
+#drawerBackdrop{display:none}
 .side-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px}
 .side-sec{margin-bottom:16px}
 .sec-head{
@@ -431,6 +447,27 @@ input[type=number].inp{-moz-appearance:textfield}
 .modal-foot{padding:13px 18px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;flex:0 0 auto;flex-wrap:wrap}
 .mtext{color:#b9c9e8;font-size:13.5px;line-height:1.55}
 
+/* ---- Mobile menu (бургер) ---- */
+#mobileMenu{position:fixed;inset:0;z-index:900;display:none}
+#mobileMenu.open{display:block}
+.mm-backdrop{position:absolute;inset:0;background:rgba(3,5,12,.62);backdrop-filter:blur(4px);animation:fade .15s}
+.mm-panel{
+  position:absolute;left:0;top:0;bottom:0;width:min(330px,88vw);display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#0c1120fb,#090d19fb);border-right:1px solid var(--line2);
+  box-shadow:30px 0 80px rgba(0,0,0,.65),0 0 40px color-mix(in srgb,var(--accent) 8%,transparent);
+  animation:slideL .22s cubic-bezier(.2,.9,.3,1.1);
+}
+@keyframes slideL{from{transform:translateX(-100%)}to{transform:none}}
+.mm-head{display:flex;align-items:center;gap:10px;padding:12px 12px 12px 16px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.mm-title{font:700 13px 'Space Grotesk';letter-spacing:2px;white-space:nowrap;
+  background:linear-gradient(90deg,var(--accent),#8ab6ff 55%,var(--accent2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+.mm-ver{font:10px 'JetBrains Mono';color:var(--muted);margin-top:2px}
+.mm-body{flex:1;overflow-y:auto;padding:10px 12px 16px}
+.mm-sec{margin-bottom:14px}
+.mm-sec h5{font:700 10px 'Space Grotesk';letter-spacing:1.6px;text-transform:uppercase;color:#5f7396;padding:6px 8px}
+.mm-foot{flex:0 0 auto;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;align-items:center;gap:10px}
+
 /* modal content bits */
 .proj-list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
 .proj-item{
@@ -503,29 +540,62 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 *::-webkit-scrollbar-thumb:hover{background:#31456b;background-clip:content-box}
 *::-webkit-scrollbar-track{background:transparent}
 
+/* ---- Крупные цели касания на тач-устройствах ---- */
+@media (pointer:coarse){
+  .port{width:16px;height:16px}
+  .port-n{top:-9px}.port-s{bottom:-9px}.port-w{left:-9px}.port-e{right:-9px}
+  .resize-handle{width:18px;height:18px;right:-9px;bottom:-9px}
+  .dia-item .mini{display:inline-flex;width:28px;height:28px}
+  #canvasControls .ibtn{height:38px;min-width:38px}
+}
+
 /* ---- Responsive ---- */
-@media (max-width:1100px){ .proj-input{width:130px} .logo-text{display:none} }
+@media (max-width:1100px){ .proj-input{width:130px} }
 @media (max-width:980px){
   #sidebarLeft,#panelRight{position:absolute;top:0;bottom:0;z-index:70;background:#0a0e1af8;backdrop-filter:blur(14px)}
   #sidebarLeft{left:0;box-shadow:24px 0 60px rgba(0,0,0,.6)}
   #panelRight{right:0;box-shadow:-24px 0 60px rgba(0,0,0,.6)}
+  body.drawer-open #drawerBackdrop{display:block;position:absolute;inset:0;z-index:65;background:rgba(3,5,12,.55);backdrop-filter:blur(2px)}
 }
 @media (max-width:820px){
-  #topbar{height:48px;gap:6px;padding:0 8px}
   .chip span.txt{display:none}
-  .proj-input{width:100px}
   #canvasHint{display:none}
   .hide-sm{display:none !important}
   .kbd-table{grid-template-columns:1fr}
   .set-grid{grid-template-columns:1fr}
 }
-@media (max-width:620px){
-  #menus .menu-btn .mtxt{display:none}
-  #menus .menu-btn{min-width:34px;padding:0 8px}
+/* ---- Мобильный режим ---- */
+@media (max-width:768px){
+  #topbar{height:50px;gap:6px;padding:0 8px}
+  .mobile-only{display:inline-flex !important}
+  .mobile-hide{display:none !important}
+  #menus{display:none}
+  #toolbar{display:none}
   .proj-input{display:none}
-  #statusbar{font-size:10px}
+  .logo-mark{width:28px;height:28px}
+  .logo-text{font-size:11px;letter-spacing:1px}
+  #mobileDock{
+    display:flex;flex:0 0 auto;align-items:center;gap:5px;padding:6px 8px;overflow-x:auto;
+    background:#080c16f2;border-top:1px solid var(--line);backdrop-filter:blur(10px);z-index:80;scrollbar-width:none;
+  }
+  #mobileDock::-webkit-scrollbar{height:0}
+  #mobileDock .ibtn{height:42px;min-width:42px;flex:0 0 auto;border-radius:10px}
+  #mobileDock .ibtn svg{width:19px;height:19px}
+  #mobileDock .menu-wrap{flex:0 0 auto}
+  #mobileDock .zoom-label{min-width:54px;font:600 12px 'JetBrains Mono'}
+  #statusbar{height:calc(24px + env(safe-area-inset-bottom));padding:0 8px;padding-bottom:env(safe-area-inset-bottom);font-size:10px;gap:6px}
+  .st-left,.st-right{gap:6px}
+  .modal-overlay{padding:0}
+  .modal,.modal.wide{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border-radius:0;border:0}
+  .exp-png-prev{max-height:200px}
+  .ta{min-height:130px}
+}
+@media (max-width:620px){
   .hide-xs{display:none !important}
-  .modal-overlay{padding:8px}
+  #statusbar{font-size:9.5px}
+}
+@media (max-width:400px){
+  .logo-text{display:none}
 }
 </style>
 </head>
@@ -534,9 +604,11 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 
   <!-- ================= TOPBAR ================= -->
   <header id="topbar">
+    <button class="ibtn mobile-only" id="btnMobileMenu" data-icon="menu" title="Меню"></button>
     <div class="brand">
-      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
+      <div class="logo-mark" title="О программе"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
       <div class="logo-text">NEON<span>·MERMAID</span></div>
+      <span class="ver-badge" id="verBadge">v1.5.0</span>
     </div>
     <nav id="menus">
       <div class="menu-wrap">
@@ -596,13 +668,13 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     <div class="top-right">
       <input id="projectName" class="proj-input" maxlength="90" title="Имя проекта" spellcheck="false">
       <div id="saveChip" class="chip saved" title="Состояние сохранения"><span class="dot"></span><span class="txt">—</span></div>
-      <button class="ibtn" id="btnSave" data-icon="save" title="Сохранить (Ctrl+S)" data-need-db></button>
+      <button class="ibtn mobile-hide" id="btnSave" data-icon="save" title="Сохранить (Ctrl+S)" data-need-db></button>
       <button class="ibtn" id="btnExportTop" data-icon="download" title="Экспорт"></button>
       <button class="ibtn" id="btnSettings" data-icon="gear" title="Настройки"></button>
     </div>
   </header>
 
-  <!-- ================= TOOLBAR ================= -->
+  <!-- ================= TOOLBAR (десктоп) ================= -->
   <div id="toolbar">
     <div class="tgroup">
       <button class="ibtn tool-btn active" data-tool="select" data-icon="cursor" title="Выбор (V)"></button>
@@ -611,14 +683,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     </div>
     <div class="tsep"></div>
     <div class="tgroup">
-      <button class="ibtn" id="btnUndo" data-icon="undo" title="Отменить (Ctrl+Z)"></button>
-      <button class="ibtn" id="btnRedo" data-icon="redo" title="Повторить (Ctrl+Y)"></button>
+      <button class="ibtn" id="btnUndo" data-role="undo" data-icon="undo" title="Отменить (Ctrl+Z)"></button>
+      <button class="ibtn" id="btnRedo" data-role="redo" data-icon="redo" title="Повторить (Ctrl+Y)"></button>
     </div>
     <div class="tsep"></div>
     <div class="tgroup">
-      <button class="ibtn" id="btnZoomOut" data-icon="minus" title="Уменьшить (−)"></button>
-      <button class="ibtn zoom-label" id="btnZoomLabel" title="Масштаб 100% (0)">100%</button>
-      <button class="ibtn" id="btnZoomIn" data-icon="plus" title="Увеличить (+)"></button>
+      <button class="ibtn" id="btnZoomOut" data-role="zoomOut" data-icon="minus" title="Уменьшить (−)"></button>
+      <button class="ibtn zoom-label" id="btnZoomLabel" data-role="fit100" title="Масштаб 100% (0)">100%</button>
+      <button class="ibtn" id="btnZoomIn" data-role="zoomIn" data-icon="plus" title="Увеличить (+)"></button>
       <div class="menu-wrap">
         <button class="ibtn" id="btnFitMenu" data-icon="frame" data-menubtn title="Варианты вписывания"></button>
         <div class="menu">
@@ -633,9 +705,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     </div>
     <div class="tsep"></div>
     <div class="tgroup">
-      <button class="ibtn" id="btnSnap" data-icon="magnet" title="Привязка к сетке"></button>
-      <button class="ibtn" id="btnGrid" data-icon="grid" title="Сетка холста"></button>
-      <button class="ibtn" id="btnLayout" data-icon="wand" title="Автоматическая разметка"></button>
+      <button class="ibtn" id="btnSnap" data-role="snap" data-icon="magnet" title="Привязка к сетке"></button>
+      <button class="ibtn" id="btnGrid" data-role="grid" data-icon="grid" title="Сетка холста"></button>
+      <button class="ibtn" id="btnLayout" data-role="layout" data-icon="wand" title="Автоматическая разметка"></button>
       <select class="inp dir-select" id="dirSelect" title="Направление диаграммы (Mermaid)">
         <option value="TD">↓ Сверху вниз (TD)</option>
         <option value="LR">→ Слева направо (LR)</option>
@@ -645,18 +717,19 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     </div>
     <div class="tsep"></div>
     <div class="tgroup">
-      <button class="ibtn" id="btnDup" data-icon="copy" title="Дублировать (Ctrl+D)"></button>
-      <button class="ibtn danger" id="btnDel" data-icon="trash" title="Удалить (Del)"></button>
+      <button class="ibtn" id="btnDup" data-role="dup" data-icon="copy" title="Дублировать (Ctrl+D)"></button>
+      <button class="ibtn danger" id="btnDel" data-role="del" data-icon="trash" title="Удалить (Del)"></button>
     </div>
     <div class="tspacer"></div>
     <div class="tgroup">
-      <button class="ibtn" id="btnToggleLeft" data-icon="panelLeft" title="Левая панель"></button>
-      <button class="ibtn" id="btnToggleRight" data-icon="panelRight" title="Правая панель"></button>
+      <button class="ibtn" id="btnToggleLeft" data-role="left" data-icon="panelLeft" title="Левая панель"></button>
+      <button class="ibtn" id="btnToggleRight" data-role="right" data-icon="panelRight" title="Правая панель"></button>
     </div>
   </div>
 
   <!-- ================= MAIN ================= -->
   <main id="main">
+    <div id="drawerBackdrop"></div>
     <!-- SIDEBAR -->
     <aside id="sidebarLeft">
       <div class="side-scroll">
@@ -686,14 +759,14 @@ input[type=range]{width:100%;accent-color:var(--accent)}
         <div id="marquee"></div>
       </div>
       <div id="emptyState" style="display:none">
-        <div class="es-box"><b>Холст пуст</b>Двойной клик по холсту — новая фигура.<br>Или перетащите фигуру из палитры слева.</div>
+        <div class="es-box"><b>Холст пуст</b>Двойной клик (или двойное касание) — новая фигура.<br>Или добавьте фигуру из палитры.</div>
       </div>
       <div id="canvasControls">
-        <button class="ibtn" id="cZoomOut" data-icon="minus" title="Уменьшить"></button>
-        <button class="ibtn zoom-label" id="cZoomLabel" title="100%">100%</button>
-        <button class="ibtn" id="cZoomIn" data-icon="plus" title="Увеличить"></button>
+        <button class="ibtn" id="cZoomOut" data-role="zoomOut" data-icon="minus" title="Уменьшить"></button>
+        <button class="ibtn zoom-label" id="cZoomLabel" data-role="fit100" title="100%">100%</button>
+        <button class="ibtn" id="cZoomIn" data-role="zoomIn" data-icon="plus" title="Увеличить"></button>
         <div class="c-div"></div>
-        <button class="ibtn" id="cFit" data-icon="frame" title="Вписать всё (1)"></button>
+        <button class="ibtn" id="cFit" data-role="fitAll" data-icon="frame" title="Вписать всё (1)"></button>
       </div>
       <div id="canvasHint"><span>Двойной клик — фигура · Колесо — масштаб · Space / средняя кнопка — панорама · Тяните от точки на узле — связь</span><button id="hintClose" title="Скрыть">✕</button></div>
     </div>
@@ -725,6 +798,41 @@ input[type=range]{width:100%;accent-color:var(--accent)}
     </aside>
   </main>
 
+  <!-- ================= MOBILE DOCK ================= -->
+  <div id="mobileDock">
+    <button class="ibtn" data-role="left" data-icon="panelLeft" title="Фигуры и диаграммы"></button>
+    <span class="dk-sep"></span>
+    <button class="ibtn tool-btn active" data-tool="select" data-icon="cursor" title="Выбор"></button>
+    <button class="ibtn tool-btn" data-tool="pan" data-icon="hand" title="Панорама"></button>
+    <button class="ibtn tool-btn" data-tool="edge" data-icon="link" title="Связь"></button>
+    <span class="dk-sep"></span>
+    <button class="ibtn" data-role="undo" data-icon="undo" title="Отменить"></button>
+    <button class="ibtn" data-role="redo" data-icon="redo" title="Повторить"></button>
+    <span class="dk-sep"></span>
+    <button class="ibtn" data-role="zoomOut" data-icon="minus" title="Уменьшить"></button>
+    <button class="ibtn zoom-label" id="dockZoomLabel" data-role="fit100" title="Масштаб 100%">100%</button>
+    <button class="ibtn" data-role="zoomIn" data-icon="plus" title="Увеличить"></button>
+    <div class="menu-wrap">
+      <button class="ibtn" data-menubtn data-icon="frame" title="Вписывание"></button>
+      <div class="menu">
+        <button class="menu-item" data-act="fit" data-fit="all">⛶ Весь холст</button>
+        <button class="menu-item" data-act="fit" data-fit="width">↔ По ширине</button>
+        <button class="menu-item" data-act="fit" data-fit="height">↕ По высоте</button>
+        <button class="menu-item" data-act="fit" data-fit="selection">❐ По выделению</button>
+        <button class="menu-item" data-act="fit" data-fit="100">1:1 Масштаб 100%</button>
+        <button class="menu-item" data-act="fit" data-fit="center">◎ Центрировать</button>
+      </div>
+    </div>
+    <span class="dk-sep"></span>
+    <button class="ibtn" data-role="snap" data-icon="magnet" title="Привязка к сетке"></button>
+    <button class="ibtn" data-role="grid" data-icon="grid" title="Сетка"></button>
+    <button class="ibtn" data-role="layout" data-icon="wand" title="Авторазметка"></button>
+    <button class="ibtn" data-role="dir" id="dockDir" title="Направление диаграммы (нажмите для смены)">TD</button>
+    <span class="dk-sep"></span>
+    <button class="ibtn danger" data-role="del" data-icon="trash" title="Удалить выделение"></button>
+    <button class="ibtn" data-role="right" data-icon="panelRight" title="Свойства / Код / Превью"></button>
+  </div>
+
   <!-- ================= STATUSBAR ================= -->
   <footer id="statusbar">
     <div class="st-left">
@@ -742,9 +850,70 @@ input[type=range]{width:100%;accent-color:var(--accent)}
       <span class="st-div"></span>
       <span id="stZoom" class="st-item">100%</span>
       <span class="st-div"></span>
-      <span id="stPos" class="st-item">X:0 Y:0</span>
+      <span id="stPos" class="st-item hide-xs">X:0 Y:0</span>
     </div>
   </footer>
+</div>
+
+<!-- ================= MOBILE MENU ================= -->
+<div id="mobileMenu">
+  <div class="mm-backdrop" id="mmBackdrop"></div>
+  <div class="mm-panel">
+    <div class="mm-head">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
+      <div>
+        <div class="mm-title">NEON·MERMAID</div>
+        <div class="mm-ver" id="mmVersion">v1.5.0</div>
+      </div>
+      <button class="ibtn" id="mmClose" data-icon="close" title="Закрыть" style="margin-left:auto"></button>
+    </div>
+    <div class="mm-body">
+      <div class="mm-sec">
+        <h5>Проект</h5>
+        <input class="inp" id="mmProjectName" maxlength="90" placeholder="Имя проекта" spellcheck="false" style="margin:2px 6px 8px;width:calc(100% - 12px)">
+        <button class="menu-item" data-act="new" data-icon="file">Новый проект</button>
+        <button class="menu-item" data-act="open" data-icon="folder" data-need-db>Открыть…</button>
+        <button class="menu-item" data-act="save" data-icon="save" data-need-db>Сохранить</button>
+        <button class="menu-item" data-act="saveAs" data-icon="copy" data-need-db>Сохранить как…</button>
+        <button class="menu-item" data-act="import" data-icon="upload">Импорт проекта…</button>
+        <button class="menu-item" data-act="export" data-icon="download">Экспорт…</button>
+        <button class="menu-item" data-act="delProject" data-icon="trash" data-need-db>Удалить проект</button>
+      </div>
+      <div class="mm-sec">
+        <h5>Правка</h5>
+        <button class="menu-item" data-act="undo" data-icon="undo">Отменить</button>
+        <button class="menu-item" data-act="redo" data-icon="redo">Повторить</button>
+        <button class="menu-item" data-act="copy" data-icon="copy">Копировать</button>
+        <button class="menu-item" data-act="paste" data-icon="copy">Вставить</button>
+        <button class="menu-item" data-act="duplicate" data-icon="copy">Дублировать</button>
+        <button class="menu-item" data-act="selectAll" data-icon="frame">Выделить всё</button>
+        <button class="menu-item" data-act="delete" data-icon="trash">Удалить</button>
+      </div>
+      <div class="mm-sec">
+        <h5>Вид</h5>
+        <button class="menu-item" data-act="toggleLeft" data-icon="panelLeft">Панель фигур и диаграмм</button>
+        <button class="menu-item" data-act="toggleRight" data-icon="panelRight">Панель свойств и кода</button>
+        <button class="menu-item" data-act="fit" data-fit="all" data-icon="frame">Вписать всё</button>
+        <button class="menu-item" data-act="fit" data-fit="width" data-icon="frame">По ширине</button>
+        <button class="menu-item" data-act="fit" data-fit="height" data-icon="frame">По высоте</button>
+        <button class="menu-item" data-act="fit" data-fit="selection" data-icon="frame">По выделению</button>
+        <button class="menu-item" data-act="fit" data-fit="100" data-icon="zoomIn">Масштаб 100%</button>
+        <button class="menu-item" data-act="fit" data-fit="center" data-icon="frame">Центрировать</button>
+        <button class="menu-item" data-act="grid" data-icon="grid"><span class="check" data-check="grid"></span>Сетка</button>
+        <button class="menu-item" data-act="snap" data-icon="magnet"><span class="check" data-check="snap"></span>Привязка к сетке</button>
+        <button class="menu-item" data-act="settings" data-icon="gear">Настройки…</button>
+      </div>
+      <div class="mm-sec">
+        <h5>Справка</h5>
+        <button class="menu-item" data-act="help" data-icon="help">Горячие клавиши</button>
+        <button class="menu-item" data-act="about" data-icon="bolt">О программе</button>
+      </div>
+    </div>
+    <div class="mm-foot">
+      <div id="mmSaveChip" class="chip saved"><span class="dot"></span><span class="txt">—</span></div>
+      <span id="mmStorage" class="muted small" style="margin-left:auto"></span>
+    </div>
+  </div>
 </div>
 
 <div id="modalRoot"></div>
@@ -755,11 +924,13 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 <script>
 'use strict';
 /* ================================================================
-   NEON MERMAID STUDIO — монолитное SPA (v1.4)
-   Исправлено: стрелочные функции форм в SHAPES записаны в явном
-   виде wrap:(l)=>… (устранена ошибка парсинга «l:» вместо «l=>»).
-   Объявления P/viewport вынесены в начало скрипта.
+   NEON MERMAID STUDIO — монолитное SPA (v1.5.0)
+   + Логотип и версия программы в заголовке
+   + Полная мобильная адаптация: бургер-меню, нижний док
+     инструментов, выдвижные панели с затемнением, полноэкранные
+     модальные окна, крупные цели касания, safe-area.
    ================================================================ */
+const APP_VERSION='1.5.0';
 
 /* ---------------- Utils (объявлены первыми — используются везде) ---------------- */
 const $=(s,r)=>(r||document).querySelector(s);
@@ -777,12 +948,12 @@ function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.
 function downloadText(text,name,mime){downloadBlob(new Blob([text],{type:(mime||'text/plain')+';charset=utf-8'}),name);}
 
 /* ---------------- Shared runtime objects (объявлены ДО всех потребителей) ---------------- */
-/* Состояние указателя/жестов — используется в renderNodeLayer, applySnapshot и др. */
 const P={mode:null,startClient:null,startView:null,startWorld:null,orig:null,nodeId:null,linkFrom:null,pendingLink:null,pointers:new Map(),pinch:null,moved:false};
 const viewport=()=>$('#viewport');
 
 /* ---------------- Icons ---------------- */
 const ICONS={
+  menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
   cursor:'<path d="M5 3l14.5 8.5-6.8 1.6L9.4 20 5 3z"/>',
   hand:'<path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/>',
   link:'<path d="M7 17L17 7M9 7h8v8"/>',
@@ -842,7 +1013,6 @@ const COLORS=[
   {name:'Янтарь',hex:'#ffb020'},{name:'Виолет',hex:'#a78bff'},{name:'Коралл',hex:'#ff5470'},
   {name:'Айс',hex:'#6ea8ff'}
 ];
-/* ИСПРАВЛЕНО: wrap:(l)=>… — явная стрелочная функция (ранее парсер читал «l:») */
 const SHAPES={
   rect:   {name:'Процесс',       wrap:(l)=>'["'+l+'"]',    w:170,h:56},
   round:  {name:'Скруглённый',   wrap:(l)=>'("'+l+'")',    w:160,h:60},
@@ -861,6 +1031,7 @@ const EDGE_TYPES={
   open:{name:'Открытая',arrow:'---',glyph:'—'}
 };
 const DIR_LABEL={TD:'↓ TD сверху вниз',LR:'→ LR слева направо',BT:'↑ BT снизу вверх',RL:'← RL справа налево'};
+const DIR_ORDER=['TD','LR','BT','RL'];
 const TOOL_HINTS={
   select:'Выбор: ЛКМ — перемещение · Space/колёсико — панорама/зум · Двойной клик — подпись',
   pan:'Панорама: перетащите холст',
@@ -902,7 +1073,6 @@ const dbGet=(id)=>dbTx((st)=>st.get(id));
 const dbDel=(id)=>dbTx((st)=>st.delete(id),'readwrite');
 const dbClear=()=>dbTx((st)=>st.clear(),'readwrite');
 
-/* Реальная проверка доступности хранилища (открытие + пробная запись) */
 function detectStorage(){
   const test=(async()=>{
     if(!window.indexedDB)return false;
@@ -970,6 +1140,7 @@ function applySnapshot(s){
   state.project=o.p;state.diagramId=o.d;
   P.pendingLink=null;
   const pn=$('#projectName');if(pn&&state.project)pn.value=state.project.name;
+  const mm=$('#mmProjectName');if(mm&&state.project)mm.value=state.project.name;
   const d=diagram();
   if(d){state.sel.nodes=new Set(Array.from(state.sel.nodes).filter((id)=>d.nodes.some((n)=>n.id===id)));state.sel.edges=new Set(Array.from(state.sel.edges).filter((id)=>d.edges.some((e)=>e.id===id)));}
   else{state.sel.nodes=new Set();state.sel.edges=new Set();}
@@ -977,7 +1148,11 @@ function applySnapshot(s){
 }
 function undo(){const h=state.history;if(h.idx<=0){toast('Нечего отменять');return;}h.idx--;applySnapshot(h.stack[h.idx]);}
 function redo(){const h=state.history;if(h.idx>=h.stack.length-1){toast('Нечего повторять');return;}h.idx++;applySnapshot(h.stack[h.idx]);}
-function updateUndoButtons(){const h=state.history;const u=$('#btnUndo'),r=$('#btnRedo');if(u)u.disabled=h.idx<=0;if(r)r.disabled=h.idx>=h.stack.length-1;}
+function updateUndoButtons(){
+  const h=state.history;
+  $$('[data-role="undo"]').forEach((b)=>{b.disabled=h.idx<=0;});
+  $$('[data-role="redo"]').forEach((b)=>{b.disabled=h.idx>=h.stack.length-1;});
+}
 
 /* ---------------- Save / dirty ---------------- */
 let saveTimer=null;
@@ -1000,10 +1175,11 @@ async function saveProject(manual){
   }
 }
 function updateSaveChip(){
-  const c=$('#saveChip');if(!c)return;
-  if(!state.storageOK){c.className='chip mem';c.title='Проект существует только в памяти. Используйте Экспорт → JSON';c.innerHTML='<span class="dot"></span><span class="txt">Только в памяти</span>';return;}
-  if(state.dirty){c.className='chip dirty';c.title='Нажмите, чтобы сохранить';c.innerHTML='<span class="dot"></span><span class="txt">Есть изменения</span>';}
-  else{c.className='chip saved';c.title='Нажмите, чтобы сохранить';c.innerHTML='<span class="dot"></span><span class="txt">Сохранено'+(state.savedAt?' '+new Date(state.savedAt).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'')+'</span>';}
+  let cls,title,html;
+  if(!state.storageOK){cls='chip mem';title='Проект существует только в памяти. Используйте Экспорт → JSON';html='<span class="dot"></span><span class="txt">Только в памяти</span>';}
+  else if(state.dirty){cls='chip dirty';title='Нажмите, чтобы сохранить';html='<span class="dot"></span><span class="txt">Есть изменения</span>';}
+  else{cls='chip saved';title='Нажмите, чтобы сохранить';html='<span class="dot"></span><span class="txt">Сохранено'+(state.savedAt?' '+new Date(state.savedAt).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'')+'</span>';}
+  ['#saveChip','#mmSaveChip'].forEach((sel)=>{const c=$(sel);if(c){c.className=cls;c.title=title;c.innerHTML=html;}});
 }
 function applyStorageUI(){
   document.body.classList.toggle('no-storage',!state.storageOK);
@@ -1023,7 +1199,8 @@ function applyView(){
   vp.style.setProperty('--gx',(v.x%gs)+'px');
   vp.style.setProperty('--gy',(v.y%gs)+'px');
   const pct=Math.round(v.s*100)+'%';
-  $('#stZoom').textContent=pct;$('#btnZoomLabel').textContent=pct;$('#cZoomLabel').textContent=pct;
+  $('#stZoom').textContent=pct;
+  $$('.zoom-label').forEach((el)=>{el.textContent=pct;});
 }
 function zoomAt(f,cx,cy){
   const v=state.view,ns=clamp(v.s*f,0.1,4);if(ns===v.s)return;
@@ -1049,7 +1226,7 @@ function fitTo(mode,animate){
   if(mode==='center'){if(!d.nodes.length)return;const bb=bbox(d.nodes);setView(r.width/2-(bb.x+bb.w/2)*state.view.s,r.height/2-(bb.y+bb.h/2)*state.view.s,state.view.s,animate);return;}
   if(mode==='100'){const cx=(r.width/2-state.view.x)/state.view.s,cy=(r.height/2-state.view.y)/state.view.s;setView(r.width/2-cx,r.height/2-cy,1,animate);return;}
   let nodes=(mode==='selection')?selectedNodes():d.nodes;
-  if(mode==='selection'&&!nodes.length)nodes=d.nodes; /* пустое выделение → вписываем всё */
+  if(mode==='selection'&&!nodes.length)nodes=d.nodes;
   if(!nodes.length){setView(r.width/2-240,r.height/2-160,1,animate);return;}
   const bb=bbox(nodes),bw=Math.max(bb.w,60),bh=Math.max(bb.h,60);
   let s;
@@ -1145,11 +1322,16 @@ function renderAll(){
 }
 function syncToolbar(){
   const d=diagram();
-  if(d)$('#dirSelect').value=d.direction;
-  $('#btnSnap').classList.toggle('active',state.settings.snap);
-  $('#btnGrid').classList.toggle('active',state.settings.gridStyle!=='off');
-  $('#btnToggleLeft').classList.toggle('active',!$('#main').classList.contains('left-collapsed'));
-  $('#btnToggleRight').classList.toggle('active',!$('#main').classList.contains('right-collapsed'));
+  if(d){
+    $('#dirSelect').value=d.direction;
+    const dd=$('#dockDir');if(dd)dd.textContent=d.direction;
+  }
+  const snapOn=state.settings.snap,gridOn=state.settings.gridStyle!=='off';
+  $$('[data-role="snap"]').forEach((b)=>b.classList.toggle('active',snapOn));
+  $$('[data-role="grid"]').forEach((b)=>b.classList.toggle('active',gridOn));
+  const lo=!$('#main').classList.contains('left-collapsed'),ro=!$('#main').classList.contains('right-collapsed');
+  $$('[data-role="left"]').forEach((b)=>b.classList.toggle('active',lo));
+  $$('[data-role="right"]').forEach((b)=>b.classList.toggle('active',ro));
   updateUndoButtons();
 }
 function updateStatus(){
@@ -1163,6 +1345,8 @@ function updateStatus(){
   const st=$('#stStorage');
   st.textContent=state.storageOK?'Хранилище: IndexedDB':'Хранилище: недоступно · только память';
   st.className='st-item hide-sm'+(state.storageOK?'':' mem');
+  const ms=$('#mmStorage');
+  if(ms)ms.textContent=state.storageOK?'IndexedDB':'только память';
 }
 
 /* ---------------- Mermaid generation ---------------- */
@@ -1170,7 +1354,7 @@ function mermaidCode(d){
   if(!d)return '';
   const L=[];
   L.push('%%{init: {"theme":"dark","themeVariables":{"primaryColor":"#0d1526","primaryTextColor":"#e8f3ff","primaryBorderColor":"'+state.settings.accent+'","lineColor":"#7f96c2","fontSize":"14px"},"flowchart":{"curve":"basis","padding":14}}}%%');
-  L.push('%% Neon Mermaid Studio · '+d.name);
+  L.push('%% Neon Mermaid Studio v'+APP_VERSION+' · '+d.name);
   L.push('graph '+(d.direction||'TD'));
   const ids={};d.nodes.forEach((n,i)=>{ids[n.id]='n'+(i+1);});
   const cls=new Map();
@@ -1378,6 +1562,12 @@ function autoLayout(){
   afterChange();fitTo('all');
   toast('Авторазметка выполнена','ok');
 }
+function cycleDirection(){
+  const d=diagram();if(!d)return;
+  d.direction=DIR_ORDER[(DIR_ORDER.indexOf(d.direction)+1)%DIR_ORDER.length];
+  afterChange();
+  toast('Направление: '+DIR_LABEL[d.direction]);
+}
 
 /* ---------------- Inline editors ---------------- */
 function editNodeLabel(id){
@@ -1410,8 +1600,6 @@ function editEdgeLabel(id){
 }
 
 /* ---------------- Pointer interactions ---------------- */
-/* P и viewport объявлены в начале скрипта */
-
 function onPointerDown(e){
   if(e.target.closest('.node-editor,.elabel-editor'))return;
   const vp=viewport();
@@ -1448,7 +1636,6 @@ function onPointerDown(e){
     else setSel([],[id]);
     P.mode=null;return;
   }
-  /* empty space */
   if(P.pendingLink){P.pendingLink=null;refreshCanvas();}
   setSel([],[]);
   if(e.pointerType==='touch'){P.mode='pan';vp.classList.add('panning');}
@@ -1598,7 +1785,7 @@ function renderProps(){
   } else {
     h+='<div class="psec"><div class="phead">'+ic('diagram')+' Диаграмма</div>'+
       '<div class="prow col"><label class="lbl">Название</label><input class="inp" id="propDiaName" value="'+esc(d.name)+'"></div>'+
-      '<div class="prow col"><label class="lbl">Направление (Mermaid)</label><div class="dir-grid">'+['TD','LR','BT','RL'].map((x)=>'<button class="dir-btn'+(d.direction===x?' active':'')+'" data-dir="'+x+'">'+DIR_LABEL[x]+'</button>').join('')+'</div></div>'+
+      '<div class="prow col"><label class="lbl">Направление (Mermaid)</label><div class="dir-grid">'+DIR_ORDER.map((x)=>'<button class="dir-btn'+(d.direction===x?' active':'')+'" data-dir="'+x+'">'+DIR_LABEL[x]+'</button>').join('')+'</div></div>'+
       '<div class="prow"><button class="pbtn ghost grow" id="propLayout">'+ic('wand')+'Авторазметка</button><button class="pbtn ghost grow" id="propFit">'+ic('frame')+'Вписать</button></div>'+
     '</div>'+
     '<div class="psec"><div class="phead">'+ic('bolt')+' Статистика</div><div class="stats">'+
@@ -1608,7 +1795,7 @@ function renderProps(){
     '</div></div>'+
     (state.storageOK?'':'<div class="mem-note">'+ic('warn')+'<span>IndexedDB недоступна — проект существует только в памяти. Используйте <b>Проект → Экспорт</b>, чтобы не потерять работу.</span></div>')+
     '<div class="psec"><div class="phead">'+ic('help')+' Подсказки</div>'+
-      '<p class="muted small" style="line-height:1.6">Двойной клик по холсту — новый узел. Тяните от точки на границе узла — связь. Двойной клик по узлу или связи — редактирование подписи. Колесо мыши — масштаб, Space — панорама.</p></div>';
+      '<p class="muted small" style="line-height:1.6">Двойной клик (двойное касание) по холсту — новый узел. Тяните от точки на границе узла — связь. Двойной клик по узлу или связи — редактирование подписи. Колесо мыши — масштаб, Space — панорама.</p></div>';
   }
   box.innerHTML=h;
   applyIcons(box);
@@ -1669,7 +1856,7 @@ function renderDiagramList(){
     '</div>').join('');
 }
 async function updateRecents(){
-  if(!state.storageOK)return; /* секция «Проекты» скрыта */
+  if(!state.storageOK)return;
   const list=$('#recentList');if(!list)return;
   try{
     const all=await dbGetAll();
@@ -1736,7 +1923,7 @@ function normalizeDiagram(o){
   return{
     id:o.id||uid('d'),
     name:String(o.name||'Диаграмма'),
-    direction:['TD','LR','BT','RL'].indexOf(o.direction)>=0?o.direction:'TD',
+    direction:DIR_ORDER.indexOf(o.direction)>=0?o.direction:'TD',
     nodes:(Array.isArray(o.nodes)?o.nodes:[]).map((n)=>({
       id:n.id||uid('n'),label:String(n.label==null?'':n.label),
       shape:SHAPES[n.shape]?n.shape:'rect',
@@ -1767,6 +1954,7 @@ function loadProject(p,fit){
   state.sel.nodes=new Set();state.sel.edges=new Set();
   state.dirty=false;state.savedAt=state.storageOK?(p.updatedAt||Date.now()):null;
   $('#projectName').value=state.project.name;
+  $('#mmProjectName').value=state.project.name;
   if(state.storageOK){try{localStorage.setItem('nms-last',state.project.id);}catch(e){}}
   histInit();renderAll();
   if(fit!==false)fitTo('all',false);
@@ -1786,7 +1974,7 @@ async function saveAsFlow(){
   if(!name)return;
   const p=JSON.parse(JSON.stringify(state.project));
   p.id=uid('p');p.name=name;p.createdAt=Date.now();p.updatedAt=Date.now();
-  state.project=p;$('#projectName').value=name;
+  state.project=p;$('#projectName').value=name;$('#mmProjectName').value=name;
   try{localStorage.setItem('nms-last',p.id);}catch(e){}
   await saveProject(true);histInit();renderDiagramList();
 }
@@ -2146,7 +2334,7 @@ function applySettings(){
 /* ---------------- Help / About ---------------- */
 function helpModal(){
   const rows=[
-    ['Основные',[['V / H / E','Выбор · Панорама · Связь'],['Del / Backspace','Удалить выделение'],['F2 или двойной клик','Правка подписи'],['Esc','Снять выделение / отменить связь']]],
+    ['Основные',[['V / H / E','Выбор · Панорама · Связь'],['Del / Backspace','Удалить выделение'],['F2 или двойной клик','Правка подписи'],['Esc','Снять выделение / закрыть меню']]],
     ['Правка',[['Ctrl + Z','Отменить'],['Ctrl + Y / Ctrl+Shift+Z','Повторить'],['Ctrl + D','Дублировать'],['Ctrl + C / Ctrl + V','Копировать / Вставить'],['Ctrl + A','Выделить всё'],['Ctrl + S','Сохранить проект'+(state.storageOK?'':' (недоступно)')]]],
     ['Холст',[['Колесо мыши','Масштаб к курсору'],['Space + тянуть','Панорама'],['Средняя кнопка','Панорама'],['1 / 2 / 3 / 4','Вписать всё / по ширине / высоте / выделению'],['0 / 5','100% / центрировать'],['+ / −','Масштаб'],['Стрелки','Сдвиг выделения (Shift — быстрее)']]]
   ];
@@ -2156,16 +2344,17 @@ function helpModal(){
     sec[1].forEach((r)=>{body+='<div class="kbd-row"><span>'+r[1]+'</span><span><kbd>'+r[0]+'</kbd></span></div>';});
     body+='</div>';
   });
-  body+='</div><p class="muted small" style="margin-top:14px">Совет: тяните от неоновой точки на границе узла, чтобы быстро создать связь. Все модальные окна разворачиваются на весь экран кнопкой ⤢ в заголовке.</p>';
+  body+='</div><p class="muted small" style="margin-top:14px">Совет: тяните от неоновой точки на границе узла, чтобы быстро создать связь. На мобильных устройствах инструменты доступны в нижнем доке, а все разделы — в бургер-меню. Модальные окна разворачиваются на весь экран кнопкой ⤢.</p>';
   openModal({title:'Горячие клавиши',icon:'help',body:body,wide:true,footer:'<button class="pbtn" data-close>Понятно</button>',
     onMount:(el,api)=>{el.querySelector('[data-close]').onclick=()=>api.close();}});
 }
 function aboutModal(){
   openModal({title:'О программе',icon:'bolt',
     body:'<div style="text-align:center;padding:14px 6px">'+
-      '<div class="logo-mark" style="width:56px;height:56px;margin:0 auto 14px;border-radius:16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:28px;height:28px"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>'+
+      '<div class="logo-mark" style="width:60px;height:60px;margin:0 auto 14px;border-radius:16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:30px;height:30px"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>'+
       '<div style="font:700 20px \'Space Grotesk\';letter-spacing:3px;background:linear-gradient(90deg,var(--accent),#8ab6ff,var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent">NEON MERMAID STUDIO</div>'+
-      '<p class="muted small" style="margin:8px 0 16px">Версия 1.4 · SPA в одном файле</p>'+
+      '<div style="margin-top:8px"><span class="ver-badge">v'+APP_VERSION+'</span></div>'+
+      '<p class="muted small" style="margin:10px 0 16px">SPA в одном файле · '+new Date().getFullYear()+'</p>'+
       '<p class="mtext" style="max-width:520px;margin:0 auto">WYSIWYG-редактор диаграмм Mermaid: рисуйте узлы и связи на неоновом холсте, а приложение автоматически сгенерирует код <span class="mono" style="color:var(--accent)">graph</span> и отрендерит предпросмотр. '+
       (state.storageOK?'Проекты хранятся локально в IndexedDB, поддерживаются импорт/экспорт JSON, .mmd, SVG и PNG.'
                       :'В этом браузере IndexedDB недоступна, поэтому приложение работает без сохранения — используйте экспорт JSON, .mmd, SVG и PNG, чтобы сберечь работу.')+
@@ -2174,7 +2363,14 @@ function aboutModal(){
     onMount:(el,api)=>{el.querySelector('[data-close]').onclick=()=>api.close();}});
 }
 
-/* ---------------- Menus (портал в body — не обрезаются тулбаром) ---------------- */
+/* ---------------- Menus (портал в body — не обрезаются) ---------------- */
+function refreshChecks(root){
+  root.querySelectorAll('[data-check]').forEach((c)=>{
+    const k=c.dataset.check;
+    const on=k==='snap'?state.settings.snap:k==='grid'?state.settings.gridStyle!=='off':false;
+    c.textContent=on?'✓':'';
+  });
+}
 function openMenu(wrap){
   const menu=wrap.querySelector('.menu');
   const btn=wrap.querySelector('[data-menubtn]');
@@ -2189,11 +2385,7 @@ function openMenu(wrap){
   if(top+mh>window.innerHeight-8)top=Math.max(8,wr.top-6-mh);
   left=clamp(left,8,Math.max(8,window.innerWidth-mw-8));
   menu.style.top=top+'px';menu.style.left=left+'px';
-  menu.querySelectorAll('[data-check]').forEach((c)=>{
-    const k=c.dataset.check;
-    const on=k==='snap'?state.settings.snap:k==='grid'?state.settings.gridStyle!=='off':false;
-    c.textContent=on?'✓':'';
-  });
+  refreshChecks(menu);
 }
 function closeMenus(){
   $$('.menu.portal').forEach((menu)=>{
@@ -2205,7 +2397,46 @@ function closeMenus(){
   $$('.menu-wrap.open').forEach((w)=>w.classList.remove('open'));
 }
 
+/* ---------------- Mobile menu & drawers ---------------- */
+function openMobileMenu(){
+  const mm=$('#mobileMenu');
+  refreshChecks(mm);
+  $('#mmProjectName').value=state.project?state.project.name:'';
+  mm.classList.add('open');
+}
+function closeMobileMenu(){$('#mobileMenu').classList.remove('open');}
+function syncPanelUI(){
+  syncToolbar();
+  const mobile=window.innerWidth<=980;
+  const anyOpen=!$('#main').classList.contains('left-collapsed')||!$('#main').classList.contains('right-collapsed');
+  document.body.classList.toggle('drawer-open',mobile&&anyOpen);
+}
+function togglePanel(side){
+  const m=$('#main');
+  const cls=side==='left'?'left-collapsed':'right-collapsed';
+  const other=side==='left'?'right-collapsed':'left-collapsed';
+  if(window.innerWidth<=980&&m.classList.contains(cls))m.classList.add(other);
+  m.classList.toggle(cls);
+  syncPanelUI();
+}
+
 /* ---------------- Actions ---------------- */
+const ROLE_ACTIONS={
+  left:()=>togglePanel('left'),
+  right:()=>togglePanel('right'),
+  undo:()=>undo(),
+  redo:()=>redo(),
+  zoomIn:()=>zoomBy(1.25),
+  zoomOut:()=>zoomBy(0.8),
+  fit100:()=>fitTo('100'),
+  fitAll:()=>fitTo('all'),
+  snap:()=>handleAction('snap'),
+  grid:()=>handleAction('grid'),
+  layout:()=>autoLayout(),
+  dir:()=>cycleDirection(),
+  del:()=>deleteSelection(),
+  dup:()=>duplicateSelection()
+};
 function handleAction(act,item){
   if(!state.storageOK&&['save','saveAs','open','delProject'].indexOf(act)>=0){
     toast('Функция недоступна: IndexedDB не доступна','warn');return;
@@ -2235,10 +2466,6 @@ function handleAction(act,item){
     case 'about':aboutModal();break;
   }
 }
-function togglePanel(side){
-  const m=$('#main'),cls=side==='left'?'left-collapsed':'right-collapsed';
-  m.classList.toggle(cls);syncToolbar();
-}
 function setTool(t){
   state.tool=t;document.body.dataset.tool=t;
   $$('.tool-btn').forEach((b)=>b.classList.toggle('active',b.dataset.tool===t));
@@ -2249,6 +2476,10 @@ function setTool(t){
 /* ---------------- UI wiring ---------------- */
 function bindUI(){
   applyIcons(document);
+  /* версии в шапке и мобильном меню */
+  $('#verBadge').textContent='v'+APP_VERSION;
+  $('#mmVersion').textContent='v'+APP_VERSION;
+  $('.brand .logo-mark').onclick=aboutModal;
   /* palette */
   $('#palette').innerHTML=Object.keys(SHAPES).map((k)=>
     '<button class="pal-item" data-shape="'+k+'" draggable="true" title="'+SHAPES[k].name+' — клик или перетащите на холст">'+SHAPE_ICONS[k]+'<span>'+SHAPES[k].name+'</span></button>').join('');
@@ -2275,25 +2506,17 @@ function bindUI(){
     const S=SHAPES[shape]||SHAPES.rect;
     addNode(shape,w.x-S.w/2,w.y-S.h/2);
   });
-  /* защита от открытия брошенного файла в окне браузера */
   const isFileDrag=(e)=>e.dataTransfer&&Array.prototype.indexOf.call(e.dataTransfer.types||[],'Files')>=0;
   window.addEventListener('dragover',(e)=>{if(isFileDrag(e))e.preventDefault();});
   window.addEventListener('drop',(e)=>{if(isFileDrag(e))e.preventDefault();});
-  /* toolbar */
+  /* tools (панель + мобильный док) */
   $$('.tool-btn').forEach((b)=>b.onclick=()=>setTool(b.dataset.tool));
-  $('#btnUndo').onclick=undo;$('#btnRedo').onclick=redo;
-  $('#btnZoomIn').onclick=()=>zoomBy(1.25);$('#btnZoomOut').onclick=()=>zoomBy(0.8);
-  $('#btnZoomLabel').onclick=()=>fitTo('100');
-  $('#btnSnap').onclick=()=>handleAction('snap');
-  $('#btnGrid').onclick=()=>handleAction('grid');
-  $('#btnLayout').onclick=autoLayout;
+  /* роли кнопок (тулбар, холст, док) */
+  $$('[data-role]').forEach((b)=>{
+    b.addEventListener('click',()=>{const f=ROLE_ACTIONS[b.dataset.role];if(f)f();});
+  });
+  $('#btnLayout'); /* авторазметка через data-role="layout" */
   $('#dirSelect').onchange=(e)=>{const d=diagram();if(d){d.direction=e.target.value;afterChange();}};
-  $('#btnDup').onclick=duplicateSelection;
-  $('#btnDel').onclick=deleteSelection;
-  $('#btnToggleLeft').onclick=()=>togglePanel('left');
-  $('#btnToggleRight').onclick=()=>togglePanel('right');
-  $('#cZoomIn').onclick=()=>zoomBy(1.25);$('#cZoomOut').onclick=()=>zoomBy(0.8);
-  $('#cZoomLabel').onclick=()=>fitTo('100');$('#cFit').onclick=()=>fitTo('all');
   $('#hintClose').onclick=()=>{$('#canvasHint').style.display='none';try{localStorage.setItem('nms-hint','1');}catch(e){}};
   try{if(localStorage.getItem('nms-hint')==='1')$('#canvasHint').style.display='none';}catch(e){}
   /* topbar */
@@ -2303,16 +2526,34 @@ function bindUI(){
   $('#btnOpenProject').onclick=openProjectModal;
   $('#btnAddDiagram').onclick=addDiagram;
   const pn=$('#projectName');
-  pn.addEventListener('input',()=>{if(!state.project)return;state.project.name=pn.value;updateStatus();markDirty();commit('pname');});
+  pn.addEventListener('input',()=>{if(!state.project)return;state.project.name=pn.value;$('#mmProjectName').value=pn.value;updateStatus();markDirty();commit('pname');});
   pn.addEventListener('keydown',(e)=>{e.stopPropagation();if(e.key==='Enter')pn.blur();});
+  const mmn=$('#mmProjectName');
+  mmn.addEventListener('input',()=>{if(!state.project)return;state.project.name=mmn.value;pn.value=mmn.value;updateStatus();markDirty();commit('pname');});
+  mmn.addEventListener('keydown',(e)=>{e.stopPropagation();if(e.key==='Enter')mmn.blur();});
   $('#saveChip').onclick=()=>{
     if(!state.storageOK){toast('Хранение недоступно — используйте Экспорт → JSON','warn',4000);return;}
     saveProject(true);
   };
+  $('#mmSaveChip').onclick=$('#saveChip').onclick;
+  /* mobile menu */
+  $('#btnMobileMenu').onclick=openMobileMenu;
+  $('#mmClose').onclick=closeMobileMenu;
+  $('#mmBackdrop').onclick=closeMobileMenu;
+  /* drawer backdrop */
+  $('#drawerBackdrop').onclick=()=>{$('#main').classList.add('left-collapsed','right-collapsed');syncPanelUI();};
   /* menus (делегирование) */
   document.addEventListener('click',(e)=>{
     const item=e.target.closest('.menu-item[data-act]');
-    if(item){e.stopPropagation();e.preventDefault();const act=item.dataset.act;closeMenus();handleAction(act,item);return;}
+    if(item){
+      e.stopPropagation();e.preventDefault();
+      const act=item.dataset.act;
+      const inMobile=!!item.closest('#mobileMenu');
+      if(inMobile)closeMobileMenu();
+      closeMenus();
+      handleAction(act,item);
+      return;
+    }
     const mb=e.target.closest('[data-menubtn]');
     if(mb){
       e.stopPropagation();e.preventDefault();
@@ -2325,6 +2566,7 @@ function bindUI(){
     if(!e.target.closest('.menu-wrap')&&!e.target.closest('.menu.portal'))closeMenus();
   });
   $('#toolbar').addEventListener('scroll',closeMenus);
+  $('#mobileDock').addEventListener('scroll',closeMenus);
   /* diagram list */
   $('#diagramList').addEventListener('click',async (e)=>{
     const item=e.target.closest('.dia-item');if(!item)return;
@@ -2345,7 +2587,11 @@ function bindUI(){
       return;
     }
     switchDiagram(id);
+    if(window.innerWidth<=980)togglePanelSafeClose();
   });
+  function togglePanelSafeClose(){ /* после выбора диаграммы закрываем левый抽屉 на мобильных */
+    if(window.innerWidth<=980){$('#main').classList.add('left-collapsed');syncPanelUI();}
+  }
   /* recents */
   $('#recentList').addEventListener('click',async (e)=>{
     if(!state.storageOK)return;
@@ -2398,14 +2644,16 @@ function bindUI(){
   window.addEventListener('keydown',(e)=>{
     if(e.key==='Escape'){
       const ae=document.activeElement;
-      if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')&&!ae.closest('.modal'))ae.blur();
+      if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')&&!ae.closest('.modal')&&!ae.closest('#mobileMenu'))ae.blur();
       if(modals.length){closeTopModal();e.preventDefault();return;}
+      if($('#mobileMenu').classList.contains('open')){closeMobileMenu();e.preventDefault();return;}
       closeMenus();
       if(P.pendingLink){P.pendingLink=null;refreshCanvas();}
       else if(state.sel.nodes.size||state.sel.edges.size)setSel([],[]);
       return;
     }
     if(modals.length)return;
+    if($('#mobileMenu').classList.contains('open'))return;
     const t=e.target;
     if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable))return;
     const mod=e.ctrlKey||e.metaKey;
@@ -2455,16 +2703,16 @@ function bindUI(){
 function onResize(){
   closeMenus();
   const w=window.innerWidth;
+  if(w>768)closeMobileMenu();
   if(w<=980){$('#main').classList.add('left-collapsed','right-collapsed');}
   else if(w<=1180){$('#main').classList.remove('left-collapsed');$('#main').classList.add('right-collapsed');}
-  syncToolbar();applyView();
+  syncPanelUI();applyView();
 }
 
 /* ---------------- Boot ---------------- */
 async function boot(){
   loadSettings();
   bindUI();
-  /* Проверка доступности IndexedDB до загрузки проекта */
   state.storageOK=await detectStorage();
   applyStorageUI();
   applySettings();
@@ -2481,7 +2729,7 @@ async function boot(){
       if(!p){p=demoProject();try{await dbPut(JSON.parse(JSON.stringify(p)));}catch(e){}}
     }
   }
-  if(!p)p=demoProject(); /* режим без хранилища — работаем только в памяти */
+  if(!p)p=demoProject();
 
   loadProject(p);
   onResize();
