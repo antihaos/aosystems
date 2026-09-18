@@ -1163,6 +1163,16 @@ el.appendChild(typeof child === 'string' ? document.createTextNode(child) : chil
 }
 return el;
 }
+// ---------- ОБЩАЯ ФАБРИКА КАРТОЧЕК ДЛЯ МОДАЛЬНЫХ ОКОН НАСТРОЕК ----------
+// Используется в «⚙ Настройки», в диалоге публикации в gist и в диалоге
+// синхронизации. Объявлена на верхнем уровне области видимости, поэтому
+// доступна из всех функций (раньше helper card() был локальным в
+// openSettingsModal и вызывал ReferenceError в других диалогах).
+function settingsCard(titleText, full) {
+const cardEl = h('div', { class: 'settings-card' + (full ? ' full' : '') });
+if (titleText) cardEl.appendChild(h('div', { class: 'card-title', textContent: titleText }));
+return cardEl;
+}
 function slugify(text) {
 return String(text == null ? '' : text).toLowerCase().trim().replace(/[^\wа-яё]+/gi, '-').replace(/^-+|-+$/g, '');
 }
@@ -1299,7 +1309,7 @@ const info = h('div', { class: 'app-info' });
 info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
 info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
 header.appendChild(info);
-header.appendChild(h('span', { class: 'app-version', textContent: 'v1.18.0' }));
+header.appendChild(h('span', { class: 'app-version', textContent: 'v1.18.1' }));
 return header;
 }
 function renderCourseHeader() {
@@ -1616,7 +1626,7 @@ class: 'quiz-button',
 textContent: gInfo.id ? '⇄ Sync' : '⇄ Связать',
 type: 'button',
 title: gInfo.id
-? ('Синхронизировать с gist ' + gInfo.id + ' (авто: новее — то и берём)')
+? ('Синхронизировать с gist ' + gInfo.id + ' (авто: берётся более свежая версия)')
 : 'Опубликовать курс в gist и связать его для дальнейшей синхронизации'
 });
 syncBtn.addEventListener('click', async () => {
@@ -1628,14 +1638,13 @@ syncBtn.disabled = true;
 const original = syncBtn.textContent;
 syncBtn.textContent = '⏳';
 try {
-let res;
 if (gInfo.id) {
-res = await syncRecordAuto(record);
+await syncRecordAuto(record);
 } else {
-res = { action: 'push', res: await pushRecordToGist(record) };
+await pushRecordToGist(record);
 }
 syncBtn.textContent = '✔';
-setTimeout(() => { syncBtn.textContent = original; syncBtn.disabled = false; updateSavedCoursesList(); }, 900);
+setTimeout(() => { syncBtn.textContent = original; syncBtn.disabled = false; }, 900);
 if (course && course.meta && course.meta._recordId === record.id) {
 const keepLesson = currentLessonId;
 const all = await getAllCoursesFromDB();
@@ -4125,7 +4134,7 @@ helpDiv.innerHTML = `
 <h4 style="color: #fff; margin-top: 10px;">🐙 Публикация курса в Gist</h4>
 <p>Кнопка <strong>⬆ Gist</strong> (или <strong>⟳ Gist</strong>, если курс уже опубликован) есть у <em>каждого сохранённого курса</em> в списке «Управление курсами». В диалоге задаются имя файла, описание, видимость и ID существующего gist. После публикации выдаются три ссылки: страница gist, raw-файл JSON и готовая ссылка на плеер вида <code>?url=&lt;raw_url&gt;</code>.</p>
 <h4 style="color: #fff; margin-top: 10px;">⇄ Синхронизация курсов с Gist</h4>
-<p>Кнопка <strong>«⇄ Синхронизировать с Gist»</strong> (в панели «Управление курсами» и в «⚙ Настройки» → «GitHub Gist») открывает мастер массовой синхронизации:</p>
+<p>Кнопка <strong>«⇄ Синхронизировать с Gist»</strong> (в панели «Управление курсами», в верхней панели и в «⚙ Настройки» → «GitHub Gist») открывает мастер массовой синхронизации:</p>
 <ul style="margin-left:20px;">
 <li><strong>⬆ Отправить</strong> — локальные курсы выгружаются в свои gist (несвязанные публикуются как новый gist и связываются автоматически);</li>
 <li><strong>⬇ Забрать</strong> — содержимое gist перезаписывает локальные курсы (несвязанные пропускаются);</li>
@@ -4815,16 +4824,11 @@ tabBtns[t.id].classList.toggle('active', t.id === id);
 });
 if (id === 'data') refreshDataStats();
 }
-function card(titleText, full) {
-const c = h('div', { class: 'settings-card' + (full ? ' full' : '') });
-if (titleText) c.appendChild(h('div', { class: 'card-title', textContent: titleText }));
-return c;
-}
 // ---------------- ВКЛАДКА: ОБЩИЕ ----------------
 const pGeneral = panels['general'];
 const generalGrid = h('div', { class: 'settings-grid' });
 pGeneral.appendChild(generalGrid);
-const uiCard = card('Интерфейс');
+const uiCard = settingsCard('Интерфейс');
 const modeField = h('div', { class: 'pg-field' });
 modeField.appendChild(h('label', { textContent: 'Режим по умолчанию' }));
 const modeSelect = h('select');
@@ -4846,7 +4850,7 @@ fabSwitch.appendChild(fabCheck);
 fabSwitch.appendChild(h('span', { textContent: 'Показывать плавающую кнопку холстов 🎨 при открытом курсе' }));
 uiCard.appendChild(fabSwitch);
 generalGrid.appendChild(uiCard);
-const quickCard = card('Быстрые действия');
+const quickCard = settingsCard('Быстрые действия');
 const quickRow = h('div', { class: 'settings-actions' });
 const openCanvasBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🎨 Открыть холсты' });
 openCanvasBtn.addEventListener('click', () => { overlay.remove(); openCanvasWorkspace(); });
@@ -4854,9 +4858,12 @@ const openHelpBtn = h('button', { class: 'quiz-button', type: 'button', textCont
 openHelpBtn.addEventListener('click', () => { overlay.remove(); openHelpModal(); });
 const openPromptBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🧠 Генератор промптов' });
 openPromptBtn.addEventListener('click', () => { overlay.remove(); openPromptGenerator(); });
+const openSyncBtn0 = h('button', { class: 'quiz-button', type: 'button', textContent: '⇄ Синхронизация Gist' });
+openSyncBtn0.addEventListener('click', () => { overlay.remove(); openGistSyncDialog(); });
 quickRow.appendChild(openCanvasBtn);
 quickRow.appendChild(openHelpBtn);
 quickRow.appendChild(openPromptBtn);
+quickRow.appendChild(openSyncBtn0);
 quickCard.appendChild(quickRow);
 quickCard.appendChild(h('p', { class: 'settings-note', textContent: 'Эти же кнопки доступны в верхней панели плеера.' }));
 generalGrid.appendChild(quickCard);
@@ -4864,7 +4871,7 @@ generalGrid.appendChild(quickCard);
 const pGithub = panels['github'];
 const ghGrid = h('div', { class: 'settings-grid' });
 pGithub.appendChild(ghGrid);
-const tokenCard = card('Токен доступа GitHub');
+const tokenCard = settingsCard('Токен доступа GitHub');
 tokenCard.appendChild(h('p', { class: 'settings-note', textContent: 'Нужен классический PAT с областью gist. Хранится только в этом браузере и отправляется лишь на api.github.com. Публичные gist загружаются без токена.' }));
 const tokenField = h('div', { class: 'pg-field' });
 tokenField.appendChild(h('label', { textContent: 'Personal Access Token' }));
@@ -4936,7 +4943,7 @@ tokenActions.appendChild(saveTokenBtn);
 tokenActions.appendChild(clearTokenBtn);
 tokenCard.appendChild(tokenActions);
 ghGrid.appendChild(tokenCard);
-const pubCard = card('Публикация и синхронизация');
+const pubCard = settingsCard('Публикация и синхронизация');
 const visField = h('div', { class: 'pg-field' });
 visField.appendChild(h('label', { textContent: 'Тип gist по умолчанию' }));
 const visSelect = h('select');
@@ -4979,7 +4986,7 @@ ghGrid.appendChild(pubCard);
 const pPrompts = panels['prompts'];
 const promptGrid = h('div', { class: 'settings-grid' });
 pPrompts.appendChild(promptGrid);
-const promptCard = card('Шаблоны промптов для LLM');
+const promptCard = settingsCard('Шаблоны промптов для LLM');
 promptCard.appendChild(h('p', { class: 'settings-note', textContent: 'Шаблоны (для курса и для одного урока) редактируются в генераторе промптов и сохраняются в браузере. Здесь — быстрые действия с ними.' }));
 const promptActions = h('div', { class: 'settings-actions' });
 const openPromptsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🧠 Открыть редактор' });
@@ -5028,7 +5035,7 @@ promptActions.appendChild(importPromptsBtn);
 promptActions.appendChild(importPromptsInput);
 promptCard.appendChild(promptActions);
 promptGrid.appendChild(promptCard);
-const schemaCard = card('Автосхема блоков {{SCHEMA}}');
+const schemaCard = settingsCard('Автосхема блоков {{SCHEMA}}');
 schemaCard.appendChild(h('p', { class: 'settings-note', textContent: 'Схема строится автоматически из актуальных типов блоков плеера и подставляется в промпт вместо {{SCHEMA}}.' }));
 const schemaActions = h('div', { class: 'settings-actions' });
 const showSchemaBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Показать схему' });
@@ -5054,7 +5061,7 @@ promptGrid.appendChild(schemaCard);
 const pCanvas = panels['canvas'];
 const canvasGrid = h('div', { class: 'settings-grid' });
 pCanvas.appendChild(canvasGrid);
-const canvasDefCard = card('Значения по умолчанию для новых холстов');
+const canvasDefCard = settingsCard('Значения по умолчанию для новых холстов');
 const linkField = h('div', { class: 'pg-field' });
 linkField.appendChild(h('label', { textContent: 'Привязка новых холстов' }));
 const linkSwitch = h('label', { class: 'settings-switch' });
@@ -5090,7 +5097,7 @@ pngPrefSelect.addEventListener('change', () => { canvasPrefs.pngArea = pngPrefSe
 pngField.appendChild(pngPrefSelect);
 canvasDefCard.appendChild(pngField);
 canvasGrid.appendChild(canvasDefCard);
-const canvasPosCard = card('Расположение элементов');
+const canvasPosCard = settingsCard('Расположение элементов');
 const canvasPosActions = h('div', { class: 'settings-actions' });
 const resetFabBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🎨 Сбросить позицию кнопки' });
 resetFabBtn.addEventListener('click', () => {
@@ -5116,7 +5123,7 @@ canvasGrid.appendChild(canvasPosCard);
 const pData = panels['data'];
 const dataGrid = h('div', { class: 'settings-grid' });
 pData.appendChild(dataGrid);
-const statsCard = card('Статистика');
+const statsCard = settingsCard('Статистика');
 const dataStats = h('p', { class: 'settings-note', textContent: 'Загрузка статистики…' });
 statsCard.appendChild(dataStats);
 const statsActions = h('div', { class: 'settings-actions' });
@@ -5145,7 +5152,7 @@ dataStats.textContent = 'Курсов: ' + list.length + ' · связано с 
 dataStats.textContent = 'Не удалось получить статистику: ' + e.message;
 }
 }
-const ioCard = card('Экспорт и импорт');
+const ioCard = settingsCard('Экспорт и импорт');
 const ioActions = h('div', { class: 'settings-actions' });
 const exportAllBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬇ Экспорт всех курсов' });
 exportAllBtn.addEventListener('click', async () => {
@@ -5181,7 +5188,7 @@ ioActions.appendChild(importAllInput);
 ioCard.appendChild(ioActions);
 ioCard.appendChild(h('p', { class: 'settings-note', textContent: 'Экспорт выгружает все курсы одним JSON-массивом (служебные поля _recordId, _gistId, _gistUrl, _gistFile, _syncedAt удаляются). Импорт принимает курс, массив курсов или объект с полем courses.' }));
 dataGrid.appendChild(ioCard);
-const dangerCard = card('Опасная зона');
+const dangerCard = settingsCard('Опасная зона');
 const dangerActions = h('div', { class: 'settings-actions' });
 const clearProgressBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🧹 Очистить прогресс', style: 'background:rgba(255,215,0,0.08); border-color:var(--yellow); color:var(--yellow);' });
 clearProgressBtn.addEventListener('click', () => {
@@ -5433,7 +5440,7 @@ try { sizeKb = Math.round(JSON.stringify(courseData).length / 1024); } catch (e)
 content.appendChild(h('p', { class: 'settings-note', textContent: 'Курс: «' + courseTitle + '» · уроков: ' + lessonsCount + ' · размер ≈ ' + sizeKb + ' КБ' + (isCurrent ? '' : ' (не открыт в плеере)') }));
 const pubGrid = h('div', { class: 'settings-grid' });
 content.appendChild(pubGrid);
-const tokenCard = card('Доступ');
+const accessCard = settingsCard('Доступ');
 const tokenLine = h('p', { class: 'settings-note' });
 function refreshTokenLine() {
 tokenLine.textContent = gistSettings.token
@@ -5442,17 +5449,17 @@ tokenLine.textContent = gistSettings.token
 tokenLine.style.color = gistSettings.token ? 'var(--green)' : 'var(--pink)';
 }
 refreshTokenLine();
-tokenCard.appendChild(tokenLine);
-const tokenActions = h('div', { class: 'settings-actions' });
+accessCard.appendChild(tokenLine);
+const accessActions = h('div', { class: 'settings-actions' });
 const settingsQuickBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⚙ Настройки GitHub' });
 settingsQuickBtn.addEventListener('click', () => { overlay.remove(); openSettingsModal('github'); });
 const syncQuickBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⇄ Синхронизация…' });
 syncQuickBtn.addEventListener('click', () => { overlay.remove(); openGistSyncDialog(); });
-tokenActions.appendChild(settingsQuickBtn);
-tokenActions.appendChild(syncQuickBtn);
-tokenCard.appendChild(tokenActions);
-pubGrid.appendChild(tokenCard);
-const paramsCard = card('Параметры публикации');
+accessActions.appendChild(settingsQuickBtn);
+accessActions.appendChild(syncQuickBtn);
+accessCard.appendChild(accessActions);
+pubGrid.appendChild(accessCard);
+const paramsCard = settingsCard('Параметры публикации');
 const nameField = h('div', { class: 'pg-field' });
 nameField.appendChild(h('label', { textContent: 'Имя файла в gist' }));
 const fileNameInput = h('input', { type: 'text', placeholder: 'course.json' });
@@ -5653,7 +5660,7 @@ content.appendChild(h('h3', { textContent: '⇄ Синхронизация ку�
 content.appendChild(h('p', { class: 'settings-note', textContent: 'Синхронизация связывает сохранённые в браузере курсы с их gist-копиями: отправляет локальные изменения в gist или забирает обновления из gist. Нужен токен с правом gist.' }));
 const syncGrid = h('div', { class: 'settings-grid' });
 content.appendChild(syncGrid);
-const statusCard = card('Статус доступа');
+const statusCard = settingsCard('Статус доступа');
 const tokenNote = h('p', { class: 'settings-note' });
 function refreshTokenNote() {
 tokenNote.textContent = gistSettings.token
@@ -5669,7 +5676,7 @@ toSettingsBtn.addEventListener('click', () => { overlay.remove(); openSettingsMo
 statusActions.appendChild(toSettingsBtn);
 statusCard.appendChild(statusActions);
 syncGrid.appendChild(statusCard);
-const dirCard = card('Направление синхронизации');
+const dirCard = settingsCard('Направление синхронизации');
 const dirSelect = h('select');
 dirSelect.appendChild(h('option', { value: 'push', textContent: '⬆ Отправить: локальные курсы → gist' }));
 dirSelect.appendChild(h('option', { value: 'pull', textContent: '⬇ Забрать: gist → локальные курсы' }));
@@ -5677,12 +5684,12 @@ dirSelect.appendChild(h('option', { value: 'auto', textContent: '⇄ Авто: �
 dirCard.appendChild(dirSelect);
 dirCard.appendChild(h('p', { class: 'settings-note', textContent: '«Отправить» публикует несвязанные курсы как новый gist и сохраняет связь (meta._gistId). «Забрать» несвязанные курсы пропускает. «Авто» берёт более свежую версию: если gist обновлён позже последней синхронизации — данные забираются, иначе отправляются.' }));
 syncGrid.appendChild(dirCard);
-const listCard = card('Курсы для синхронизации', true);
+const listCard = settingsCard('Курсы для синхронизации', true);
 const listWrap = h('div', { class: 'sync-list' });
 listWrap.appendChild(h('p', { class: 'settings-note', textContent: 'Загрузка списка…' }));
 listCard.appendChild(listWrap);
 content.appendChild(listCard);
-const logCard = card('Журнал', true);
+const logCard = settingsCard('Журнал', true);
 const logEl = h('div', { class: 'settings-sync-log' });
 logEl.appendChild(h('p', { class: 'settings-note', textContent: 'Результаты синхронизации появятся здесь.' }));
 logCard.appendChild(logEl);
@@ -5787,7 +5794,6 @@ closeBtn2.disabled = false;
 runBtn.textContent = '🔄 Синхронизировать заново';
 refreshTokenNote();
 await updateSavedCoursesList();
-// если открытый курс был изменён — перечитываем его из базы
 try {
 const currentRecId = course && course.meta ? course.meta._recordId : null;
 if (currentRecId) {
@@ -7593,7 +7599,7 @@ c.height = outH;
 const ctx = c.getContext('2d');
 if (!ctx) { alert('Не удалось создать canvas для экспорта PNG.'); return; }
 // базовая матрица задаёт ТОЛЬКО разрешение, масштаб вида = 1
-// (paintScene сама применяет scale, иначе получалось двойное масштабирование)
+// (paintScene сама применяет scale — иначе было бы двойное масштабирование)
 ctx.setTransform(exScale, 0, 0, exScale, 0, 0);
 paintScene(ctx, bw, bh, { scale: 1, x: -region.x0, y: -region.y0 }, rec);
 const suffix = mode === 'viewport' ? '-viewport' : (mode === 'content' ? '-content' : '-full');
