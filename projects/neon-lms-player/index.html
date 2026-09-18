@@ -244,8 +244,8 @@ animation: slideUp 0.3s ease; max-height: 80vh; overflow-y: auto;
 .saved-course-item { display: flex; gap: 8px; align-items: center; margin: 5px 0; flex-wrap: wrap; padding: 6px 8px; border: 1px solid transparent; border-radius: 8px; transition: all .25s; }
 .saved-course-item:hover { border-color: var(--border); background: rgba(255,255,255,0.02); }
 .saved-course-item.current { border-color: var(--cyan); background: rgba(0,240,255,0.07); box-shadow: 0 0 10px rgba(0,240,255,0.2); }
-.saved-course-item > span.course-name { flex: 1; min-width: 160px; }
-.saved-course-item .quiz-button { margin-top: 0; padding: 6px 12px; font-size: 0.9em; }
+.saved-course-item > span.course-name { flex: 1; min-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.saved-course-item .quiz-button { margin-top: 0; padding: 6px 12px; font-size: 0.9em; flex: 0 0 auto; }
 .current-badge { font-size: 0.72em; color: var(--green); border: 1px solid rgba(5,255,161,0.4); border-radius: 10px; padding: 0 7px; margin-left: 6px; white-space: nowrap; }
 .toggle-manager-btn {
 display: inline-block; padding: 8px 16px; background: transparent; border: 1px solid var(--cyan); color: var(--cyan);
@@ -589,12 +589,12 @@ transition: border-color .3s, box-shadow .3s;
 .prompt-gen-modal { max-width: 940px; max-height: 88vh; }
 .pg-tabs { display: flex; gap: 6px; margin: 12px 0 14px; flex-wrap: wrap; }
 .pg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.pg-field { display: flex; flex-direction: column; gap: 4px; }
+.pg-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .pg-field.full { grid-column: 1 / -1; }
 .pg-field > label { color: var(--muted); font-size: 0.82em; }
 .pg-field input, .pg-field select, .pg-field textarea {
 background: #0a0c14; color: var(--text); border: 1px solid var(--border); border-radius: 6px;
-padding: 6px 8px; outline: none; font-family: inherit; font-size: 0.92em; width: 100%;
+padding: 6px 8px; outline: none; font-family: inherit; font-size: 0.92em; width: 100%; min-width: 0;
 transition: border-color .3s, box-shadow .3s;
 }
 .pg-field input:focus, .pg-field select:focus, .pg-field textarea:focus { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
@@ -607,7 +607,7 @@ display: flex; align-items: center; gap: 8px; padding: 9px 14px; flex: 1 1 220px
 border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all .25s; font-size: 0.9em;
 }
 .pg-radio:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.25); }
-.pg-radio input { accent-color: var(--cyan); width: 16px; height: 16px; }
+.pg-radio input { accent-color: var(--cyan); width: 16px; height: 16px; flex: 0 0 auto; }
 .pg-radio.active { border-color: var(--cyan); background: rgba(0,240,255,0.1); box-shadow: 0 0 12px rgba(0,240,255,.3); }
 .pg-radio small { display: block; color: var(--muted); font-size: 0.85em; }
 .pg-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 8px; }
@@ -641,7 +641,6 @@ box-shadow: 0 0 12px rgba(0,240,255,0.35); transform: translateY(-2px);
 }
 .block-canvas-count { color: var(--muted); font-size: 0.85em; }
 .block-canvas-hint { color: var(--muted); font-size: 0.78em; }
-/* ---- значок заметок ВНУТРИ области блока (режим просмотра курса) ---- */
 .block-canvas-host { position: relative; min-width: 0; }
 .block-canvas-float {
 position: absolute; top: 5px; right: 5px; z-index: 25;
@@ -676,10 +675,61 @@ opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 26;
 box-shadow: 0 4px 14px rgba(0, 0, 0, .5);
 }
 .block-canvas-float:hover .bcf-tip { opacity: 1; }
-/* ============ НАСТРОЙКИ + GITHUB GIST ============ */
-.settings-modal { max-width: 720px; max-height: 88vh; }
-.settings-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.settings-row .quiz-button { margin-top: 0; }
+/* ============ НАСТРОЙКИ (УЛУЧШЕННЫЙ UI) + GITHUB GIST ============ */
+.settings-modal { max-width: 800px; max-height: 90vh; padding: 22px; }
+.settings-modal > h3 { padding-right: 46px; margin-bottom: 2px; }
+.settings-panel { display: flex; flex-direction: column; gap: 12px; padding-top: 6px; min-width: 0; }
+.settings-grid {
+display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+gap: 12px; align-items: start; min-width: 0;
+}
+.settings-card {
+border: 1px solid var(--border); border-radius: 8px; padding: 11px 12px;
+background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 9px; min-width: 0;
+}
+.settings-card > .card-title {
+color: var(--cyan); font-size: .76em; text-transform: uppercase; letter-spacing: .8px;
+border-bottom: 1px solid var(--border); padding-bottom: 5px; line-height: 1.3;
+}
+.settings-card.full { grid-column: 1 / -1; }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.settings-actions .quiz-button, .settings-actions .copy-btn {
+margin-top: 0; margin-left: 0; flex: 0 1 auto; white-space: nowrap; padding: 8px 14px;
+}
+.settings-inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.settings-inline > input[type="text"], .settings-inline > input[type="password"] { flex: 1 1 180px; min-width: 0; }
+.settings-note { color: var(--muted); font-size: .8em; line-height: 1.45; overflow-wrap: anywhere; }
+.settings-switch {
+display: flex; align-items: flex-start; gap: 8px; font-size: .86em; color: var(--text);
+cursor: pointer; line-height: 1.35; min-width: 0;
+}
+.settings-switch input { flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px; accent-color: var(--cyan); cursor: pointer; }
+.settings-switch span { min-width: 0; }
+.settings-sync-log {
+max-height: 190px; min-height: 62px; overflow-y: auto; border: 1px solid var(--border);
+border-radius: 6px; padding: 8px; background: #0a0c14;
+font-family: 'Courier New', monospace; font-size: .76em; line-height: 1.5;
+}
+.sync-log-line { padding: 2px 0; border-bottom: 1px dashed rgba(0,240,255,.1); word-break: break-word; }
+.sync-log-line:last-child { border-bottom: none; }
+.sync-log-line.ok { color: var(--green); }
+.sync-log-line.err { color: var(--pink); }
+.sync-log-line.wait { color: var(--yellow); }
+.sync-list { display: flex; flex-direction: column; gap: 6px; max-height: 230px; overflow-y: auto; min-width: 0; }
+.sync-row {
+display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+border: 1px solid var(--border); border-radius: 6px; background: rgba(255,255,255,0.02);
+cursor: pointer; flex-wrap: wrap; min-width: 0; transition: border-color .2s;
+}
+.sync-row:hover { border-color: var(--cyan); }
+.sync-row input[type="checkbox"] { flex: 0 0 auto; width: 15px; height: 15px; accent-color: var(--cyan); cursor: pointer; }
+.sync-row .sync-name { flex: 1 1 160px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .88em; }
+.sync-row .sync-state {
+flex: 0 1 auto; font-size: .72em; color: var(--muted);
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.token-row { display: flex; gap: 6px; align-items: stretch; flex-wrap: wrap; min-width: 0; }
+.token-row input { flex: 1 1 180px; min-width: 0; }
 .gist-status { font-size: 0.85em; color: var(--muted); margin: 6px 0 10px; }
 .gist-status.ok { color: var(--green); }
 .gist-status.warn { color: var(--yellow); }
@@ -699,8 +749,6 @@ a.gist-url { text-decoration: none; }
 a.gist-url:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,.3); }
 .gist-file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .gist-file-btn { text-align: left; margin-top: 0; }
-.token-row { display: flex; gap: 6px; align-items: stretch; }
-.token-row input { flex: 1; }
 .gist-msg { font-size: 0.85em; margin-top: 6px; min-height: 1.2em; word-break: break-word; }
 .gist-msg.ok { color: var(--green); }
 .gist-msg.err { color: var(--pink); }
@@ -765,7 +813,6 @@ cursor: pointer; font-size: 0.85em; line-height: 1; padding: 0; transition: all 
 .canvas-win-btn.danger { color: var(--pink); border-color: rgba(255,42,109,0.5); }
 .canvas-win-btn.danger:hover { background: rgba(255,42,109,0.18); box-shadow: 0 0 8px rgba(255,42,109,0.4); }
 .canvas-win-body { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
-/* ---------- САЙДБАР СПИСКА ХОЛСТОВ ---------- */
 .canvas-sidebar {
 width: 254px; flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column;
 border-right: 1px solid var(--border); background: rgba(0,0,0,0.22); overflow: hidden;
@@ -786,9 +833,7 @@ border-bottom: 1px solid rgba(0,240,255,0.12); background: rgba(255,255,255,0.01
 .canvas-side-filter:hover { background: rgba(0,240,255,0.05); }
 .canvas-side-filter input { flex: 0 0 auto; width: 15px; height: 15px; margin-top: 2px; accent-color: var(--cyan); cursor: pointer; }
 .canvas-side-filter span { min-width: 0; }
-.canvas-list {
-flex: 1 1 auto; min-height: 64px; overflow-y: auto; overflow-x: hidden; padding: 6px;
-}
+.canvas-list { flex: 1 1 auto; min-height: 64px; overflow-y: auto; overflow-x: hidden; padding: 6px; }
 .canvas-item {
 display: flex; align-items: center; gap: 6px; padding: 6px 8px; margin-bottom: 5px;
 border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all .2s;
@@ -797,13 +842,9 @@ background: rgba(255,255,255,0.02); min-width: 0;
 .canvas-item:hover { border-color: var(--cyan); box-shadow: 0 0 8px rgba(0,240,255,0.25); }
 .canvas-item.active { border-color: var(--cyan); background: rgba(0,240,255,0.12); box-shadow: 0 0 10px rgba(0,240,255,0.35); }
 .canvas-item-info { flex: 1 1 auto; min-width: 0; }
-.canvas-item-title {
-color: var(--text); font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.canvas-item-title { color: var(--text); font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .canvas-item.active .canvas-item-title { color: #fff; }
-.canvas-item-meta {
-color: var(--muted); font-size: 0.72em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.canvas-item-meta { color: var(--muted); font-size: 0.72em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .canvas-item-btns { display: flex; gap: 3px; flex: 0 0 auto; }
 .canvas-new-btn {
 flex: 0 0 auto; width: calc(100% - 16px); margin: 7px 8px;
@@ -834,17 +875,11 @@ transition: border-color .3s, box-shadow .3s;
 flex: 0 0 auto; width: 38px; height: 26px; padding: 1px; border: 1px solid var(--border);
 border-radius: 6px; background: #0a0c14; cursor: pointer;
 }
-.canvas-opt-label {
-color: var(--muted); font-size: 0.7em; text-transform: uppercase; letter-spacing: .6px;
-line-height: 1.3; overflow-wrap: anywhere;
-}
+.canvas-opt-label { color: var(--muted); font-size: 0.7em; text-transform: uppercase; letter-spacing: .6px; line-height: 1.3; overflow-wrap: anywhere; }
 .canvas-opt-hint { color: var(--muted); font-size: 0.7em; line-height: 1.4; overflow-wrap: anywhere; }
 .canvas-opt-row { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: nowrap; }
 .canvas-opt-row > .canvas-opt-label { flex: 0 0 auto; }
-.canvas-check-row {
-display: flex; align-items: center; gap: 7px; font-size: 0.8em; color: var(--text);
-cursor: pointer; min-width: 0; line-height: 1.3;
-}
+.canvas-check-row { display: flex; align-items: center; gap: 7px; font-size: 0.8em; color: var(--text); cursor: pointer; min-width: 0; line-height: 1.3; }
 .canvas-check-row input { flex: 0 0 auto; width: 15px; height: 15px; accent-color: var(--cyan); cursor: pointer; }
 .canvas-check-row span { min-width: 0; }
 .canvas-side-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
@@ -911,8 +946,7 @@ transition: opacity .35s ease, background .3s ease;
 .sb-mini {
 width: 19px; height: 19px; display: flex; align-items: center; justify-content: center;
 background: transparent; border: 1px solid var(--border); color: var(--cyan); border-radius: 4px;
-cursor: pointer; font-size: 0.95em; line-height: 1; padding: 0; transition: all .2s; font-family: inherit;
-flex: 0 0 auto;
+cursor: pointer; font-size: 0.95em; line-height: 1; padding: 0; transition: all .2s; font-family: inherit; flex: 0 0 auto;
 }
 .sb-mini:hover { background: rgba(0,240,255,.18); box-shadow: 0 0 6px rgba(0,240,255,.4); }
 .zoom-label { min-width: 46px; text-align: center; color: var(--cyan); font-weight: bold; cursor: pointer; user-select: none; flex: 0 0 auto; }
@@ -934,10 +968,7 @@ box-shadow: 0 8px 28px rgba(0,0,0,.65), 0 0 14px rgba(0,240,255,.15);
 }
 .canvas-popover.open { display: block; animation: fadeIn .16s ease; }
 .swatch-grid { display: grid; grid-template-columns: repeat(4, 24px); gap: 6px; margin-bottom: 8px; }
-.color-swatch {
-width: 24px; height: 24px; border-radius: 5px; border: 2px solid rgba(255,255,255,0.18);
-cursor: pointer; transition: all .2s; padding: 0;
-}
+.color-swatch { width: 24px; height: 24px; border-radius: 5px; border: 2px solid rgba(255,255,255,0.18); cursor: pointer; transition: all .2s; padding: 0; }
 .color-swatch:hover { transform: scale(1.12); }
 .color-swatch.active { border-color: #fff; box-shadow: 0 0 10px currentColor; transform: scale(1.12); }
 .canvas-color-input { width: 100%; height: 28px; padding: 1px; border: 1px solid var(--border); border-radius: 6px; background: #0a0c14; cursor: pointer; }
@@ -945,10 +976,7 @@ cursor: pointer; transition: all .2s; padding: 0;
 .help-popover { width: 330px; max-width: 88vw; color: var(--muted); font-size: 0.8em; line-height: 1.6; }
 .help-popover h5 { color: var(--cyan); font-size: 1em; margin: 7px 0 3px; text-transform: uppercase; letter-spacing: .6px; }
 .help-popover h5:first-child { margin-top: 0; }
-.help-popover kbd {
-background: #0a0c14; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px;
-color: var(--cyan); font-family: 'Courier New', monospace; font-size: 0.95em;
-}
+.help-popover kbd { background: #0a0c14; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; color: var(--cyan); font-family: 'Courier New', monospace; font-size: 0.95em; }
 .help-popover ul { list-style: none; padding: 0; margin: 0; }
 .help-popover li { padding: 1px 0; }
 .focus-toolbar {
@@ -996,8 +1024,10 @@ box-shadow: 6px 0 24px rgba(0,0,0,.6); background: var(--panel);
 }
 @media (max-width: 700px) {
 .pg-grid { grid-template-columns: 1fr; }
+.settings-grid { grid-template-columns: 1fr; }
 .prompt-gen-modal, .settings-modal { max-height: 92vh; }
 .gist-result-label { min-width: 100%; }
+.settings-actions .quiz-button, .settings-actions .copy-btn { flex: 1 1 140px; }
 }
 @media (max-width: 600px) {
 .columns { flex-direction: column; }
@@ -1269,7 +1299,7 @@ const info = h('div', { class: 'app-info' });
 info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
 info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
 header.appendChild(info);
-header.appendChild(h('span', { class: 'app-version', textContent: 'v1.17.3' }));
+header.appendChild(h('span', { class: 'app-version', textContent: 'v1.18.0' }));
 return header;
 }
 function renderCourseHeader() {
@@ -1295,11 +1325,13 @@ throw new Error('Редактор поддерживает только один
 const gistId = course.meta._gistId;
 const gistUrl = course.meta._gistUrl;
 const gistFile = course.meta._gistFile;
+const gistSynced = course.meta._syncedAt;
 await loadCourseFromObject(data, recordId);
 if (gistId) {
 data.meta._gistId = gistId;
 data.meta._gistUrl = gistUrl;
 data.meta._gistFile = gistFile;
+data.meta._syncedAt = gistSynced;
 }
 }
 });
@@ -1325,6 +1357,9 @@ textContent: '🐙 Gist ↗'
 }));
 } else {
 badges.appendChild(h('span', { class: 'badge', title: 'Курс связан с gist ' + course.meta._gistId, textContent: '🐙 Gist' }));
+}
+if (course.meta._syncedAt) {
+badges.appendChild(h('span', { class: 'badge', title: 'Последняя синхронизация с gist', textContent: '⇄ ' + formatSyncDate(course.meta._syncedAt) }));
 }
 }
 header.appendChild(badges);
@@ -1511,6 +1546,14 @@ await loadCourseFromObject(data, null);
 });
 });
 buttonRow.appendChild(newCourseBtn);
+const syncAllBtn = h('button', {
+class: 'quiz-button',
+textContent: '⇄ Синхронизировать с Gist',
+type: 'button',
+title: 'Массовая синхронизация сохранённых курсов с GitHub Gist (отправить / забрать / авто)'
+});
+syncAllBtn.addEventListener('click', () => openGistSyncDialog());
+buttonRow.appendChild(syncAllBtn);
 manager.appendChild(buttonRow);
 const urlRow = h('div', { style: 'display:flex; gap:10px; margin:10px 0 4px;' });
 const urlInput = h('input', {
@@ -1527,7 +1570,7 @@ urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.prevent
 urlRow.appendChild(urlInput);
 urlRow.appendChild(urlBtn);
 manager.appendChild(urlRow);
-manager.appendChild(h('p', { class: 'pg-note', textContent: 'Поддерживаются: прямая ссылка на JSON-курс, массив курсов, объект с полем courses, а также ссылки на GitHub Gist — если в gist несколько .json-файлов, будет предложен выбор. Публичные gist загружаются без токена, секретные — после указания токена в «⚙ Настройки».' }));
+manager.appendChild(h('p', { class: 'pg-note', textContent: 'Поддерживаются: прямая ссылка на JSON-курс, массив курсов, объект с полем courses, а также ссылки на GitHub Gist — если в gist несколько .json-файлов, будет предложен выбор. Публичные gist загружаются без токена, секретные — после указания токена в «⚙ Настройки». Кнопка «⇄ Синхронизировать с Gist» связывает локальные курсы с их gist-копиями и обновляет их в обе стороны.' }));
 urlStatusEl = h('div', { class: 'url-status' });
 manager.appendChild(urlStatusEl);
 urlFilesEl = h('div', { class: 'gist-file-list' });
@@ -1555,15 +1598,60 @@ courses.forEach(record => {
 const isCurrent = currentRecordId && record.id === currentRecordId;
 const item = h('div', { class: 'saved-course-item' + (isCurrent ? ' current' : '') });
 const meta = (record.course && record.course.meta) || {};
+const gInfo = courseGistInfo(record.course);
 const nameSpan = h('span', { class: 'course-name' });
-nameSpan.appendChild(h('span', { textContent: (meta._gistId ? '🐙 ' : '') + (record.title || 'Без названия') }));
+const nameText = (gInfo.id ? '🐙 ' : '') + (record.title || 'Без названия');
+nameSpan.appendChild(h('span', { textContent: nameText, title: nameText + (gInfo.syncedAt ? ('\nСинхронизирован: ' + formatSyncDate(gInfo.syncedAt)) : '') }));
 if (isCurrent) nameSpan.appendChild(h('span', { class: 'current-badge', textContent: 'открыт' }));
+if (gInfo.syncedAt) nameSpan.appendChild(h('span', { class: 'current-badge', style: 'color:var(--muted); border-color:var(--border);', textContent: '⇄ ' + formatSyncDate(gInfo.syncedAt) }));
 item.appendChild(nameSpan);
 const loadBtn = h('button', { class: 'quiz-button', textContent: 'Загрузить', type: 'button' });
 loadBtn.addEventListener('click', () => {
 if (!record.course.meta) record.course.meta = {};
 record.course.meta._recordId = record.id;
 setCourse(record.course);
+});
+const syncBtn = h('button', {
+class: 'quiz-button',
+textContent: gInfo.id ? '⇄ Sync' : '⇄ Связать',
+type: 'button',
+title: gInfo.id
+? ('Синхронизировать с gist ' + gInfo.id + ' (авто: новее — то и берём)')
+: 'Опубликовать курс в gist и связать его для дальнейшей синхронизации'
+});
+syncBtn.addEventListener('click', async () => {
+if (!gistSettings.token) {
+alert('Для синхронизации нужен токен GitHub: «⚙ Настройки» → «GitHub Gist».');
+return;
+}
+syncBtn.disabled = true;
+const original = syncBtn.textContent;
+syncBtn.textContent = '⏳';
+try {
+let res;
+if (gInfo.id) {
+res = await syncRecordAuto(record);
+} else {
+res = { action: 'push', res: await pushRecordToGist(record) };
+}
+syncBtn.textContent = '✔';
+setTimeout(() => { syncBtn.textContent = original; syncBtn.disabled = false; updateSavedCoursesList(); }, 900);
+if (course && course.meta && course.meta._recordId === record.id) {
+const keepLesson = currentLessonId;
+const all = await getAllCoursesFromDB();
+const fresh = all.find(r => r.id === record.id);
+if (fresh && fresh.course) {
+setCourse(fresh.course);
+if (keepLesson && fresh.course.lessons.some(l => l.id === keepLesson)) showLesson(keepLesson);
+}
+} else {
+updateSavedCoursesList();
+}
+} catch (e) {
+syncBtn.textContent = '✖';
+setTimeout(() => { syncBtn.textContent = original; syncBtn.disabled = false; }, 1200);
+alert('Ошибка синхронизации: ' + (e && e.message ? e.message : String(e)));
+}
 });
 const gistBtn = h('button', {
 class: 'quiz-button',
@@ -1584,6 +1672,7 @@ alert('Ошибка удаления: ' + e.message);
 }
 });
 item.appendChild(loadBtn);
+item.appendChild(syncBtn);
 item.appendChild(gistBtn);
 item.appendChild(delBtn);
 listEl.appendChild(item);
@@ -2637,6 +2726,7 @@ if (!course.meta) course.meta = {};
 if (!course.meta._recordId) course.meta._recordId = generateRecordId();
 await saveCourseToDB(course, course.meta._recordId);
 updateSavedCoursesList();
+scheduleAutoSync();
 }
 function validateBlockData(data) {
 if (!data || typeof data !== 'object' || Array.isArray(data)) {
@@ -2806,7 +2896,6 @@ overlay.addEventListener('click', (e) => {
 if (e.target === overlay) overlay.remove();
 });
 }
-// ---------- ОПРЕДЕЛЕНИЕ MIME-ТИПА МЕДИАФАЙЛА ПО РАСШИРЕНИЮ ----------
 function guessMediaType(url, kind) {
 if (!url) return null;
 const clean = String(url).split('?')[0].split('#')[0].toLowerCase();
@@ -2823,7 +2912,6 @@ m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac', weba: 'audio/webm', opus
 if (kind === 'video') return videoTypes[ext] || null;
 return audioTypes[ext] || null;
 }
-// ---------- ОБРАБОТЧИК ОШИБОК ЗАГРУЗКИ МЕДИА ----------
 function attachMediaErrorHandler(mediaEl, src, container) {
 const showMediaError = () => {
 if (mediaEl.dataset.errShown === '1') return;
@@ -4033,37 +4121,30 @@ helpDiv.innerHTML = `
 <p><strong>Несколько курсов:</strong> можно загрузить один курс, массив курсов, массив URL или объект с полем <code>courses</code>.</p>
 <p><strong>Автозагрузка через URL:</strong> параметр <code>?url=ссылка</code> (или <code>?source=</code>, <code>?course=</code>) в адресной строке загружает курс при открытии страницы. Параметр также принимает ссылку на gist.</p>
 <h4 style="color: #fff; margin-top: 10px;">🔗 Поле «Загрузить по URL» — JSON и GitHub Gist</h4>
-<p>Одно поле умеет и то, и другое. Вставьте прямую ссылку на JSON <em>или</em> ссылку на gist (<code>https://gist.github.com/user/ID</code>, raw-ссылку или просто ID) — плеер сам определит тип:</p>
-<ul style="margin-left:20px;">
-<li>для gist выполняется запрос к Gist API, находятся все файлы <code>.json</code>; если их несколько, появляется список кнопок для выбора нужного файла;</li>
-<li>публичные gist загружаются без токена, секретные — только после указания токена в «⚙ Настройки»;</li>
-<li>поддерживаются файлы с одним курсом, массивом курсов и объектом <code>courses</code>;</li>
-<li>статус загрузки и ошибки выводятся под полем ввода.</li>
-</ul>
+<p>Одно поле умеет и то, и другое. Вставьте прямую ссылку на JSON <em>или</em> ссылку на gist (<code>https://gist.github.com/user/ID</code>, raw-ссылку или просто ID) — плеер сам определит тип. Если в gist несколько <code>.json</code>-файлов, будет предложен выбор. Публичные gist загружаются без токена, секретные — после указания токена в «⚙ Настройки».</p>
 <h4 style="color: #fff; margin-top: 10px;">🐙 Публикация курса в Gist</h4>
 <p>Кнопка <strong>⬆ Gist</strong> (или <strong>⟳ Gist</strong>, если курс уже опубликован) есть у <em>каждого сохранённого курса</em> в списке «Управление курсами». В диалоге задаются имя файла, описание, видимость и ID существующего gist. После публикации выдаются три ссылки: страница gist, raw-файл JSON и готовая ссылка на плеер вида <code>?url=&lt;raw_url&gt;</code>.</p>
+<h4 style="color: #fff; margin-top: 10px;">⇄ Синхронизация курсов с Gist</h4>
+<p>Кнопка <strong>«⇄ Синхронизировать с Gist»</strong> (в панели «Управление курсами» и в «⚙ Настройки» → «GitHub Gist») открывает мастер массовой синхронизации:</p>
+<ul style="margin-left:20px;">
+<li><strong>⬆ Отправить</strong> — локальные курсы выгружаются в свои gist (несвязанные публикуются как новый gist и связываются автоматически);</li>
+<li><strong>⬇ Забрать</strong> — содержимое gist перезаписывает локальные курсы (несвязанные пропускаются);</li>
+<li><strong>⇄ Авто</strong> — сравнивается время изменения: если gist новее локальной копии — данные забираются, иначе отправляются.</li>
+</ul>
+<p>Курсы выбираются чекбоксами, ход операции виден в журнале. У каждого курса в списке есть отдельная кнопка <strong>⇄ Sync</strong> для быстрой синхронизации только его. Время последней синхронизации хранится в <code>meta._syncedAt</code> и показывается бейджем в шапке курса.</p>
+<p><strong>Автосинхронизация:</strong> в «⚙ Настройки» → «GitHub Gist» можно включить автоматическую отправку открытого курса в связанный gist после каждого сохранения (с задержкой ~6 секунд, чтобы не дёргать API на каждое действие).</p>
 <h4 style="color: #fff; margin-top: 10px;">⚙ Настройки</h4>
-<p>Кнопка <strong>⚙</strong> в верхней панели: <strong>Общие</strong> (режим по умолчанию, плавающая кнопка 🎨), <strong>GitHub Gist</strong> (токен), <strong>Промпты</strong> (шаблоны и автосхема блоков), <strong>Холсты</strong> (значения по умолчанию, сброс позиций), <strong>Данные</strong> (экспорт/импорт курсов, прогресс, статистика).</p>
+<p>Кнопка <strong>⚙</strong> в верхней панели открывает окно с вкладками: <strong>Общие</strong> (режим по умолчанию, плавающая кнопка 🎨, быстрые действия), <strong>GitHub Gist</strong> (токен, видимость, синхронизация, автосинхронизация), <strong>Промпты</strong> (шаблоны и автосхема блоков), <strong>Холсты</strong> (значения по умолчанию, расположение), <strong>Данные</strong> (статистика, экспорт/импорт, очистка). Каждая группа параметров — в отдельной карточке, элементы не перекрываются и корректно переносятся на узких экранах.</p>
 <h4 style="color: #fff; margin-top: 10px;">🧠 Генератор и редактор промптов</h4>
 <p>Три вкладки: <strong>⚙ Параметры</strong>, <strong>📝 Шаблоны</strong>, <strong>👁 Результат</strong>. Подстановки: <code>{{TOPIC}}</code>, <code>{{LANGUAGE}}</code>, <code>{{LESSONS_COUNT}}</code>, <code>{{BLOCKS_PER_LESSON}}</code>, <code>{{LESSON_NUMBER}}</code>, <code>{{LESSON_TITLE}}</code>, <code>{{LESSON_POSITION}}</code>, <code>{{COURSE_CONTEXT}}</code>, <code>{{AUTHOR}}</code>, <code>{{DURATION}}</code>, <code>{{LEVEL}}</code>, <code>{{EXTRA}}</code>, <code>{{SCHEMA}}</code>. В режиме редактирования рядом с заголовком урока есть кнопка <strong>🧠</strong>.</p>
 <h4 style="color: #fff; margin-top: 10px;">🎨 Виртуальные холсты для заметок</h4>
 <p>Плавающая кнопка <strong>🎨</strong> (sticky) доступна при загруженном курсе: её можно <strong>перетащить</strong> в любое место экрана — позиция запоминается; обычный клик открывает окно холстов.</p>
-<p><strong>Бесконечный холст:</strong> границ нет, координаты не ограничены. Начало координат (0;0) отмечено осями, сетка бесконечная и адаптивная к масштабу.</p>
-<p><strong>Три уровня привязки холстов:</strong></p>
-<ul style="margin-left:20px;">
-<li><strong>К курсу</strong> — холст без привязки, виден во всех уроках;</li>
-<li><strong>К уроку</strong> — поле «Привязка» в панели холстов или кнопка 🎨 в заголовке урока;</li>
-<li><strong>К блоку</strong> — холст привязывается автоматически при нажатии 🎨 в панели инструментов блока (поле <code>blockId</code>), либо атрибутами блока <code>"canvas": true</code>, <code>"canvasId": "..."</code>, <code>"canvasLabel": "..."</code>.</li>
-</ul>
-<p><strong>Как формируется ключ привязки (<code>blockId</code>):</strong> если у блока задан <code>id</code> — ключ <code>b:&lt;id&gt;</code>; иначе ключ строится по <em>полному пути</em> блока в уроке: <code>b:&lt;id-урока&gt;#&lt;путь&gt;</code>, например <code>b:lesson-1#3</code> для четвёртого блока верхнего уровня или <code>b:lesson-1#3.0.1</code> для вложенного блока (секция → вкладка → блок). Такой путь уникален, поэтому холст никогда не «прилипает» к нескольким блокам и значок 🎨 не дублируется. Автоматическая привязка по пути доступна блокам верхнего уровня, а также любым блокам с собственным <code>id</code> или <code>canvasId</code>.</p>
-<p><strong>В режиме просмотра</strong> значок <strong>🎨</strong> размещается в правом верхнем углу области блока и показывается <em>только один раз</em> — у того блока, к которому холст привязан. Зелёный счётчик — количество заметок; полупрозрачный значок означает пустой или ещё не созданный холст.</p>
-<p><strong>Сайдбар холстов:</strong> список с фильтром «только текущий урок», кнопка создания, сворачиваемая панель «Свойства холста» (название, привязка к уроку и блоку, фон, сетка, область экспорта PNG, дублирование/экспорт/импорт/очистка/удаление).</p>
-<p><strong>Статусбар:</strong> холст и его привязки (📎 урок, 🧩 блок), инструмент с цветом и толщиной, координаты, масштаб (<code>−</code>/<code>+</code>/<code>▣</code>/<code>⌂</code>), число штрихов, автосохранение и кнопка <code>?</code>.</p>
-<p><strong>Режим фокуса (🎯 или F):</strong> скрывает интерфейс и разворачивает окно; через ~2 секунды бездействия панели растворяются. Выход — <code>F</code>, <code>Esc</code> или <code>⤡</code>.</p>
-<p><strong>Инструменты:</strong> карандаш (✏), маркер (🖍), ластик (⌫), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯), текст (T), рука (✋). Горячие клавиши: P, H, E, L, A, R, O, T, V; Ctrl+Z / Ctrl+Y / Ctrl+S.</p>
-<p><strong>Перемещение и масштаб:</strong> «Рука» (V) · средняя кнопка мыши · пробел + мышь · колесо (панорама) · Ctrl + колесо (зум к курсору) · щипок · стрелки (Shift — быстрее).</p>
-<p><strong>Экспорт PNG:</strong> область — «Видимая + всё содержимое» (по умолчанию), «Только видимая» или «Только содержимое». Файл всегда содержит <em>всю</em> выбранную область целиком: сцена рендерится заново в отдельный canvas с точным соответствием «документ → пиксель», разрешение не ниже экранного (с учётом devicePixelRatio), фон и сетка сохраняются.</p>
-<p><strong>Хранение:</strong> штрихи — векторные последовательности абсолютных координат в поле <code>meta.canvases</code>, сохраняются в IndexedDB вместе с курсом и попадают в gist при публикации. Формат (version 2):</p>
+<p><strong>Три уровня привязки холстов:</strong> к курсу (без привязки), к уроку (<code>lessonId</code>) и к блоку (<code>blockId</code>).</p>
+<p><strong>Как формируется ключ привязки (<code>blockId</code>):</strong> если у блока задан <code>id</code> — ключ <code>b:&lt;id&gt;</code>; иначе ключ строится по <em>полному пути</em> блока в уроке: <code>b:&lt;id-урока&gt;#&lt;путь&gt;</code>, например <code>b:lesson-1#3</code> или <code>b:lesson-1#3.0.1</code> для вложенного блока. Путь уникален, поэтому холст не «прилипает» к нескольким блокам и значок 🎨 не дублируется.</p>
+<p><strong>В режиме просмотра</strong> значок <strong>🎨</strong> размещается в правом верхнем углу области блока и показывается только один раз — у блока, к которому холст привязан. Зелёный счётчик — количество заметок; полупрозрачный значок — пустой или ещё не созданный холст.</p>
+<p><strong>Экспорт PNG:</strong> область — «Видимая + всё содержимое» (по умолчанию), «Только видимая» или «Только содержимое». Файл всегда содержит всю выбранную область целиком, разрешение не ниже экранного (с учётом devicePixelRatio).</p>
+<p><strong>Инструменты:</strong> карандаш (✏), маркер (🖍), ластик (⌫), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯), текст (T), рука (✋). Горячие клавиши: P, H, E, L, A, R, O, T, V; Ctrl+Z / Ctrl+Y / Ctrl+S; F — режим фокуса.</p>
+<p><strong>Хранение:</strong> штрихи — векторные последовательности абсолютных координат в поле <code>meta.canvases</code>, сохраняются в IndexedDB вместе с курсом и попадают в gist при публикации/синхронизации. Формат (version 2):</p>
 <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>"canvases": [
 {
 "id": "cv-...", "version": 2, "title": "Заметки к блоку",
@@ -4071,20 +4152,14 @@ helpDiv.innerHTML = `
 "background": "#0a0c14", "showGrid": true,
 "view": { "scale": 1, "cx": 0, "cy": 0 },
 "strokes": [
-{ "tool": "pencil", "color": "#00f0ff", "size": 3, "points": [[-120.5, 40], [-96, 58.2]] },
-{ "tool": "rect", "color": "#ff2a6d", "size": 2, "fill": true, "points": [[10, 20], [320, 210]] },
-{ "tool": "text", "color": "#ffffff", "text": "Заметка", "fontSize": 24, "points": [[40, -80]] }
+{ "tool": "pencil", "color": "#00f0ff", "size": 3, "points": [[-120.5, 40], [-96, 58.2]] }
 ]
 }
 ]</code></pre>
 <h4 style="color: #fff; margin-top: 10px;">Редактирование блоков</h4>
-<p>В режиме редактирования наведите курсор на блок — появится панель: <code>✎</code> — редактировать, <code>🎨</code> — холст заметок для этого блока, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить после текущего, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>.</p>
-<h4 style="color: #fff; margin-top: 10px;">Аудио и видео</h4>
-<p>Блоки <code>video</code> и <code>audio</code>: <code>src</code>, <code>caption</code>, <code>mimeType</code> (определяется по расширению), <code>speedControl</code>, <code>loop</code>, <code>muted</code>, <code>autoplay</code>.</p>
-<h4 style="color: #fff; margin-top: 10px;">Размеры блоков, graph и model3d</h4>
-<p>Любой блок поддерживает <code>width</code>, <code>height</code>, <code>maxWidth</code>, <code>maxHeight</code>, <code>minWidth</code>, <code>minHeight</code>, <code>autoScale</code>, а также <code>canvas</code>/<code>canvasId</code>/<code>canvasLabel</code>. График: 2D (<code>y = f(x)</code>), 3D (<code>z = f(x,y)</code>), параметрические кривые, интерактивные <code>params</code>. 3D-модели <code>.glb</code>/<code>.gltf</code> по URL или из файла.</p>
+<p>В режиме редактирования наведите курсор на блок — появится панель: <code>✎</code> — редактировать, <code>🎨</code> — холст заметок, <code>↑</code>/<code>↓</code> — переместить, <code>＋</code> — добавить, <code>🗑</code> — удалить. Редактор блока содержит вкладки <strong>«Форма»</strong> и <strong>«JSON»</strong>.</p>
 <h4 style="color: #fff; margin-top: 10px;">Дополнительные типы блоков</h4>
-<p><code>flashcards</code>, <code>checklist</code>, <code>quote</code>, <code>glossary</code>, <code>equation</code>, <code>youtube</code>, <code>kanban</code>, <code>stats</code>, <code>countdown</code>, <code>tree</code>, <code>truefalse</code>, <code>divider</code>, <code>download</code>, <code>hotspots</code>, <code>crossword</code>.</p>
+<p><code>flashcards</code>, <code>checklist</code>, <code>quote</code>, <code>glossary</code>, <code>equation</code>, <code>youtube</code>, <code>kanban</code>, <code>stats</code>, <code>countdown</code>, <code>tree</code>, <code>truefalse</code>, <code>divider</code>, <code>download</code>, <code>hotspots</code>, <code>crossword</code>, <code>graph</code>, <code>model3d</code>.</p>
 `;
 content.appendChild(helpDiv);
 overlay.appendChild(content);
@@ -4163,15 +4238,15 @@ lines.push('ПОЛЯ meta КУРСА: title, description, author, duration, leve
 lines.push('');
 lines.push('ВАЖНЫЕ УТОЧНЕНИЯ ПО БЛОКАМ:');
 lines.push('- video/audio: mimeType можно не указывать — он определится по расширению; autoplay для видео включается без звука; для внешних файлов нужен CORS.');
-lines.push('- graph: mode "2d" → equation вида "y = f(x)"; mode "3d" → "z = f(x,y)"; parametric true → paramX/paramY/paramZ как функции t и поля tMin/tMax; params — массив слайдеров { name, value, min, max, step }, имена параметров чувствительны к регистру и подставляются прямо в уравнение.');
-lines.push('- model3d: src — URL .glb/.gltf; lightPreset — studio|warm|cold|night|neon; lightColor/lightIntensity (0–3) — ключевой свет; ambientColor/ambientIntensity (0–3) — рассеянный свет; background — цвет фона; showGrid, autoRotate.');
+lines.push('- graph: mode "2d" → equation вида "y = f(x)"; mode "3d" → "z = f(x,y)"; parametric true → paramX/paramY/paramZ как функции t и поля tMin/tMax; params — массив слайдеров { name, value, min, max, step }.');
+lines.push('- model3d: src — URL .glb/.gltf; lightPreset — studio|warm|cold|night|neon; lightColor/lightIntensity (0–3); ambientColor/ambientIntensity (0–3); background; showGrid, autoRotate.');
 lines.push('- fill-blank: пропуски в тексте записываются как номер в двойных фигурных скобках; answers — объект, ключи которого совпадают с номерами пропусков.');
 lines.push('- equation: latex без ограничителей $$; в JSON обратные слэши удваиваются (например "x = \\\\frac{-b}{2a}").');
 lines.push('- hotspots: координаты x/y — проценты (0–100) от размеров изображения.');
 lines.push('- crossword: слова размещаются на общей сетке через row/col (с 0) и direction "across"|"down"; буквы в пересечениях должны совпадать.');
-lines.push('- mermaid: код диаграммы (graph TD, flowchart, sequenceDiagram, mindmap и т. п.) без markdown-обёрток.');
+lines.push('- mermaid: код диаграммы без markdown-обёрток.');
 lines.push('- svg: полноценная разметка <svg xmlns="http://www.w3.org/2000/svg" viewBox="...">...</svg>.');
-lines.push('- canvas/canvasId/canvasLabel: добавляйте к блокам ВЕРХНЕГО УРОВНЯ урока (или блокам с уникальным полем id), где студенту полезно делать рукописные пометки (задачи, схемы, таблицы, длинные определения, graph, svg, crossword). Один холст на блок — не дублируйте атрибуты у вложенных блоков.');
+lines.push('- canvas/canvasId/canvasLabel: добавляйте к блокам ВЕРХНЕГО УРОВНЯ урока (или блокам с уникальным полем id). Один холст на блок — не дублируйте атрибуты у вложенных блоков.');
 return lines.join('\n');
 }
 function defaultCourseTemplate() {
@@ -4205,7 +4280,7 @@ return [
 '- Структуры, процессы и классификации визуализируй блоками mermaid и svg; зависимости и функции — блоком graph (2d/3d, при необходимости с интерактивными params).',
 '- Блоки кода размещай преимущественно внутри блока modal, чтобы не перегружать ленту урока.',
 '- Для длинных перечней и справочных данных используй accordion, tabs, steps, tree, table.',
-'- ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК: атрибут "canvas": true добавляй ТОЛЬКО к блокам верхнего уровня урока (массив blocks) или к блокам с уникальным полем "id". Не ставь "canvas": true одновременно на родительский блок (section, tabs, accordion) и на его вложенные блоки — это приведёт к дублированию значков. Рядом с "canvas": true задавай осмысленный "canvasLabel" (например "Решение задачи на холсте"). Если один холст должен быть общим для нескольких блоков — задай им одинаковый "canvasId". В режиме просмотра значок 🎨 появится в правом верхнем углу области такого блока. Массив meta.canvases при этом остаётся пустым: холсты создаёт плеер.',
+'- ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК: атрибут "canvas": true добавляй ТОЛЬКО к блокам верхнего уровня урока (массив blocks) или к блокам с уникальным полем "id". Не ставь "canvas": true одновременно на родительский блок (section, tabs, accordion) и на его вложенные блоки — это приведёт к дублированию значков. Рядом задавай осмысленный "canvasLabel". Для общего холста нескольких блоков — одинаковый "canvasId". В режиме просмотра значок 🎨 появится в правом верхнем углу области такого блока. Массив meta.canvases при этом остаётся пустым: холсты создаёт плеер.',
 '- Обязательный минимум на курс: не менее 3 блоков quiz, 1 fill-blank, 1 multi-quiz или match, 1 диаграмма (chart или pie), 1 mermaid, 1 svg, 1 timeline или steps, не менее 3 блоков верхнего уровня с "canvas": true.',
 '- Каждый урок заверши блоком checklist («Что нужно уметь после урока») и/или flashcards для запоминания терминов.',
 '',
@@ -4274,7 +4349,7 @@ return [
 '- Структуры и процессы — mermaid и svg; зависимости — graph (2d/3d, при необходимости params).',
 '- Блоки кода размещай преимущественно внутри modal.',
 '- Длинные перечни оформляй через accordion, tabs, steps, tree.',
-'- ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК: атрибут "canvas": true ставь ТОЛЬКО на блоки верхнего уровня урока или на блоки с уникальным "id". Не дублируй его на родительском и вложенных блоках одновременно — иначе значок 🎨 появится несколько раз. Добавляй осмысленный "canvasLabel" (например "Решение на холсте"). Для общего холста нескольких блоков используй одинаковый "canvasId". Массив meta.canvases курса при этом не изменяется — холсты создаёт плеер.',
+'- ХОЛСТЫ ДЛЯ РУКОПИСНЫХ ЗАМЕТОК: атрибут "canvas": true ставь ТОЛЬКО на блоки верхнего уровня урока или на блоки с уникальным "id". Не дублируй его на родительском и вложенных блоках одновременно. Добавляй осмысленный "canvasLabel". Для общего холста нескольких блоков используй одинаковый "canvasId". Массив meta.canvases курса при этом не изменяется — холсты создаёт плеер.',
 '- Минимум для урока: не менее 2 блоков верхнего уровня с "canvas": true (если тема предполагает решение задач или схемы).',
 '',
 '=== ЭТАП 5. КАЧЕСТВА JSON ===',
@@ -4697,10 +4772,10 @@ openPromptGenerator(preset);
 // =====================================================================
 // ==================== НАСТРОЙКИ ПРИЛОЖЕНИЯ ===========================
 // =====================================================================
-const APP_PREFS_KEY = 'lms_app_prefs_v1';
-let appPrefs = { showCanvasFab: true };
+const APP_PREFS_KEY = 'lms_app_prefs_v2';
+let appPrefs = { showCanvasFab: true, autoSyncGist: false };
 try {
-const savedPrefs = JSON.parse(localStorage.getItem(APP_PREFS_KEY) || 'null');
+const savedPrefs = JSON.parse(localStorage.getItem(APP_PREFS_KEY) || localStorage.getItem('lms_app_prefs_v1') || 'null');
 if (savedPrefs && typeof savedPrefs === 'object') appPrefs = Object.assign(appPrefs, savedPrefs);
 } catch (e) {}
 function saveAppPrefs() {
@@ -4713,6 +4788,7 @@ const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'b
 closeBtn.addEventListener('click', () => overlay.remove());
 content.appendChild(closeBtn);
 content.appendChild(h('h3', { textContent: '⚙ Настройки', class: 'heading' }));
+content.appendChild(h('p', { class: 'settings-note', textContent: 'Все параметры хранятся локально в браузере. Внешние запросы выполняются только к api.github.com при работе с gist.' }));
 const TABS = [
 { id: 'general', label: '🎛 Общие' },
 { id: 'github', label: '🐙 GitHub Gist' },
@@ -4739,9 +4815,16 @@ tabBtns[t.id].classList.toggle('active', t.id === id);
 });
 if (id === 'data') refreshDataStats();
 }
+function card(titleText, full) {
+const c = h('div', { class: 'settings-card' + (full ? ' full' : '') });
+if (titleText) c.appendChild(h('div', { class: 'card-title', textContent: titleText }));
+return c;
+}
+// ---------------- ВКЛАДКА: ОБЩИЕ ----------------
 const pGeneral = panels['general'];
-pGeneral.appendChild(h('div', { class: 'pg-section-title', textContent: 'Интерфейс' }));
-const gridGeneral = h('div', { class: 'pg-grid' });
+const generalGrid = h('div', { class: 'settings-grid' });
+pGeneral.appendChild(generalGrid);
+const uiCard = card('Интерфейс');
 const modeField = h('div', { class: 'pg-field' });
 modeField.appendChild(h('label', { textContent: 'Режим по умолчанию' }));
 const modeSelect = h('select');
@@ -4750,10 +4833,8 @@ modeSelect.appendChild(h('option', { value: 'view', textContent: '👁 Прос�
 modeSelect.value = editMode ? 'edit' : 'view';
 modeSelect.addEventListener('change', () => setEditMode(modeSelect.value === 'edit'));
 modeField.appendChild(modeSelect);
-gridGeneral.appendChild(modeField);
-const fabField = h('div', { class: 'pg-field' });
-fabField.appendChild(h('label', { textContent: 'Плавающая кнопка холстов 🎨' }));
-const fabRow = h('label', { class: 'checkbox-label', style: 'padding:6px 0;' });
+uiCard.appendChild(modeField);
+const fabSwitch = h('label', { class: 'settings-switch' });
 const fabCheck = h('input', { type: 'checkbox' });
 fabCheck.checked = appPrefs.showCanvasFab !== false;
 fabCheck.addEventListener('change', () => {
@@ -4761,19 +4842,32 @@ appPrefs.showCanvasFab = fabCheck.checked;
 saveAppPrefs();
 updateCanvasFab();
 });
-fabRow.appendChild(fabCheck);
-fabRow.appendChild(h('span', { textContent: 'Показывать sticky-кнопку 🎨 при открытом курсе' }));
-fabField.appendChild(fabRow);
-gridGeneral.appendChild(fabField);
-pGeneral.appendChild(gridGeneral);
-pGeneral.appendChild(h('p', { class: 'pg-note', textContent: 'Все настройки хранятся локально в браузере (localStorage) и не передаются на сторонние серверы, кроме api.github.com при работе с gist.' }));
+fabSwitch.appendChild(fabCheck);
+fabSwitch.appendChild(h('span', { textContent: 'Показывать плавающую кнопку холстов 🎨 при открытом курсе' }));
+uiCard.appendChild(fabSwitch);
+generalGrid.appendChild(uiCard);
+const quickCard = card('Быстрые действия');
+const quickRow = h('div', { class: 'settings-actions' });
+const openCanvasBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🎨 Открыть холсты' });
+openCanvasBtn.addEventListener('click', () => { overlay.remove(); openCanvasWorkspace(); });
+const openHelpBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '❔ Справка' });
+openHelpBtn.addEventListener('click', () => { overlay.remove(); openHelpModal(); });
+const openPromptBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🧠 Генератор промптов' });
+openPromptBtn.addEventListener('click', () => { overlay.remove(); openPromptGenerator(); });
+quickRow.appendChild(openCanvasBtn);
+quickRow.appendChild(openHelpBtn);
+quickRow.appendChild(openPromptBtn);
+quickCard.appendChild(quickRow);
+quickCard.appendChild(h('p', { class: 'settings-note', textContent: 'Эти же кнопки доступны в верхней панели плеера.' }));
+generalGrid.appendChild(quickCard);
+// ---------------- ВКЛАДКА: GITHUB GIST ----------------
 const pGithub = panels['github'];
-pGithub.appendChild(h('div', { class: 'pg-section-title', textContent: 'Токен доступа GitHub' }));
-pGithub.appendChild(h('p', { class: 'pg-note', textContent: 'Для создания и обновления gist нужен классический персональный токен (Personal Access Token) с областью доступа gist. Токен хранится только в этом браузере и отправляется исключительно на api.github.com. Загрузка публичных gist работает без токена — просто вставьте ссылку в поле «Загрузить по URL».' }));
-pGithub.appendChild(h('a', { href: GIST_TOKEN_URL, target: '_blank', rel: 'noopener', class: 'quiz-button', style: 'display:inline-block; text-decoration:none; margin-top:0;', textContent: '🔑 Создать токен на GitHub ↗' }));
-const gridGh = h('div', { class: 'pg-grid', style: 'margin-top:12px;' });
-const tokenField = h('div', { class: 'pg-field full' });
-tokenField.appendChild(h('label', { textContent: 'Токен (Personal Access Token)' }));
+const ghGrid = h('div', { class: 'settings-grid' });
+pGithub.appendChild(ghGrid);
+const tokenCard = card('Токен доступа GitHub');
+tokenCard.appendChild(h('p', { class: 'settings-note', textContent: 'Нужен классический PAT с областью gist. Хранится только в этом браузере и отправляется лишь на api.github.com. Публичные gist загружаются без токена.' }));
+const tokenField = h('div', { class: 'pg-field' });
+tokenField.appendChild(h('label', { textContent: 'Personal Access Token' }));
 const tokenRow = h('div', { class: 'token-row' });
 const tokenInput = h('input', { type: 'password', placeholder: 'ghp_xxxxxxxxxxxxxxxxxxxx', autocomplete: 'off', spellcheck: 'false' });
 tokenInput.value = gistSettings.token || '';
@@ -4782,34 +4876,21 @@ showTokenBtn.addEventListener('click', () => { tokenInput.type = tokenInput.type
 tokenRow.appendChild(tokenInput);
 tokenRow.appendChild(showTokenBtn);
 tokenField.appendChild(tokenRow);
-gridGh.appendChild(tokenField);
-const visField = h('div', { class: 'pg-field' });
-visField.appendChild(h('label', { textContent: 'Тип gist по умолчанию' }));
-const visSelect = h('select');
-visSelect.appendChild(h('option', { value: 'secret', textContent: 'Секретный (только по ссылке)' }));
-visSelect.appendChild(h('option', { value: 'public', textContent: 'Публичный (виден всем)' }));
-visSelect.value = gistSettings.defaultPublic ? 'public' : 'secret';
-visSelect.addEventListener('change', () => { gistSettings.defaultPublic = visSelect.value === 'public'; saveGistSettings(); });
-visField.appendChild(visSelect);
-gridGh.appendChild(visField);
+tokenCard.appendChild(tokenField);
 const loginField = h('div', { class: 'pg-field' });
 loginField.appendChild(h('label', { textContent: 'Аккаунт GitHub (определяется автоматически)' }));
 const loginInput = h('input', { type: 'text', placeholder: '—', readonly: 'readonly' });
 loginInput.value = gistSettings.login || '';
 loginField.appendChild(loginInput);
-gridGh.appendChild(loginField);
-pGithub.appendChild(gridGh);
+tokenCard.appendChild(loginField);
 const ghMsg = h('div', { class: 'gist-msg' });
-pGithub.appendChild(ghMsg);
-const ghRow = h('div', { class: 'settings-row' });
-const checkTokenBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '✔ Проверить токен' });
+tokenCard.appendChild(ghMsg);
+const tokenActions = h('div', { class: 'settings-actions' });
+const createTokenLink = h('a', { href: GIST_TOKEN_URL, target: '_blank', rel: 'noopener', class: 'quiz-button', style: 'display:inline-flex; align-items:center; text-decoration:none; margin-top:0;', textContent: '🔑 Создать токен ↗' });
+const checkTokenBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '✔ Проверить' });
 checkTokenBtn.addEventListener('click', async () => {
 const tokenValue = tokenInput.value.trim();
-if (!tokenValue) {
-ghMsg.textContent = '✖ Сначала введите токен.';
-ghMsg.className = 'gist-msg err';
-return;
-}
+if (!tokenValue) { ghMsg.textContent = '✖ Сначала введите токен.'; ghMsg.className = 'gist-msg err'; return; }
 ghMsg.textContent = '⏳ Проверяем токен…';
 ghMsg.className = 'gist-msg wait';
 const previousToken = gistSettings.token;
@@ -4830,7 +4911,7 @@ return;
 }
 saveGistSettings();
 });
-const saveTokenBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '💾 Сохранить токен' });
+const saveTokenBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '💾 Сохранить' });
 saveTokenBtn.addEventListener('click', () => {
 gistSettings.token = tokenInput.value.trim();
 gistSettings.defaultPublic = visSelect.value === 'public';
@@ -4849,16 +4930,59 @@ loginInput.value = '';
 ghMsg.textContent = 'Токен удалён.';
 ghMsg.className = 'gist-msg';
 });
-ghRow.appendChild(checkTokenBtn);
-ghRow.appendChild(saveTokenBtn);
-ghRow.appendChild(clearTokenBtn);
-pGithub.appendChild(ghRow);
-pGithub.appendChild(h('p', { class: 'pg-note', textContent: 'Загрузка курса из gist: вставьте ссылку gist в поле «Загрузить по URL» в панели «Управление курсами». Публикация: кнопка «⬆ Gist» у нужного курса в списке сохранённых.' }));
+tokenActions.appendChild(createTokenLink);
+tokenActions.appendChild(checkTokenBtn);
+tokenActions.appendChild(saveTokenBtn);
+tokenActions.appendChild(clearTokenBtn);
+tokenCard.appendChild(tokenActions);
+ghGrid.appendChild(tokenCard);
+const pubCard = card('Публикация и синхронизация');
+const visField = h('div', { class: 'pg-field' });
+visField.appendChild(h('label', { textContent: 'Тип gist по умолчанию' }));
+const visSelect = h('select');
+visSelect.appendChild(h('option', { value: 'secret', textContent: 'Секретный (только по ссылке)' }));
+visSelect.appendChild(h('option', { value: 'public', textContent: 'Публичный (виден всем)' }));
+visSelect.value = gistSettings.defaultPublic ? 'public' : 'secret';
+visSelect.addEventListener('change', () => { gistSettings.defaultPublic = visSelect.value === 'public'; saveGistSettings(); });
+visField.appendChild(visSelect);
+pubCard.appendChild(visField);
+const autoSyncSwitch = h('label', { class: 'settings-switch' });
+const autoSyncCheck = h('input', { type: 'checkbox' });
+autoSyncCheck.checked = !!appPrefs.autoSyncGist;
+autoSyncCheck.addEventListener('change', () => {
+appPrefs.autoSyncGist = autoSyncCheck.checked;
+saveAppPrefs();
+autoSyncNote.textContent = appPrefs.autoSyncGist
+? 'Включено: открытый курс будет автоматически отправляться в связанный gist через ~6 секунд после сохранения.'
+: 'Выключено: синхронизация выполняется только вручную.';
+});
+autoSyncSwitch.appendChild(autoSyncCheck);
+autoSyncSwitch.appendChild(h('span', { textContent: 'Автосинхронизация открытого курса с gist' }));
+pubCard.appendChild(autoSyncSwitch);
+const autoSyncNote = h('p', { class: 'settings-note', textContent: appPrefs.autoSyncGist ? 'Включено: открытый курс будет автоматически отправляться в связанный gist через ~6 секунд после сохранения.' : 'Выключено: синхронизация выполняется только вручную.' });
+pubCard.appendChild(autoSyncNote);
+const pubActions = h('div', { class: 'settings-actions' });
+const openSyncBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⇄ Синхронизация курсов…' });
+openSyncBtn.addEventListener('click', () => { overlay.remove(); openGistSyncDialog(); });
+const publishCurrentBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬆ Опубликовать текущий курс' });
+publishCurrentBtn.addEventListener('click', () => {
+if (!course) { alert('Сначала загрузите курс.'); return; }
+overlay.remove();
+openGistPublishDialog(course);
+});
+pubActions.appendChild(openSyncBtn);
+pubActions.appendChild(publishCurrentBtn);
+pubCard.appendChild(pubActions);
+pubCard.appendChild(h('p', { class: 'settings-note', textContent: 'Загрузка курса из gist: вставьте ссылку gist в поле «Загрузить по URL» в панели «Управление курсами». Массовая синхронизация всех сохранённых курсов — кнопка «⇄ Синхронизация курсов…».' }));
+ghGrid.appendChild(pubCard);
+// ---------------- ВКЛАДКА: ПРОМПТЫ ----------------
 const pPrompts = panels['prompts'];
-pPrompts.appendChild(h('div', { class: 'pg-section-title', textContent: 'Шаблоны промптов для LLM' }));
-pPrompts.appendChild(h('p', { class: 'pg-note', textContent: 'Шаблоны промптов (для курса и для одного урока) редактируются в генераторе промптов и сохраняются в браузере. Здесь доступны быстрые действия с ними.' }));
-const promptRow = h('div', { class: 'settings-row' });
-const openPromptsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🧠 Открыть редактор промптов' });
+const promptGrid = h('div', { class: 'settings-grid' });
+pPrompts.appendChild(promptGrid);
+const promptCard = card('Шаблоны промптов для LLM');
+promptCard.appendChild(h('p', { class: 'settings-note', textContent: 'Шаблоны (для курса и для одного урока) редактируются в генераторе промптов и сохраняются в браузере. Здесь — быстрые действия с ними.' }));
+const promptActions = h('div', { class: 'settings-actions' });
+const openPromptsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🧠 Открыть редактор' });
 openPromptsBtn.addEventListener('click', () => { overlay.remove(); openPromptGenerator(null, 'templates'); });
 const resetPromptsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⟲ Сбросить шаблоны' });
 resetPromptsBtn.addEventListener('click', () => {
@@ -4869,7 +4993,7 @@ localStorage.removeItem(PROMPT_TPL_LESSON_KEY);
 } catch (e) {}
 alert('Шаблоны промптов сброшены к стандартным.');
 });
-const exportPromptsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬇ Экспорт шаблонов' });
+const exportPromptsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬇ Экспорт' });
 exportPromptsBtn.addEventListener('click', () => {
 const t = loadPromptTemplates();
 downloadBlob(new Blob([JSON.stringify({ course: t.course, lesson: t.lesson, exportedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' }), 'lms-prompts.json');
@@ -4895,56 +5019,66 @@ alert('Ошибка импорта: ' + e.message);
 reader.onerror = () => alert('Не удалось прочитать файл.');
 reader.readAsText(file);
 });
-const importPromptsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬆ Импорт шаблонов' });
+const importPromptsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬆ Импорт' });
 importPromptsBtn.addEventListener('click', () => importPromptsInput.click());
-promptRow.appendChild(openPromptsBtn);
-promptRow.appendChild(resetPromptsBtn);
-promptRow.appendChild(exportPromptsBtn);
-promptRow.appendChild(importPromptsBtn);
-promptRow.appendChild(importPromptsInput);
-pPrompts.appendChild(promptRow);
-const schemaRow = h('div', { class: 'settings-row' });
-const showSchemaBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '{{SCHEMA}} Показать автосхему блоков' });
-const schemaArea = h('textarea', { class: 'tpl pg-hidden', style: 'min-height:220px; width:100%; margin-top:10px; background:#0a0c14; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:10px; font-family:monospace; font-size:0.78em;', readonly: 'readonly', spellcheck: 'false' });
+promptActions.appendChild(openPromptsBtn);
+promptActions.appendChild(resetPromptsBtn);
+promptActions.appendChild(exportPromptsBtn);
+promptActions.appendChild(importPromptsBtn);
+promptActions.appendChild(importPromptsInput);
+promptCard.appendChild(promptActions);
+promptGrid.appendChild(promptCard);
+const schemaCard = card('Автосхема блоков {{SCHEMA}}');
+schemaCard.appendChild(h('p', { class: 'settings-note', textContent: 'Схема строится автоматически из актуальных типов блоков плеера и подставляется в промпт вместо {{SCHEMA}}.' }));
+const schemaActions = h('div', { class: 'settings-actions' });
+const showSchemaBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Показать схему' });
+const copySchemaBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Копировать' });
+schemaActions.appendChild(showSchemaBtn);
+schemaActions.appendChild(copySchemaBtn);
+schemaCard.appendChild(schemaActions);
+const schemaArea = h('textarea', { class: 'tpl pg-hidden', style: 'min-height:220px; width:100%; background:#0a0c14; color:var(--text); border:1px solid var(--border); border-radius:6px; padding:10px; font-family:monospace; font-size:0.78em; resize:vertical;', readonly: 'readonly', spellcheck: 'false' });
 showSchemaBtn.addEventListener('click', () => {
 const hidden = schemaArea.classList.contains('pg-hidden');
 if (hidden) schemaArea.value = buildSchemaText();
 schemaArea.classList.toggle('pg-hidden', !hidden);
-showSchemaBtn.textContent = hidden ? '{{SCHEMA}} Скрыть автосхему' : '{{SCHEMA}} Показать автосхему';
+showSchemaBtn.textContent = hidden ? 'Скрыть схему' : 'Показать схему';
 });
-schemaRow.appendChild(showSchemaBtn);
-pPrompts.appendChild(schemaRow);
-pPrompts.appendChild(schemaArea);
+copySchemaBtn.addEventListener('click', async () => {
+const ok = await copyTextToClipboard(schemaArea.value || buildSchemaText());
+copySchemaBtn.textContent = ok ? '✔ Скопировано' : '✖';
+setTimeout(() => { copySchemaBtn.textContent = 'Копировать'; }, 1600);
+});
+schemaCard.appendChild(schemaArea);
+promptGrid.appendChild(schemaCard);
+// ---------------- ВКЛАДКА: ХОЛСТЫ ----------------
 const pCanvas = panels['canvas'];
-pCanvas.appendChild(h('div', { class: 'pg-section-title', textContent: 'Значения по умолчанию для новых холстов' }));
-const canvasGrid = h('div', { class: 'pg-grid' });
+const canvasGrid = h('div', { class: 'settings-grid' });
+pCanvas.appendChild(canvasGrid);
+const canvasDefCard = card('Значения по умолчанию для новых холстов');
 const linkField = h('div', { class: 'pg-field' });
 linkField.appendChild(h('label', { textContent: 'Привязка новых холстов' }));
-const linkRow = h('label', { class: 'checkbox-label', style: 'padding:6px 0;' });
+const linkSwitch = h('label', { class: 'settings-switch' });
 const linkCheck = h('input', { type: 'checkbox' });
 linkCheck.checked = !!canvasPrefs.linkToLesson;
 linkCheck.addEventListener('change', () => { canvasPrefs.linkToLesson = linkCheck.checked; saveCanvasPrefs(); });
-linkRow.appendChild(linkCheck);
-linkRow.appendChild(h('span', { textContent: 'Привязывать к текущему уроку' }));
-linkField.appendChild(linkRow);
-canvasGrid.appendChild(linkField);
-const gridField = h('div', { class: 'pg-field' });
-gridField.appendChild(h('label', { textContent: 'Сетка' }));
-const gridRow2 = h('label', { class: 'checkbox-label', style: 'padding:6px 0;' });
+linkSwitch.appendChild(linkCheck);
+linkSwitch.appendChild(h('span', { textContent: 'Привязывать к текущему уроку' }));
+linkField.appendChild(linkSwitch);
+canvasDefCard.appendChild(linkField);
+const gridSwitch = h('label', { class: 'settings-switch' });
 const gridCheck2 = h('input', { type: 'checkbox' });
 gridCheck2.checked = canvasPrefs.showGrid !== false;
 gridCheck2.addEventListener('change', () => { canvasPrefs.showGrid = gridCheck2.checked; saveCanvasPrefs(); });
-gridRow2.appendChild(gridCheck2);
-gridRow2.appendChild(h('span', { textContent: 'Показывать бесконечную сетку' }));
-gridField.appendChild(gridRow2);
-canvasGrid.appendChild(gridField);
+gridSwitch.appendChild(gridCheck2);
+gridSwitch.appendChild(h('span', { textContent: 'Показывать бесконечную сетку' }));
+canvasDefCard.appendChild(gridSwitch);
 const bgField = h('div', { class: 'pg-field' });
 bgField.appendChild(h('label', { textContent: 'Цвет фона нового холста' }));
-const bgPrefInput = h('input', { type: 'color' });
+const bgPrefInput = h('input', { type: 'color', style: 'width:100%; height:30px; padding:2px; background:#0a0c14; border:1px solid var(--border); border-radius:6px; cursor:pointer;' });
 bgPrefInput.value = /^#[0-9a-f]{6}$/i.test(canvasPrefs.background || '') ? canvasPrefs.background : '#0a0c14';
 bgPrefInput.addEventListener('input', () => { canvasPrefs.background = bgPrefInput.value; saveCanvasPrefs(); });
 bgField.appendChild(bgPrefInput);
-canvasGrid.appendChild(bgField);
+canvasDefCard.appendChild(bgField);
 const pngField = h('div', { class: 'pg-field' });
 pngField.appendChild(h('label', { textContent: 'Область экспорта PNG по умолчанию' }));
 const pngPrefSelect = h('select');
@@ -4954,10 +5088,10 @@ pngPrefSelect.appendChild(h('option', { value: 'content', textContent: 'Толь
 pngPrefSelect.value = canvasPrefs.pngArea || 'union';
 pngPrefSelect.addEventListener('change', () => { canvasPrefs.pngArea = pngPrefSelect.value; saveCanvasPrefs(); });
 pngField.appendChild(pngPrefSelect);
-canvasGrid.appendChild(pngField);
-pCanvas.appendChild(canvasGrid);
-pCanvas.appendChild(h('div', { class: 'pg-section-title', textContent: 'Расположение элементов' }));
-const canvasRow = h('div', { class: 'settings-row' });
+canvasDefCard.appendChild(pngField);
+canvasGrid.appendChild(canvasDefCard);
+const canvasPosCard = card('Расположение элементов');
+const canvasPosActions = h('div', { class: 'settings-actions' });
 const resetFabBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🎨 Сбросить позицию кнопки' });
 resetFabBtn.addEventListener('click', () => {
 try { localStorage.removeItem(CANVAS_FAB_POS_KEY); } catch (e) {}
@@ -4972,33 +5106,47 @@ alert('Позиция и размер окна холстов сброшены.'
 });
 const closeCanvasWinBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '✖ Закрыть окно холстов' });
 closeCanvasWinBtn.addEventListener('click', () => { if (canvasWorkspace) canvasWorkspace.close(); });
-canvasRow.appendChild(resetFabBtn);
-canvasRow.appendChild(resetWinBtn);
-canvasRow.appendChild(closeCanvasWinBtn);
-pCanvas.appendChild(canvasRow);
-pCanvas.appendChild(h('p', { class: 'pg-note', textContent: 'Заметки холстов хранятся в meta.canvases курса и сохраняются вместе с курсом (IndexedDB), в том числе при публикации в gist. Привязка к блоку хранится в поле blockId: b:<id-блока> либо b:<id-урока>#<путь блока> — путь уникален, поэтому один холст не может «прилипнуть» к нескольким блокам.' }));
+canvasPosActions.appendChild(resetFabBtn);
+canvasPosActions.appendChild(resetWinBtn);
+canvasPosActions.appendChild(closeCanvasWinBtn);
+canvasPosCard.appendChild(canvasPosActions);
+canvasPosCard.appendChild(h('p', { class: 'settings-note', textContent: 'Заметки холстов хранятся в meta.canvases курса и сохраняются вместе с курсом (IndexedDB), в том числе при публикации и синхронизации с gist. Привязка к блоку: b:<id-блока> либо b:<id-урока>#<путь блока>.' }));
+canvasGrid.appendChild(canvasPosCard);
+// ---------------- ВКЛАДКА: ДАННЫЕ ----------------
 const pData = panels['data'];
-pData.appendChild(h('div', { class: 'pg-section-title', textContent: 'Сохранённые курсы' }));
-const dataStats = h('p', { class: 'pg-note', textContent: 'Загрузка статистики…' });
-pData.appendChild(dataStats);
+const dataGrid = h('div', { class: 'settings-grid' });
+pData.appendChild(dataGrid);
+const statsCard = card('Статистика');
+const dataStats = h('p', { class: 'settings-note', textContent: 'Загрузка статистики…' });
+statsCard.appendChild(dataStats);
+const statsActions = h('div', { class: 'settings-actions' });
+const refreshStatsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⟳ Обновить' });
+refreshStatsBtn.addEventListener('click', () => refreshDataStats());
+statsActions.appendChild(refreshStatsBtn);
+statsCard.appendChild(statsActions);
+dataGrid.appendChild(statsCard);
 async function refreshDataStats() {
+dataStats.textContent = 'Загрузка…';
 try {
 const list = await getAllCoursesFromDB();
-let strokes = 0, canvases = 0, blockBound = 0;
+let strokes = 0, canvases = 0, blockBound = 0, linked = 0;
 list.forEach(r => {
-const arr = (r.course && r.course.meta && Array.isArray(r.course.meta.canvases)) ? r.course.meta.canvases : [];
+const m = (r.course && r.course.meta) || {};
+if (m._gistId) linked++;
+const arr = Array.isArray(m.canvases) ? m.canvases : [];
 canvases += arr.length;
 arr.forEach(c => {
 strokes += Array.isArray(c.strokes) ? c.strokes.length : 0;
 if (c && c.blockId) blockBound++;
 });
 });
-dataStats.textContent = 'Курсов в базе: ' + list.length + ' · холстов: ' + canvases + ' (из них привязано к блокам: ' + blockBound + ') · штрихов в холстах: ' + strokes;
+dataStats.textContent = 'Курсов: ' + list.length + ' · связано с gist: ' + linked + ' · холстов: ' + canvases + ' (к блокам: ' + blockBound + ') · штрихов: ' + strokes;
 } catch (e) {
 dataStats.textContent = 'Не удалось получить статистику: ' + e.message;
 }
 }
-const dataRow = h('div', { class: 'settings-row' });
+const ioCard = card('Экспорт и импорт');
+const ioActions = h('div', { class: 'settings-actions' });
 const exportAllBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬇ Экспорт всех курсов' });
 exportAllBtn.addEventListener('click', async () => {
 try {
@@ -5025,15 +5173,17 @@ refreshDataStats();
 alert('Ошибка импорта: ' + e.message);
 }
 });
-const importAllBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬆ Импорт курсов из файла' });
+const importAllBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⬆ Импорт курсов' });
 importAllBtn.addEventListener('click', () => importAllInput.click());
-dataRow.appendChild(exportAllBtn);
-dataRow.appendChild(importAllBtn);
-dataRow.appendChild(importAllInput);
-pData.appendChild(dataRow);
-pData.appendChild(h('div', { class: 'pg-section-title', textContent: 'Опасная зона' }));
-const dangerRow = h('div', { class: 'settings-row' });
-const clearProgressBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🧹 Очистить прогресс прохождения', style: 'background:rgba(255,215,0,0.08); border-color:var(--yellow); color:var(--yellow);' });
+ioActions.appendChild(exportAllBtn);
+ioActions.appendChild(importAllBtn);
+ioActions.appendChild(importAllInput);
+ioCard.appendChild(ioActions);
+ioCard.appendChild(h('p', { class: 'settings-note', textContent: 'Экспорт выгружает все курсы одним JSON-массивом (служебные поля _recordId, _gistId, _gistUrl, _gistFile, _syncedAt удаляются). Импорт принимает курс, массив курсов или объект с полем courses.' }));
+dataGrid.appendChild(ioCard);
+const dangerCard = card('Опасная зона');
+const dangerActions = h('div', { class: 'settings-actions' });
+const clearProgressBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🧹 Очистить прогресс', style: 'background:rgba(255,215,0,0.08); border-color:var(--yellow); color:var(--yellow);' });
 clearProgressBtn.addEventListener('click', () => {
 if (!confirm('Удалить отметки о прохождении всех уроков во всех курсах?')) return;
 try { localStorage.removeItem('lms_course_progress'); } catch (e) {}
@@ -5062,10 +5212,11 @@ alert('Все курсы удалены.');
 alert('Ошибка удаления: ' + e.message);
 }
 });
-dangerRow.appendChild(clearProgressBtn);
-dangerRow.appendChild(clearCoursesBtn);
-pData.appendChild(dangerRow);
-const bottomRow = h('div', { style: 'display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;' });
+dangerActions.appendChild(clearProgressBtn);
+dangerActions.appendChild(clearCoursesBtn);
+dangerCard.appendChild(dangerActions);
+dataGrid.appendChild(dangerCard);
+const bottomRow = h('div', { class: 'settings-actions', style: 'margin-top:14px; justify-content:flex-end;' });
 const doneBtn = h('button', { class: 'quiz-button', type: 'button', textContent: 'Готово' });
 doneBtn.addEventListener('click', () => overlay.remove());
 bottomRow.appendChild(doneBtn);
@@ -5162,6 +5313,8 @@ delete clone.meta._recordId;
 delete clone.meta._gistId;
 delete clone.meta._gistUrl;
 delete clone.meta._gistFile;
+delete clone.meta._syncedAt;
+delete clone.meta._syncDir;
 }
 return clone;
 }
@@ -5219,6 +5372,8 @@ if (!courseData.meta) courseData.meta = {};
 courseData.meta._gistId = gist.id;
 courseData.meta._gistUrl = gist.html_url || '';
 courseData.meta._gistFile = fileName || '';
+courseData.meta._syncedAt = new Date().toISOString();
+courseData.meta._syncDir = 'push';
 const recId = courseData.meta._recordId;
 try {
 await saveCourseToDB(courseData, recId);
@@ -5266,7 +5421,7 @@ if (!courseData || !courseData.meta) { alert('Курс не выбран.'); ret
 const meta = courseData.meta;
 const isCurrent = (courseData === course);
 const overlay = h('div', { class: 'modal-overlay' });
-const content = h('div', { class: 'modal-content prompt-gen-modal', style: 'max-width:700px;' });
+const content = h('div', { class: 'modal-content settings-modal' });
 const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
 closeBtn.addEventListener('click', () => overlay.remove());
 content.appendChild(closeBtn);
@@ -5275,8 +5430,11 @@ const courseTitle = meta.title || 'Без названия';
 const lessonsCount = Array.isArray(courseData.lessons) ? courseData.lessons.length : 0;
 let sizeKb = 0;
 try { sizeKb = Math.round(JSON.stringify(courseData).length / 1024); } catch (e) {}
-content.appendChild(h('p', { class: 'pg-note', textContent: 'Курс: «' + courseTitle + '» · уроков: ' + lessonsCount + ' · размер ≈ ' + sizeKb + ' КБ' + (isCurrent ? '' : ' (не открыт в плеере)') }));
-const tokenLine = h('p', { class: 'pg-note' });
+content.appendChild(h('p', { class: 'settings-note', textContent: 'Курс: «' + courseTitle + '» · уроков: ' + lessonsCount + ' · размер ≈ ' + sizeKb + ' КБ' + (isCurrent ? '' : ' (не открыт в плеере)') }));
+const pubGrid = h('div', { class: 'settings-grid' });
+content.appendChild(pubGrid);
+const tokenCard = card('Доступ');
+const tokenLine = h('p', { class: 'settings-note' });
 function refreshTokenLine() {
 tokenLine.textContent = gistSettings.token
 ? ('Токен: задан' + (gistSettings.login ? ' (' + gistSettings.login + ')' : '') + '.')
@@ -5284,23 +5442,29 @@ tokenLine.textContent = gistSettings.token
 tokenLine.style.color = gistSettings.token ? 'var(--green)' : 'var(--pink)';
 }
 refreshTokenLine();
-content.appendChild(tokenLine);
-const settingsQuickBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⚙ Настройки GitHub', style: 'margin-top:0;' });
+tokenCard.appendChild(tokenLine);
+const tokenActions = h('div', { class: 'settings-actions' });
+const settingsQuickBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⚙ Настройки GitHub' });
 settingsQuickBtn.addEventListener('click', () => { overlay.remove(); openSettingsModal('github'); });
-content.appendChild(settingsQuickBtn);
-const grid = h('div', { class: 'pg-grid', style: 'margin-top:12px;' });
+const syncQuickBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⇄ Синхронизация…' });
+syncQuickBtn.addEventListener('click', () => { overlay.remove(); openGistSyncDialog(); });
+tokenActions.appendChild(settingsQuickBtn);
+tokenActions.appendChild(syncQuickBtn);
+tokenCard.appendChild(tokenActions);
+pubGrid.appendChild(tokenCard);
+const paramsCard = card('Параметры публикации');
 const nameField = h('div', { class: 'pg-field' });
 nameField.appendChild(h('label', { textContent: 'Имя файла в gist' }));
 const fileNameInput = h('input', { type: 'text', placeholder: 'course.json' });
 fileNameInput.value = meta._gistFile || (slugify(courseTitle) || 'course') + '.json';
 nameField.appendChild(fileNameInput);
-grid.appendChild(nameField);
+paramsCard.appendChild(nameField);
 const descField = h('div', { class: 'pg-field' });
 descField.appendChild(h('label', { textContent: 'Описание gist' }));
 const descInput = h('input', { type: 'text', placeholder: 'Описание' });
 descInput.value = courseTitle + (meta.description ? ' — ' + String(meta.description).substring(0, 120) : ' — курс NEON LMS');
 descField.appendChild(descInput);
-grid.appendChild(descField);
+paramsCard.appendChild(descField);
 const visField2 = h('div', { class: 'pg-field' });
 visField2.appendChild(h('label', { textContent: 'Видимость' }));
 const visSelect2 = h('select');
@@ -5308,20 +5472,20 @@ visSelect2.appendChild(h('option', { value: 'secret', textContent: 'Секрет
 visSelect2.appendChild(h('option', { value: 'public', textContent: 'Публичный (виден всем, индексируется)' }));
 visSelect2.value = gistSettings.defaultPublic ? 'public' : 'secret';
 visField2.appendChild(visSelect2);
-grid.appendChild(visField2);
+paramsCard.appendChild(visField2);
 const updField = h('div', { class: 'pg-field' });
 updField.appendChild(h('label', { textContent: 'Обновить существующий gist (ID)' }));
-const gistIdInput = h('input', { type: 'text', placeholder: 'оставьте пустым, чтобы создать новый', spellcheck: 'false' });
+const gistIdInput = h('input', { type: 'text', placeholder: 'пусто = создать новый', spellcheck: 'false' });
 gistIdInput.value = meta._gistId || '';
 updField.appendChild(gistIdInput);
-grid.appendChild(updField);
-content.appendChild(grid);
-content.appendChild(h('p', { class: 'pg-note', textContent: '⚠ В gist выгружается полный JSON курса, включая рукописные заметки холстов (meta.canvases) и их привязки к урокам и блокам. Служебные поля (_recordId, _gistId, _gistUrl, _gistFile) в файл не попадают. Публичный gist виден всем — не публикуйте конфиденциальные данные.' }));
+paramsCard.appendChild(updField);
+paramsCard.appendChild(h('p', { class: 'settings-note', textContent: '⚠ В gist выгружается полный JSON курса, включая рукописные заметки холстов (meta.canvases) и их привязки. Служебные поля (_recordId, _gistId, _gistUrl, _gistFile, _syncedAt) в файл не попадают. Публичный gist виден всем.' }));
+pubGrid.appendChild(paramsCard);
 const msg = h('div', { class: 'gist-msg' });
 content.appendChild(msg);
 const resultBox = h('div');
 content.appendChild(resultBox);
-const btnRow = h('div', { class: 'pg-btn-row' });
+const btnRow = h('div', { class: 'settings-actions', style: 'margin-top:12px;' });
 const publishBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🚀 Опубликовать' });
 publishBtn.addEventListener('click', async () => {
 const gistId = parseGistId(gistIdInput.value);
@@ -5359,6 +5523,286 @@ content.appendChild(btnRow);
 overlay.appendChild(content);
 document.body.appendChild(overlay);
 overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+}
+// =====================================================================
+// ========== СИНХРОНИЗАЦИЯ СОХРАНЁННЫХ КУРСОВ С GITHUB GIST ==========
+// =====================================================================
+let gistSyncRunning = false;
+let autoSyncTimer = null;
+function courseGistInfo(courseData) {
+const meta = (courseData && courseData.meta) || {};
+return {
+id: meta._gistId ? String(meta._gistId) : '',
+url: meta._gistUrl ? String(meta._gistUrl) : '',
+file: meta._gistFile ? String(meta._gistFile) : '',
+syncedAt: meta._syncedAt ? String(meta._syncedAt) : ''
+};
+}
+function formatSyncDate(iso) {
+if (!iso) return '—';
+const d = new Date(iso);
+if (isNaN(d.getTime())) return '—';
+return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+function recordTitle(record) {
+return (record && record.course && record.course.meta && record.course.meta.title)
+|| (record && record.title)
+|| (record && record.id)
+|| 'Без названия';
+}
+// Отправить локальный курс в gist (создать или обновить) и сохранить связь
+async function pushRecordToGist(record) {
+if (!record || !record.course) throw new Error('нет данных курса');
+const courseData = record.course;
+if (!courseData.meta) courseData.meta = {};
+const g = courseGistInfo(courseData);
+const fileName = g.file || ((slugify(courseData.meta.title || record.title) || 'course') + '.json');
+const res = await pushCourseToGist(courseData, {
+fileName: fileName,
+description: (courseData.meta.title || record.title || 'Курс NEON LMS') + ' · синхронизация ' + new Date().toLocaleString('ru-RU'),
+isPublic: !!gistSettings.defaultPublic,
+gistId: g.id
+});
+courseData.meta._gistId = res.gist.id;
+courseData.meta._gistUrl = res.gist.html_url || '';
+courseData.meta._gistFile = res.fileName;
+courseData.meta._syncedAt = new Date().toISOString();
+courseData.meta._syncDir = 'push';
+await saveCourseToDB(courseData, record.id);
+lastLoadedGistId = res.gist.id || lastLoadedGistId;
+return res;
+}
+// Забрать курс из связанного gist и перезаписать локальную копию
+async function pullRecordFromGist(record) {
+if (!record || !record.course) throw new Error('нет данных курса');
+const courseData = record.course;
+if (!courseData.meta) courseData.meta = {};
+const g = courseGistInfo(courseData);
+if (!g.id) throw new Error('курс не связан с gist — сначала опубликуйте его (⬆ Gist)');
+const gist = await gistRequest('/gists/' + encodeURIComponent(g.id));
+const fileName = gistFileName(gist, g.file);
+if (!fileName) throw new Error('в gist нет файлов');
+const text = await fetchGistFileText(gist.files[fileName]);
+let data;
+try {
+data = JSON.parse(text);
+} catch (e) {
+throw new Error('файл «' + fileName + '» не является валидным JSON');
+}
+if (!data || !data.meta || !Array.isArray(data.lessons)) {
+throw new Error('файл «' + fileName + '» не содержит курс (нет meta/lessons)');
+}
+data.meta._recordId = record.id;
+data.meta._gistId = gist.id || g.id;
+data.meta._gistUrl = gist.html_url || g.url;
+data.meta._gistFile = fileName;
+data.meta._syncedAt = new Date().toISOString();
+data.meta._syncDir = 'pull';
+await saveCourseToDB(data, record.id);
+return { gist: gist, fileName: fileName, course: data };
+}
+async function getGistUpdatedAt(gistId) {
+try {
+const gist = await gistRequest('/gists/' + encodeURIComponent(gistId));
+return (gist && gist.updated_at) ? new Date(gist.updated_at).getTime() : 0;
+} catch (e) {
+return 0;
+}
+}
+// Авторежим: сравниваем время изменения gist и локальной копии
+async function syncRecordAuto(record) {
+const g = courseGistInfo(record.course);
+if (!g.id) {
+return { action: 'push', res: await pushRecordToGist(record), reason: 'нет связи — опубликован новый gist' };
+}
+const remoteTime = await getGistUpdatedAt(g.id);
+const localTime = g.syncedAt ? new Date(g.syncedAt).getTime() : 0;
+if (remoteTime && remoteTime > localTime + 1000) {
+return { action: 'pull', res: await pullRecordFromGist(record), reason: 'gist новее локальной копии' };
+}
+return { action: 'push', res: await pushRecordToGist(record), reason: 'локальная копия новее или равна' };
+}
+// Фоновая автосинхронизация открытого курса после сохранений
+function scheduleAutoSync() {
+if (!appPrefs.autoSyncGist) return;
+if (!gistSettings.token) return;
+if (!course || !course.meta || !course.meta._gistId) return;
+const recId = course.meta._recordId;
+if (autoSyncTimer) clearTimeout(autoSyncTimer);
+autoSyncTimer = setTimeout(async () => {
+autoSyncTimer = null;
+try {
+const all = await getAllCoursesFromDB();
+const rec = all.find(r => r.id === recId);
+if (!rec) return;
+if (!courseGistInfo(rec.course).id) return;
+await pushRecordToGist(rec);
+console.log('⇄ Автосинхронизация с gist выполнена:', rec.course.meta._gistId);
+} catch (e) {
+console.warn('⇄ Автосинхронизация с gist не удалась:', e);
+}
+}, 6000);
+}
+function openGistSyncDialog() {
+const overlay = h('div', { class: 'modal-overlay' });
+const content = h('div', { class: 'modal-content settings-modal' });
+const closeBtn = h('button', { class: 'modal-close', textContent: '×', type: 'button' });
+closeBtn.addEventListener('click', () => { if (!gistSyncRunning) overlay.remove(); });
+content.appendChild(closeBtn);
+content.appendChild(h('h3', { textContent: '⇄ Синхронизация курсов с GitHub Gist', class: 'heading' }));
+content.appendChild(h('p', { class: 'settings-note', textContent: 'Синхронизация связывает сохранённые в браузере курсы с их gist-копиями: отправляет локальные изменения в gist или забирает обновления из gist. Нужен токен с правом gist.' }));
+const syncGrid = h('div', { class: 'settings-grid' });
+content.appendChild(syncGrid);
+const statusCard = card('Статус доступа');
+const tokenNote = h('p', { class: 'settings-note' });
+function refreshTokenNote() {
+tokenNote.textContent = gistSettings.token
+? ('Токен: задан' + (gistSettings.login ? ' (' + gistSettings.login + ')' : '') + '.')
+: 'Токен НЕ задан — синхронизация невозможна (доступна только загрузка публичных gist).';
+tokenNote.style.color = gistSettings.token ? 'var(--green)' : 'var(--pink)';
+}
+refreshTokenNote();
+statusCard.appendChild(tokenNote);
+const statusActions = h('div', { class: 'settings-actions' });
+const toSettingsBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '⚙ Настройки GitHub' });
+toSettingsBtn.addEventListener('click', () => { overlay.remove(); openSettingsModal('github'); });
+statusActions.appendChild(toSettingsBtn);
+statusCard.appendChild(statusActions);
+syncGrid.appendChild(statusCard);
+const dirCard = card('Направление синхронизации');
+const dirSelect = h('select');
+dirSelect.appendChild(h('option', { value: 'push', textContent: '⬆ Отправить: локальные курсы → gist' }));
+dirSelect.appendChild(h('option', { value: 'pull', textContent: '⬇ Забрать: gist → локальные курсы' }));
+dirSelect.appendChild(h('option', { value: 'auto', textContent: '⇄ Авто: сравнивать время изменения' }));
+dirCard.appendChild(dirSelect);
+dirCard.appendChild(h('p', { class: 'settings-note', textContent: '«Отправить» публикует несвязанные курсы как новый gist и сохраняет связь (meta._gistId). «Забрать» несвязанные курсы пропускает. «Авто» берёт более свежую версию: если gist обновлён позже последней синхронизации — данные забираются, иначе отправляются.' }));
+syncGrid.appendChild(dirCard);
+const listCard = card('Курсы для синхронизации', true);
+const listWrap = h('div', { class: 'sync-list' });
+listWrap.appendChild(h('p', { class: 'settings-note', textContent: 'Загрузка списка…' }));
+listCard.appendChild(listWrap);
+content.appendChild(listCard);
+const logCard = card('Журнал', true);
+const logEl = h('div', { class: 'settings-sync-log' });
+logEl.appendChild(h('p', { class: 'settings-note', textContent: 'Результаты синхронизации появятся здесь.' }));
+logCard.appendChild(logEl);
+content.appendChild(logCard);
+const actions = h('div', { class: 'settings-actions', style: 'margin-top:12px;' });
+const runBtn = h('button', { class: 'quiz-button', type: 'button', textContent: '🔄 Синхронизировать' });
+const closeBtn2 = h('button', { class: 'quiz-button', type: 'button', textContent: 'Закрыть' });
+closeBtn2.addEventListener('click', () => { if (!gistSyncRunning) overlay.remove(); });
+actions.appendChild(runBtn);
+actions.appendChild(closeBtn2);
+content.appendChild(actions);
+overlay.appendChild(content);
+document.body.appendChild(overlay);
+overlay.addEventListener('click', (e) => { if (e.target === overlay && !gistSyncRunning) overlay.remove(); });
+const checkboxes = [];
+function log(text, kind) {
+if (logEl.querySelector('.settings-note')) logEl.innerHTML = '';
+logEl.appendChild(h('div', { class: 'sync-log-line' + (kind ? ' ' + kind : ''), textContent: text }));
+logEl.scrollTop = logEl.scrollHeight;
+}
+async function fillList() {
+try {
+const records = await getAllCoursesFromDB();
+listWrap.innerHTML = '';
+if (!records.length) {
+listWrap.appendChild(h('p', { class: 'settings-note', textContent: 'Сохранённых курсов нет — загрузите курс из файла, по URL или создайте новый.' }));
+return;
+}
+const allRow = h('label', { class: 'sync-row' });
+const allCheck = h('input', { type: 'checkbox' });
+allCheck.checked = true;
+allRow.appendChild(allCheck);
+allRow.appendChild(h('span', { class: 'sync-name', textContent: 'Выбрать все (' + records.length + ')' }));
+listWrap.appendChild(allRow);
+records.forEach(rec => {
+const g = courseGistInfo(rec.course);
+const row = h('label', { class: 'sync-row' });
+const cb = h('input', { type: 'checkbox' });
+cb.checked = true;
+row.appendChild(cb);
+row.appendChild(h('span', { class: 'sync-name', textContent: (g.id ? '🐙 ' : '• ') + recordTitle(rec), title: recordTitle(rec) }));
+row.appendChild(h('span', {
+class: 'sync-state',
+textContent: g.id ? ('gist ' + g.id.substring(0, 8) + '… · ⇄ ' + formatSyncDate(g.syncedAt)) : 'не связан с gist'
+}));
+listWrap.appendChild(row);
+checkboxes.push({ cb: cb, record: rec });
+});
+allCheck.addEventListener('change', () => checkboxes.forEach(i => { i.cb.checked = allCheck.checked; }));
+} catch (e) {
+listWrap.innerHTML = '';
+listWrap.appendChild(h('p', { class: 'settings-note', textContent: 'Ошибка загрузки списка: ' + e.message }));
+}
+}
+fillList();
+runBtn.addEventListener('click', async () => {
+if (gistSyncRunning) return;
+if (!gistSettings.token) {
+alert('Для синхронизации нужен токен GitHub: «⚙ Настройки» → «GitHub Gist».');
+return;
+}
+const chosen = checkboxes.filter(i => i.cb.checked).map(i => i.record);
+if (chosen.length === 0) { alert('Выберите хотя бы один курс.'); return; }
+const direction = dirSelect.value;
+if (direction === 'pull' && !confirm('Заменить локальные версии выбранных курсов содержимым из gist? Локальные правки будут потеряны.')) return;
+gistSyncRunning = true;
+runBtn.disabled = true;
+closeBtn2.disabled = true;
+runBtn.textContent = '⏳ Синхронизация…';
+log('=== Запуск: курсов ' + chosen.length + ', режим «' + direction + '» ===', 'wait');
+let okCount = 0, errCount = 0, skipCount = 0;
+for (const rec of chosen) {
+const title = recordTitle(rec);
+try {
+if (direction === 'push') {
+const res = await pushRecordToGist(rec);
+log('✔ «' + title + '» → gist ' + (res.gist.id || '') + (res.updated ? ' (обновлён)' : ' (создан)'), 'ok');
+} else if (direction === 'pull') {
+const g = courseGistInfo(rec.course);
+if (!g.id) {
+skipCount++;
+log('⟂ «' + title + '» — нет связи с gist, пропущен', 'wait');
+continue;
+}
+const res = await pullRecordFromGist(rec);
+log('✔ «' + title + '» ← gist ' + g.id + ' (файл ' + res.fileName + ')', 'ok');
+} else {
+const res = await syncRecordAuto(rec);
+if (res.action === 'pull') log('✔ «' + title + '» ← gist (' + res.reason + ')', 'ok');
+else log('✔ «' + title + '» → gist (' + res.reason + ')', 'ok');
+}
+okCount++;
+} catch (e) {
+errCount++;
+log('✖ «' + title + '»: ' + (e && e.message ? e.message : String(e)), 'err');
+}
+}
+log('=== Готово: успешно ' + okCount + ', ошибок ' + errCount + ', пропущено ' + skipCount + ' ===', errCount ? 'wait' : 'ok');
+gistSyncRunning = false;
+runBtn.disabled = false;
+closeBtn2.disabled = false;
+runBtn.textContent = '🔄 Синхронизировать заново';
+refreshTokenNote();
+await updateSavedCoursesList();
+// если открытый курс был изменён — перечитываем его из базы
+try {
+const currentRecId = course && course.meta ? course.meta._recordId : null;
+if (currentRecId) {
+const all = await getAllCoursesFromDB();
+const fresh = all.find(r => r.id === currentRecId);
+if (fresh && fresh.course) {
+const keepLesson = currentLessonId;
+setCourse(fresh.course);
+if (keepLesson && fresh.course.lessons.some(l => l.id === keepLesson)) showLesson(keepLesson);
+}
+}
+} catch (e) {
+console.warn('Не удалось обновить открытый курс после синхронизации:', e);
+}
+});
 }
 // =====================================================================
 // == ВИРТУАЛЬНЫЕ ХОЛСТЫ: БЕСКОНЕЧНАЯ ПЛОСКОСТЬ, ПРИВЯЗКА К БЛОКАМ ====
@@ -5479,13 +5923,6 @@ setTimeout(() => URL.revokeObjectURL(url), 3000);
 // =====================================================================
 // ====== ПРИВЯЗКА ХОЛСТОВ К БЛОКАМ: УНИКАЛЬНЫЙ КЛЮЧ ПО ПУТИ БЛОКА =====
 // =====================================================================
-// blockPath — ПОЛНЫЙ путь блока внутри урока:
-//   верхний уровень: "0", "1", "2" ...
-//   вложенные:       "2.0", "2.1.3", "2.t0.1" (вкладка), "2.a1" (аккордеон),
-//                    "2.c0" (колонка), "2.s1" (шаг), "2.l"/"2.r" (compare),
-//                    "2.fr"/"2.bk" (стороны карточки) и т. д.
-// Для блоков верхнего уровня ключ совпадает со старым форматом b:<lesson>#<index>,
-// поэтому уже созданные привязки продолжают работать.
 function blockCanvasKey(lessonId, blockPath, block) {
 if (block && typeof block.id === 'string' && block.id.trim() !== '') return 'b:' + block.id.trim();
 return 'b:' + String(lessonId == null ? '' : lessonId) + '#' + String(blockPath == null ? '' : blockPath);
@@ -5515,8 +5952,6 @@ const explicitId = blockExplicitCanvasId(block);
 if (explicitId) return findCanvasById(explicitId);
 return findCanvasByBlockId(blockCanvasKey(lessonId, blockPath, block));
 }
-// Холст может быть привязан только к блоку с однозначным ключом:
-// блок верхнего уровня урока, блок с собственным id или блок с явным canvasId.
 function blockCanBindCanvas(block, isTopLevel) {
 if (isTopLevel === true) return true;
 if (blockExplicitCanvasId(block) !== '') return true;
@@ -5563,10 +5998,7 @@ return;
 const rec = ensureCanvasForBlock(lessonId, blockPath, block, label);
 if (rec) openCanvasWorkspace(rec.id);
 }
-// ---------- РЕЕСТР ЗНАЧКОВ ЗАМЕТОК, ВСТРОЕННЫХ В БЛОКИ ----------
 const blockCanvasBadges = new Set();
-// Холсты, уже показанные в текущем проходе рендеринга урока (защита от дублей
-// при совпадении ключей, например при повторяющихся id блоков).
 let renderedAutoCanvases = new Set();
 function resetRenderedAutoCanvases() {
 renderedAutoCanvases = new Set();
@@ -5577,7 +6009,6 @@ if (!entry || !entry.btn || !entry.btn.isConnected) { blockCanvasBadges.delete(e
 try { entry.refresh(); } catch (e) {}
 });
 }
-// ---------- ПАНЕЛЬ ХОЛСТА ПОД БЛОКОМ (РЕЖИМ РЕДАКТИРОВАНИЯ) ----------
 function attachBlockCanvasBar(element, block, blockPath) {
 const wrap = h('div', { class: 'block-canvas-wrap' });
 wrap.appendChild(element);
@@ -5610,7 +6041,6 @@ textContent: explicitId ? ('общий холст: ' + explicitId) : ('прив�
 wrap.appendChild(bar);
 return wrap;
 }
-// ---------- ЗНАЧОК «🎨» ВНУТРИ ОБЛАСТИ БЛОКА (РЕЖИМ ПРОСМОТРА) ----------
 function attachBlockCanvasFloat(element, block, blockPath) {
 const host = h('div', { class: 'block-canvas-host' });
 host.appendChild(element);
@@ -5632,7 +6062,6 @@ const entry = { btn: btn, refresh: refresh };
 function refresh() {
 const rec = resolveRec();
 const requested = blockCanvasRequested(block);
-// ни холста, ни запроса на холст — значок не показываем
 if (!rec && !requested) {
 btn.style.display = 'none';
 blockCanvasBadges.delete(entry);
@@ -5854,7 +6283,6 @@ const closeBtn = winBtn('×', 'Закрыть окно', true);
 root.appendChild(header);
 const body = h('div', { class: 'canvas-win-body' });
 root.appendChild(body);
-// ---------- САЙДБАР: СПИСОК ХОЛСТОВ + СВОЙСТВА ----------
 const sidebar = h('div', { class: 'canvas-sidebar' });
 const sideHead = h('div', { class: 'canvas-side-head' });
 sideHead.appendChild(h('span', { textContent: 'Холсты курса' }));
@@ -7118,15 +7546,7 @@ rec.strokes = [];
 invalidateStatic();
 afterChange(rec);
 }
-// =====================================================================
-// ==== ЭКСПОРТ PNG: ТОЧНЫЙ РАСЧЁТ ОБЛАСТИ И ОДНОКРАТНЫЙ МАСШТАБ =======
-// =====================================================================
-// Причина прежней ошибки: paintScene() внутри себя уже применяет масштаб вида
-// (translate + scale), а базовая матрица canvas дополнительно масштабировала
-// сцену на exScale. Возникало двойное масштабирование (exScale²), из-за чего
-// в файл попадала только часть холста (левый верхний фрагмент области).
-// Теперь базовая матрица задаёт ТОЛЬКО разрешение (exScale), а масштаб вида
-// равен 1 — соответствие «документ → пиксель» становится точным.
+// ---------- ЭКСПОРТ PNG: ТОЧНАЯ ОБЛАСТЬ И ОДНОКРАТНЫЙ МАСШТАБ ----------
 function computeExportRegion(rec, mode) {
 const vp = visibleDocRect();
 const bb = contentBBox(rec);
@@ -7138,7 +7558,6 @@ region = bb
 ? { x0: bb.x0, y0: bb.y0, x1: bb.x1, y1: bb.y1 }
 : { x0: vp.x0, y0: vp.y0, x1: vp.x1, y1: vp.y1 };
 } else {
-// union: вся видимая область + всё содержимое (в том числе за пределами экрана)
 region = bb
 ? {
 x0: Math.min(bb.x0, vp.x0), y0: Math.min(bb.y0, vp.y0),
@@ -7156,16 +7575,13 @@ const rec = activeRecord();
 if (!rec) return;
 const mode = pngAreaSelect.value || 'union';
 const region = computeExportRegion(rec, mode);
-// небольшой отступ по краям, чтобы штрихи у границы не обрезались
 const span = Math.max(region.x1 - region.x0, region.y1 - region.y0);
 const pad = Math.max(10, Math.min(60, span * 0.03));
 region.x0 -= pad; region.y0 -= pad; region.x1 += pad; region.y1 += pad;
-// размеры области в единицах документа
 const bw = Math.max(64, region.x1 - region.x0);
 const bh = Math.max(64, region.y1 - region.y0);
 const dpr = window.devicePixelRatio || 1;
 const MAXPIX = 8000;
-// разрешение экспорта: не ниже экранного, но с ограничением по числу пикселей
 let exScale = Math.max(dpr, Math.min(4, Math.max(2, view.scale * dpr)));
 const maxSide = Math.max(bw, bh);
 if (maxSide * exScale > MAXPIX) exScale = Math.max(0.05, MAXPIX / maxSide);
@@ -7176,8 +7592,8 @@ c.width = outW;
 c.height = outH;
 const ctx = c.getContext('2d');
 if (!ctx) { alert('Не удалось создать canvas для экспорта PNG.'); return; }
-// Базовая матрица = только разрешение; масштаб вида = 1, сдвиг = -region.x0/-y0.
-// Итоговое соответствие: пиксель = (документ - region.x0) * exScale — без двойного scale.
+// базовая матрица задаёт ТОЛЬКО разрешение, масштаб вида = 1
+// (paintScene сама применяет scale, иначе получалось двойное масштабирование)
 ctx.setTransform(exScale, 0, 0, exScale, 0, 0);
 paintScene(ctx, bw, bh, { scale: 1, x: -region.x0, y: -region.y0 }, rec);
 const suffix = mode === 'viewport' ? '-viewport' : (mode === 'content' ? '-content' : '-full');
@@ -7437,6 +7853,14 @@ title: 'Открыть бесконечные виртуальные холст�
 });
 canvasOpenBtn.addEventListener('click', () => openCanvasWorkspace());
 buttonsContainer.appendChild(canvasOpenBtn);
+const syncBtn = h('button', {
+class: 'toggle-manager-btn',
+textContent: '⇄ Gist',
+type: 'button',
+title: 'Синхронизация сохранённых курсов с GitHub Gist'
+});
+syncBtn.addEventListener('click', () => openGistSyncDialog());
+buttonsContainer.appendChild(syncBtn);
 buttonsContainer.appendChild(renderModeToggle());
 const settingsBtn = h('button', {
 class: 'toggle-manager-btn icon-only',
@@ -7477,7 +7901,6 @@ if (!course) return;
 currentLessonId = lessonId;
 app.innerHTML = '';
 renderBaseUI();
-// сбрасываем учёт уже показанных «автопривязанных» холстов перед рендером урока
 resetRenderedAutoCanvases();
 const backBtn = h('button', { class: 'back-btn', textContent: '← К списку занятий', type: 'button' });
 backBtn.addEventListener('click', () => {
@@ -7647,8 +8070,6 @@ function postProcess(container) {
 processMath(container);
 renderMermaidDiagrams(container);
 }
-// parentPath — путь родительского контейнера; путь дочернего блока = parentPath + '.' + idx.
-// isTopLevel = true только для блоков верхнего уровня урока.
 function renderBlocks(blocks, container, isTopLevel, parentPath) {
 if (!Array.isArray(blocks)) return;
 const base = (parentPath === undefined || parentPath === null) ? '' : String(parentPath);
@@ -8496,22 +8917,18 @@ else applySizing(block, element, false);
 } else if (block.type !== 'youtube') {
 applySizing(block, element, false);
 }
-// ------- ПРИВЯЗКА ХОЛСТА: строго один значок на один холст -------
 const explicitId = blockExplicitCanvasId(block);
 const canBind = blockCanBindCanvas(block, isTopLevel === true);
 const requested = blockCanvasRequested(block);
 let attachCanvasUI = false;
 if (canBind && requested) {
-// холст запрошен атрибутом canvas / canvasId
 attachCanvasUI = true;
 } else if (canBind && hasBoundCanvas(currentLessonId, bPath, block)) {
-// холст уже привязан (создан кнопкой 🎨 в режиме редактирования)
 attachCanvasUI = true;
 }
 if (attachCanvasUI) {
 const rec = resolveBlockCanvas(currentLessonId, bPath, block);
 if (!explicitId && rec) {
-// авто-привязка (без явного canvasId) должна встречаться только один раз
 if (renderedAutoCanvases.has(rec.id)) attachCanvasUI = false;
 else renderedAutoCanvases.add(rec.id);
 }
