@@ -1269,7 +1269,7 @@ const info = h('div', { class: 'app-info' });
 info.appendChild(h('div', { class: 'app-name', textContent: 'NEON LMS PLAYER' }));
 info.appendChild(h('div', { class: 'app-description', textContent: 'Интерактивная платформа для создания и прохождения образовательных курсов' }));
 header.appendChild(info);
-header.appendChild(h('span', { class: 'app-version', textContent: 'v1.17.2' }));
+header.appendChild(h('span', { class: 'app-version', textContent: 'v1.17.3' }));
 return header;
 }
 function renderCourseHeader() {
@@ -4056,13 +4056,13 @@ helpDiv.innerHTML = `
 <li><strong>К блоку</strong> — холст привязывается автоматически при нажатии 🎨 в панели инструментов блока (поле <code>blockId</code>), либо атрибутами блока <code>"canvas": true</code>, <code>"canvasId": "..."</code>, <code>"canvasLabel": "..."</code>.</li>
 </ul>
 <p><strong>Как формируется ключ привязки (<code>blockId</code>):</strong> если у блока задан <code>id</code> — ключ <code>b:&lt;id&gt;</code>; иначе ключ строится по <em>полному пути</em> блока в уроке: <code>b:&lt;id-урока&gt;#&lt;путь&gt;</code>, например <code>b:lesson-1#3</code> для четвёртого блока верхнего уровня или <code>b:lesson-1#3.0.1</code> для вложенного блока (секция → вкладка → блок). Такой путь уникален, поэтому холст никогда не «прилипает» к нескольким блокам и значок 🎨 не дублируется. Автоматическая привязка по пути доступна блокам верхнего уровня, а также любым блокам с собственным <code>id</code> или <code>canvasId</code>.</p>
-<p><strong>В режиме просмотра</strong> значок <strong>🎨</strong> размещается в правом верхнем углу области блока и показывается <em>только один раз</em> — у того блока, к которому холст realmente привязан. Зелёный счётчик — количество заметок; полупрозрачный значок означает пустой или ещё не созданный холст.</p>
+<p><strong>В режиме просмотра</strong> значок <strong>🎨</strong> размещается в правом верхнем углу области блока и показывается <em>только один раз</em> — у того блока, к которому холст привязан. Зелёный счётчик — количество заметок; полупрозрачный значок означает пустой или ещё не созданный холст.</p>
 <p><strong>Сайдбар холстов:</strong> список с фильтром «только текущий урок», кнопка создания, сворачиваемая панель «Свойства холста» (название, привязка к уроку и блоку, фон, сетка, область экспорта PNG, дублирование/экспорт/импорт/очистка/удаление).</p>
 <p><strong>Статусбар:</strong> холст и его привязки (📎 урок, 🧩 блок), инструмент с цветом и толщиной, координаты, масштаб (<code>−</code>/<code>+</code>/<code>▣</code>/<code>⌂</code>), число штрихов, автосохранение и кнопка <code>?</code>.</p>
 <p><strong>Режим фокуса (🎯 или F):</strong> скрывает интерфейс и разворачивает окно; через ~2 секунды бездействия панели растворяются. Выход — <code>F</code>, <code>Esc</code> или <code>⤡</code>.</p>
 <p><strong>Инструменты:</strong> карандаш (✏), маркер (🖍), ластик (⌫), линия (╱), стрелка (↗), прямоугольник (▭), эллипс (◯), текст (T), рука (✋). Горячие клавиши: P, H, E, L, A, R, O, T, V; Ctrl+Z / Ctrl+Y / Ctrl+S.</p>
 <p><strong>Перемещение и масштаб:</strong> «Рука» (V) · средняя кнопка мыши · пробел + мышь · колесо (панорама) · Ctrl + колесо (зум к курсору) · щипок · стрелки (Shift — быстрее).</p>
-<p><strong>Экспорт PNG:</strong> область — «Видимая + всё содержимое» (по умолчанию), «Только видимая» или «Только содержимое». Разрешение не ниже экранного (с учётом devicePixelRatio).</p>
+<p><strong>Экспорт PNG:</strong> область — «Видимая + всё содержимое» (по умолчанию), «Только видимая» или «Только содержимое». Файл всегда содержит <em>всю</em> выбранную область целиком: сцена рендерится заново в отдельный canvas с точным соответствием «документ → пиксель», разрешение не ниже экранного (с учётом devicePixelRatio), фон и сетка сохраняются.</p>
 <p><strong>Хранение:</strong> штрихи — векторные последовательности абсолютных координат в поле <code>meta.canvases</code>, сохраняются в IndexedDB вместе с курсом и попадают в gist при публикации. Формат (version 2):</p>
 <pre style="background:#0a0c14; padding:10px; border-radius:6px; overflow-x:auto;"><code>"canvases": [
 {
@@ -7118,11 +7118,16 @@ rec.strokes = [];
 invalidateStatic();
 afterChange(rec);
 }
-// ---------- ЭКСПОРТ PNG: видимая область + содержимое ----------
-function exportPNG() {
-const rec = activeRecord();
-if (!rec) return;
-const mode = pngAreaSelect.value || 'union';
+// =====================================================================
+// ==== ЭКСПОРТ PNG: ТОЧНЫЙ РАСЧЁТ ОБЛАСТИ И ОДНОКРАТНЫЙ МАСШТАБ =======
+// =====================================================================
+// Причина прежней ошибки: paintScene() внутри себя уже применяет масштаб вида
+// (translate + scale), а базовая матрица canvas дополнительно масштабировала
+// сцену на exScale. Возникало двойное масштабирование (exScale²), из-за чего
+// в файл попадала только часть холста (левый верхний фрагмент области).
+// Теперь базовая матрица задаёт ТОЛЬКО разрешение (exScale), а масштаб вида
+// равен 1 — соответствие «документ → пиксель» становится точным.
+function computeExportRegion(rec, mode) {
 const vp = visibleDocRect();
 const bb = contentBBox(rec);
 let region;
@@ -7133,6 +7138,7 @@ region = bb
 ? { x0: bb.x0, y0: bb.y0, x1: bb.x1, y1: bb.y1 }
 : { x0: vp.x0, y0: vp.y0, x1: vp.x1, y1: vp.y1 };
 } else {
+// union: вся видимая область + всё содержимое (в том числе за пределами экрана)
 region = bb
 ? {
 x0: Math.min(bb.x0, vp.x0), y0: Math.min(bb.y0, vp.y0),
@@ -7140,30 +7146,45 @@ x1: Math.max(bb.x1, vp.x1), y1: Math.max(bb.y1, vp.y1)
 }
 : { x0: vp.x0, y0: vp.y0, x1: vp.x1, y1: vp.y1 };
 }
-if (!isFinite(region.x0) || !isFinite(region.y0) || !isFinite(region.x1) || !isFinite(region.y1)) {
-region = { x0: -LEGACY_PAGE_W / 2, y0: -LEGACY_PAGE_H / 2, x1: LEGACY_PAGE_W / 2, y1: LEGACY_PAGE_H / 2 };
+['x0', 'y0', 'x1', 'y1'].forEach(k => { if (!isFinite(region[k])) region[k] = 0; });
+if (region.x1 <= region.x0) region.x1 = region.x0 + 1;
+if (region.y1 <= region.y0) region.y1 = region.y0 + 1;
+return region;
 }
+function exportPNG() {
+const rec = activeRecord();
+if (!rec) return;
+const mode = pngAreaSelect.value || 'union';
+const region = computeExportRegion(rec, mode);
+// небольшой отступ по краям, чтобы штрихи у границы не обрезались
 const span = Math.max(region.x1 - region.x0, region.y1 - region.y0);
 const pad = Math.max(10, Math.min(60, span * 0.03));
 region.x0 -= pad; region.y0 -= pad; region.x1 += pad; region.y1 += pad;
+// размеры области в единицах документа
 const bw = Math.max(64, region.x1 - region.x0);
 const bh = Math.max(64, region.y1 - region.y0);
 const dpr = window.devicePixelRatio || 1;
-let exScale = Math.max(2, Math.min(4, view.scale * dpr));
-const MAXPIX = 6000;
-if (bw * exScale > MAXPIX || bh * exScale > MAXPIX) {
-exScale = Math.max(0.1, Math.min(MAXPIX / bw, MAXPIX / bh));
-}
+const MAXPIX = 8000;
+// разрешение экспорта: не ниже экранного, но с ограничением по числу пикселей
+let exScale = Math.max(dpr, Math.min(4, Math.max(2, view.scale * dpr)));
+const maxSide = Math.max(bw, bh);
+if (maxSide * exScale > MAXPIX) exScale = Math.max(0.05, MAXPIX / maxSide);
+const outW = Math.max(1, Math.round(bw * exScale));
+const outH = Math.max(1, Math.round(bh * exScale));
 const c = document.createElement('canvas');
-c.width = Math.max(1, Math.round(bw * exScale));
-c.height = Math.max(1, Math.round(bh * exScale));
+c.width = outW;
+c.height = outH;
 const ctx = c.getContext('2d');
+if (!ctx) { alert('Не удалось создать canvas для экспорта PNG.'); return; }
+// Базовая матрица = только разрешение; масштаб вида = 1, сдвиг = -region.x0/-y0.
+// Итоговое соответствие: пиксель = (документ - region.x0) * exScale — без двойного scale.
 ctx.setTransform(exScale, 0, 0, exScale, 0, 0);
-paintScene(ctx, bw, bh, { scale: exScale, x: -region.x0 * exScale, y: -region.y0 * exScale }, rec);
+paintScene(ctx, bw, bh, { scale: 1, x: -region.x0, y: -region.y0 }, rec);
+const suffix = mode === 'viewport' ? '-viewport' : (mode === 'content' ? '-content' : '-full');
+const fileName = slugify(rec.title || 'canvas') + suffix + '.png';
 c.toBlob((blob) => {
 if (!blob) { alert('Не удалось сформировать PNG.'); return; }
-const suffix = mode === 'viewport' ? '-viewport' : (mode === 'content' ? '-content' : '-full');
-downloadBlob(blob, slugify(rec.title || 'canvas') + suffix + '.png');
+downloadBlob(blob, fileName);
 }, 'image/png');
 }
 function exportJSON() {
