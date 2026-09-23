@@ -67,10 +67,14 @@ main{flex:1;display:flex;min-height:0;position:relative}
 .pname{font-size:11px;color:var(--text)}
 .pdesc{font-size:9px;color:var(--mut);line-height:1.35;margin-top:2px}
 
-#canvasWrap{flex:1;position:relative;min-width:0;background:
+#canvasWrap{flex:1;position:relative;min-width:0;overflow:hidden;background:
   radial-gradient(ellipse at 30% 20%, rgba(0,229,255,.045), transparent 55%),
   radial-gradient(ellipse at 75% 80%, rgba(255,43,214,.05), transparent 55%), var(--bg)}
-#graph{position:absolute;inset:0;touch-action:none;display:block}
+/* ФИКС КООРДИНАТ: canvas — replaced-элемент, без width/height:100% его
+   CSS-размер равен атрибутам width/height (= cssW*dpr), из-за чего на
+   экранах с dpr != 1 вся сцена отображалась крупнее расчётной и клики
+   попадали мимо блоков. Жёстко привязываем CSS-размер к контейнеру. */
+#graph{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #viewTools{position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:5;flex-wrap:wrap;max-width:calc(100% - 20px)}
 #viewTools .btn{padding:6px 9px;font-size:10px;background:rgba(8,9,18,.85)}
 #zoomLabel{min-width:52px;text-align:center;cursor:default}
@@ -389,9 +393,11 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 'use strict';
 
 /* ======================================================================
-   NeonForge Audio Lab v2 — расширяемая архитектура на TypeScript.
-   Реестр узлов · Web Audio движок · граф-студия · canvas-вид (touch)
-   · bypass A/B · undo/redo · offline WAV · библиотека тейков · автосейв
+   NeonForge Audio Lab v2.1 — расширяемая архитектура на TypeScript.
+   Исправлена система координат холста: CSS-размер canvas жёстко равен
+   контейнеру (width/height:100%), все экранные измерения берутся из
+   getBoundingClientRect самого canvas — рассогласования при dpr != 1
+   и на мобильных больше нет.
    ====================================================================== */
 
 /* ---------------------------- УТИЛИТЫ ---------------------------- */
@@ -1393,14 +1399,18 @@ function toggleBypass(gn: GNode): void {
 }
 
 /* ==================================================================
-   CANVAS-ВИД: зум, панорама, multi-touch (пинч), провода, частицы
+   CANVAS-ВИД — ЕДИНАЯ СИСТЕМА КООРДИНАТ
+   Экранные координаты (CSS px) всегда берутся из getBoundingClientRect
+   самого canvas; cssW/cssH — это ТОЧНО displayed-размер canvas;
+   мировые <-> экранные преобразования используют одни и те же cssW/H.
    ================================================================== */
 interface Hit { kind: 'none' | 'node' | 'pin' | 'pout' | 'edge'; node?: GNode; edge?: GEdge; }
 
 class GraphView {
   g: CanvasRenderingContext2D;
   cam = { x: 400, y: 340, z: 0.8 };
-  cssW = 800; cssH = 600; dpr = 1;
+  cssW = 1; cssH = 1; dpr = 1;
+  rectW = 1; rectH = 1;
   t = 0; lastTs = 0;
   snap = true;
   mode: '' | 'pan' = '';
@@ -1414,7 +1424,7 @@ class GraphView {
 
   constructor(public canvas: HTMLCanvasElement) {
     this.g = canvas.getContext('2d') as CanvasRenderingContext2D;
-    this.resize();
+    this.resize(true);
     canvas.addEventListener('pointerdown', e => this.onDown(e));
     canvas.addEventListener('pointermove', e => this.onMove(e));
     window.addEventListener('pointerup', e => this.onUp(e));
@@ -1429,21 +1439,23 @@ class GraphView {
     canvas.addEventListener('drop', e => {
       e.preventDefault();
       const type = e.dataTransfer?.getData('text/nf'); if (!type) return;
-      const r = canvas.getBoundingClientRect();
-      const w = this.toWorldAt(e.clientX - r.left, e.clientY - r.top);
-      studio.addNode(type, w.x - 100, w.y - 46);
+      this.mouseSet(e);
+      studio.addNode(type, this.mouseW.x - 100, this.mouseW.y - 46);
     });
     requestAnimationFrame(ts => this.frame(ts));
   }
 
-  resize(): void {
-    const wrap = $('canvasWrap');
-    const w = Math.max(1, wrap.clientWidth);
-    const h = Math.max(1, wrap.clientHeight);
+  /* Размеры — ТОЛЬКО из фактического прямоугольника canvas.
+     forced=true пересоздаёт backbuffer даже если размеры не изменились. */
+  resize(forced?: boolean): void {
+    const r = this.canvas.getBoundingClientRect();
+    const w = Math.max(1, r.width), h = Math.max(1, r.height);
     this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    if (w !== this.cssW || h !== this.cssH || this.canvas.width !== Math.round(w * this.dpr)) {
+    const bw = Math.max(1, Math.round(w * this.dpr)), bh = Math.max(1, Math.round(h * this.dpr));
+    if (forced || w !== this.rectW || h !== this.rectH || this.canvas.width !== bw || this.canvas.height !== bh) {
+      this.rectW = w; this.rectH = h;
       this.cssW = w; this.cssH = h;
-      this.canvas.width = Math.round(w * this.dpr); this.canvas.height = Math.round(h * this.dpr);
+      this.canvas.width = bw; this.canvas.height = bh;
     }
   }
   toWorldAt(mx: number, my: number): { x: number, y: number } {
@@ -1451,7 +1463,8 @@ class GraphView {
   }
   sx(wx: number): number { return (wx - this.cam.x) * this.cam.z + this.cssW / 2; }
   sy(wy: number): number { return (wy - this.cam.y) * this.cam.z + this.cssH / 2; }
-  mouseSet(e: PointerEvent | WheelEvent | MouseEvent): void {
+  /* мышиные/тач-координаты — относительно фактического rect canvas */
+  mouseSet(e: PointerEvent | WheelEvent | MouseEvent | DragEvent): void {
     const r = this.canvas.getBoundingClientRect();
     this.mouse.x = e.clientX - r.left; this.mouse.y = e.clientY - r.top;
     this.mouseW = this.toWorldAt(this.mouse.x, this.mouse.y);
@@ -1491,6 +1504,7 @@ class GraphView {
 
   onDown(e: PointerEvent): void {
     this.isTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
+    this.resize();
     const r = this.canvas.getBoundingClientRect();
     this.pointers.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top });
     try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { }
@@ -1560,6 +1574,7 @@ class GraphView {
     this.pointers.delete(e.pointerId);
     if (this.pointers.size < 2) this.pinch = null;
     if (this.wireFrom && this.pointers.size === 0) {
+      this.mouseSet(e); /* фикс: обновляем координаты именно в момент отпускания */
       const h = this.pick();
       if (h.kind === 'pin' && h.node && h.node.id !== this.wireFrom) studio.connect(this.wireFrom, h.node.id);
       this.wireFrom = null;
@@ -1581,12 +1596,17 @@ class GraphView {
   zoomBy(f: number): void { this.cam.z = clamp(this.cam.z * f, 0.15, 2.4); }
 
   fitAll(): void {
-    this.resize();
+    this.resize(true);
     const ns = [...studio.nodes.values()];
     if (!ns.length) { this.cam = { x: 400, y: 340, z: 0.8 }; return; }
     let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
-    ns.forEach(n => { x1 = Math.min(x1, n.x); y1 = Math.min(y1, n.y); x2 = Math.max(x2, n.x + n.w); y2 = Math.max(y2, n.y + n.h); });
-    const bw = Math.max(1, x2 - x1 + 240), bh = Math.max(1, y2 - y1 + 200);
+    ns.forEach(n => {
+      const nx = n.tx !== undefined ? n.tx : n.x;
+      const ny = n.ty !== undefined ? n.ty : n.y;
+      x1 = Math.min(x1, nx); y1 = Math.min(y1, ny);
+      x2 = Math.max(x2, nx + n.w); y2 = Math.max(y2, ny + n.h);
+    });
+    const bw = Math.max(1, x2 - x1 + 200), bh = Math.max(1, y2 - y1 + 160);
     const W = Math.max(1, this.cssW), H = Math.max(1, this.cssH);
     this.cam.z = clamp(Math.min(W / bw, H / bh), 0.15, 1.5);
     this.cam.x = (x1 + x2) / 2; this.cam.y = (y1 + y2) / 2;
@@ -1618,7 +1638,7 @@ class GraphView {
       const arr = byLevel[+k]; arr.sort((a, b) => a.y - b.y);
       arr.forEach((n, i) => { n.tx = 60 + (+k) * 272; n.ty = 400 + (i - (arr.length - 1) / 2) * 150; });
     });
-    setTimeout(pushHistory, 900);
+    setTimeout(() => { pushHistory(); this.fitAll(); }, 900);
     toast('Выравнивание: топологическая раскладка по столбцам', 'ok');
   }
 
@@ -1901,7 +1921,6 @@ function renderInspector(): void {
   const cat = el('div', 'insdesc'); cat.textContent = `${gn.def.category} · #${gn.type}`; host.appendChild(cat);
   const desc = el('div', 'insdesc'); desc.textContent = gn.def.desc; host.appendChild(desc);
 
-  /* A/B bypass */
   if (gn.def.inputs > 0 && gn.def.outputs > 0) {
     const sw = el('div', 'switchRow');
     sw.style.border = '1px solid rgba(255,43,214,.25)'; sw.style.borderRadius = '8px';
@@ -2095,7 +2114,7 @@ function setProg(f: number, remain: number): void {
 }
 
 /* ==================================================================
-   OFFLINE-РЕНДЕР → WAV (быстрее реального времени)
+   OFFLINE-РЕНДЕР → WAV
    ================================================================== */
 function encodeWav(buf: AudioBuffer): Blob {
   const nCh = Math.min(2, buf.numberOfChannels), sr = buf.sampleRate, len = buf.length;
@@ -2234,7 +2253,7 @@ async function refreshTakes(): Promise<void> {
     const url = URL.createObjectURL(t.blob);
     const au = el('audio') as HTMLAudioElement; au.controls = true; au.preload = 'none'; au.src = url;
     const dl = el('a', 'btn mag') as HTMLAnchorElement; dl.textContent = '⬇'; dl.href = url;
-    dl.download = `${t.name.replace(/[^\wа-яёА-ЯЁ\- ]/g, '').trim() || 'take'}.${t.ext}`;
+    dl.download = `${(t.name || 'take').replace(/[^\wа-яёА-ЯЁ\- ]/g, '').trim() || 'take'}.${t.ext}`;
     dl.style.padding = '8px 10px';
     const del = el('button', 'btn danger'); del.textContent = '🗑'; del.style.padding = '8px 10px';
     del.addEventListener('click', async () => { URL.revokeObjectURL(url); await store.delTake(t.id); refreshTakes(); toast('Тейк удалён'); });
@@ -2387,7 +2406,6 @@ function drawAnalyzerModal(): void {
     g.fillText('Движок остановлен — нажмите ▶ Запустить', 28, H / 2);
     return;
   }
-  /* осциллограмма */
   engine.outAnalyser.getByteTimeDomainData(footWave as any);
   g.strokeStyle = '#00e5ff'; g.lineWidth = 2.5;
   g.shadowColor = '#00e5ff'; g.shadowBlur = 10;
@@ -2401,7 +2419,6 @@ function drawAnalyzerModal(): void {
   g.stroke(); g.shadowBlur = 0;
   g.strokeStyle = 'rgba(255,255,255,0.1)'; g.lineWidth = 1;
   g.beginPath(); g.moveTo(0, half); g.lineTo(W, half); g.stroke();
-  /* спектр */
   engine.outAnalyser.getByteFrequencyData(footFreq as any);
   const bars = 96, bw = W / bars, top = half + 12, sh = H - top - 8;
   for (let i = 0; i < bars; i++) {
@@ -2556,11 +2573,11 @@ function init(): void {
   view = new GraphView($('graph') as HTMLCanvasElement);
   buildDefaultProject();
 
-  /* восстановление автосохранённой сессии */
   if (restoreAutosave()) {
     toast('Восстановлена предыдущая сессия', 'info');
   }
 
+  /* fit после двух кадров — когда layout гарантированно установился */
   requestAnimationFrame(() => { requestAnimationFrame(() => { view.fitAll(); }); });
   view.fitAll();
   renderInspector();
@@ -2568,7 +2585,6 @@ function init(): void {
   updateFmtNote();
   resetHistory();
 
-  /* автосохранение */
   setInterval(autosave, 15000);
   window.addEventListener('beforeunload', autosave);
 
@@ -2584,7 +2600,7 @@ function init(): void {
   const syncDraggable = () => {
     $('palette').querySelectorAll('.pitem').forEach(it => { (it as HTMLElement).draggable = !isMobile(); });
   };
-  const onMq = () => { if (!mqM.matches) closeDrawers(); syncDraggable(); view.resize(); view.fitAll(); };
+  const onMq = () => { if (!mqM.matches) closeDrawers(); syncDraggable(); view.resize(true); view.fitAll(); };
   if (mqM.addEventListener) mqM.addEventListener('change', onMq); else (mqM as any).addListener(onMq);
 
   /* палитра: поиск и шаблон */
@@ -2633,7 +2649,7 @@ function init(): void {
   $('btnSaveProj').addEventListener('click', () => saveProject(false));
   $('btnSaveAs').addEventListener('click', () => saveProject(true));
 
-  /* JSON (+ дублирующие кнопки в модалке проектов для мобильных) */
+  /* JSON */
   $('btnExportJson').addEventListener('click', exportJson);
   $('btnImportJson').addEventListener('click', () => ($('fileJson') as HTMLInputElement).click());
   $('btnExportJson2').addEventListener('click', exportJson);
@@ -2680,8 +2696,9 @@ function init(): void {
     else if (k === 'escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); closeDrawers(); }
   });
 
-  window.addEventListener('resize', () => { view.resize(); syncDraggable(); });
-  window.addEventListener('orientationchange', () => { setTimeout(() => { view.resize(); view.fitAll(); }, 250); });
+  window.addEventListener('resize', () => { view.resize(true); syncDraggable(); });
+  window.addEventListener('orientationchange', () => { setTimeout(() => { view.resize(true); view.fitAll(); }, 250); });
+  window.addEventListener('scroll', () => view.resize(), true);
 
   if (isMobile()) {
     setTimeout(() => toast('Мобильный режим: ⚡ — блоки, щипок — масштаб, тап по блоку — параметры', 'info'), 700);
