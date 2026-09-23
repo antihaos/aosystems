@@ -1,0 +1,2741 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05050d">
+<meta name="description" content="NeonForge Audio Lab — неоновая SPA/PWA студия мастеринга: конструктор цепочек обработки звука (шумоподавление по образцу, гейт, фильтры, EQ, компрессоры, реверберация, дилей, сатуратор), визуализация сигнала от пина к пину, undo/redo, offline-рендер WAV, библиотека записей в IndexedDB, экспорт OGG/FLAC.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>NeonForge Audio Lab — студия мастеринга</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/unbounded@5.0.12/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/unbounded@5.0.12/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.12/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.12/700.css">
+<style>
+:root{
+  --bg:#05050d; --panel:#0a0b16; --panel2:#0d0f1e;
+  --cyan:#00e5ff; --mag:#ff2bd6; --green:#39ff14; --violet:#8b5cff; --amber:#ffb300; --red:#ff3b5c;
+  --text:#d7e4ff; --mut:#6b7a99;
+  --hdr:58px; --ftr:44px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;overflow:hidden;display:flex;flex-direction:column;overscroll-behavior:none}
+::selection{background:rgba(0,229,255,.35)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:#06070f}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,rgba(0,229,255,.35),rgba(255,43,214,.35));border-radius:4px}
+
+header{height:var(--hdr);flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 14px;
+  background:linear-gradient(180deg,#0b0d1c,#070810);
+  border-bottom:1px solid rgba(0,229,255,.18);
+  box-shadow:0 0 24px rgba(0,229,255,.08), inset 0 -1px 0 rgba(255,43,214,.12);z-index:20}
+.brand{display:flex;gap:10px;align-items:center;min-width:0;flex-shrink:0}
+.brand img{width:36px;height:36px;border-radius:9px;box-shadow:0 0 16px rgba(0,229,255,.65),0 0 30px rgba(255,43,214,.25);flex-shrink:0}
+h1{font-family:'Unbounded',sans-serif;font-size:14px;letter-spacing:2px;line-height:1.15;white-space:nowrap;
+  background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 8px rgba(0,229,255,.55))}
+h1 small{display:block;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--mut);-webkit-text-fill-color:var(--mut)}
+.spacer{flex:1}
+.hgroup{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.btn{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.35);color:var(--cyan);padding:7px 11px;border-radius:8px;
+  font-family:inherit;font-size:11px;cursor:pointer;transition:.15s;text-shadow:0 0 8px rgba(0,229,255,.5);white-space:nowrap;user-select:none;text-decoration:none;display:inline-block}
+.btn:hover{background:rgba(0,229,255,.14);box-shadow:0 0 14px rgba(0,229,255,.4)}
+.btn:active{transform:scale(.94)}
+.btn.primary{border-color:rgba(57,255,20,.5);color:var(--green);text-shadow:0 0 8px rgba(57,255,20,.6)}
+.btn.primary:hover{background:rgba(57,255,20,.1);box-shadow:0 0 16px rgba(57,255,20,.45)}
+.btn.danger{border-color:rgba(255,59,92,.5);color:var(--red);text-shadow:0 0 8px rgba(255,59,92,.5)}
+.btn.danger:hover{background:rgba(255,59,92,.12);box-shadow:0 0 16px rgba(255,59,92,.4)}
+.btn.mag{border-color:rgba(255,43,214,.5);color:var(--mag);text-shadow:0 0 8px rgba(255,43,214,.5)}
+.btn.mag:hover{background:rgba(255,43,214,.12);box-shadow:0 0 16px rgba(255,43,214,.4)}
+.btn.active{background:rgba(255,59,92,.28)!important;box-shadow:0 0 18px rgba(255,59,92,.7);animation:recpulse 1s infinite}
+.btn.toggleOn{background:rgba(57,255,20,.18);border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(57,255,20,.4)}
+@keyframes recpulse{50%{box-shadow:0 0 26px rgba(255,59,92,.95)}}
+.btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+
+main{flex:1;display:flex;min-height:0;position:relative}
+#palette{width:242px;flex-shrink:0;background:var(--panel);border-right:1px solid rgba(0,229,255,.12);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 30px}
+.palt{font-family:'Unbounded',sans-serif;font-size:10px;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.5);padding:4px 4px 10px}
+.pcat{font-size:9px;letter-spacing:2px;color:var(--mut);margin:14px 4px 6px;text-transform:uppercase;border-left:2px solid var(--mag);padding-left:6px}
+.pitem{display:flex;gap:8px;align-items:flex-start;padding:10px 8px;border:1px solid rgba(255,255,255,.07);border-radius:8px;margin-bottom:6px;
+  cursor:grab;background:rgba(255,255,255,.02);transition:.15s}
+.pitem:hover{border-color:rgba(0,229,255,.5);box-shadow:0 0 12px rgba(0,229,255,.15)}
+.pitem:active{transform:scale(.97);cursor:grabbing}
+.pdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.pname{font-size:11px;color:var(--text)}
+.pdesc{font-size:9px;color:var(--mut);line-height:1.35;margin-top:2px}
+
+#canvasWrap{flex:1;position:relative;min-width:0;background:
+  radial-gradient(ellipse at 30% 20%, rgba(0,229,255,.045), transparent 55%),
+  radial-gradient(ellipse at 75% 80%, rgba(255,43,214,.05), transparent 55%), var(--bg)}
+#graph{position:absolute;inset:0;touch-action:none;display:block}
+#viewTools{position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:5;flex-wrap:wrap;max-width:calc(100% - 20px)}
+#viewTools .btn{padding:6px 9px;font-size:10px;background:rgba(8,9,18,.85)}
+#zoomLabel{min-width:52px;text-align:center;cursor:default}
+#hintBar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--mut);
+  background:rgba(5,5,13,.75);padding:5px 14px;border-radius:20px;border:1px solid rgba(0,229,255,.14);pointer-events:none;white-space:nowrap;z-index:5;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+
+#inspector{width:306px;flex-shrink:0;background:var(--panel);border-left:1px solid rgba(255,43,214,.15);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px}
+.inshead{display:flex;align-items:center;gap:9px}
+.inshead .pdot{width:13px;height:13px;margin:0}
+.institle{font-family:'Unbounded',sans-serif;font-size:13px}
+.insdesc{font-size:10px;color:var(--mut);margin:8px 0 4px;line-height:1.55}
+.sect{font-size:9px;letter-spacing:2px;color:var(--mut);margin:16px 0 9px;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:5px}
+.sect b{color:var(--mag);font-weight:400}
+.prow{margin-bottom:13px}
+.prowtop{display:flex;justify-content:space-between;align-items:center;font-size:10px;margin-bottom:5px}
+.pval{color:var(--cyan);text-shadow:0 0 6px rgba(0,229,255,.5);font-size:10px}
+.sliderRow{display:flex;gap:8px;align-items:center}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:6px;border-radius:3px;outline:none;
+  background:linear-gradient(90deg,rgba(0,229,255,.45),rgba(255,43,214,.45))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#0a0b16;
+  border:2px solid var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.85);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#0a0b16;border:2px solid var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.85);cursor:pointer}
+.pnum{width:78px;background:#0a0c18;border:1px solid rgba(0,229,255,.25);color:var(--text);border-radius:6px;padding:6px;font:inherit;font-size:11px}
+.pnum:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 8px rgba(0,229,255,.35)}
+.textinp{flex:1;background:#0a0c18;border:1px solid rgba(0,229,255,.25);color:var(--text);border-radius:8px;padding:10px;font:inherit;font-size:12px;min-width:0}
+.textinp:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.35)}
+select.textinp{appearance:none}
+.switchRow{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:5px 0}
+.switch{position:relative;width:44px;height:22px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .sl{position:absolute;inset:0;background:#101327;border:1px solid rgba(0,229,255,.3);border-radius:20px;cursor:pointer;transition:.2s}
+.switch .sl:before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;border-radius:50%;background:var(--mut);transition:.2s}
+.switch input:checked + .sl{border-color:var(--green);box-shadow:0 0 10px rgba(57,255,20,.45)}
+.switch input:checked + .sl:before{transform:translateX(22px);background:var(--green);box-shadow:0 0 8px var(--green)}
+.hint{font-size:9.5px;color:var(--mut);line-height:1.55}
+.row{display:flex;gap:8px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.row.right{justify-content:flex-end}
+.dangerZone{margin-top:18px;padding-top:12px;border-top:1px dashed rgba(255,59,92,.3);display:flex;gap:8px}
+.dangerZone .btn{flex:1;padding:10px}
+.keys{font-size:10px;color:var(--mut);line-height:1.9}
+.keys b{color:var(--cyan);font-weight:400;border:1px solid rgba(0,229,255,.3);border-radius:4px;padding:1px 6px;font-size:9px}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px;font-size:9px;color:var(--mut)}
+.stat b{display:block;font-size:14px;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.5);font-weight:400;margin-top:2px}
+
+footer{height:var(--ftr);flex-shrink:0;display:flex;align-items:center;gap:14px;padding:0 14px;background:#07080f;
+  border-top:1px solid rgba(255,43,214,.18);font-size:10.5px;color:var(--mut);z-index:20}
+.dot{width:9px;height:9px;border-radius:50%;background:#2a3050;flex-shrink:0;transition:.2s}
+.dot.on{background:var(--green);box-shadow:0 0 10px var(--green)}
+.dot.rec{background:var(--red);box-shadow:0 0 12px var(--red);animation:recpulse 1s infinite}
+footer canvas{border-radius:4px;background:rgba(255,255,255,.04);flex-shrink:0}
+#recInfo{color:var(--red);text-shadow:0 0 8px rgba(255,59,92,.6);white-space:nowrap}
+#btnAnalyzer{padding:5px 9px;font-size:12px}
+
+#backdrop{position:fixed;inset:0;background:rgba(2,2,8,.55);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:44}
+#backdrop.show{opacity:1;pointer-events:auto}
+.fab{display:none}
+
+.modal{position:fixed;inset:0;background:rgba(3,3,8,.78);backdrop-filter:blur(7px);display:none;align-items:center;justify-content:center;z-index:100}
+.modal.open{display:flex}
+.mpanel{width:min(600px,94vw);max-height:86vh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,#0c0e1e,#080a14);
+  border:1px solid rgba(0,229,255,.35);border-radius:16px;padding:22px;
+  box-shadow:0 0 44px rgba(0,229,255,.18),0 0 90px rgba(255,43,214,.1)}
+.mtitle{font-family:'Unbounded',sans-serif;font-size:15px;color:var(--cyan);text-shadow:0 0 14px rgba(0,229,255,.6);margin-bottom:6px}
+.fmtRow{display:flex;gap:10px;margin:8px 0}
+.fmt{flex:1;position:relative;cursor:pointer}
+.fmt input{position:absolute;opacity:0}
+.fmt span{display:block;text-align:center;padding:12px 8px;border:1px solid rgba(255,255,255,.15);border-radius:10px;font-size:11px;color:var(--mut);transition:.15s}
+.fmt input:checked + span{border-color:var(--mag);color:var(--mag);box-shadow:0 0 14px rgba(255,43,214,.35);text-shadow:0 0 8px rgba(255,43,214,.6)}
+.prog{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin:8px 0}
+#progBar{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--mag));box-shadow:0 0 10px rgba(0,229,255,.7);transition:width .15s linear}
+.projRow{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.02);flex-wrap:wrap}
+.projRow:hover{border-color:rgba(0,229,255,.4)}
+.projInfo{flex:1;min-width:120px}
+.projName{font-size:11.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.projMeta{font-size:9px;color:var(--mut);margin-top:3px}
+.projRow audio{width:170px;height:32px;flex-shrink:0}
+audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
+.modal .btn{padding:10px 13px}
+#anCv{width:100%;height:auto;border-radius:10px;background:#05050d;border:1px solid rgba(0,229,255,.2);box-shadow:0 0 24px rgba(0,229,255,.12)}
+
+#toasts{position:fixed;right:16px;bottom:calc(var(--ftr) + 14px);display:flex;flex-direction:column;gap:8px;z-index:200;max-width:340px}
+.toast{padding:10px 14px;border-radius:9px;font-size:11px;line-height:1.45;background:rgba(10,12,24,.94);
+  border:1px solid var(--cyan);color:var(--text);box-shadow:0 0 18px rgba(0,229,255,.3);animation:slideIn .25s ease}
+.toast.error{border-color:var(--red);box-shadow:0 0 18px rgba(255,59,92,.4)}
+.toast.ok{border-color:var(--green);box-shadow:0 0 18px rgba(57,255,20,.35)}
+.toast.warn{border-color:var(--amber);box-shadow:0 0 18px rgba(255,179,0,.35)}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}}
+
+#boot{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;z-index:300;transition:opacity .45s}
+.ring{width:64px;height:64px;border-radius:50%;border:3px solid rgba(0,229,255,.15);border-top-color:var(--cyan);border-right-color:var(--mag);
+  animation:spin 1s linear infinite;box-shadow:0 0 30px rgba(0,229,255,.35)}
+@keyframes spin{to{transform:rotate(360deg)}}
+#bootMsg{font-family:'Unbounded',sans-serif;font-size:12px;letter-spacing:2px;color:var(--cyan);text-shadow:0 0 12px rgba(0,229,255,.7);text-align:center;padding:0 20px;max-width:520px;line-height:1.6}
+
+@media (max-width:1180px){
+  #inspector{width:255px}
+  #palette{width:210px}
+  h1{font-size:12px}
+}
+
+@media (max-width:900px){
+  :root{--hdr:54px;--ftr:40px}
+  header{gap:6px;padding:0 8px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  header::-webkit-scrollbar{display:none}
+  .brand{gap:7px}
+  .brand img{width:30px;height:30px}
+  .blabel{display:none}
+  .btn{padding:9px 10px;font-size:12px;border-radius:9px}
+  #grpFiles{display:none}
+
+  main{display:block}
+  #canvasWrap{position:absolute;top:0;left:0;right:0;bottom:0;width:auto;flex:none}
+
+  #palette{position:fixed;left:0;top:var(--hdr);bottom:0;width:min(310px,86vw);z-index:45;
+    transform:translateX(-106%);transition:transform .28s cubic-bezier(.22,.9,.35,1);
+    box-shadow:0 0 44px rgba(0,0,0,.75);padding-bottom:90px;border-right:1px solid rgba(0,229,255,.3)}
+  #palette.open{transform:none}
+
+  #inspector{position:fixed;left:0;right:0;bottom:0;top:auto;width:100%;max-height:60vh;z-index:45;
+    transform:translateY(106%);transition:transform .28s cubic-bezier(.22,.9,.35,1);
+    border-radius:18px 18px 0 0;border-top:1px solid rgba(0,229,255,.45);border-left:none;
+    box-shadow:0 -12px 44px rgba(0,0,0,.75);
+    padding:14px 14px calc(16px + env(safe-area-inset-bottom))}
+  #inspector.open{transform:none}
+  #inspector:before{content:'';display:block;width:44px;height:4px;border-radius:2px;background:rgba(0,229,255,.4);margin:0 auto 12px;box-shadow:0 0 8px rgba(0,229,255,.5)}
+
+  .fab{display:flex;align-items:center;justify-content:center;position:fixed;
+    bottom:calc(var(--ftr) + 14px + env(safe-area-inset-bottom));width:52px;height:52px;border-radius:50%;z-index:46;
+    font-size:21px;border:1px solid rgba(0,229,255,.55);background:rgba(10,12,24,.94);color:var(--cyan);
+    box-shadow:0 0 20px rgba(0,229,255,.4);cursor:pointer;transition:.15s}
+  .fab:active{transform:scale(.9)}
+  #fabPalette{left:12px}
+  #fabInspector{right:12px;border-color:rgba(255,43,214,.55);color:var(--mag);box-shadow:0 0 20px rgba(255,43,214,.35)}
+  #fabInspector.pulse{animation:fabPulse 1.6s infinite}
+  @keyframes fabPulse{50%{box-shadow:0 0 28px rgba(255,43,214,.8)}}
+
+  #viewTools{top:8px;left:8px;gap:5px;flex-wrap:nowrap;overflow-x:auto;max-width:calc(100vw - 16px);padding-bottom:3px;scrollbar-width:none}
+  #viewTools::-webkit-scrollbar{display:none}
+  #viewTools .btn{padding:8px 9px;font-size:10px;flex-shrink:0}
+  #btnZoomOut,#zoomLabel,#btnZoomIn{display:none}
+  #hintBar{display:none}
+
+  footer{gap:8px;padding:0 10px;padding-bottom:env(safe-area-inset-bottom);font-size:9.5px}
+  #spectrum,#srLabel{display:none}
+  #meter{width:100px!important}
+  #statusText{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:28vw}
+
+  .modal{align-items:flex-end}
+  .mpanel{width:100%;max-width:100%;max-height:92vh;border-radius:18px 18px 0 0;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom));border-left:none;border-right:none;border-bottom:none}
+  .mpanel:before{content:'';display:block;width:44px;height:4px;border-radius:2px;background:rgba(0,229,255,.4);margin:0 auto 14px;box-shadow:0 0 8px rgba(0,229,255,.5)}
+  .row .btn{flex:1;text-align:center;justify-content:center}
+  .projRow audio{width:100%}
+  #toasts{left:8px;right:8px;bottom:calc(var(--ftr) + 74px + env(safe-area-inset-bottom));max-width:none;align-items:flex-end}
+  .toast{max-width:100%}
+}
+@media (max-width:640px){
+  .brand h1{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="boot"><div class="ring"></div><div id="bootMsg">ИНИЦИАЛИЗАЦИЯ ЯДРА · КОМПИЛЯЦИЯ TYPESCRIPT…</div></div>
+
+<header>
+  <div class="brand">
+    <img id="logo" alt="logo">
+    <h1>NEONFORGE<small>AUDIO LAB · MASTERING STUDIO</small></h1>
+  </div>
+  <div class="spacer"></div>
+  <div class="hgroup">
+    <button id="btnEngine" class="btn primary"><span id="btnEngineIco">▶</span><span class="blabel" id="btnEngineTxt"> Запустить</span></button>
+    <button id="btnRec" class="btn danger" title="Live-запись"><span>●</span><span class="blabel"> REC</span></button>
+    <button id="btnExport" class="btn mag" title="Экспорт OGG/FLAC/WAV"><span>⬇</span><span class="blabel"> Экспорт</span></button>
+  </div>
+  <div class="hgroup">
+    <button id="btnUndo" class="btn" title="Отменить (Ctrl+Z)" disabled>⟲</button>
+    <button id="btnRedo" class="btn" title="Повторить (Ctrl+Shift+Z)" disabled>⟳</button>
+  </div>
+  <div class="hgroup">
+    <button id="btnProjects" class="btn" title="Проекты (IndexedDB)"><span>🗀</span><span class="blabel"> Проекты</span></button>
+  </div>
+  <div class="hgroup" id="grpFiles">
+    <button id="btnExportJson" class="btn" title="Экспорт JSON">⇩</button>
+    <button id="btnImportJson" class="btn" title="Импорт JSON">⇧</button>
+    <button id="btnHelp" class="btn" title="Справка">?</button>
+  </div>
+</header>
+
+<main>
+  <aside id="palette">
+    <div class="palt">⚡ БЛОКИ ЦЕПИ</div>
+    <input id="palSearch" class="textinp" placeholder="🔍 Поиск блока…" style="width:100%;margin-bottom:8px">
+    <button id="btnTemplate" class="btn primary" style="width:100%">⚡ Шаблон мастеринга</button>
+  </aside>
+
+  <section id="canvasWrap">
+    <canvas id="graph"></canvas>
+    <div id="viewTools">
+      <button class="btn" id="btnLayout" title="Автовыравнивание (L)">⌗ Выравнивание</button>
+      <button class="btn" id="btnFit" title="Вписать граф (F)">⊟ Вписать</button>
+      <button class="btn toggleOn" id="btnSnap" title="Привязка к сетке (G)">▦ Сетка</button>
+      <button class="btn" id="btnZoomOut">−</button>
+      <button class="btn" id="zoomLabel">100%</button>
+      <button class="btn" id="btnZoomIn">+</button>
+    </div>
+    <div id="hintBar">►→◄ соединение · колесо/щипок — масштаб · B — bypass · Del — удалить · Ctrl+Z — отмена</div>
+  </section>
+
+  <aside id="inspector"></aside>
+</main>
+
+<button id="fabPalette" class="fab" title="Блоки цепи">⚡</button>
+<button id="fabInspector" class="fab pulse" title="Параметры блока">⚙</button>
+<div id="backdrop"></div>
+
+<footer>
+  <div class="dot" id="statusDot"></div>
+  <span id="statusText">движок остановлен</span>
+  <span id="srLabel">— кГц</span>
+  <canvas id="meter" width="360" height="30" style="width:180px;height:15px"></canvas>
+  <canvas id="spectrum" width="480" height="34" style="width:240px;height:17px"></canvas>
+  <div class="spacer"></div>
+  <button id="btnAnalyzer" class="btn" title="Мастер-анализатор">📊</button>
+  <span id="recInfo"></span>
+</footer>
+
+<!-- ================= MODALS ================= -->
+<div class="modal" id="modalExport">
+  <div class="mpanel">
+    <div class="mtitle">⬇ ЭКСПОРТ РЕЗУЛЬТАТА</div>
+    <div class="hint">Звук проходит через всю цепь и записывается с мастер-шины. Каждый результат автоматически сохраняется в библиотеку.</div>
+    <div class="sect">ФОРМАТ ПОТОЧНОЙ ЗАПИСИ</div>
+    <div class="fmtRow">
+      <label class="fmt"><input type="radio" name="fmt" value="ogg" checked><span>OGG · Opus</span></label>
+      <label class="fmt"><input type="radio" name="fmt" value="flac"><span>FLAC · lossless</span></label>
+    </div>
+    <div id="fmtNote" class="hint"></div>
+    <div class="sect">OFFLINE-РЕНДЕР · WAV (БЫСТРЕЕ РЕАЛЬНОГО ВРЕМЕНИ)</div>
+    <div class="row"><button class="btn primary" id="btnOffline">⚡ Рендер WAV</button><span id="offlineStatus" class="hint"></span></div>
+    <div class="hint">Граф пересчитывается в OfflineAudioContext (источник — «Аудиофайл» или «Тон-генератор»). Шумоподавление/гейт/микрофон в offline проходят насквозь.</div>
+    <div class="sect">РЕНДЕР АУДИОФАЙЛА В РЕАЛЬНОМ ВРЕМЕНИ</div>
+    <div class="row"><span id="renderFileInfo" class="hint">файл не загружен</span></div>
+    <div class="row"><button class="btn primary" id="btnRender">▶ Рендер и экспорт</button><span id="renderTime" class="hint"></span></div>
+    <div class="prog"><div id="progBar"></div></div>
+    <div class="sect">ЗАПИСЬ ВЫХОДА ЦЕПИ · LIVE</div>
+    <div class="row"><button class="btn danger" id="btnLive">● Записать</button><span id="liveTime" class="hint">остановка — повторное нажатие</span></div>
+    <div class="sect">РЕЗУЛЬТАТ</div>
+    <div id="resultWrap" style="display:none">
+      <audio id="resultAudio" controls></audio>
+      <div class="row" style="margin-top:10px"><a id="dlResult" class="btn mag">⬇ Скачать</a><span id="resultInfo" class="hint"></span></div>
+    </div>
+    <div class="sect">БИБЛИОТЕКА ЗАПИСЕЙ · INDEXEDDB</div>
+    <div id="takesList"><div class="hint">Пусто</div></div>
+    <div class="row right" style="margin-top:14px"><button class="btn" data-close>Закрыть</button></div>
+  </div>
+</div>
+
+<div class="modal" id="modalProjects">
+  <div class="mpanel">
+    <div class="mtitle">🗀 ПРОЕКТЫ · INDEXEDDB</div>
+    <div class="row">
+      <input id="projName" class="textinp" placeholder="Имя проекта">
+      <button class="btn primary" id="btnSaveProj">💾 Сохранить</button>
+      <button class="btn" id="btnSaveAs">Как новый…</button>
+    </div>
+    <div class="hint">Сессия также автосохраняется в браузере и восстанавливается при следующем открытии.</div>
+    <div class="sect">СОХРАНЁННЫЕ ПРОЕКТЫ</div>
+    <div id="projList"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="btnExportJson2">⇩ Экспорт JSON</button>
+      <button class="btn" id="btnImportJson2">⇧ Импорт JSON</button>
+      <button class="btn" id="btnHelp2">? Справка</button>
+    </div>
+    <div class="row right" style="margin-top:14px"><button class="btn" data-close>Закрыть</button></div>
+  </div>
+</div>
+
+<div class="modal" id="modalAnalyzer">
+  <div class="mpanel" style="width:min(760px,96vw)">
+    <div class="mtitle">📊 МАСТЕР-АНАЛИЗАТОР</div>
+    <canvas id="anCv" width="1400" height="460"></canvas>
+    <div class="hint" style="margin-top:8px">Верх — осциллограмма мастер-шины, низ — спектр (лог-шкала). Запустите движок.</div>
+    <div class="row right" style="margin-top:12px"><button class="btn" data-close>Закрыть</button></div>
+  </div>
+</div>
+
+<div class="modal" id="modalHelp">
+  <div class="mpanel">
+    <div class="mtitle">❔ КАК РАБОТАТЬ</div>
+    <div class="keys" style="line-height:2.1">
+      <b>1</b> Добавьте блоки из панели «⚡» (клик/тап — в центр холста, либо перетащите на холст). Есть поиск по блокам.<br>
+      <b>2</b> Соедините пины: тяните от выходного ► (справа) к входному ◄ (слева).<br>
+      <b>3</b> Загрузите аудиофайл, включите «Тон-генератор» или разрешите доступ к микрофону.<br>
+      <b>4</b> Нажмите «▶» — сигнал пойдёт по цепи, провода оживут.<br>
+      <b>5</b> Шумоподавление: подайте шум → «Захватить профиль шума». Гейт — пороговое подавление тишины.<br>
+      <b>6</b> «⬇ Экспорт»: offline-рендер WAV (быстро), рендер файла в реальном времени или live-запись в OGG/FLAC. Все тейки — в библиотеке.<br>
+      <b>7</b> «⚡ Шаблон мастеринга» — соберёт типовую цепь одним нажатием.<br>
+      <b>8</b> Bypass (A/B) каждого блока — мгновенное сравнение «до/после».<br><br>
+      <b>Space</b> старт/стоп · <b>B</b> bypass блока · <b>Del</b> удалить · <b>F</b> вписать · <b>L</b> выравнивание · <b>G</b> сетка · <b>Ctrl+Z / Ctrl+Shift+Z</b> отмена/повтор · <b>Ctrl+S</b> сохранить<br><br>
+      <b>Мобильные:</b> щипок — масштаб, один палец на фоне — перемещение, ⚡ — палитра, ⚙ — параметры блока.
+    </div>
+    <div class="row right" style="margin-top:14px"><button class="btn" data-close>Понятно</button></div>
+  </div>
+</div>
+
+<input type="file" id="fileAudio" accept="audio/*" hidden>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+<div id="toasts"></div>
+
+<!-- ================= TYPESCRIPT SOURCE ================= -->
+<script type="text/plain" id="app-code">
+(() => {
+'use strict';
+
+/* ======================================================================
+   NeonForge Audio Lab v2 — расширяемая архитектура на TypeScript.
+   Реестр узлов · Web Audio движок · граф-студия · canvas-вид (touch)
+   · bypass A/B · undo/redo · offline WAV · библиотека тейков · автосейв
+   ====================================================================== */
+
+/* ---------------------------- УТИЛИТЫ ---------------------------- */
+const $ = (s: string): HTMLElement => {
+  const sel = /^[A-Za-z][\w-]*$/.test(s) ? '#' + s : s;
+  const r = document.querySelector(sel);
+  if (!r) throw new Error('Элемент не найден: ' + s);
+  return r as HTMLElement;
+};
+const uid = (): string => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const clamp = (v: number, a: number, b: number): number => v < a ? a : v > b ? b : v;
+const num = (v: any): number => Number(v);
+const dbToGain = (db: number): number => Math.pow(10, db / 20);
+const isMobile = (): boolean => window.matchMedia('(max-width:900px)').matches;
+function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string): HTMLElementTagNameMap[K] {
+  const e = document.createElement(tag); if (cls) e.className = cls; return e;
+}
+function hexA(hex: string, a: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+function rr(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
+  g.beginPath();
+  g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+function bez(p0x: number, p0y: number, c1x: number, c1y: number, c2x: number, c2y: number, p3x: number, p3y: number, t: number): { x: number, y: number } {
+  const mt = 1 - t, a = mt * mt * mt, b = 3 * mt * mt * t, c = 3 * mt * t * t, d = t * t * t;
+  return { x: a * p0x + b * c1x + c * c2x + d * p3x, y: a * p0y + b * c1y + c * c2y + d * p3y };
+}
+function toast(msg: string, kind: 'info' | 'ok' | 'warn' | 'error' = 'info'): void {
+  const box = $('toasts'); const t = el('div', 'toast ' + kind); t.textContent = msg;
+  box.appendChild(t);
+  while (box.children.length > 4) box.firstChild?.remove();
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 320); }, 3400);
+}
+function openDrawer(id: string): void {
+  $('palette').classList.remove('open');
+  $('inspector').classList.remove('open');
+  $(id).classList.add('open');
+  $('backdrop').classList.add('show');
+}
+function closeDrawers(): void {
+  $('palette').classList.remove('open');
+  $('inspector').classList.remove('open');
+  $('backdrop').classList.remove('show');
+}
+
+/* ---------------------------- ТИПЫ ---------------------------- */
+type ParamValue = number | boolean | string;
+type Params = Record<string, ParamValue>;
+interface ParamDef {
+  key: string; label: string; type: 'float' | 'bool' | 'enum';
+  min?: number; max?: number; step?: number; value: ParamValue;
+  unit?: string; log?: boolean; options?: string[];
+}
+interface ProcHandle {
+  input?: AudioNode; output: AudioNode;
+  update(p: Params): void;
+  start?(): Promise<void> | void;
+  stop?(): void;
+  dispose?(): void;
+  extra?: any;
+}
+interface GNode {
+  id: string; type: string; def: NodeTypeDef;
+  x: number; y: number; w: number; h: number;
+  params: Params; handle?: ProcHandle; analyser?: AnalyserNode;
+  inPort?: AudioNode; outPort?: AudioNode;
+  dry?: GainNode | null; wet?: GainNode | null;
+  bypass?: boolean;
+  wave?: Uint8Array; spec?: Uint8Array; level: number;
+  tx?: number; ty?: number;
+}
+interface GEdge { id: string; from: string; to: string; connected: boolean; phase: number; }
+interface NodeEnv { ctx: AudioContext; engine: Engine; offline?: boolean; }
+interface NodeTypeDef {
+  type: string; label: string; category: string; color: string; desc: string;
+  inputs: number; outputs: number; params: ParamDef[];
+  offlineUnsafe?: boolean;
+  factory(env: NodeEnv, p: Params): ProcHandle;
+  customUI?(host: HTMLElement, gn: GNode): void;
+}
+
+function fmtVal(p: ParamDef, v: ParamValue): string {
+  if (p.type === 'bool') return v ? 'вкл' : 'выкл';
+  if (p.type === 'enum') return String(v);
+  const n = Number(v);
+  switch (p.unit) {
+    case 'дБ': return n.toFixed(1) + ' дБ';
+    case 'Гц': return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 1 : 2) + ' кГц' : Math.round(n) + ' Гц';
+    case 'мс': return Math.round(n) + ' мс';
+    case 'с': return n.toFixed(2) + ' с';
+    case 'x': return n.toFixed(2) + 'x';
+    case '%': return Math.round(n) + ' %';
+    default: return Math.abs(n) < 10 ? n.toFixed(2) : n.toFixed(1);
+  }
+}
+
+/* ---------------------------- FFT (radix-2) ---------------------------- */
+function fft(re: Float32Array, im: Float32Array, invert: boolean): void {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) {
+      let t = re[i]; re[i] = re[j]; re[j] = t;
+      t = im[i]; im[i] = im[j]; im[j] = t;
+    }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = 2 * Math.PI / len * (invert ? -1 : 1);
+    const wlR = Math.cos(ang), wlI = Math.sin(ang), half = len >> 1;
+    for (let i = 0; i < n; i += len) {
+      let wr = 1, wi = 0;
+      for (let k = 0; k < half; k++) {
+        const a = i + k, bIdx = i + k + half;
+        const uR = re[a], uI = im[a];
+        const vR = re[bIdx] * wr - im[bIdx] * wi;
+        const vI = re[bIdx] * wi + im[bIdx] * wr;
+        re[a] = uR + vR; im[a] = uI + vI;
+        re[bIdx] = uR - vR; im[bIdx] = uI - vI;
+        const nwr = wr * wlR - wi * wlI;
+        wi = wr * wlI + wi * wlR; wr = nwr;
+      }
+    }
+  }
+  if (invert) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+}
+
+/* ==================================================================
+   РЕЕСТР УЗЛОВ — расширяемая архитектура: register(определение)
+   ================================================================== */
+const defs = new Map<string, NodeTypeDef>();
+function register(d: NodeTypeDef): void { defs.set(d.type, d); }
+
+/* ---------- ИСТОЧНИКИ ---------- */
+register({
+  type: 'mic', label: 'Микрофон', category: 'Источники', color: '#00e5ff', offlineUnsafe: true,
+  desc: 'Вход с микрофона устройства (getUserMedia). Обработка браузера отключена для чистого сигнала.',
+  inputs: 0, outputs: 1,
+  params: [{ key: 'gain', label: 'Усиление', type: 'float', min: -60, max: 24, step: 0.5, value: 0, unit: 'дБ' }],
+  factory(env, p) {
+    const g = env.ctx.createGain(); g.gain.value = dbToGain(num(p.gain));
+    let src: MediaStreamAudioSourceNode | null = null;
+    return {
+      output: g,
+      update(pp) { g.gain.setTargetAtTime(dbToGain(num(pp.gain)), env.ctx.currentTime, 0.02); },
+      async start() {
+        const s = await env.engine.startMic();
+        if (!src) { src = env.ctx.createMediaStreamSource(s); src.connect(g); }
+      },
+      stop() { if (src) { try { src.disconnect(); } catch (e) { } src = null; } },
+      dispose() { this.stop?.(); try { g.disconnect(); } catch (e) { } }
+    };
+  },
+  customUI(host) {
+    const d = el('div', 'hint');
+    d.textContent = 'При первом запуске браузер запросит доступ к микрофону. Требуется HTTPS или localhost. Эхо-подавление браузера отключено — используйте узел «Шумоподавление».';
+    host.appendChild(d);
+  }
+});
+
+register({
+  type: 'file', label: 'Аудиофайл', category: 'Источники', color: '#00b3ff',
+  desc: 'Проигрывание загруженного файла через всю цепь обработки. Основа для рендера в OGG/FLAC/WAV.',
+  inputs: 0, outputs: 1,
+  params: [
+    { key: 'gain', label: 'Усиление', type: 'float', min: -60, max: 12, step: 0.5, value: 0, unit: 'дБ' },
+    { key: 'loop', label: 'Зациклить', type: 'bool', value: false }
+  ],
+  factory(env, p) {
+    const g = env.ctx.createGain(); g.gain.value = dbToGain(num(p.gain));
+    let cur: Params = { ...p };
+    let src: AudioBufferSourceNode | null = null;
+    return {
+      output: g,
+      update(pp) { cur = { ...pp }; g.gain.setTargetAtTime(dbToGain(num(pp.gain)), env.ctx.currentTime, 0.02); },
+      start() {
+        const buf = env.engine.fileBuffer; if (!buf || !env.ctx) return;
+        this.stop?.();
+        src = env.ctx.createBufferSource(); src.buffer = buf; src.loop = !!cur.loop;
+        src.connect(g); src.start();
+      },
+      stop() { if (src) { try { src.stop(); } catch (e) { } try { src.disconnect(); } catch (e) { } src = null; } },
+      dispose() { this.stop?.(); try { g.disconnect(); } catch (e) { } }
+    };
+  },
+  customUI(host) {
+    const info = el('div', 'hint');
+    const upd = () => {
+      info.textContent = engine.fileBuffer
+        ? `✔ ${engine.fileName} · ${engine.fileBuffer.duration.toFixed(1)} c · ${engine.fileBuffer.numberOfChannels} кан`
+        : 'Файл не загружен';
+    };
+    fileInfoRefresh = upd; upd();
+    const btn = el('button', 'btn'); btn.textContent = '📂 Загрузить аудио';
+    btn.style.margin = '8px 0'; btn.style.width = '100%';
+    btn.addEventListener('click', () => fileAudioInput.click());
+    host.appendChild(info); host.appendChild(btn);
+  }
+});
+
+register({
+  type: 'tone', label: 'Тон-генератор', category: 'Источники', color: '#6effd9',
+  desc: 'Тестовый осциллятор: синус/квадрат/пила/треугольник. Для настройки фильтров, проверки цепи и offline-рендера.',
+  inputs: 0, outputs: 1,
+  params: [
+    { key: 'wave', label: 'Форма волны', type: 'enum', options: ['sine', 'square', 'sawtooth', 'triangle'], value: 'sine' },
+    { key: 'freq', label: 'Частота', type: 'float', min: 20, max: 20000, step: 1, value: 440, unit: 'Гц', log: true },
+    { key: 'gain', label: 'Уровень', type: 'float', min: -60, max: 0, step: 0.5, value: -12, unit: 'дБ' }
+  ],
+  factory(env, p) {
+    const g = env.ctx.createGain(); g.gain.value = dbToGain(num(p.gain));
+    let cur: Params = { ...p };
+    let osc: OscillatorNode | null = null;
+    return {
+      output: g,
+      update(pp) {
+        cur = { ...pp };
+        const t = env.ctx.currentTime;
+        g.gain.setTargetAtTime(dbToGain(num(pp.gain)), t, 0.02);
+        if (osc) { osc.type = String(pp.wave) as OscillatorType; osc.frequency.setTargetAtTime(num(pp.freq), t, 0.01); }
+      },
+      start() {
+        if (osc || !env.ctx) return;
+        osc = env.ctx.createOscillator();
+        osc.type = String(cur.wave) as OscillatorType;
+        osc.frequency.value = num(cur.freq);
+        osc.connect(g); osc.start();
+      },
+      stop() { if (osc) { try { osc.stop(); } catch (e) { } try { osc.disconnect(); } catch (e) { } osc = null; } },
+      dispose() { this.stop?.(); try { g.disconnect(); } catch (e) { } }
+    };
+  }
+});
+
+/* ---------- ОЧИСТКА ---------- */
+register({
+  type: 'denoise', label: 'Шумоподавление', category: 'Очистка', color: '#39ff14', offlineUnsafe: true,
+  desc: 'Спектральное вычитание шума по обученному профилю. STFT 2048, 50% overlap, √Hann-окно. Сначала захватите образец шума.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'amount', label: 'Агрессивность', type: 'float', min: 0.5, max: 4, step: 0.05, value: 1.4, unit: 'x' },
+    { key: 'floor', label: 'Спектральный пол', type: 'float', min: -60, max: -6, step: 1, value: -26, unit: 'дБ' }
+  ],
+  factory(env, p) {
+    const ctx = env.ctx;
+    const N = 2048, HOP = 1024, BINS = N / 2 + 1, LEN = N * 4;
+    const input = ctx.createGain();
+    const output = ctx.createGain();
+    const script = ctx.createScriptProcessor(N, 1, 1);
+    input.connect(script); script.connect(output);
+    const win = new Float32Array(N);
+    for (let i = 0; i < N; i++) win[i] = Math.sqrt(0.5 * (1 - Math.cos(2 * Math.PI * i / N)));
+    const inRing = new Float32Array(LEN), outRing = new Float32Array(LEN);
+    let inWr = 0, inRd = 0, outWr = N, outRd = 0;
+    const re = new Float32Array(N), im = new Float32Array(N);
+    const noise = new Float32Array(BINS);
+    let learning = false, hasProfile = false;
+    let amount = num(p.amount), floorLin = dbToGain(num(p.floor));
+    script.onaudioprocess = (ev: any) => {
+      const ib: Float32Array = ev.inputBuffer.getChannelData(0);
+      const ob: Float32Array = ev.outputBuffer.getChannelData(0);
+      for (let i = 0; i < ib.length; i++) { inRing[inWr % LEN] = ib[i]; inWr++; }
+      while (inWr - inRd >= N) {
+        for (let k = 0; k < N; k++) { re[k] = inRing[(inRd + k) % LEN] * win[k]; im[k] = 0; }
+        fft(re, im, false);
+        for (let b = 0; b < BINS; b++) {
+          const m = Math.hypot(re[b], im[b]);
+          if (learning) { noise[b] = noise[b] * 0.87 + m * 0.13; hasProfile = true; }
+          else if (hasProfile) {
+            const nm = Math.max(m - amount * noise[b], floorLin * m);
+            const s = m > 1e-9 ? nm / m : 0;
+            re[b] *= s; im[b] *= s;
+            const b2 = (N - b) & (N - 1);
+            if (b2 !== b) { re[b2] *= s; im[b2] *= s; }
+          }
+        }
+        fft(re, im, true);
+        for (let k = 0; k < N; k++) { outRing[(outWr + k) % LEN] += re[k] * win[k]; }
+        outWr += HOP; inRd += HOP;
+      }
+      for (let i = 0; i < ob.length; i++) { const idx = outRd % LEN; ob[i] = outRing[idx]; outRing[idx] = 0; outRd++; }
+    };
+    return {
+      input, output,
+      update(pp) { amount = num(pp.amount); floorLin = dbToGain(num(pp.floor)); },
+      extra: {
+        setLearning(v: boolean) { learning = v; },
+        get learning() { return learning; },
+        get hasProfile() { return hasProfile; },
+        reset() { noise.fill(0); hasProfile = false; learning = false; }
+      },
+      dispose() { script.onaudioprocess = null; try { input.disconnect(); script.disconnect(); output.disconnect(); } catch (e) { } }
+    };
+  },
+  customUI(host, gn) {
+    const st = el('div', 'hint');
+    st.textContent = 'Профиль шума не обучен. Запустите движок, подайте «шум» в микрофон и нажмите захват (2 c тишины фона).';
+    const btn = el('button', 'btn primary'); btn.textContent = '🎙 Захватить профиль шума';
+    btn.style.margin = '8px 0'; btn.style.width = '100%';
+    const rst = el('button', 'btn danger'); rst.textContent = 'Сбросить профиль'; rst.style.width = '100%';
+    btn.addEventListener('click', () => {
+      if (!engine.running || !gn.handle) { toast('Сначала запустите движок (▶)', 'warn'); return; }
+      const api = gn.handle.extra;
+      if (api.learning) return;
+      api.setLearning(true); btn.disabled = true;
+      let t = 2.0;
+      const iv = setInterval(() => {
+        t -= 0.1;
+        st.textContent = `🎙 Обучение профиля… ${Math.max(0, t).toFixed(1)} c — держите шум в эфире`;
+        if (t <= 0) {
+          clearInterval(iv); api.setLearning(false); btn.disabled = false;
+          st.textContent = '✔ Профиль шума сохранён. Регулируйте агрессивность и пол в реальном времени.';
+          toast('Профиль шума готов', 'ok');
+        }
+      }, 100);
+    });
+    rst.addEventListener('click', () => {
+      gn.handle?.extra?.reset(); st.textContent = 'Профиль сброшен.'; toast('Профиль шума сброшен');
+    });
+    host.appendChild(st); host.appendChild(btn); host.appendChild(rst);
+  }
+});
+
+register({
+  type: 'gate', label: 'Гейт (Noise Gate)', category: 'Очистка', color: '#b6ff00', offlineUnsafe: true,
+  desc: 'Пороговый гейт: полностью закрывает сигнал тише порога. Убирает паузы, дыхание, остаточный шум.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'threshold', label: 'Порог', type: 'float', min: -80, max: 0, step: 0.5, value: -45, unit: 'дБ' },
+    { key: 'attack', label: 'Атака', type: 'float', min: 0.001, max: 0.2, step: 0.001, value: 0.005, unit: 'с' },
+    { key: 'release', label: 'Релиз', type: 'float', min: 0.01, max: 1, step: 0.01, value: 0.12, unit: 'с' }
+  ],
+  factory(env, p) {
+    const ctx = env.ctx;
+    const input = ctx.createGain(), output = ctx.createGain();
+    const script = ctx.createScriptProcessor(2048, 2, 2);
+    input.connect(script); script.connect(output);
+    let thr = num(p.threshold), att = num(p.attack), rel = num(p.release), gc = 0;
+    script.onaudioprocess = (ev: any) => {
+      const sr = ctx.sampleRate;
+      const aC = 1 - Math.exp(-1 / (Math.max(0.0005, att) * sr));
+      const rC = 1 - Math.exp(-1 / (Math.max(0.001, rel) * sr));
+      const nin = ev.inputBuffer.numberOfChannels, nout = ev.outputBuffer.numberOfChannels;
+      const L: Float32Array = ev.inputBuffer.getChannelData(0);
+      const R: Float32Array | null = nin > 1 ? ev.inputBuffer.getChannelData(1) : null;
+      const OL: Float32Array = ev.outputBuffer.getChannelData(0);
+      const OR: Float32Array | null = nout > 1 ? ev.outputBuffer.getChannelData(1) : null;
+      const CH = 128;
+      for (let off = 0; off < L.length; off += CH) {
+        let sum = 0, cnt = 0;
+        const end = Math.min(off + CH, L.length);
+        for (let i = off; i < end; i++) { const v = R ? (L[i] + R[i]) / 2 : L[i]; sum += v * v; cnt++; }
+        const rms = Math.sqrt(sum / Math.max(1, cnt));
+        const db = 20 * Math.log10(rms + 1e-7);
+        const target = db > thr ? 1 : 0;
+        const co = target > gc ? aC : rC;
+        for (let i = off; i < end; i++) {
+          gc += (target - gc) * co;
+          OL[i] = L[i] * gc;
+          if (OR) OR[i] = (R ? R[i] : L[i]) * gc;
+        }
+      }
+    };
+    return {
+      input, output,
+      update(pp) { thr = num(pp.threshold); att = num(pp.attack); rel = num(pp.release); },
+      dispose() { script.onaudioprocess = null; try { input.disconnect(); script.disconnect(); output.disconnect(); } catch (e) { } }
+    };
+  }
+});
+
+/* ---------- ФИЛЬТРЫ ---------- */
+function biquadFactory(bt: string) {
+  return (env: NodeEnv, p: Params): ProcHandle => {
+    const f = env.ctx.createBiquadFilter(); f.type = bt as BiquadFilterType;
+    const apply = (pp: Params) => {
+      const t = env.ctx.currentTime;
+      f.frequency.setTargetAtTime(num(pp.freq), t, 0.01);
+      f.Q.setTargetAtTime(num(pp.q), t, 0.01);
+      if (pp.gain !== undefined) f.gain.setTargetAtTime(num(pp.gain), t, 0.01);
+    };
+    apply(p);
+    return { input: f, output: f, update: apply };
+  };
+}
+const fFreq = (min: number, max: number, def: number): ParamDef => ({ key: 'freq', label: 'Частота', type: 'float', min, max, step: 1, value: def, unit: 'Гц', log: true });
+const fQ = (min: number, max: number, def: number): ParamDef => ({ key: 'q', label: 'Добротность Q', type: 'float', min, max, step: 0.01, value: def });
+
+register({ type: 'hp', label: 'Фильтр ВЧ', category: 'Фильтры', color: '#ff9d00', desc: 'Highpass — срезает низкочастотный гул, ветер, вибрации сцены.', inputs: 1, outputs: 1, params: [fFreq(20, 3000, 85), fQ(0.1, 12, 0.71)], factory: biquadFactory('highpass') });
+register({ type: 'lp', label: 'Фильтр НЧ', category: 'Фильтры', color: '#ff7a00', desc: 'Lowpass — убирает высокочастотный свист и «песок».', inputs: 1, outputs: 1, params: [fFreq(40, 22000, 14000), fQ(0.1, 12, 0.71)], factory: biquadFactory('lowpass') });
+register({ type: 'bp', label: 'Полосовой', category: 'Фильтры', color: '#ffc400', desc: 'Bandpass — выделяет полосу, полезен для вокала и раций-эффекта.', inputs: 1, outputs: 1, params: [fFreq(40, 18000, 1200), fQ(0.2, 30, 1.2)], factory: biquadFactory('bandpass') });
+register({ type: 'notch', label: 'Режекторный', category: 'Фильтры', color: '#ffe600', desc: 'Notch — точечно вырезает частоту (фон 50 Гц, резонансы, свист).', inputs: 1, outputs: 1, params: [fFreq(20, 20000, 50), fQ(0.1, 40, 8)], factory: biquadFactory('notch') });
+
+/* ---------- ЭКВАЛИЗАЦИЯ ---------- */
+register({
+  type: 'peak', label: 'Пик-фильтр', category: 'Эквализация', color: '#ffd600',
+  desc: 'Параметрическая bell-секция: точечная коррекция частоты с заданной добротностью.',
+  inputs: 1, outputs: 1,
+  params: [fFreq(20, 20000, 1000), { key: 'gain', label: 'Усиление', type: 'float', min: -30, max: 30, step: 0.5, value: 0, unit: 'дБ' }, fQ(0.1, 12, 1)],
+  factory: biquadFactory('peaking')
+});
+register({
+  type: 'eq3', label: 'Параметрик EQ', category: 'Эквализация', color: '#ffea00',
+  desc: 'Трёхполосный мастеринг-EQ: low-shelf + середина (bell) + high-shelf.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'lowFreq', label: 'Низ · частота', type: 'float', min: 40, max: 400, step: 1, value: 110, unit: 'Гц', log: true },
+    { key: 'lowGain', label: 'Низ · усиление', type: 'float', min: -18, max: 18, step: 0.5, value: 0, unit: 'дБ' },
+    { key: 'midFreq', label: 'Середина · частота', type: 'float', min: 200, max: 4000, step: 1, value: 850, unit: 'Гц', log: true },
+    { key: 'midGain', label: 'Середина · усиление', type: 'float', min: -18, max: 18, step: 0.5, value: 0, unit: 'дБ' },
+    { key: 'midQ', label: 'Середина · Q', type: 'float', min: 0.3, max: 8, step: 0.05, value: 1.1 },
+    { key: 'highFreq', label: 'Верх · частота', type: 'float', min: 3000, max: 16000, step: 10, value: 8500, unit: 'Гц', log: true },
+    { key: 'highGain', label: 'Верх · усиление', type: 'float', min: -18, max: 18, step: 0.5, value: 0, unit: 'дБ' }
+  ],
+  factory(env, p) {
+    const c = env.ctx;
+    const inp = c.createGain(), out = c.createGain();
+    const ls = c.createBiquadFilter(); ls.type = 'lowshelf';
+    const pk = c.createBiquadFilter(); pk.type = 'peaking';
+    const hs = c.createBiquadFilter(); hs.type = 'highshelf';
+    inp.connect(ls); ls.connect(pk); pk.connect(hs); hs.connect(out);
+    const apply = (pp: Params) => {
+      const t = c.currentTime;
+      ls.frequency.setTargetAtTime(num(pp.lowFreq), t, .01); ls.gain.setTargetAtTime(num(pp.lowGain), t, .01);
+      pk.frequency.setTargetAtTime(num(pp.midFreq), t, .01); pk.Q.setTargetAtTime(num(pp.midQ), t, .01); pk.gain.setTargetAtTime(num(pp.midGain), t, .01);
+      hs.frequency.setTargetAtTime(num(pp.highFreq), t, .01); hs.gain.setTargetAtTime(num(pp.highGain), t, .01);
+    };
+    apply(p);
+    return { input: inp, output: out, update: apply };
+  }
+});
+register({
+  type: 'eq8', label: 'Графический EQ 8', category: 'Эквализация', color: '#d4ff00',
+  desc: 'Октавный графический эквалайзер, 8 полос ISO (63 Гц … 8 кГц).',
+  inputs: 1, outputs: 1,
+  params: [63, 125, 250, 500, 1000, 2000, 4000, 8000].map((f, i) => ({
+    key: 'b' + i, label: (f >= 1000 ? f / 1000 + ' кГц' : f + ' Гц'),
+    type: 'float' as 'float', min: -18, max: 18, step: 0.5, value: 0, unit: 'дБ'
+  })),
+  factory(env, p) {
+    const c = env.ctx;
+    const freqs = [63, 125, 250, 500, 1000, 2000, 4000, 8000];
+    const inp = c.createGain(), out = c.createGain();
+    const filters = freqs.map(f => {
+      const bq = c.createBiquadFilter(); bq.type = 'peaking'; bq.frequency.value = f; bq.Q.value = 1.41; return bq;
+    });
+    let prev: AudioNode = inp;
+    filters.forEach(f => { prev.connect(f); prev = f; });
+    prev.connect(out);
+    const apply = (pp: Params) => {
+      const t = c.currentTime;
+      filters.forEach((f, i) => f.gain.setTargetAtTime(num(pp['b' + i]), t, .015));
+    };
+    apply(p);
+    return { input: inp, output: out, update: apply };
+  }
+});
+
+/* ---------- ДИНАМИКА ---------- */
+register({
+  type: 'comp', label: 'Компрессор', category: 'Динамика', color: '#ff2d95',
+  desc: 'DynamicsCompressor + makeup-gain. Выравнивает громкость, добавляет плотность.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'threshold', label: 'Порог', type: 'float', min: -60, max: 0, step: 0.5, value: -22, unit: 'дБ' },
+    { key: 'knee', label: 'Колено', type: 'float', min: 0, max: 40, step: 0.5, value: 10, unit: 'дБ' },
+    { key: 'ratio', label: 'Сжатие', type: 'float', min: 1, max: 20, step: 0.1, value: 4, unit: 'x' },
+    { key: 'attack', label: 'Атака', type: 'float', min: 0.001, max: 0.5, step: 0.001, value: 0.004, unit: 'с' },
+    { key: 'release', label: 'Релиз', type: 'float', min: 0.01, max: 1, step: 0.005, value: 0.18, unit: 'с' },
+    { key: 'makeup', label: 'Makeup', type: 'float', min: 0, max: 24, step: 0.5, value: 0, unit: 'дБ' }
+  ],
+  factory(env, p) {
+    const c = env.ctx;
+    const inp = c.createGain(), comp = c.createDynamicsCompressor(), mk = c.createGain();
+    inp.connect(comp); comp.connect(mk);
+    const apply = (pp: Params) => {
+      const t = c.currentTime;
+      comp.threshold.setTargetAtTime(num(pp.threshold), t, .015);
+      comp.knee.setTargetAtTime(num(pp.knee), t, .015);
+      comp.ratio.setTargetAtTime(num(pp.ratio), t, .015);
+      comp.attack.setTargetAtTime(num(pp.attack), t, .015);
+      comp.release.setTargetAtTime(num(pp.release), t, .015);
+      mk.gain.setTargetAtTime(dbToGain(num(pp.makeup)), t, .02);
+    };
+    apply(p);
+    return { input: inp, output: mk, update: apply };
+  }
+});
+register({
+  type: 'limiter', label: 'Лимитер', category: 'Динамика', color: '#ff006a',
+  desc: 'Жёсткий brickwall (ratio 20:1) — защита от перегруза и финальный уровень мастеринга.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'threshold', label: 'Потолок', type: 'float', min: -40, max: 0, step: 0.1, value: -2.5, unit: 'дБ' },
+    { key: 'attack', label: 'Атака', type: 'float', min: 0.001, max: 0.05, step: 0.001, value: 0.002, unit: 'с' },
+    { key: 'release', label: 'Релиз', type: 'float', min: 0.01, max: 0.3, step: 0.005, value: 0.06, unit: 'с' }
+  ],
+  factory(env, p) {
+    const c = env.ctx;
+    const comp = c.createDynamicsCompressor();
+    comp.ratio.value = 20; comp.knee.value = 0;
+    const apply = (pp: Params) => {
+      const t = c.currentTime;
+      comp.threshold.setTargetAtTime(num(pp.threshold), t, .015);
+      comp.attack.setTargetAtTime(num(pp.attack), t, .015);
+      comp.release.setTargetAtTime(num(pp.release), t, .015);
+    };
+    apply(p);
+    return { input: comp, output: comp, update: apply };
+  }
+});
+
+/* ---------- ЭФФЕКТЫ ---------- */
+register({
+  type: 'satur', label: 'Сатуратор', category: 'Эффекты', color: '#ff8c00',
+  desc: 'Мягкая tanh-сатурация (Warmth/Drive) + микс сухого и насыщенного сигнала.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'drive', label: 'Drive', type: 'float', min: 1, max: 20, step: 0.1, value: 4, unit: 'x' },
+    { key: 'mix', label: 'Микс', type: 'float', min: 0, max: 100, step: 1, value: 30, unit: '%' }
+  ],
+  factory(env, p) {
+    const c = env.ctx;
+    const inp = c.createGain(), out = c.createGain();
+    const dry = c.createGain(), wet = c.createGain();
+    const sh = c.createWaveShaper(); sh.oversample = '2x';
+    const makeCurve = (drive: number) => {
+      const n = 1024, cv = new Float32Array(n), k = Math.tanh(drive) || 1;
+      for (let i = 0; i < n; i++) { const x = (i / (n - 1)) * 2 - 1; cv[i] = Math.tanh(x * drive) / k; }
+      return cv;
+    };
+    sh.curve = makeCurve(num(p.drive));
+    inp.connect(dry); dry.connect(out);
+    inp.connect(sh); sh.connect(wet); wet.connect(out);
+    const apply = (pp: Params) => {
+      const t = c.currentTime, mix = num(pp.mix) / 100;
+      dry.gain.setTargetAtTime(1 - mix, t, .02);
+      wet.gain.setTargetAtTime(mix, t, .02);
+      sh.curve = makeCurve(num(pp.drive));
+    };
+    apply(p);
+    return { input: inp, output: out, update: apply };
+  }
+});
+register({
+  type: 'delay', label: 'Дилей / Эхо', category: 'Эффекты', color: '#c77dff',
+  desc: 'Эхо с обратной связью: время задержки, feedback и доля влажного сигнала.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'time', label: 'Время', type: 'float', min: 10, max: 1000, step: 1, value: 250, unit: 'мс' },
+    { key: 'feedback', label: 'Feedback', type: 'float', min: 0, max: 90, step: 1, value: 35, unit: '%' },
+    { key: 'wet', label: 'Микс влажн.', type: 'float', min: 0, max: 100, step: 1, value: 25, unit: '%' }
+  ],
+  factory(env, p) {
+    const c = env.ctx;
+    const inp = c.createGain(), out = c.createGain();
+    const dry = c.createGain(), wet = c.createGain();
+    const dly = c.createDelay(2.0), fb = c.createGain();
+    inp.connect(dry); dry.connect(out);
+    inp.connect(dly); dly.connect(wet); wet.connect(out);
+    dly.connect(fb); fb.connect(dly);
+    const apply = (pp: Params) => {
+      const t = c.currentTime;
+      dly.delayTime.setTargetAtTime(clamp(num(pp.time) / 1000, 0.001, 2), t, .02);
+      fb.gain.setTargetAtTime(num(pp.feedback) / 100, t, .02);
+      wet.gain.setTargetAtTime(num(pp.wet) / 100, t, .02);
+    };
+    apply(p);
+    return { input: inp, output: out, update: apply };
+  }
+});
+register({
+  type: 'reverb', label: 'Реверберация', category: 'Эффекты', color: '#9d4edd',
+  desc: 'Алгоритмический convolver-реверб (генерируемый импульсный отклик). Decay и микс.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'decay', label: 'Decay', type: 'float', min: 0.3, max: 8, step: 0.1, value: 2.2, unit: 'с' },
+    { key: 'wet', label: 'Микс влажн.', type: 'float', min: 0, max: 100, step: 1, value: 18, unit: '%' }
+  ],
+  factory(env, p) {
+    const c = env.ctx;
+    const inp = c.createGain(), out = c.createGain();
+    const dry = c.createGain(), wet = c.createGain();
+    const conv = c.createConvolver();
+    const makeIR = (dur: number) => {
+      const sr = c.sampleRate, len = Math.max(1, Math.floor(sr * dur));
+      const buf = c.createBuffer(2, len, sr);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++) {
+          const env2 = Math.pow(1 - i / len, 2.4);
+          const fade = Math.min(1, i / (sr * 0.004));
+          d[i] = (Math.random() * 2 - 1) * env2 * fade * 0.5;
+        }
+      }
+      return buf;
+    };
+    let lastDecay = num(p.decay), lastGen = 0;
+    conv.buffer = makeIR(lastDecay);
+    inp.connect(dry); dry.connect(out);
+    inp.connect(conv); conv.connect(wet); wet.connect(out);
+    const apply = (pp: Params) => {
+      const t = c.currentTime;
+      wet.gain.setTargetAtTime(num(pp.wet) / 100, t, .02);
+      const d = num(pp.decay);
+      const now = performance.now();
+      if (Math.abs(d - lastDecay) > 0.05 && now - lastGen > 350) {
+        lastDecay = d; lastGen = now;
+        conv.buffer = makeIR(d);
+      }
+    };
+    apply(p);
+    return { input: inp, output: out, update: apply };
+  }
+});
+
+/* ---------- УТИЛИТЫ ---------- */
+register({
+  type: 'gainpan', label: 'Усиление · Панорама', category: 'Утилиты', color: '#00ffc8',
+  desc: 'Трим громкости и стерео-панорама.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'gain', label: 'Усиление', type: 'float', min: -48, max: 24, step: 0.5, value: 0, unit: 'дБ' },
+    { key: 'pan', label: 'Панорама', type: 'float', min: -1, max: 1, step: 0.01, value: 0 }
+  ],
+  factory(env, p) {
+    const c = env.ctx;
+    const g = c.createGain(); const pan = c.createStereoPanner();
+    g.connect(pan);
+    const apply = (pp: Params) => {
+      const t = c.currentTime;
+      g.gain.setTargetAtTime(dbToGain(num(pp.gain)), t, .02);
+      pan.pan.setTargetAtTime(num(pp.pan), t, .02);
+    };
+    apply(p);
+    return { input: g, output: pan, update: apply };
+  }
+});
+register({
+  type: 'widener', label: 'Стерео-расширитель', category: 'Утилиты', color: '#00ffa3',
+  desc: 'M/S-процессор: width 0 — моно, 1 — стерео как есть, 2 — сверхширокое.',
+  inputs: 1, outputs: 1,
+  params: [{ key: 'width', label: 'Ширина', type: 'float', min: 0, max: 2, step: 0.01, value: 1 }],
+  factory(env, p) {
+    const c = env.ctx;
+    const inp = c.createGain();
+    const spl = c.createChannelSplitter(2);
+    const mrg = c.createChannelMerger(2);
+    const lM = c.createGain(), rM = c.createGain(), mid = c.createGain();
+    const lS = c.createGain(), rS = c.createGain(), side = c.createGain();
+    const wG = c.createGain(), nwG = c.createGain();
+    lM.gain.value = .5; rM.gain.value = .5; lS.gain.value = .5; rS.gain.value = -.5;
+    inp.connect(spl);
+    spl.connect(lM, 0); spl.connect(rM, 1); lM.connect(mid); rM.connect(mid);
+    spl.connect(lS, 0); spl.connect(rS, 1); lS.connect(side); rS.connect(side);
+    mid.connect(mrg, 0, 0); side.connect(wG); wG.connect(mrg, 0, 0);
+    mid.connect(mrg, 0, 1); side.connect(nwG); nwG.connect(mrg, 0, 1);
+    const apply = (pp: Params) => {
+      const t = c.currentTime, w = num(pp.width);
+      wG.gain.setTargetAtTime(w, t, .02);
+      nwG.gain.setTargetAtTime(-w, t, .02);
+    };
+    apply(p);
+    return { input: inp, output: mrg, update: apply };
+  }
+});
+register({
+  type: 'scope', label: 'Анализатор спектра', category: 'Утилиты', color: '#8b5cff',
+  desc: 'Прозрачный проход с анализом — в карточке узла отображается живой спектр.',
+  inputs: 1, outputs: 1,
+  params: [{ key: 'smoothing', label: 'Сглаживание', type: 'float', min: 0, max: 0.95, step: 0.01, value: 0.82 }],
+  factory(env, p) {
+    const an = env.ctx.createAnalyser(); an.fftSize = 2048; an.smoothingTimeConstant = num(p.smoothing);
+    return {
+      input: an, output: an,
+      update(pp) { an.smoothingTimeConstant = num(pp.smoothing); },
+      extra: { analyser: an }
+    };
+  }
+});
+
+/* ---------- ВЫХОД ---------- */
+register({
+  type: 'out', label: 'Мастер-выход', category: 'Выход', color: '#ff4d4d',
+  desc: 'Финальная точка цепи: колонки + шина записи (MediaStream → OGG/FLAC) + offline-рендер.',
+  inputs: 1, outputs: 0,
+  params: [{ key: 'trim', label: 'Мастер-трим', type: 'float', min: -24, max: 12, step: 0.5, value: 0, unit: 'дБ' }],
+  factory(env, p) {
+    const c = env.ctx;
+    const g = c.createGain(); const an = c.createAnalyser(); an.fftSize = 1024;
+    g.connect(an); an.connect(c.destination);
+    if (!env.offline && env.engine.mediaDest) an.connect(env.engine.mediaDest);
+    if (!env.offline) env.engine.outAnalyser = an;
+    const apply = (pp: Params) => g.gain.setTargetAtTime(dbToGain(num(pp.trim)), c.currentTime, .02);
+    apply(p);
+    return {
+      input: g, output: an, update: apply,
+      dispose() { if (!env.offline) env.engine.outAnalyser = null; try { g.disconnect(); an.disconnect(); } catch (e) { } }
+    };
+  }
+});
+
+/* ==================================================================
+   ДВИЖОК WEB AUDIO
+   ================================================================== */
+class Engine {
+  ctx: AudioContext | null = null;
+  mediaDest: MediaStreamAudioDestinationNode | null = null;
+  micStream: MediaStream | null = null;
+  fileBuffer: AudioBuffer | null = null;
+  fileName: string = '';
+  running: boolean = false;
+  outAnalyser: AnalyserNode | null = null;
+
+  async init(): Promise<AudioContext> {
+    if (!this.ctx) {
+      const AC: any = (window as any).AudioContext || (window as any).webkitAudioContext;
+      this.ctx = new AC({ latencyHint: 'interactive' });
+      this.mediaDest = this.ctx.createMediaStreamDestination();
+    }
+    if (this.ctx.state === 'suspended') { try { await this.ctx.resume(); } catch (e) { } }
+    return this.ctx;
+  }
+  async startMic(): Promise<MediaStream> {
+    if (!this.micStream) {
+      this.micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } as any
+      });
+    }
+    return this.micStream;
+  }
+}
+const engine = new Engine();
+
+/* ==================================================================
+   BYPASS-ОБЁРТКА (dry/wet A/B) — общая для live и offline
+   ================================================================== */
+interface Ports { inPort?: AudioNode; outPort: AudioNode; dry: GainNode | null; wet: GainNode | null; }
+function makePorts(def: NodeTypeDef, handle: ProcHandle, ctx: BaseAudioContext): Ports {
+  if (def.inputs > 0 && def.outputs > 0 && handle.input) {
+    const inW = ctx.createGain(), outW = ctx.createGain();
+    const dry = ctx.createGain(), wet = ctx.createGain();
+    dry.gain.value = 0; wet.gain.value = 1;
+    inW.connect(dry); dry.connect(outW);
+    inW.connect(handle.input); handle.output.connect(wet); wet.connect(outW);
+    return { inPort: inW, outPort: outW, dry, wet };
+  }
+  return { inPort: handle.input, outPort: handle.output, dry: null, wet: null };
+}
+function applyBypassGains(ports: Ports, bypass: boolean): void {
+  if (!ports.dry || !ports.wet) return;
+  ports.dry.gain.value = bypass ? 1 : 0;
+  ports.wet.gain.value = bypass ? 0 : 1;
+}
+
+/* ==================================================================
+   МОДЕЛЬ ГРАФА — STUDIO
+   ================================================================== */
+class Studio {
+  nodes = new Map<string, GNode>();
+  edges: GEdge[] = [];
+  selected: string | null = null;
+  selectedEdge: string | null = null;
+  name: string = 'Новый проект';
+  loading: boolean = false;
+
+  addNode(type: string, x: number, y: number, params?: Params, quiet?: boolean): GNode | null {
+    const def = defs.get(type);
+    if (!def) { toast('Неизвестный тип узла: ' + type, 'error'); return null; }
+    const gn: GNode = { id: uid(), type, def, x, y, w: 200, h: 92, params: {}, level: 0 };
+    for (const p of def.params) gn.params[p.key] = (params && params[p.key] !== undefined) ? params[p.key] : p.value;
+    this.nodes.set(gn.id, gn);
+    if (engine.ctx) this.createHandle(gn);
+    if (!quiet) { this.select(gn.id); toast(`Добавлен блок «${def.label}»`, 'ok'); if (!this.loading) pushHistory(); }
+    return gn;
+  }
+
+  createHandle(gn: GNode): void {
+    if (!engine.ctx) return;
+    const env: NodeEnv = { ctx: engine.ctx, engine, offline: false };
+    gn.handle = gn.def.factory(env, gn.params);
+    const ports = makePorts(gn.def, gn.handle, engine.ctx);
+    gn.inPort = ports.inPort; gn.outPort = ports.outPort; gn.dry = ports.dry; gn.wet = ports.wet;
+    applyBypassGains(ports, !!gn.bypass);
+    const an = engine.ctx.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = 0.7;
+    gn.outPort.connect(an);
+    gn.analyser = an;
+    gn.wave = new Uint8Array(an.fftSize);
+  }
+
+  destroyNodeAudio(gn: GNode): void {
+    try { gn.handle?.dispose?.(); } catch (e) { }
+    try { gn.handle?.output.disconnect(); } catch (e) { }
+    try { (gn.inPort as GainNode | undefined)?.disconnect(); } catch (e) { }
+    try { gn.outPort?.disconnect(); } catch (e) { }
+    try { gn.dry?.disconnect(); } catch (e) { }
+    try { gn.wet?.disconnect(); } catch (e) { }
+    try { gn.analyser?.disconnect(); } catch (e) { }
+    gn.handle = undefined; gn.analyser = undefined;
+    gn.inPort = undefined; gn.outPort = undefined; gn.dry = null; gn.wet = null;
+  }
+
+  removeNode(id: string): void {
+    const gn = this.nodes.get(id); if (!gn) return;
+    for (const e of [...this.edges]) if (e.from === id || e.to === id) this.removeEdge(e.id);
+    this.destroyNodeAudio(gn);
+    this.nodes.delete(id);
+    if (this.selected === id) this.selected = null;
+    renderInspector();
+    toast(`Блок «${gn.def.label}» удалён`);
+    if (!this.loading) pushHistory();
+  }
+
+  select(id: string | null): void { this.selected = id; this.selectedEdge = null; renderInspector(); }
+  selectEdge(id: string | null): void { this.selectedEdge = id; this.selected = null; renderInspector(); }
+
+  wouldCycle(from: string, to: string): boolean {
+    const seen = new Set<string>(); const st = [to];
+    while (st.length) {
+      const cur = st.pop() as string;
+      if (cur === from) return true;
+      if (seen.has(cur)) continue; seen.add(cur);
+      for (const e of this.edges) if (e.from === cur) st.push(e.to);
+    }
+    return false;
+  }
+
+  connect(from: string, to: string, quiet?: boolean): void {
+    if (from === to) { toast('Нельзя соединить узел сам с собой', 'warn'); return; }
+    const a = this.nodes.get(from), b = this.nodes.get(to);
+    if (!a || !b || b.def.inputs === 0) return;
+    if (this.edges.some(e => e.from === from && e.to === to)) return;
+    if (this.wouldCycle(from, to)) { toast('Цикл в графе недопустим', 'warn'); return; }
+    const ex = this.edges.find(e => e.to === to);
+    if (ex) this.removeEdge(ex.id);
+    const e: GEdge = { id: uid(), from, to, connected: false, phase: Math.random() };
+    this.edges.push(e);
+    this.connectAudio(e);
+    if (!quiet) toast(`${a.def.label} → ${b.def.label}`, 'ok');
+    if (!quiet && !this.loading) pushHistory();
+  }
+
+  connectAudio(e: GEdge): void {
+    if (!engine.ctx) return;
+    const a = this.nodes.get(e.from), b = this.nodes.get(e.to);
+    if (a?.outPort && b?.inPort && !e.connected) {
+      a.outPort.connect(b.inPort);
+      e.connected = true;
+    }
+  }
+
+  removeEdge(id: string): void {
+    const i = this.edges.findIndex(e => e.id === id); if (i < 0) return;
+    const e = this.edges[i];
+    const a = this.nodes.get(e.from), b = this.nodes.get(e.to);
+    if (e.connected && a?.outPort && b?.inPort) {
+      try { a.outPort.disconnect(b.inPort); } catch (err) { }
+    }
+    this.edges.splice(i, 1);
+    if (this.selectedEdge === id) this.selectedEdge = null;
+    if (!this.loading) pushHistory();
+  }
+
+  syncHandles(): void {
+    if (!engine.ctx) return;
+    for (const gn of this.nodes.values()) if (!gn.handle) this.createHandle(gn);
+    for (const e of this.edges) this.connectAudio(e);
+  }
+
+  async start(): Promise<void> {
+    try {
+      await engine.init();
+      this.syncHandles();
+      if (!this.nodes.size) { toast('Граф пуст — добавьте блоки из панели «⚡»', 'warn'); return; }
+      let hasSource = false;
+      for (const gn of this.nodes.values()) {
+        if (gn.handle?.start) {
+          hasSource = true;
+          try { await gn.handle.start(); }
+          catch (err: any) {
+            let msg = err?.message || String(err);
+            if (err?.name === 'NotAllowedError') msg = 'доступ к микрофону запрещён';
+            else if (err?.name === 'NotFoundError') msg = 'микрофон не найден';
+            toast(`Источник «${gn.def.label}»: ${msg}`, 'error');
+          }
+        }
+      }
+      if (!hasSource) toast('Добавьте источник: «Микрофон», «Аудиофайл» или «Тон-генератор»', 'warn');
+      const hasOut = [...this.nodes.values()].some(n => n.type === 'out');
+      if (!hasOut) toast('Цепь не ведёт к «Мастер-выходу» — звук не будет слышен и записан', 'warn');
+      engine.running = true;
+      updateTransportUI();
+      toast('Движок запущен · ' + (engine.ctx ? (engine.ctx.sampleRate / 1000).toFixed(1) : '?') + ' кГц', 'ok');
+    } catch (e: any) {
+      toast('Ошибка запуска движка: ' + (e?.message || e), 'error');
+    }
+  }
+
+  stop(): void {
+    for (const gn of this.nodes.values()) { try { gn.handle?.stop?.(); } catch (e) { } }
+    engine.running = false;
+    updateTransportUI();
+  }
+
+  restartFiles(): void {
+    for (const gn of this.nodes.values())
+      if (gn.type === 'file' && gn.handle) { gn.handle.stop?.(); gn.handle.start?.(); }
+  }
+
+  serialize(): any {
+    return {
+      app: 'neonforge', v: 2, name: this.name,
+      nodes: [...this.nodes.values()].map(n => ({ id: n.id, type: n.type, x: n.x, y: n.y, bypass: !!n.bypass, params: { ...n.params } })),
+      edges: this.edges.map(e => ({ id: e.id, from: e.from, to: e.to }))
+    };
+  }
+
+  loadFrom(d: any, quiet?: boolean, keepHistory?: boolean): void {
+    this.loading = true;
+    try {
+      this.stop();
+      for (const e of [...this.edges]) this.removeEdge(e.id);
+      for (const gn of [...this.nodes.values()]) this.destroyNodeAudio(gn);
+      this.nodes.clear(); this.edges = []; this.selected = null; this.selectedEdge = null;
+      if (d && d.name) this.name = d.name;
+      const created: Record<string, boolean> = {};
+      for (const nd of (d?.nodes || [])) {
+        const def = defs.get(nd.type); if (!def) continue;
+        const gn: GNode = { id: nd.id || uid(), type: nd.type, def, x: +nd.x || 0, y: +nd.y || 0, w: 200, h: 92, params: {}, level: 0, bypass: !!nd.bypass };
+        for (const p of def.params) gn.params[p.key] = (nd.params && nd.params[p.key] !== undefined) ? nd.params[p.key] : p.value;
+        this.nodes.set(gn.id, gn); created[gn.id] = true;
+      }
+      for (const ed of (d?.edges || []))
+        if (created[ed.from] && created[ed.to])
+          this.edges.push({ id: ed.id || uid(), from: ed.from, to: ed.to, connected: false, phase: Math.random() });
+      if (engine.ctx) this.syncHandles();
+      renderInspector();
+      if (!quiet) toast(`Проект «${this.name}» загружен · ${this.nodes.size} блоков`, 'ok');
+    } catch (e) { console.error(e); toast('Ошибка загрузки проекта', 'error'); }
+    this.loading = false;
+    if (!keepHistory) resetHistory();
+  }
+}
+const studio = new Studio();
+
+/* ==================================================================
+   ИСТОРИЯ (UNDO / REDO)
+   ================================================================== */
+const history = { stack: [] as string[], idx: -1 };
+let histTimer: any = 0;
+function snapshot(): string { return JSON.stringify(studio.serialize()); }
+function updateUndoButtons(): void {
+  ($('btnUndo') as HTMLButtonElement).disabled = history.idx <= 0;
+  ($('btnRedo') as HTMLButtonElement).disabled = history.idx >= history.stack.length - 1;
+}
+function pushHistory(): void {
+  const s = snapshot();
+  if (history.idx >= 0 && history.stack[history.idx] === s) return;
+  history.stack = history.stack.slice(0, history.idx + 1);
+  history.stack.push(s);
+  if (history.stack.length > 60) history.stack.shift();
+  history.idx = history.stack.length - 1;
+  updateUndoButtons();
+}
+function queueHistory(): void { clearTimeout(histTimer); histTimer = setTimeout(pushHistory, 700); }
+function resetHistory(): void { history.stack = [snapshot()]; history.idx = 0; updateUndoButtons(); }
+function applySnapshot(s: string): void {
+  const cam = { ...view.cam };
+  studio.loadFrom(JSON.parse(s), true, true);
+  view.cam = cam;
+  renderInspector();
+}
+function undo(): void {
+  if (history.idx > 0) { history.idx--; applySnapshot(history.stack[history.idx]); updateUndoButtons(); toast('↩ Отменено'); }
+}
+function redo(): void {
+  if (history.idx < history.stack.length - 1) { history.idx++; applySnapshot(history.stack[history.idx]); updateUndoButtons(); toast('↪ Повторено'); }
+}
+function toggleBypass(gn: GNode): void {
+  gn.bypass = !gn.bypass;
+  if (gn.dry && gn.wet) {
+    if (engine.ctx) {
+      const t = engine.ctx.currentTime;
+      gn.dry.gain.setTargetAtTime(gn.bypass ? 1 : 0, t, .008);
+      gn.wet.gain.setTargetAtTime(gn.bypass ? 0 : 1, t, .008);
+    } else {
+      gn.dry.gain.value = gn.bypass ? 1 : 0;
+      gn.wet.gain.value = gn.bypass ? 0 : 1;
+    }
+  }
+  pushHistory();
+  renderInspector();
+  toast(gn.bypass ? `«${gn.def.label}» — BYPASS ВКЛ` : `«${gn.def.label}» — bypass выкл`, gn.bypass ? 'warn' : 'info');
+}
+
+/* ==================================================================
+   CANVAS-ВИД: зум, панорама, multi-touch (пинч), провода, частицы
+   ================================================================== */
+interface Hit { kind: 'none' | 'node' | 'pin' | 'pout' | 'edge'; node?: GNode; edge?: GEdge; }
+
+class GraphView {
+  g: CanvasRenderingContext2D;
+  cam = { x: 400, y: 340, z: 0.8 };
+  cssW = 800; cssH = 600; dpr = 1;
+  t = 0; lastTs = 0;
+  snap = true;
+  mode: '' | 'pan' = '';
+  panStart = { mx: 0, my: 0, cx: 0, cy: 0 };
+  nodeDrag: { id: string, ox: number, oy: number } | null = null;
+  wireFrom: string | null = null;
+  mouse = { x: 0, y: 0 }; mouseW = { x: 0, y: 0 };
+  pointers = new Map<number, { x: number, y: number }>();
+  pinch: { dist: number, cx: number, cy: number, camx: number, camy: number, z: number } | null = null;
+  isTouch = false;
+
+  constructor(public canvas: HTMLCanvasElement) {
+    this.g = canvas.getContext('2d') as CanvasRenderingContext2D;
+    this.resize();
+    canvas.addEventListener('pointerdown', e => this.onDown(e));
+    canvas.addEventListener('pointermove', e => this.onMove(e));
+    window.addEventListener('pointerup', e => this.onUp(e));
+    window.addEventListener('pointercancel', e => this.onUp(e));
+    canvas.addEventListener('wheel', e => this.onWheel(e), { passive: false });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    canvas.addEventListener('dblclick', e => {
+      this.mouseSet(e); const h = this.pick();
+      if (h.kind === 'node' && h.node) { this.cam.x = h.node.x + h.node.w / 2; this.cam.y = h.node.y + h.node.h / 2; }
+    });
+    canvas.addEventListener('dragover', e => e.preventDefault());
+    canvas.addEventListener('drop', e => {
+      e.preventDefault();
+      const type = e.dataTransfer?.getData('text/nf'); if (!type) return;
+      const r = canvas.getBoundingClientRect();
+      const w = this.toWorldAt(e.clientX - r.left, e.clientY - r.top);
+      studio.addNode(type, w.x - 100, w.y - 46);
+    });
+    requestAnimationFrame(ts => this.frame(ts));
+  }
+
+  resize(): void {
+    const wrap = $('canvasWrap');
+    const w = Math.max(1, wrap.clientWidth);
+    const h = Math.max(1, wrap.clientHeight);
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    if (w !== this.cssW || h !== this.cssH || this.canvas.width !== Math.round(w * this.dpr)) {
+      this.cssW = w; this.cssH = h;
+      this.canvas.width = Math.round(w * this.dpr); this.canvas.height = Math.round(h * this.dpr);
+    }
+  }
+  toWorldAt(mx: number, my: number): { x: number, y: number } {
+    return { x: (mx - this.cssW / 2) / this.cam.z + this.cam.x, y: (my - this.cssH / 2) / this.cam.z + this.cam.y };
+  }
+  sx(wx: number): number { return (wx - this.cam.x) * this.cam.z + this.cssW / 2; }
+  sy(wy: number): number { return (wy - this.cam.y) * this.cam.z + this.cssH / 2; }
+  mouseSet(e: PointerEvent | WheelEvent | MouseEvent): void {
+    const r = this.canvas.getBoundingClientRect();
+    this.mouse.x = e.clientX - r.left; this.mouse.y = e.clientY - r.top;
+    this.mouseW = this.toWorldAt(this.mouse.x, this.mouse.y);
+  }
+  private pinR2(): number { const r = this.isTouch ? 26 : 13; return r * r; }
+
+  pick(): Hit {
+    const ns = [...studio.nodes.values()].reverse();
+    const pr = this.pinR2();
+    for (const gn of ns) {
+      if (gn.def.outputs > 0) {
+        const dx = this.mouse.x - this.sx(gn.x + gn.w), dy = this.mouse.y - this.sy(gn.y + gn.h / 2);
+        if (dx * dx + dy * dy < pr) return { kind: 'pout', node: gn };
+      }
+      if (gn.def.inputs > 0) {
+        const dx = this.mouse.x - this.sx(gn.x), dy = this.mouse.y - this.sy(gn.y + gn.h / 2);
+        if (dx * dx + dy * dy < pr) return { kind: 'pin', node: gn };
+      }
+    }
+    const w = this.mouseW;
+    for (const gn of ns)
+      if (w.x >= gn.x && w.x <= gn.x + gn.w && w.y >= gn.y && w.y <= gn.y + gn.h) return { kind: 'node', node: gn };
+    for (const e of studio.edges) {
+      const a = studio.nodes.get(e.from), b = studio.nodes.get(e.to); if (!a || !b) continue;
+      const p0 = { x: this.sx(a.x + a.w), y: this.sy(a.y + a.h / 2) };
+      const p3 = { x: this.sx(b.x), y: this.sy(b.y + b.h / 2) };
+      const dxw = Math.max(60, Math.abs(b.x - a.x - a.w) * 0.5) * this.cam.z;
+      const thr = this.isTouch ? 160 : 64;
+      for (let i = 0; i <= 16; i++) {
+        const pt = bez(p0.x, p0.y, p0.x + dxw, p0.y, p3.x - dxw, p3.y, p3.x, p3.y, i / 16);
+        const ddx = pt.x - this.mouse.x, ddy = pt.y - this.mouse.y;
+        if (ddx * ddx + ddy * ddy < thr) return { kind: 'edge', edge: e };
+      }
+    }
+    return { kind: 'none' };
+  }
+
+  onDown(e: PointerEvent): void {
+    this.isTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
+    const r = this.canvas.getBoundingClientRect();
+    this.pointers.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top });
+    try { this.canvas.setPointerCapture(e.pointerId); } catch (err) { }
+    if (this.pointers.size === 2) {
+      const [p1, p2] = [...this.pointers.values()];
+      this.pinch = {
+        dist: Math.max(1, Math.hypot(p2.x - p1.x, p2.y - p1.y)),
+        cx: (p1.x + p2.x) / 2, cy: (p1.y + p2.y) / 2,
+        camx: this.cam.x, camy: this.cam.y, z: this.cam.z
+      };
+      this.wireFrom = null; this.nodeDrag = null; this.mode = '';
+      return;
+    }
+    this.mouseSet(e);
+    const h = this.pick();
+    if (h.kind === 'pout' && h.node) { this.wireFrom = h.node.id; }
+    else if (h.kind === 'pin' && h.node) {
+      const ex = studio.edges.find(x => x.to === h.node!.id);
+      if (ex) { this.wireFrom = ex.from; studio.removeEdge(ex.id); }
+    }
+    else if (h.kind === 'node' && h.node) {
+      studio.select(h.node.id);
+      this.nodeDrag = { id: h.node.id, ox: h.node.x - this.mouseW.x, oy: h.node.y - this.mouseW.y };
+    }
+    else if (h.kind === 'edge' && h.edge) { studio.selectEdge(h.edge.id); }
+    else {
+      this.mode = 'pan';
+      this.panStart = { mx: this.mouse.x, my: this.mouse.y, cx: this.cam.x, cy: this.cam.y };
+      studio.select(null);
+    }
+  }
+  onMove(e: PointerEvent): void {
+    const r = this.canvas.getBoundingClientRect();
+    if (this.pointers.has(e.pointerId)) this.pointers.set(e.pointerId, { x: e.clientX - r.left, y: e.clientY - r.top });
+    if (this.pinch && this.pointers.size >= 2) {
+      const [p1, p2] = [...this.pointers.values()];
+      const nd = Math.max(1, Math.hypot(p2.x - p1.x, p2.y - p1.y));
+      const ncx = (p1.x + p2.x) / 2, ncy = (p1.y + p2.y) / 2;
+      const wb = {
+        x: (this.pinch.cx - this.cssW / 2) / this.pinch.z + this.pinch.camx,
+        y: (this.pinch.cy - this.cssH / 2) / this.pinch.z + this.pinch.camy
+      };
+      const nz = clamp(this.pinch.z * (nd / this.pinch.dist), 0.15, 2.4);
+      this.cam.z = nz;
+      this.cam.x = wb.x - (ncx - this.cssW / 2) / nz;
+      this.cam.y = wb.y - (ncy - this.cssH / 2) / nz;
+      return;
+    }
+    this.mouseSet(e);
+    if (this.mode === 'pan') {
+      this.cam.x = this.panStart.cx - (this.mouse.x - this.panStart.mx) / this.cam.z;
+      this.cam.y = this.panStart.cy - (this.mouse.y - this.panStart.my) / this.cam.z;
+    } else if (this.nodeDrag) {
+      const gn = studio.nodes.get(this.nodeDrag.id);
+      if (gn) {
+        gn.x = this.mouseW.x + this.nodeDrag.ox; gn.y = this.mouseW.y + this.nodeDrag.oy;
+        gn.tx = undefined; gn.ty = undefined;
+        if (this.snap) { gn.x = Math.round(gn.x / 20) * 20; gn.y = Math.round(gn.y / 20) * 20; }
+      }
+    }
+    if (!this.isTouch) {
+      const h = this.pick();
+      this.canvas.style.cursor = (h.kind === 'pout' || h.kind === 'pin') ? 'crosshair' : h.kind === 'node' ? 'grab' : h.kind === 'edge' ? 'pointer' : 'default';
+    }
+  }
+  onUp(e: PointerEvent): void {
+    this.pointers.delete(e.pointerId);
+    if (this.pointers.size < 2) this.pinch = null;
+    if (this.wireFrom && this.pointers.size === 0) {
+      const h = this.pick();
+      if (h.kind === 'pin' && h.node && h.node.id !== this.wireFrom) studio.connect(this.wireFrom, h.node.id);
+      this.wireFrom = null;
+    }
+    if (this.pointers.size === 0) {
+      if (this.nodeDrag) queueHistory();
+      this.mode = ''; this.nodeDrag = null;
+    }
+  }
+  onWheel(e: WheelEvent): void {
+    e.preventDefault();
+    this.mouseSet(e);
+    const wb = { ...this.mouseW };
+    const nz = clamp(this.cam.z * Math.exp(-e.deltaY * 0.0012), 0.15, 2.4);
+    this.cam.z = nz;
+    this.cam.x = wb.x - (this.mouse.x - this.cssW / 2) / nz;
+    this.cam.y = wb.y - (this.mouse.y - this.cssH / 2) / nz;
+  }
+  zoomBy(f: number): void { this.cam.z = clamp(this.cam.z * f, 0.15, 2.4); }
+
+  fitAll(): void {
+    this.resize();
+    const ns = [...studio.nodes.values()];
+    if (!ns.length) { this.cam = { x: 400, y: 340, z: 0.8 }; return; }
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    ns.forEach(n => { x1 = Math.min(x1, n.x); y1 = Math.min(y1, n.y); x2 = Math.max(x2, n.x + n.w); y2 = Math.max(y2, n.y + n.h); });
+    const bw = Math.max(1, x2 - x1 + 240), bh = Math.max(1, y2 - y1 + 200);
+    const W = Math.max(1, this.cssW), H = Math.max(1, this.cssH);
+    this.cam.z = clamp(Math.min(W / bw, H / bh), 0.15, 1.5);
+    this.cam.x = (x1 + x2) / 2; this.cam.y = (y1 + y2) / 2;
+  }
+
+  autoLayout(): void {
+    const nodes = [...studio.nodes.values()]; if (!nodes.length) return;
+    const inc: Record<string, number> = {};
+    nodes.forEach(n => inc[n.id] = 0);
+    studio.edges.forEach(e => { if (inc[e.to] !== undefined) inc[e.to]++; });
+    const level: Record<string, number> = {};
+    const q: string[] = nodes.filter(n => inc[n.id] === 0).map(n => n.id);
+    q.forEach(id => level[id] = 0);
+    if (!q.length) { q.push(nodes[0].id); level[nodes[0].id] = 0; }
+    const seen = new Set<string>();
+    while (q.length) {
+      const id = q.shift() as string;
+      if (seen.has(id)) continue; seen.add(id);
+      for (const e of studio.edges.filter(ed => ed.from === id)) {
+        const l = (level[id] ?? 0) + 1;
+        if ((level[e.to] ?? -1) < l) level[e.to] = l;
+        if (!seen.has(e.to)) q.push(e.to);
+      }
+    }
+    nodes.forEach(n => { if (level[n.id] === undefined) level[n.id] = 0; });
+    const byLevel: Record<number, GNode[]> = {};
+    nodes.forEach(n => { (byLevel[level[n.id]] = byLevel[level[n.id]] || []).push(n); });
+    Object.keys(byLevel).forEach(k => {
+      const arr = byLevel[+k]; arr.sort((a, b) => a.y - b.y);
+      arr.forEach((n, i) => { n.tx = 60 + (+k) * 272; n.ty = 400 + (i - (arr.length - 1) / 2) * 150; });
+    });
+    setTimeout(pushHistory, 900);
+    toast('Выравнивание: топологическая раскладка по столбцам', 'ok');
+  }
+
+  updateLevels(): void {
+    for (const gn of studio.nodes.values()) {
+      if (engine.running && gn.analyser && gn.wave) {
+        gn.analyser.getByteTimeDomainData(gn.wave as any);
+        let sum = 0;
+        for (let i = 0; i < gn.wave.length; i += 2) { const v = (gn.wave[i] - 128) / 128; sum += v * v; }
+        const rms = Math.sqrt(sum / (gn.wave.length / 2));
+        gn.level += (clamp(rms * 3.2, 0, 1) - gn.level) * 0.25;
+      } else gn.level *= 0.9;
+    }
+  }
+
+  frame(ts: number): void {
+    requestAnimationFrame(t => this.frame(t));
+    const dt = Math.min(0.05, (ts - this.lastTs) / 1000 || 0); this.lastTs = ts; this.t += dt;
+    this.resize();
+    for (const gn of studio.nodes.values()) {
+      if (gn.tx !== undefined) { gn.x += (gn.tx - gn.x) * 0.18; if (Math.abs(gn.tx - gn.x) < 0.5) { gn.x = gn.tx; gn.tx = undefined; } }
+      if (gn.ty !== undefined) { gn.y += (gn.ty - gn.y) * 0.18; if (Math.abs(gn.ty - gn.y) < 0.5) { gn.y = gn.ty; gn.ty = undefined; } }
+    }
+    this.updateLevels();
+    this.draw();
+    drawMeter(); drawSpectrum(); drawAnalyzerModal();
+    if (!isMobile()) {
+      const zl = $('zoomLabel'); const zt = Math.round(this.cam.z * 100) + '%';
+      if (zl.textContent !== zt) zl.textContent = zt;
+    }
+  }
+
+  draw(): void {
+    const g = this.g, z = this.cam.z;
+    g.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    g.fillStyle = '#05050d'; g.fillRect(0, 0, this.cssW, this.cssH);
+    g.save();
+    g.translate(this.cssW / 2, this.cssH / 2); g.scale(z, z); g.translate(-this.cam.x, -this.cam.y);
+    this.drawGrid(g);
+    for (const e of studio.edges) this.drawEdge(g, e);
+    if (this.wireFrom) this.drawWiring(g);
+    for (const gn of studio.nodes.values()) this.drawNode(g, gn);
+    g.restore();
+    const vg = g.createRadialGradient(this.cssW / 2, this.cssH / 2, this.cssH * 0.35, this.cssW / 2, this.cssH / 2, this.cssH * 0.85);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,10,0.4)');
+    g.fillStyle = vg; g.fillRect(0, 0, this.cssW, this.cssH);
+  }
+
+  drawGrid(g: CanvasRenderingContext2D): void {
+    const z = this.cam.z;
+    let step = 40; while (step * z < 26) step *= 5;
+    const l = this.cam.x - this.cssW / 2 / z, r = this.cam.x + this.cssW / 2 / z;
+    const t = this.cam.y - this.cssH / 2 / z, b = this.cam.y + this.cssH / 2 / z;
+    g.lineWidth = 1 / z;
+    g.strokeStyle = 'rgba(0,229,255,0.05)'; g.beginPath();
+    for (let x = Math.floor(l / step) * step; x <= r; x += step) if (Math.round(x / step) % 5 !== 0) { g.moveTo(x, t); g.lineTo(x, b); }
+    for (let y = Math.floor(t / step) * step; y <= b; y += step) if (Math.round(y / step) % 5 !== 0) { g.moveTo(l, y); g.lineTo(r, y); }
+    g.stroke();
+    g.strokeStyle = 'rgba(255,43,214,0.07)'; g.beginPath();
+    for (let x = Math.floor(l / (step * 5)) * step * 5; x <= r; x += step * 5) { g.moveTo(x, t); g.lineTo(x, b); }
+    for (let y = Math.floor(t / (step * 5)) * step * 5; y <= b; y += step * 5) { g.moveTo(l, y); g.lineTo(r, y); }
+    g.stroke();
+  }
+
+  drawEdge(g: CanvasRenderingContext2D, e: GEdge): void {
+    const a = studio.nodes.get(e.from), b = studio.nodes.get(e.to); if (!a || !b) return;
+    const p0 = { x: a.x + a.w, y: a.y + a.h / 2 }, p3 = { x: b.x, y: b.y + b.h / 2 };
+    const dx = Math.max(60, Math.abs(p3.x - p0.x) * 0.5);
+    const c1 = { x: p0.x + dx, y: p0.y }, c2 = { x: p3.x - dx, y: p3.y };
+    const lvl = engine.running ? a.level : 0;
+    const grad = g.createLinearGradient(p0.x, p0.y, p3.x, p3.y);
+    grad.addColorStop(0, a.def.color); grad.addColorStop(1, b.def.color);
+    g.strokeStyle = grad;
+    g.shadowColor = a.def.color; g.shadowBlur = 8 + lvl * 20;
+    g.globalAlpha = 0.5 + lvl * 0.5;
+    g.lineWidth = (e.id === studio.selectedEdge ? 3.4 : 2) + lvl * 1.6;
+    g.beginPath(); g.moveTo(p0.x, p0.y); g.bezierCurveTo(c1.x, c1.y, c2.x, c2.y, p3.x, p3.y); g.stroke();
+    g.shadowBlur = 0; g.globalAlpha = 1;
+    if (engine.running) {
+      const np = 3 + Math.round(lvl * 3);
+      for (let i = 0; i < np; i++) {
+        const tt = (this.t * (0.22 + lvl * 0.55) + i / np + e.phase) % 1;
+        const pt = bez(p0.x, p0.y, c1.x, c1.y, c2.x, c2.y, p3.x, p3.y, tt);
+        g.fillStyle = '#ffffff'; g.shadowColor = a.def.color; g.shadowBlur = 10 + lvl * 12;
+        g.globalAlpha = 0.35 + lvl * 0.65;
+        g.beginPath(); g.arc(pt.x, pt.y, 2.2 + lvl * 2.2, 0, Math.PI * 2); g.fill();
+      }
+      g.shadowBlur = 0; g.globalAlpha = 1;
+    }
+  }
+
+  drawWiring(g: CanvasRenderingContext2D): void {
+    const a = studio.nodes.get(this.wireFrom as string); if (!a) return;
+    const p0 = { x: a.x + a.w, y: a.y + a.h / 2 }, p3 = this.mouseW;
+    const dx = Math.max(60, Math.abs(p3.x - p0.x) * 0.5);
+    g.strokeStyle = 'rgba(0,229,255,0.9)'; g.setLineDash([7, 5]); g.lineWidth = 2;
+    g.shadowColor = '#00e5ff'; g.shadowBlur = 12;
+    g.beginPath(); g.moveTo(p0.x, p0.y); g.bezierCurveTo(p0.x + dx, p0.y, p3.x - dx, p3.y, p3.x, p3.y); g.stroke();
+    g.setLineDash([]); g.shadowBlur = 0;
+  }
+
+  drawNode(g: CanvasRenderingContext2D, gn: GNode): void {
+    const { x, y, w, h } = gn, bp = !!gn.bypass;
+    const c = bp ? '#5a6478' : gn.def.color;
+    const sel = studio.selected === gn.id;
+    g.globalAlpha = bp ? 0.72 : 1;
+    g.shadowColor = c; g.shadowBlur = sel ? 24 : 10;
+    rr(g, x, y, w, h, 12);
+    g.fillStyle = 'rgba(10,12,22,0.93)'; g.fill();
+    g.lineWidth = sel ? 2.2 : 1.2; g.strokeStyle = c; g.stroke();
+    g.shadowBlur = 0;
+    if (sel) {
+      g.setLineDash([6, 4]); g.strokeStyle = 'rgba(0,229,255,0.8)'; g.lineWidth = 1;
+      rr(g, x - 4, y - 4, w + 8, h + 8, 15); g.stroke(); g.setLineDash([]);
+    }
+    g.font = '700 12px "JetBrains Mono",monospace'; g.fillStyle = c;
+    g.shadowColor = c; g.shadowBlur = 7;
+    let label = gn.def.label;
+    while (g.measureText(label).width > w - 60 && label.length > 3) label = label.slice(0, -2);
+    g.fillText(label, x + 12, y + 18);
+    g.shadowBlur = 0;
+    g.font = '9px "JetBrains Mono",monospace';
+    if (bp) { g.fillStyle = '#ff2bd6'; g.fillText('BYPASS', x + w - 12 - g.measureText('BYPASS').width, y + 18); }
+    else {
+      g.fillStyle = 'rgba(255,255,255,0.32)';
+      const tag = '#' + gn.type;
+      g.fillText(tag, x + w - 12 - g.measureText(tag).width, y + 18);
+    }
+    g.strokeStyle = hexA(c, 0.3); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(x + 9, y + 26); g.lineTo(x + w - 9, y + 26); g.stroke();
+    const bx = x + 10, by = y + 32, bw = w - 20, bh = 34;
+    g.fillStyle = 'rgba(255,255,255,0.025)'; g.fillRect(bx, by, bw, bh);
+    if (gn.type === 'scope' && gn.handle?.extra?.analyser) {
+      const an: AnalyserNode = gn.handle.extra.analyser;
+      if (!gn.spec) gn.spec = new Uint8Array(an.frequencyBinCount);
+      an.getByteFrequencyData(gn.spec as any);
+      const bars = 30;
+      for (let i = 0; i < bars; i++) {
+        const idx = Math.floor(Math.pow(i / bars, 1.7) * an.frequencyBinCount * 0.75);
+        const v = gn.spec[idx] / 255;
+        const bxx = bx + i * (bw / bars);
+        g.fillStyle = hexA(bp ? '#8b5cff' : c, 0.4 + v * 0.6);
+        g.fillRect(bxx + 1, by + bh - v * bh, bw / bars - 2, Math.max(1, v * bh));
+      }
+    } else if (engine.running && gn.wave && gn.level > 0.003) {
+      g.strokeStyle = hexA(c, 0.95); g.lineWidth = 1.3;
+      g.shadowColor = c; g.shadowBlur = 6;
+      g.beginPath();
+      const stepI = Math.max(1, Math.floor(gn.wave.length / bw));
+      for (let i = 0, px = 0; i < gn.wave.length; i += stepI, px++) {
+        const v = (gn.wave[i] - 128) / 128;
+        const py = by + bh / 2 - v * bh * 0.46;
+        if (px === 0) g.moveTo(bx, py); else g.lineTo(bx + px, py);
+      }
+      g.stroke(); g.shadowBlur = 0;
+    } else {
+      g.strokeStyle = 'rgba(255,255,255,0.15)'; g.setLineDash([3, 4]); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(bx, by + bh / 2); g.lineTo(bx + bw, by + bh / 2); g.stroke(); g.setLineDash([]);
+    }
+    g.font = '9px "JetBrains Mono",monospace'; g.fillStyle = 'rgba(215,228,255,0.55)';
+    const sum = gn.def.params.filter(p => p.type !== 'bool').slice(0, 3)
+      .map(p => `${p.label.split(' ')[0]} ${fmtVal(p, gn.params[p.key])}`).join(' · ');
+    g.fillText(sum.length > 34 ? sum.slice(0, 33) + '…' : sum, x + 12, y + 81);
+    if (gn.def.inputs > 0) this.drawPin(g, x, y + h / 2, '#00e5ff', studio.edges.some(e => e.to === gn.id), !!this.wireFrom);
+    if (gn.def.outputs > 0) this.drawPin(g, x + w, y + h / 2, gn.def.color, studio.edges.some(e => e.from === gn.id), false);
+    g.globalAlpha = 1;
+  }
+
+  drawPin(g: CanvasRenderingContext2D, x: number, y: number, color: string, filled: boolean, active: boolean): void {
+    const tr = this.isTouch ? 1.35 : 1;
+    g.shadowColor = color; g.shadowBlur = (active ? 14 : 7) * tr;
+    g.strokeStyle = color; g.lineWidth = 2 * tr;
+    g.beginPath(); g.arc(x, y, (active ? 8 : 6.5) * tr, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = filled ? color : '#05050d';
+    g.beginPath(); g.arc(x, y, (filled ? 3.6 : 2.4) * tr, 0, Math.PI * 2); g.fill();
+    g.shadowBlur = 0;
+  }
+}
+let view: GraphView;
+
+/* ==================================================================
+   ИНСПЕКТОР
+   ================================================================== */
+let fileInfoRefresh: (() => void) | null = null;
+const fileAudioInput = $('fileAudio') as HTMLInputElement;
+
+function buildParamRow(gn: GNode, p: ParamDef): HTMLElement {
+  const row = el('div', 'prow');
+  if (p.type === 'bool') {
+    const sw = el('div', 'switchRow');
+    const lab = el('span'); lab.textContent = p.label;
+    const wrap = el('label', 'switch');
+    const cb = el('input') as HTMLInputElement; cb.type = 'checkbox'; cb.checked = !!gn.params[p.key];
+    const sl = el('span', 'sl');
+    wrap.appendChild(cb); wrap.appendChild(sl);
+    cb.addEventListener('change', () => { gn.params[p.key] = cb.checked; gn.handle?.update(gn.params); queueHistory(); });
+    sw.appendChild(lab); sw.appendChild(wrap); row.appendChild(sw);
+    return row;
+  }
+  if (p.type === 'enum') {
+    const sw = el('div', 'switchRow');
+    const lab = el('span'); lab.textContent = p.label;
+    const selEl = el('select', 'textinp') as HTMLSelectElement;
+    selEl.style.flex = '0 0 130px'; selEl.style.padding = '6px 8px';
+    for (const o of (p.options || [])) {
+      const opt = el('option') as HTMLOptionElement; opt.value = o; opt.textContent = o;
+      if (gn.params[p.key] === o) opt.selected = true;
+      selEl.appendChild(opt);
+    }
+    selEl.addEventListener('change', () => { gn.params[p.key] = selEl.value; gn.handle?.update(gn.params); queueHistory(); });
+    sw.appendChild(lab); sw.appendChild(selEl); row.appendChild(sw);
+    return row;
+  }
+  const top = el('div', 'prowtop');
+  const lab = el('span'); lab.textContent = p.label;
+  const val = el('span', 'pval'); val.textContent = fmtVal(p, gn.params[p.key]);
+  top.appendChild(lab); top.appendChild(val);
+  const sr = el('div', 'sliderRow');
+  const sl = el('input') as HTMLInputElement; sl.type = 'range'; sl.min = '0'; sl.max = '1000'; sl.step = '1';
+  const ni = el('input', 'pnum') as HTMLInputElement; ni.type = 'number'; ni.inputMode = 'decimal';
+  ni.min = String(p.min); ni.max = String(p.max); ni.step = String(p.step ?? 0.01);
+  const mn = p.min as number, mx = p.max as number;
+  const toPos = (v: number) => p.log ? 1000 * Math.log(Math.max(v, mn) / mn) / Math.log(mx / mn) : 1000 * (v - mn) / (mx - mn);
+  const fromPos = (t2: number) => p.log ? mn * Math.pow(mx / mn, t2 / 1000) : mn + (mx - mn) * t2 / 1000;
+  const setUI = (v: number) => {
+    sl.value = String(clamp(toPos(v), 0, 1000));
+    const st = p.step ?? 0.01;
+    ni.value = String(Math.round(v / st) * st);
+    val.textContent = fmtVal(p, v);
+  };
+  setUI(num(gn.params[p.key]));
+  const commit = (v: number) => {
+    v = clamp(v, mn, mx);
+    gn.params[p.key] = v; gn.handle?.update(gn.params); setUI(v); queueHistory();
+  };
+  sl.addEventListener('input', () => commit(fromPos(num(sl.value))));
+  ni.addEventListener('change', () => commit(num(ni.value)));
+  sr.appendChild(sl); sr.appendChild(ni);
+  row.appendChild(top); row.appendChild(sr);
+  return row;
+}
+
+function renderInspector(): void {
+  const host = $('inspector');
+  fileInfoRefresh = null;
+  host.innerHTML = '';
+  const gn = studio.selected ? studio.nodes.get(studio.selected) : null;
+
+  if (isMobile()) {
+    if (gn) { if (!host.classList.contains('open')) openDrawer('inspector'); }
+    else if (!studio.selectedEdge) { closeDrawers(); }
+  }
+
+  if (!gn) {
+    if (studio.selectedEdge) {
+      const e = studio.edges.find(x => x.id === studio.selectedEdge);
+      if (e) {
+        const a = studio.nodes.get(e.from), b = studio.nodes.get(e.to);
+        const t = el('div', 'institle'); t.textContent = '🔗 Соединение';
+        const d = el('div', 'insdesc'); d.textContent = `${a?.def.label} → ${b?.def.label}. Нажмите Del (или «Удалить связь» ниже), чтобы разорвать; потяните входной пин, чтобы переподключить.`;
+        host.appendChild(t); host.appendChild(d);
+        const rz = el('div', 'dangerZone');
+        const de = el('button', 'btn danger'); de.textContent = '✕ Удалить связь'; de.style.flex = '1';
+        de.addEventListener('click', () => { studio.removeEdge(e.id); studio.selectEdge(null); });
+        rz.appendChild(de); host.appendChild(rz);
+      }
+    }
+    renderProjectPanel(host);
+    return;
+  }
+  const head = el('div', 'inshead');
+  const dot = el('span', 'pdot');
+  dot.style.background = gn.bypass ? '#5a6478' : gn.def.color;
+  dot.style.boxShadow = `0 0 10px ${gn.bypass ? '#5a6478' : gn.def.color}`;
+  const title = el('div', 'institle'); title.textContent = gn.def.label + (gn.bypass ? ' · BYPASS' : '');
+  title.style.color = gn.bypass ? '#8b96ad' : gn.def.color;
+  title.style.textShadow = `0 0 12px ${hexA(gn.bypass ? '#8b96ad' : gn.def.color, .6)}`;
+  head.appendChild(dot); head.appendChild(title);
+  host.appendChild(head);
+  const cat = el('div', 'insdesc'); cat.textContent = `${gn.def.category} · #${gn.type}`; host.appendChild(cat);
+  const desc = el('div', 'insdesc'); desc.textContent = gn.def.desc; host.appendChild(desc);
+
+  /* A/B bypass */
+  if (gn.def.inputs > 0 && gn.def.outputs > 0) {
+    const sw = el('div', 'switchRow');
+    sw.style.border = '1px solid rgba(255,43,214,.25)'; sw.style.borderRadius = '8px';
+    sw.style.padding = '8px 10px'; sw.style.background = 'rgba(255,43,214,.05)';
+    const lab = el('span'); lab.innerHTML = '<b style="color:var(--mag);font-weight:400">A/B</b> Bypass блока';
+    const wrap = el('label', 'switch');
+    const cb = el('input') as HTMLInputElement; cb.type = 'checkbox'; cb.checked = !!gn.bypass;
+    const sl2 = el('span', 'sl');
+    wrap.appendChild(cb); wrap.appendChild(sl2);
+    cb.addEventListener('change', () => toggleBypass(gn));
+    sw.appendChild(lab); sw.appendChild(wrap);
+    host.appendChild(sw);
+  }
+
+  if (gn.def.params.length) {
+    const s = el('div', 'sect'); s.innerHTML = 'ПАРАМЕТРЫ <b>·</b> live'; host.appendChild(s);
+    for (const p of gn.def.params) host.appendChild(buildParamRow(gn, p));
+    const rp = el('button', 'btn'); rp.textContent = '↺ Сбросить параметры'; rp.style.width = '100%';
+    rp.addEventListener('click', () => {
+      for (const p of gn.def.params) gn.params[p.key] = p.value;
+      gn.handle?.update(gn.params); queueHistory(); renderInspector();
+      toast('Параметры сброшены к значениям по умолчанию');
+    });
+    host.appendChild(rp);
+  }
+  if (gn.def.customUI) {
+    const s2 = el('div', 'sect'); s2.textContent = 'УПРАВЛЕНИЕ'; host.appendChild(s2);
+    gn.def.customUI(host, gn);
+  }
+  const dz = el('div', 'dangerZone');
+  const dup = el('button', 'btn'); dup.textContent = '⧉ Дублировать';
+  dup.addEventListener('click', () => {
+    const n = studio.addNode(gn.type, gn.x + 40, gn.y + 60, { ...gn.params });
+    if (n) { n.bypass = !!gn.bypass; view.fitAll(); }
+  });
+  const del = el('button', 'btn danger'); del.textContent = '✕ Удалить';
+  del.addEventListener('click', () => { studio.removeNode(gn.id); if (isMobile()) closeDrawers(); });
+  dz.appendChild(dup); dz.appendChild(del);
+  host.appendChild(dz);
+}
+
+function renderProjectPanel(host: HTMLElement): void {
+  const s = el('div', 'sect'); s.textContent = 'ПРОЕКТ'; host.appendChild(s);
+  const row = el('div', 'row');
+  const inp = el('input', 'textinp') as HTMLInputElement; inp.value = studio.name; inp.placeholder = 'Имя проекта';
+  inp.addEventListener('input', () => { studio.name = inp.value; const pn = $('projName') as HTMLInputElement; if (pn) pn.value = inp.value; });
+  row.appendChild(inp); host.appendChild(row);
+  const st = el('div', 'statgrid');
+  const mk = (label: string, v: string): HTMLElement => { const d = el('div', 'stat'); d.innerHTML = `${label}<b>${v}</b>`; return d; };
+  st.appendChild(mk('Блоков', String(studio.nodes.size)));
+  st.appendChild(mk('Связей', String(studio.edges.length)));
+  st.appendChild(mk('Частота', engine.ctx ? (engine.ctx.sampleRate / 1000).toFixed(1) + ' кГц' : '—'));
+  st.appendChild(mk('Движок', engine.running ? 'РАБОТАЕТ' : 'СТОП'));
+  host.appendChild(st);
+  const s2 = el('div', 'sect'); s2.textContent = isMobile() ? 'УПРАВЛЕНИЕ (ТАЧ)' : 'ГОРЯЧИЕ КЛАВИШИ'; host.appendChild(s2);
+  const k = el('div', 'keys');
+  k.innerHTML = isMobile()
+    ? '⚡ — палитра блоков (тап = добавить в центр)<br>Один палец на фоне — перемещение холста<br>Щипок двумя пальцами — масштаб<br>Тап по блоку — параметры (⚙)<br>Тяните от пина ► к пину ◄ — соединение<br>«⌗ Выравнивание» — автораскладка'
+    : '<b>Space</b> старт/стоп движка<br><b>B</b> bypass выбранного блока<br><b>Del</b> удалить блок/связь<br><b>F</b> вписать граф · <b>L</b> авто-выравнивание<br><b>G</b> привязка к сетке<br><b>Ctrl+Z / Ctrl+Shift+Z</b> отмена/повтор<br><b>Ctrl+S</b> сохранить проект';
+  host.appendChild(k);
+  const s3 = el('div', 'sect'); s3.textContent = 'ТИПОВОЙ МАСТЕРИНГ'; host.appendChild(s3);
+  const h2 = el('div', 'hint');
+  h2.textContent = 'Источник → Шумоподавление → Гейт → Фильтр ВЧ → Параметрик EQ → Сатуратор → Компрессор → Реверб → Лимитер → Мастер-выход. Или нажмите «⚡ Шаблон мастеринга» в палитре.';
+  host.appendChild(h2);
+}
+
+/* ==================================================================
+   ТРАНСПОРТ / ЗАПИСЬ / ЭКСПОРТ
+   ================================================================== */
+function updateTransportUI(): void {
+  $('btnEngineIco').textContent = engine.running ? '⏹' : '▶';
+  $('btnEngineTxt').textContent = engine.running ? ' Остановить' : ' Запустить';
+  const b = $('btnEngine');
+  b.classList.toggle('primary', !engine.running);
+  b.classList.toggle('danger', engine.running);
+  $('statusDot').className = 'dot' + (engine.running ? ' on' : '') + (isRecording() ? ' rec' : '');
+  $('statusText').textContent = engine.running ? 'движок работает' : 'движок остановлен';
+  $('srLabel').textContent = engine.ctx ? (engine.ctx.sampleRate / 1000).toFixed(1) + ' кГц' : '— кГц';
+  const rfi = $('renderFileInfo');
+  rfi.textContent = engine.fileBuffer ? `✔ ${engine.fileName} · ${engine.fileBuffer.duration.toFixed(1)} c` : 'файл не загружен — добавьте узел «Аудиофайл»';
+}
+async function toggleTransport(): Promise<void> {
+  if (engine.running) studio.stop(); else await studio.start();
+  renderInspector();
+}
+
+function pickMime(fmt: 'ogg' | 'flac'): string {
+  const lists: Record<string, string[]> = {
+    flac: ['audio/flac', 'audio/x-flac', 'audio/webm;codecs=flac', 'audio/mp4;codecs=flac', 'audio/ogg;codecs=flac'],
+    ogg: ['audio/ogg;codecs=opus', 'audio/webm;codecs=opus', 'audio/mp4;codecs=opus', 'audio/ogg']
+  };
+  for (const m of lists[fmt]) if (window.MediaRecorder && MediaRecorder.isTypeSupported(m)) return m;
+  if (fmt === 'flac') { toast('FLAC не поддерживается этим браузером — переключаюсь на OGG/WebM', 'warn'); return pickMime('ogg'); }
+  return '';
+}
+function extFor(mime: string): string {
+  if (mime.includes('flac')) return 'flac';
+  if (mime.includes('ogg')) return 'ogg';
+  if (mime.includes('webm')) return 'webm';
+  if (mime.includes('mp4')) return 'm4a';
+  return 'bin';
+}
+function currentFmt(): 'ogg' | 'flac' {
+  const r = document.querySelector('input[name=fmt]:checked') as HTMLInputElement | null;
+  return r && r.value === 'flac' ? 'flac' : 'ogg';
+}
+function showResult(blob: Blob, ext: string): void {
+  $('resultWrap').style.display = 'block';
+  const url = URL.createObjectURL(blob);
+  const audio = $('resultAudio') as HTMLAudioElement; audio.src = url;
+  const a = $('dlResult') as HTMLAnchorElement;
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  a.href = url; a.download = `neonforge_${stamp}.${ext}`;
+  a.textContent = `⬇ Скачать ${ext.toUpperCase()}`;
+  $('resultInfo').textContent = `${(blob.size / 1048576).toFixed(2)} МБ · ${ext.toUpperCase()}`;
+  toast(`Готово: ${ext.toUpperCase()} · ${(blob.size / 1048576).toFixed(2)} МБ`, 'ok');
+  saveTake(blob, ext);
+}
+
+let liveRec: MediaRecorder | null = null;
+let renderRec: MediaRecorder | null = null;
+let recChunks: Blob[] = [];
+let recTimer: any = 0;
+const isRecording = (): boolean => !!liveRec || !!renderRec;
+
+async function toggleLive(): Promise<void> {
+  if (liveRec && liveRec.state !== 'inactive') { liveRec.stop(); return; }
+  if (!engine.running) { await studio.start(); if (!engine.running) return; }
+  if (!engine.mediaDest) { toast('Нет мастер-шины (добавьте «Мастер-выход»)', 'error'); return; }
+  const mime = pickMime(currentFmt()); if (!mime) { toast('MediaRecorder недоступен', 'error'); return; }
+  const ext = extFor(mime);
+  recChunks = [];
+  liveRec = new MediaRecorder(engine.mediaDest.stream, { mimeType: mime, audioBitsPerSecond: 256000 });
+  liveRec.ondataavailable = ev => { if (ev.data.size) recChunks.push(ev.data); };
+  liveRec.onstop = () => {
+    const blob = new Blob(recChunks, { type: mime });
+    showResult(blob, ext);
+    liveRec = null; clearInterval(recTimer);
+    $('btnRec').classList.remove('active'); ($('btnLive') as HTMLElement).classList.remove('active');
+    $('btnLive').textContent = '● Записать'; $('recInfo').textContent = ''; $('liveTime').textContent = 'остановка — повторное нажатие';
+    updateTransportUI();
+  };
+  liveRec.start(100);
+  const t0 = performance.now();
+  $('btnRec').classList.add('active'); ($('btnLive') as HTMLElement).classList.add('active');
+  $('btnLive').textContent = '■ Остановить';
+  updateTransportUI();
+  recTimer = setInterval(() => {
+    const s = (performance.now() - t0) / 1000;
+    const txt = `● REC ${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+    $('recInfo').textContent = txt; $('liveTime').textContent = txt;
+  }, 200);
+  toast('Live-запись выхода цепи начата', 'ok');
+}
+
+async function renderTake(): Promise<void> {
+  if (!engine.fileBuffer) { toast('Сначала загрузите аудиофайл в узле «Аудиофайл»', 'warn'); return; }
+  if (!engine.running) await studio.start(); else studio.restartFiles();
+  if (!engine.ctx || !engine.mediaDest || !engine.running) return;
+  const mime = pickMime(currentFmt()); if (!mime) return;
+  const ext = extFor(mime);
+  recChunks = [];
+  renderRec = new MediaRecorder(engine.mediaDest.stream, { mimeType: mime, audioBitsPerSecond: ext === 'flac' ? 1411200 : 256000 });
+  renderRec.ondataavailable = ev => { if (ev.data.size) recChunks.push(ev.data); };
+  const dur = engine.fileBuffer.duration;
+  renderRec.onstop = () => {
+    const blob = new Blob(recChunks, { type: mime });
+    showResult(blob, ext);
+    renderRec = null; clearInterval(recTimer);
+    setProg(1, 0); $('renderTime').textContent = '✔ готово';
+    updateTransportUI();
+  };
+  renderRec.start(100);
+  const t0 = performance.now();
+  $('renderTime').textContent = 'рендер…';
+  setProg(0, dur);
+  updateTransportUI();
+  recTimer = setInterval(() => {
+    const s = (performance.now() - t0) / 1000;
+    setProg(Math.min(1, s / dur), Math.max(0, dur - s));
+  }, 120);
+  setTimeout(() => {
+    clearInterval(recTimer);
+    try { if (renderRec && renderRec.state !== 'inactive') renderRec.stop(); } catch (e) { }
+  }, dur * 1000 + 650);
+  toast(`Рендер ${dur.toFixed(1)} c в ${ext.toUpperCase()} — в реальном времени`, 'info');
+}
+function setProg(f: number, remain: number): void {
+  $('progBar').style.width = (f * 100).toFixed(1) + '%';
+  if (f < 1) $('renderTime').textContent = `рендер… ещё ~${remain.toFixed(0)} c`;
+}
+
+/* ==================================================================
+   OFFLINE-РЕНДЕР → WAV (быстрее реального времени)
+   ================================================================== */
+function encodeWav(buf: AudioBuffer): Blob {
+  const nCh = Math.min(2, buf.numberOfChannels), sr = buf.sampleRate, len = buf.length;
+  const ab = new ArrayBuffer(44 + len * nCh * 2);
+  const dv = new DataView(ab);
+  const ws = (o: number, s: string) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  ws(0, 'RIFF'); dv.setUint32(4, 36 + len * nCh * 2, true); ws(8, 'WAVE'); ws(12, 'fmt ');
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, nCh, true);
+  dv.setUint32(24, sr, true); dv.setUint32(28, sr * nCh * 2, true); dv.setUint16(32, nCh * 2, true); dv.setUint16(34, 16, true);
+  ws(36, 'data'); dv.setUint32(40, len * nCh * 2, true);
+  const chans: Float32Array[] = [];
+  for (let c = 0; c < nCh; c++) chans.push(buf.getChannelData(c));
+  let off = 44;
+  for (let i = 0; i < len; i++) {
+    for (let c = 0; c < nCh; c++) {
+      const s = clamp(chans[c][i], -1, 1);
+      dv.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      off += 2;
+    }
+  }
+  return new Blob([ab], { type: 'audio/wav' });
+}
+
+async function renderOfflineWav(): Promise<void> {
+  const nodes = [...studio.nodes.values()];
+  const hasFile = nodes.some(n => n.type === 'file');
+  const hasTone = nodes.some(n => n.type === 'tone');
+  if (!hasFile && !hasTone) { toast('Для offline-рендера нужен «Аудиофайл» или «Тон-генератор»', 'warn'); return; }
+  if (hasFile && !engine.fileBuffer) { toast('Загрузите файл в узле «Аудиофайл»', 'warn'); return; }
+  const statusEl = $('offlineStatus');
+  statusEl.textContent = 'рендер…';
+  ($('btnOffline') as HTMLButtonElement).disabled = true;
+  try {
+    await engine.init();
+    const sr = engine.ctx!.sampleRate || 48000;
+    const dur = engine.fileBuffer ? engine.fileBuffer.duration + 2.0 : 10;
+    const total = Math.max(3, Math.min(dur, 600));
+    const OC: any = (window as any).OfflineAudioContext || (window as any).webkitOfflineAudioContext;
+    const octx: OfflineAudioContext = new OC(2, Math.ceil(total * sr), sr);
+    const env: NodeEnv = { ctx: octx as any as AudioContext, engine, offline: true };
+    const clones = new Map<string, Ports>();
+    const starters: ProcHandle[] = [];
+    const warned = new Set<string>();
+    for (const gn of nodes) {
+      let handle: ProcHandle;
+      if (gn.def.offlineUnsafe) {
+        const gg = octx.createGain();
+        handle = gn.def.inputs > 0
+          ? { input: gg, output: gg, update() { } }
+          : { output: gg, update() { } };
+        if (!warned.has(gn.type)) { warned.add(gn.type); toast(`«${gn.def.label}» в offline-режиме проходит насквозь`, 'warn'); }
+      } else {
+        handle = gn.def.factory(env, gn.params);
+      }
+      const ports = makePorts(gn.def, handle, octx as any);
+      applyBypassGains(ports, !!gn.bypass);
+      clones.set(gn.id, ports);
+      if (handle.start && !gn.def.offlineUnsafe) starters.push(handle);
+    }
+    for (const e of studio.edges) {
+      const a = clones.get(e.from), b = clones.get(e.to);
+      if (a?.outPort && b?.inPort) a.outPort.connect(b.inPort);
+    }
+    for (const h of starters) { try { (h.start as any).call(h); } catch (e) { } }
+    const rendered = await octx.startRendering();
+    const wav = encodeWav(rendered);
+    showResult(wav, 'wav');
+    statusEl.textContent = `✔ ${total.toFixed(1)} c · ${(wav.size / 1048576).toFixed(2)} МБ`;
+  } catch (e: any) {
+    statusEl.textContent = '✕ ошибка';
+    toast('Offline-рендер: ' + (e?.message || e), 'error');
+  }
+  ($('btnOffline') as HTMLButtonElement).disabled = false;
+}
+
+/* ==================================================================
+   ХРАНИЛИЩЕ: ПРОЕКТЫ + ТЕЙКИ (IndexedDB v2)
+   ================================================================== */
+class ProjectStore {
+  private dbP: Promise<IDBDatabase>;
+  constructor() {
+    this.dbP = new Promise((res, rej) => {
+      const r = indexedDB.open('neonforge-studio', 2);
+      r.onupgradeneeded = () => {
+        const db = r.result;
+        if (!db.objectStoreNames.contains('projects')) db.createObjectStore('projects', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('takes')) db.createObjectStore('takes', { keyPath: 'id' });
+      };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  private tx(name: string, mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest): Promise<any> {
+    return this.dbP.then(db => new Promise((res, rej) => {
+      const t = db.transaction(name, mode);
+      const rq = fn(t.objectStore(name));
+      t.oncomplete = () => res(rq.result);
+      t.onerror = () => rej(t.error);
+      t.onabort = () => rej(t.error);
+    }));
+  }
+  put(p: any): Promise<any> { return this.tx('projects', 'readwrite', s => s.put(p)); }
+  all(): Promise<any[]> { return this.tx('projects', 'readonly', s => s.getAll()).then(r => (r as any[]).sort((a, b) => b.date - a.date)); }
+  del(id: string): Promise<any> { return this.tx('projects', 'readwrite', s => s.delete(id)); }
+  putTake(t: any): Promise<any> { return this.tx('takes', 'readwrite', s => s.put(t)); }
+  allTakes(): Promise<any[]> { return this.tx('takes', 'readonly', s => s.getAll()).then(r => (r as any[]).sort((a, b) => b.date - a.date)); }
+  delTake(id: string): Promise<any> { return this.tx('takes', 'readwrite', s => s.delete(id)); }
+}
+const store = new ProjectStore();
+let currentProjectId: string | null = null;
+
+async function saveTake(blob: Blob, ext: string): Promise<void> {
+  try {
+    const t = {
+      id: uid(),
+      name: `Тейк ${new Date().toLocaleString('ru')}`,
+      date: Date.now(), ext, mime: blob.type || '', size: blob.size, blob
+    };
+    await store.putTake(t);
+    refreshTakes();
+    toast('Тейк сохранён в библиотеку записей', 'ok');
+  } catch (e) { console.warn('saveTake', e); }
+}
+async function refreshTakes(): Promise<void> {
+  const c = $('takesList'); c.innerHTML = '';
+  let list: any[] = [];
+  try { list = await store.allTakes(); } catch (e) { c.innerHTML = '<div class="hint">Хранилище недоступно</div>'; return; }
+  if (!list.length) { c.innerHTML = '<div class="hint">Пусто — записи появляются здесь автоматически после каждого экспорта.</div>'; return; }
+  for (const t of list) {
+    const row = el('div', 'projRow');
+    const info = el('div', 'projInfo');
+    const nm = el('div', 'projName'); nm.textContent = t.name;
+    const mt = el('div', 'projMeta');
+    mt.textContent = `${new Date(t.date).toLocaleString('ru')} · ${(t.ext || '?').toUpperCase()} · ${(t.size / 1048576).toFixed(2)} МБ`;
+    info.appendChild(nm); info.appendChild(mt);
+    const url = URL.createObjectURL(t.blob);
+    const au = el('audio') as HTMLAudioElement; au.controls = true; au.preload = 'none'; au.src = url;
+    const dl = el('a', 'btn mag') as HTMLAnchorElement; dl.textContent = '⬇'; dl.href = url;
+    dl.download = `${t.name.replace(/[^\wа-яёА-ЯЁ\- ]/g, '').trim() || 'take'}.${t.ext}`;
+    dl.style.padding = '8px 10px';
+    const del = el('button', 'btn danger'); del.textContent = '🗑'; del.style.padding = '8px 10px';
+    del.addEventListener('click', async () => { URL.revokeObjectURL(url); await store.delTake(t.id); refreshTakes(); toast('Тейк удалён'); });
+    row.appendChild(info); row.appendChild(au); row.appendChild(dl); row.appendChild(del);
+    c.appendChild(row);
+  }
+}
+
+async function saveProject(asNew: boolean): Promise<void> {
+  const pn = $('projName') as HTMLInputElement;
+  const name = ((pn && pn.value) || studio.name || 'Без имени').trim();
+  const id = (asNew || !currentProjectId) ? uid() : currentProjectId;
+  studio.name = name;
+  await store.put({ id, name, date: Date.now(), data: studio.serialize() });
+  currentProjectId = id;
+  renderInspector(); refreshProjects();
+  toast(`Проект «${name}» сохранён в IndexedDB`, 'ok');
+}
+async function refreshProjects(): Promise<void> {
+  const c = $('projList'); c.innerHTML = '';
+  let list: any[] = [];
+  try { list = await store.all(); } catch (e) { c.innerHTML = '<div class="hint">IndexedDB недоступна</div>'; return; }
+  if (!list.length) { c.innerHTML = '<div class="hint">Пока пусто — сохраните текущий проект.</div>'; return; }
+  for (const p of list) {
+    const row = el('div', 'projRow');
+    const info = el('div', 'projInfo');
+    const nm = el('div', 'projName'); nm.textContent = p.name + (p.id === currentProjectId ? ' ●' : '');
+    const mt = el('div', 'projMeta');
+    mt.textContent = `${new Date(p.date).toLocaleString('ru')} · блоков: ${p.data?.nodes?.length ?? 0} · связей: ${p.data?.edges?.length ?? 0}`;
+    info.appendChild(nm); info.appendChild(mt);
+    const load = el('button', 'btn primary'); load.textContent = '⤓ Открыть';
+    load.addEventListener('click', () => {
+      studio.loadFrom(p.data); currentProjectId = p.id; studio.name = p.name;
+      ($('projName') as HTMLInputElement).value = p.name;
+      closeModal('modalProjects'); view.fitAll(); renderInspector(); updateTransportUI();
+    });
+    const del = el('button', 'btn danger'); del.textContent = '🗑';
+    del.addEventListener('click', async () => { await store.del(p.id); if (currentProjectId === p.id) currentProjectId = null; refreshProjects(); toast('Проект удалён'); });
+    row.appendChild(info); row.appendChild(load); row.appendChild(del);
+    c.appendChild(row);
+  }
+}
+
+function exportJson(): void {
+  const data = JSON.stringify(studio.serialize(), null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const a = el('a') as HTMLAnchorElement;
+  a.href = URL.createObjectURL(blob);
+  a.download = (studio.name || 'neonforge-project').replace(/[^\wа-яёА-ЯЁ\- ]/g, '').trim() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('Проект экспортирован в JSON', 'ok');
+}
+async function importJson(file: File): Promise<void> {
+  try {
+    const txt = await file.text();
+    const d = JSON.parse(txt);
+    if (!d || !Array.isArray(d.nodes)) throw new Error('неверный формат');
+    studio.loadFrom(d); currentProjectId = null;
+    ($('projName') as HTMLInputElement).value = studio.name;
+    view.fitAll(); renderInspector(); updateTransportUI();
+  } catch (e) { toast('Ошибка импорта JSON: ' + (e as Error).message, 'error'); }
+}
+
+/* ==================================================================
+   АВТОСОХРАНЕНИЕ СЕССИИ (localStorage)
+   ================================================================== */
+const AUTOSAVE_KEY = 'nf_autosave_v2';
+function autosave(): void {
+  try { localStorage.setItem(AUTOSAVE_KEY, JSON.stringify({ data: studio.serialize(), ts: Date.now() })); } catch (e) { }
+}
+function restoreAutosave(): boolean {
+  try {
+    const raw = localStorage.getItem(AUTOSAVE_KEY);
+    if (!raw) return false;
+    const p = JSON.parse(raw);
+    if (p?.data?.nodes?.length) { studio.loadFrom(p.data, true); return true; }
+  } catch (e) { }
+  return false;
+}
+
+/* ==================================================================
+   МОДАЛКИ
+   ================================================================== */
+function openModal(id: string): void { $(id).classList.add('open'); }
+function closeModal(id: string): void { $(id).classList.remove('open'); }
+
+/* ==================================================================
+   ФУТЕР: мастер-метр, спектр, большой анализатор
+   ================================================================== */
+const meterCv = $('meter') as HTMLCanvasElement;
+const specCv = $('spectrum') as HTMLCanvasElement;
+const anCv = $('anCv') as HTMLCanvasElement;
+const meterG = meterCv.getContext('2d') as CanvasRenderingContext2D;
+const specG = specCv.getContext('2d') as CanvasRenderingContext2D;
+const anG = anCv.getContext('2d') as CanvasRenderingContext2D;
+const footWave = new Uint8Array(1024);
+const footFreq = new Uint8Array(512);
+let peakHold = 0;
+function drawMeter(): void {
+  const g = meterG, W = meterCv.width, H = meterCv.height;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = 'rgba(255,255,255,0.05)'; g.fillRect(0, 0, W, H);
+  let pos = 0;
+  if (engine.running && engine.outAnalyser) {
+    engine.outAnalyser.getByteTimeDomainData(footWave as any);
+    let sum = 0;
+    for (let i = 0; i < footWave.length; i++) { const v = (footWave[i] - 128) / 128; sum += v * v; }
+    const db = 20 * Math.log10(Math.sqrt(sum / footWave.length) + 1e-6);
+    pos = clamp((db + 60) / 60, 0, 1);
+  }
+  peakHold = Math.max(pos, peakHold - 0.006);
+  if (pos > 0.001) {
+    const gr = g.createLinearGradient(0, 0, W, 0);
+    gr.addColorStop(0, '#00ffc8'); gr.addColorStop(0.6, '#00e5ff'); gr.addColorStop(0.85, '#ffd600'); gr.addColorStop(1, '#ff2bd6');
+    g.fillStyle = gr; g.shadowColor = '#00e5ff'; g.shadowBlur = 8;
+    g.fillRect(0, 0, W * pos, H); g.shadowBlur = 0;
+  }
+  g.fillStyle = peakHold > 0.98 ? '#ff3b5c' : '#ffffff';
+  g.fillRect(Math.max(0, W * peakHold - 2), 0, 2, H);
+  for (let i = 1; i < 6; i++) { g.fillStyle = 'rgba(5,5,13,0.55)'; g.fillRect(W * i / 6, 0, 1, H); }
+}
+function drawSpectrum(): void {
+  if (isMobile()) return;
+  const g = specG, W = specCv.width, H = specCv.height;
+  g.clearRect(0, 0, W, H);
+  if (!engine.running || !engine.outAnalyser) return;
+  engine.outAnalyser.getByteFrequencyData(footFreq as any);
+  const bars = 60, bw = W / bars;
+  for (let i = 0; i < bars; i++) {
+    const idx = Math.floor(Math.pow(i / bars, 1.8) * footFreq.length * 0.9);
+    const v = footFreq[idx] / 255;
+    const hue = 320 - (i / bars) * 130;
+    g.fillStyle = `hsla(${hue},100%,60%,${0.35 + v * 0.65})`;
+    g.shadowColor = `hsla(${hue},100%,60%,0.8)`; g.shadowBlur = 4;
+    g.fillRect(i * bw + 1, H - v * H, bw - 2, Math.max(1, v * H));
+  }
+  g.shadowBlur = 0;
+}
+function drawAnalyzerModal(): void {
+  const m = $('modalAnalyzer');
+  if (!m.classList.contains('open')) return;
+  const g = anG, W = anCv.width, H = anCv.height;
+  const half = H * 0.44;
+  g.fillStyle = '#05050d'; g.fillRect(0, 0, W, H);
+  g.strokeStyle = 'rgba(0,229,255,0.08)'; g.lineWidth = 1;
+  for (let i = 1; i < 8; i++) { g.beginPath(); g.moveTo(W * i / 8, 0); g.lineTo(W * i / 8, H); g.stroke(); }
+  if (!engine.running || !engine.outAnalyser) {
+    g.fillStyle = '#6b7a99'; g.font = '22px "JetBrains Mono",monospace';
+    g.fillText('Движок остановлен — нажмите ▶ Запустить', 28, H / 2);
+    return;
+  }
+  /* осциллограмма */
+  engine.outAnalyser.getByteTimeDomainData(footWave as any);
+  g.strokeStyle = '#00e5ff'; g.lineWidth = 2.5;
+  g.shadowColor = '#00e5ff'; g.shadowBlur = 10;
+  g.beginPath();
+  const stepI = Math.max(1, Math.floor(footWave.length / W));
+  for (let i = 0, px = 0; i < footWave.length; i += stepI, px++) {
+    const v = (footWave[i] - 128) / 128;
+    const py = half / 2 - v * half * 0.45;
+    if (px === 0) g.moveTo(0, py); else g.lineTo(px, py);
+  }
+  g.stroke(); g.shadowBlur = 0;
+  g.strokeStyle = 'rgba(255,255,255,0.1)'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, half); g.lineTo(W, half); g.stroke();
+  /* спектр */
+  engine.outAnalyser.getByteFrequencyData(footFreq as any);
+  const bars = 96, bw = W / bars, top = half + 12, sh = H - top - 8;
+  for (let i = 0; i < bars; i++) {
+    const idx = Math.floor(Math.pow(i / bars, 1.7) * footFreq.length * 0.92);
+    const v = footFreq[idx] / 255;
+    const hue = 320 - (i / bars) * 140;
+    g.fillStyle = `hsla(${hue},100%,60%,${0.4 + v * 0.6})`;
+    g.shadowColor = `hsla(${hue},100%,60%,0.9)`; g.shadowBlur = 8;
+    g.fillRect(i * bw + 2, top + sh - v * sh, bw - 4, Math.max(2, v * sh));
+  }
+  g.shadowBlur = 0;
+  g.fillStyle = 'rgba(215,228,255,0.4)'; g.font = '16px "JetBrains Mono",monospace';
+  g.fillText('OSCILLOSCOPE', 14, 26); g.fillText('SPECTRUM', 14, top + 20);
+}
+
+/* ==================================================================
+   PWA: иконка (canvas), манифест, service worker
+   ================================================================== */
+function makeIcon(size: number): string {
+  const c = el('canvas') as HTMLCanvasElement; c.width = c.height = size;
+  const g = c.getContext('2d') as CanvasRenderingContext2D;
+  g.fillStyle = '#06060e'; g.fillRect(0, 0, size, size);
+  const rg = g.createRadialGradient(size / 2, size / 2, size * 0.05, size / 2, size / 2, size * 0.6);
+  rg.addColorStop(0, 'rgba(0,229,255,0.25)'); rg.addColorStop(1, 'rgba(0,229,255,0)');
+  g.fillStyle = rg; g.fillRect(0, 0, size, size);
+  const bars = [0.28, 0.5, 0.85, 0.62, 1.0, 0.55, 0.8, 0.42, 0.68, 0.34, 0.58, 0.4, 0.24];
+  const bw = size / (bars.length * 2.1);
+  bars.forEach((v, i) => {
+    const x = size / 2 + (i - (bars.length - 1) / 2) * bw * 1.7;
+    const h = v * size * 0.52;
+    const gr = g.createLinearGradient(0, size / 2 - h / 2, 0, size / 2 + h / 2);
+    gr.addColorStop(0, '#00e5ff'); gr.addColorStop(1, '#ff2bd6');
+    g.fillStyle = gr; g.shadowColor = '#00e5ff'; g.shadowBlur = size * 0.045;
+    g.fillRect(x - bw / 2, size / 2 - h / 2, bw, h);
+  });
+  g.shadowBlur = 0;
+  g.strokeStyle = 'rgba(255,255,255,0.14)'; g.lineWidth = size * 0.02;
+  g.strokeRect(g.lineWidth, g.lineWidth, size - g.lineWidth * 2, size - g.lineWidth * 2);
+  return c.toDataURL('image/png');
+}
+function setupPWA(iconURL: string): void {
+  const link = el('link') as HTMLLinkElement; link.rel = 'icon'; link.href = iconURL;
+  document.head.appendChild(link);
+  const apple = el('link') as HTMLLinkElement; apple.rel = 'apple-touch-icon'; apple.href = iconURL;
+  document.head.appendChild(apple);
+  const manifest = {
+    name: 'NeonForge Audio Lab — студия мастеринга',
+    short_name: 'NeonForge',
+    description: 'Конструктор цепочек обработки звука: шумоподавление, гейт, фильтры, EQ, компрессоры, реверб, дилей. Экспорт в OGG/FLAC/WAV.',
+    start_url: '.', display: 'standalone', orientation: 'any',
+    background_color: '#05050d', theme_color: '#05050d',
+    icons: [{ src: iconURL, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }]
+  };
+  const mLink = el('link') as HTMLLinkElement; mLink.rel = 'manifest';
+  mLink.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
+  document.head.appendChild(mLink);
+  if ('serviceWorker' in navigator) {
+    try {
+      const sw = `self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));self.addEventListener('fetch',()=>{});`;
+      navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw], { type: 'text/javascript' }))).catch(() => { });
+    } catch (e) { }
+  }
+}
+
+/* ==================================================================
+   ПАЛИТРА + ПОИСК + ШАБЛОН
+   ================================================================== */
+function buildPalette(): void {
+  const pal = $('palette');
+  const cats = ['Источники', 'Очистка', 'Фильтры', 'Эквализация', 'Динамика', 'Эффекты', 'Утилиты', 'Выход'];
+  for (const cat of cats) {
+    const list = [...defs.values()].filter(d => d.category === cat);
+    if (!list.length) continue;
+    const h = el('div', 'pcat'); h.textContent = cat; pal.appendChild(h);
+    for (const d of list) {
+      const it = el('div', 'pitem');
+      (it as HTMLElement).draggable = !isMobile();
+      it.innerHTML = `<span class="pdot" style="background:${d.color};box-shadow:0 0 8px ${d.color}"></span><div><div class="pname">${d.label}</div><div class="pdesc">${d.desc.slice(0, 64)}${d.desc.length > 64 ? '…' : ''}</div></div>`;
+      it.addEventListener('click', () => {
+        studio.addNode(d.type, view.cam.x - 100 + (Math.random() * 60 - 30), view.cam.y - 46 + (Math.random() * 60 - 30));
+      });
+      it.addEventListener('dragstart', ev => { ev.dataTransfer?.setData('text/nf', d.type); });
+      pal.appendChild(it);
+    }
+  }
+}
+function filterPalette(q: string): void {
+  const pal = $('palette');
+  let curHdr: HTMLElement | null = null, curVisible = 0;
+  const finish = () => { if (curHdr) curHdr.style.display = curVisible ? '' : 'none'; };
+  Array.from(pal.children).forEach(ch => {
+    const c = ch as HTMLElement;
+    if (c.classList.contains('pcat')) { finish(); curHdr = c; curVisible = 0; }
+    else if (c.classList.contains('pitem')) {
+      const vis = !q || (c.textContent || '').toLowerCase().includes(q);
+      c.style.display = vis ? '' : 'none';
+      if (vis) curVisible++;
+    }
+  });
+  finish();
+}
+function applyTemplate(): void {
+  let src = [...studio.nodes.values()].find(n => n.def.inputs === 0 && n.def.outputs > 0);
+  if (!src) src = studio.addNode('mic', 40, 300, undefined, true) as GNode;
+  const y = 300;
+  const seq = ['denoise', 'hp', 'eq3', 'comp', 'limiter'];
+  let prev = src, x = prev.x + 260;
+  for (const t of seq) {
+    const gn = studio.addNode(t, x, y, undefined, true);
+    if (!gn) continue;
+    studio.connect(prev.id, gn.id, true);
+    prev = gn; x += 260;
+  }
+  let out = [...studio.nodes.values()].find(n => n.type === 'out');
+  if (!out) out = studio.addNode('out', x, y, undefined, true) as GNode;
+  studio.connect(prev.id, out.id, true);
+  view.autoLayout();
+  pushHistory();
+  toast('Шаблон мастеринга применён: источник → denoise → ВЧ → EQ → комп → лимитер → выход', 'ok');
+}
+
+/* ==================================================================
+   СТАРТОВЫЙ ПРОЕКТ
+   ================================================================== */
+function buildDefaultProject(): void {
+  const y = 300;
+  const chain: Array<[string, number]> = [['mic', 40], ['denoise', 300], ['hp', 560], ['eq3', 820], ['comp', 1080], ['limiter', 1340], ['out', 1600]];
+  const ids: string[] = [];
+  chain.forEach(([t, x]) => { const gn = studio.addNode(t, x, y, undefined, true); if (gn) ids.push(gn.id); });
+  for (let i = 0; i + 1 < ids.length; i++) studio.connect(ids[i], ids[i + 1], true);
+  studio.name = 'Мастеринг-цепь по умолчанию';
+  studio.select(null);
+}
+
+/* ==================================================================
+   ИНИЦИАЛИЗАЦИЯ И СВЯЗЫВАНИЕ UI
+   ================================================================== */
+function updateFmtNote(): void {
+  const fmt = currentFmt();
+  const ok = pickMime(fmt);
+  $('fmtNote').textContent = fmt === 'flac'
+    ? (ok.includes('flac') ? '✔ Браузер поддерживает запись FLAC (MediaRecorder).' : '⚠ FLAC недоступен — будет использован ' + (ok ? extFor(ok) : '?').toUpperCase())
+    : '✔ OGG/Opus — универсальный формат потокового качества.';
+}
+
+function init(): void {
+  const iconURL = makeIcon(512);
+  ($('logo') as HTMLImageElement).src = iconURL;
+  setupPWA(iconURL);
+
+  buildPalette();
+  view = new GraphView($('graph') as HTMLCanvasElement);
+  buildDefaultProject();
+
+  /* восстановление автосохранённой сессии */
+  if (restoreAutosave()) {
+    toast('Восстановлена предыдущая сессия', 'info');
+  }
+
+  requestAnimationFrame(() => { requestAnimationFrame(() => { view.fitAll(); }); });
+  view.fitAll();
+  renderInspector();
+  updateTransportUI();
+  updateFmtNote();
+  resetHistory();
+
+  /* автосохранение */
+  setInterval(autosave, 15000);
+  window.addEventListener('beforeunload', autosave);
+
+  /* мобильные выдвижные панели */
+  $('fabPalette').addEventListener('click', () => {
+    $('palette').classList.contains('open') ? closeDrawers() : openDrawer('palette');
+  });
+  $('fabInspector').addEventListener('click', () => {
+    $('inspector').classList.contains('open') ? closeDrawers() : openDrawer('inspector');
+  });
+  $('backdrop').addEventListener('click', closeDrawers);
+  const mqM = window.matchMedia('(max-width:900px)');
+  const syncDraggable = () => {
+    $('palette').querySelectorAll('.pitem').forEach(it => { (it as HTMLElement).draggable = !isMobile(); });
+  };
+  const onMq = () => { if (!mqM.matches) closeDrawers(); syncDraggable(); view.resize(); view.fitAll(); };
+  if (mqM.addEventListener) mqM.addEventListener('change', onMq); else (mqM as any).addListener(onMq);
+
+  /* палитра: поиск и шаблон */
+  ($('palSearch') as HTMLInputElement).addEventListener('input', ev => {
+    filterPalette((ev.target as HTMLInputElement).value.trim().toLowerCase());
+  });
+  $('btnTemplate').addEventListener('click', applyTemplate);
+
+  /* загрузка аудиофайла */
+  fileAudioInput.addEventListener('change', async () => {
+    const f = fileAudioInput.files?.[0]; if (!f) return;
+    try {
+      const ctx = await engine.init();
+      const ab = await f.arrayBuffer();
+      const buf: AudioBuffer = await new Promise((res, rej) => ctx.decodeAudioData(ab, b => res(b), e2 => rej(e2)));
+      engine.fileBuffer = buf; engine.fileName = f.name;
+      toast(`Загружено: ${f.name} · ${buf.duration.toFixed(1)} c`, 'ok');
+      fileInfoRefresh?.(); updateTransportUI();
+    } catch (e) { toast('Не удалось декодировать аудиофайл', 'error'); }
+    fileAudioInput.value = '';
+  });
+
+  /* транспорт и запись */
+  $('btnEngine').addEventListener('click', () => toggleTransport());
+  $('btnRec').addEventListener('click', () => toggleLive());
+  $('btnLive').addEventListener('click', () => toggleLive());
+  $('btnRender').addEventListener('click', () => renderTake());
+  $('btnOffline').addEventListener('click', () => renderOfflineWav());
+
+  /* undo / redo */
+  $('btnUndo').addEventListener('click', undo);
+  $('btnRedo').addEventListener('click', redo);
+
+  /* экспорт модалка */
+  $('btnExport').addEventListener('click', () => { openModal('modalExport'); updateTransportUI(); updateFmtNote(); refreshTakes(); });
+  document.querySelectorAll('input[name=fmt]').forEach(r => r.addEventListener('change', updateFmtNote));
+
+  /* анализатор */
+  $('btnAnalyzer').addEventListener('click', () => openModal('modalAnalyzer'));
+
+  /* проекты */
+  $('btnProjects').addEventListener('click', async () => {
+    ($('projName') as HTMLInputElement).value = studio.name;
+    openModal('modalProjects'); await refreshProjects();
+  });
+  $('btnSaveProj').addEventListener('click', () => saveProject(false));
+  $('btnSaveAs').addEventListener('click', () => saveProject(true));
+
+  /* JSON (+ дублирующие кнопки в модалке проектов для мобильных) */
+  $('btnExportJson').addEventListener('click', exportJson);
+  $('btnImportJson').addEventListener('click', () => ($('fileJson') as HTMLInputElement).click());
+  $('btnExportJson2').addEventListener('click', exportJson);
+  $('btnImportJson2').addEventListener('click', () => ($('fileJson') as HTMLInputElement).click());
+  ($('fileJson') as HTMLInputElement).addEventListener('change', async ev => {
+    const f = (ev.target as HTMLInputElement).files?.[0];
+    if (f) await importJson(f);
+    (ev.target as HTMLInputElement).value = '';
+  });
+
+  /* справка и модалки */
+  $('btnHelp').addEventListener('click', () => openModal('modalHelp'));
+  $('btnHelp2').addEventListener('click', () => { closeModal('modalProjects'); openModal('modalHelp'); });
+  document.querySelectorAll('.modal').forEach(m => m.addEventListener('pointerdown', ev => { if (ev.target === m) m.classList.remove('open'); }));
+  document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', ev => {
+    (ev.target as HTMLElement).closest('.modal')?.classList.remove('open');
+  }));
+
+  /* инструменты вида */
+  $('btnLayout').addEventListener('click', () => view.autoLayout());
+  $('btnFit').addEventListener('click', () => view.fitAll());
+  $('btnSnap').addEventListener('click', () => { view.snap = !view.snap; $('btnSnap').classList.toggle('toggleOn', view.snap); });
+  $('btnZoomIn').addEventListener('click', () => view.zoomBy(1.2));
+  $('btnZoomOut').addEventListener('click', () => view.zoomBy(1 / 1.2));
+
+  /* клавиатура */
+  window.addEventListener('keydown', e => {
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    const k = e.key.toLowerCase();
+    const mod = e.ctrlKey || e.metaKey;
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (studio.selectedEdge) { studio.removeEdge(studio.selectedEdge); studio.selectEdge(null); }
+      else if (studio.selected) studio.removeNode(studio.selected);
+      e.preventDefault();
+    } else if (mod && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    else if (mod && k === 'y') { e.preventDefault(); redo(); }
+    else if (mod && k === 's') { e.preventDefault(); if (currentProjectId) saveProject(false); else { ($('projName') as HTMLInputElement).value = studio.name; openModal('modalProjects'); refreshProjects(); } }
+    else if (!mod && k === 'f') view.fitAll();
+    else if (!mod && k === 'l') view.autoLayout();
+    else if (!mod && k === 'g') { view.snap = !view.snap; $('btnSnap').classList.toggle('toggleOn', view.snap); }
+    else if (!mod && k === 'b') { if (studio.selected) { const gn = studio.nodes.get(studio.selected); if (gn && gn.def.inputs > 0 && gn.def.outputs > 0) toggleBypass(gn); } }
+    else if (e.key === ' ') { e.preventDefault(); toggleTransport(); }
+    else if (k === 'escape') { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); closeDrawers(); }
+  });
+
+  window.addEventListener('resize', () => { view.resize(); syncDraggable(); });
+  window.addEventListener('orientationchange', () => { setTimeout(() => { view.resize(); view.fitAll(); }, 250); });
+
+  if (isMobile()) {
+    setTimeout(() => toast('Мобильный режим: ⚡ — блоки, щипок — масштаб, тап по блоку — параметры', 'info'), 700);
+  }
+}
+
+init();
+
+/* отладочный доступ */
+(window as any).NF = { studio, engine, defs, view, history };
+})();
+</script>
+
+<!-- ================= КОМПИЛЯЦИЯ TYPESCRIPT В БРАУЗЕРЕ ================= -->
+<script>
+(function () {
+  var cdns = [
+    'https://unpkg.com/typescript@5.4.5/lib/typescript.js',
+    'https://cdn.jsdelivr.net/npm/typescript@5.4.5/lib/typescript.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/typescript/5.4.5/typescript.min.js'
+  ];
+  function fail(msg) {
+    var b = document.getElementById('bootMsg');
+    if (b) { b.textContent = msg; b.style.color = '#ff3b5c'; }
+  }
+  function boot() {
+    try {
+      var src = document.getElementById('app-code').textContent;
+      var out = ts.transpileModule(src, {
+        compilerOptions: {
+          target: ts.ScriptTarget.ES2020,
+          module: ts.ModuleKind.ESNext,
+          useDefineForClassFields: false,
+          removeComments: false
+        }
+      }).outputText;
+      (0, eval)(out);
+      var b = document.getElementById('boot');
+      if (b) { b.style.opacity = '0'; setTimeout(function () { b.remove(); }, 450); }
+    } catch (err) {
+      console.error(err);
+      fail('ОШИБКА ЗАПУСКА: ' + (err && err.message ? err.message : err));
+    }
+  }
+  function load(i) {
+    if (i >= cdns.length) { fail('НЕ УДАЛОСЬ ЗАГРУЗИТЬ КОМПИЛЯТОР TYPESCRIPT (CDN НЕДОСТУПЕН)'); return; }
+    var s = document.createElement('script');
+    s.src = cdns[i];
+    s.onload = function () { if (window.ts) boot(); else load(i + 1); };
+    s.onerror = function () { load(i + 1); };
+    document.head.appendChild(s);
+  }
+  if (window.ts) boot(); else load(0);
+})();
+</script>
+</body>
+</html>
