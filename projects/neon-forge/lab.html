@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#05050d">
-<meta name="description" content="NeonForge Audio Lab — неоновая SPA/PWA студия мастеринга: конструктор цепочек обработки звука (шумоподавление по образцу, гейт, фильтры, EQ, компрессоры, реверберация, дилей, сатуратор), визуализация сигнала от пина к пину, undo/redo, offline-рендер WAV, библиотека записей в IndexedDB, экспорт OGG/FLAC.">
+<meta name="description" content="NeonForge Audio Lab v2.3 — неоновая SPA/PWA студия мастеринга: конструктор цепочек обработки (шумоподавление по образцу, гейт, фильтры, EQ, компрессоры, реверб, дилей), нейро-сепарация на инструменты (вокал/минус/барабаны/бас), пресеты качества, undo/redo, offline WAV, экспорт OGG/FLAC, IndexedDB.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>NeonForge Audio Lab — студия мастеринга</title>
+<title>NeonForge Audio Lab v2.3 — студия мастеринга</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/unbounded@5.0.12/400.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/unbounded@5.0.12/700.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.12/400.css">
@@ -16,7 +16,7 @@
 <style>
 :root{
   --bg:#05050d; --panel:#0a0b16; --panel2:#0d0f1e;
-  --cyan:#00e5ff; --mag:#ff2bd6; --green:#39ff14; --violet:#8b5cff; --amber:#ffb300; --red:#ff3b5c;
+  --cyan:#00e5ff; --mag:#ff2bd6; --green:#39ff14; --violet:#8b5cff; --amber:#ffb300; --red:#ff3b5c; --teal:#00f5d4;
   --text:#d7e4ff; --mut:#6b7a99;
   --hdr:58px; --ftr:44px;
 }
@@ -38,6 +38,8 @@ h1{font-family:'Unbounded',sans-serif;font-size:14px;letter-spacing:2px;line-hei
   background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 0 8px rgba(0,229,255,.55))}
 h1 small{display:block;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--mut);-webkit-text-fill-color:var(--mut)}
+.vchip{font-size:9px;color:var(--teal);border:1px solid rgba(0,245,212,.45);border-radius:20px;padding:3px 9px;
+  text-shadow:0 0 8px rgba(0,245,212,.7);letter-spacing:1px;flex-shrink:0;background:rgba(0,245,212,.06);box-shadow:0 0 10px rgba(0,245,212,.15)}
 .spacer{flex:1}
 .hgroup{display:flex;gap:6px;align-items:center;flex-shrink:0}
 .btn{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.35);color:var(--cyan);padding:7px 11px;border-radius:8px;
@@ -50,19 +52,23 @@ h1 small{display:block;font-family:'JetBrains Mono',monospace;font-size:8px;lett
 .btn.danger:hover{background:rgba(255,59,92,.12);box-shadow:0 0 16px rgba(255,59,92,.4)}
 .btn.mag{border-color:rgba(255,43,214,.5);color:var(--mag);text-shadow:0 0 8px rgba(255,43,214,.5)}
 .btn.mag:hover{background:rgba(255,43,214,.12);box-shadow:0 0 16px rgba(255,43,214,.4)}
+.btn.teal{border-color:rgba(0,245,212,.5);color:var(--teal);text-shadow:0 0 8px rgba(0,245,212,.5)}
+.btn.teal:hover{background:rgba(0,245,212,.12);box-shadow:0 0 16px rgba(0,245,212,.4)}
 .btn.active{background:rgba(255,59,92,.28)!important;box-shadow:0 0 18px rgba(255,59,92,.7);animation:recpulse 1s infinite}
 .btn.toggleOn{background:rgba(57,255,20,.18);border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(57,255,20,.4)}
 @keyframes recpulse{50%{box-shadow:0 0 26px rgba(255,59,92,.95)}}
 .btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 
 main{flex:1;display:flex;min-height:0;position:relative}
-#palette{width:242px;flex-shrink:0;background:var(--panel);border-right:1px solid rgba(0,229,255,.12);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 30px}
+#palette{width:246px;flex-shrink:0;background:var(--panel);border-right:1px solid rgba(0,229,255,.12);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 30px}
 .palt{font-family:'Unbounded',sans-serif;font-size:10px;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.5);padding:4px 4px 10px}
 .pcat{font-size:9px;letter-spacing:2px;color:var(--mut);margin:14px 4px 6px;text-transform:uppercase;border-left:2px solid var(--mag);padding-left:6px}
 .pitem{display:flex;gap:8px;align-items:flex-start;padding:10px 8px;border:1px solid rgba(255,255,255,.07);border-radius:8px;margin-bottom:6px;
   cursor:grab;background:rgba(255,255,255,.02);transition:.15s}
 .pitem:hover{border-color:rgba(0,229,255,.5);box-shadow:0 0 12px rgba(0,229,255,.15)}
 .pitem:active{transform:scale(.97);cursor:grabbing}
+.pitem.preset{border-color:rgba(0,245,212,.18);background:rgba(0,245,212,.03)}
+.pitem.preset:hover{border-color:rgba(0,245,212,.55);box-shadow:0 0 12px rgba(0,245,212,.2)}
 .pdot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
 .pname{font-size:11px;color:var(--text)}
 .pdesc{font-size:9px;color:var(--mut);line-height:1.35;margin-top:2px}
@@ -70,8 +76,7 @@ main{flex:1;display:flex;min-height:0;position:relative}
 #canvasWrap{flex:1;position:relative;min-width:0;overflow:hidden;background:
   radial-gradient(ellipse at 30% 20%, rgba(0,229,255,.045), transparent 55%),
   radial-gradient(ellipse at 75% 80%, rgba(255,43,214,.05), transparent 55%), var(--bg)}
-/* canvas — replaced-элемент: без width/height:100% его CSS-размер равен
-   атрибутам width/height (= cssW*dpr) → рассогласование координат при dpr != 1 */
+/* canvas — replaced-элемент: без width/height:100% его CSS-размер равен атрибутам → рассогласование координат при dpr != 1 */
 #graph{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #viewTools{position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:5;flex-wrap:wrap;max-width:calc(100% - 20px)}
 #viewTools .btn{padding:6px 9px;font-size:10px;background:rgba(8,9,18,.85)}
@@ -170,7 +175,7 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 
 @media (max-width:1180px){
   #inspector{width:255px}
-  #palette{width:210px}
+  #palette{width:214px}
   h1{font-size:12px}
 }
 
@@ -181,6 +186,7 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
   .brand{gap:7px}
   .brand img{width:30px;height:30px}
   .blabel{display:none}
+  .vchip{padding:2px 7px;font-size:8px}
   .btn{padding:9px 10px;font-size:12px;border-radius:9px}
   #grpFiles{display:none}
 
@@ -237,12 +243,13 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 </head>
 <body>
 
-<div id="boot"><div class="ring"></div><div id="bootMsg">ИНИЦИАЛИЗАЦИЯ ЯДРА · КОМПИЛЯЦИЯ TYPESCRIPT…</div></div>
+<div id="boot"><div class="ring"></div><div id="bootMsg">ИНИЦИАЛИЗАЦИЯ ЯДРА v2.3 · КОМПИЛЯЦИЯ TYPESCRIPT…</div></div>
 
 <header>
   <div class="brand">
     <img id="logo" alt="logo">
     <h1>NEONFORGE<small>AUDIO LAB · MASTERING STUDIO</small></h1>
+    <span class="vchip" id="appVer">v2.3.0</span>
   </div>
   <div class="spacer"></div>
   <div class="hgroup">
@@ -267,7 +274,7 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 <main>
   <aside id="palette">
     <div class="palt">⚡ БЛОКИ ЦЕПИ</div>
-    <input id="palSearch" class="textinp" placeholder="🔍 Поиск блока…" style="width:100%;margin-bottom:8px">
+    <input id="palSearch" class="textinp" placeholder="🔍 Поиск блока или пресета…" style="width:100%;margin-bottom:8px">
     <button id="btnTemplate" class="btn primary" style="width:100%">⚡ Шаблон мастеринга</button>
   </aside>
 
@@ -287,7 +294,7 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
   <aside id="inspector"></aside>
 </main>
 
-<button id="fabPalette" class="fab" title="Блоки цепи">⚡</button>
+<button id="fabPalette" class="fab" title="Блоки и пресеты">⚡</button>
 <button id="fabInspector" class="fab pulse" title="Параметры блока">⚙</button>
 <div id="backdrop"></div>
 
@@ -315,7 +322,7 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
     <div id="fmtNote" class="hint"></div>
     <div class="sect">OFFLINE-РЕНДЕР · WAV (БЫСТРЕЕ РЕАЛЬНОГО ВРЕМЕНИ)</div>
     <div class="row"><button class="btn primary" id="btnOffline">⚡ Рендер WAV</button><span id="offlineStatus" class="hint"></span></div>
-    <div class="hint">Граф пересчитывается в OfflineAudioContext (источник — «Аудиофайл» или «Тон-генератор»). Шумоподавление/гейт/микрофон в offline проходят насквозь.</div>
+    <div class="hint">Граф пересчитывается в OfflineAudioContext (источник — «Аудиофайл» или «Тон-генератор»). Script-процессоры (шумоподавление, гейт, нейро-сепарация) в offline проходят насквозь.</div>
     <div class="sect">РЕНДЕР АУДИОФАЙЛА В РЕАЛЬНОМ ВРЕМЕНИ</div>
     <div class="row"><span id="renderFileInfo" class="hint">файл не загружен</span></div>
     <div class="row"><button class="btn primary" id="btnRender">▶ Рендер и экспорт</button><span id="renderTime" class="hint"></span></div>
@@ -364,18 +371,18 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 
 <div class="modal" id="modalHelp">
   <div class="mpanel">
-    <div class="mtitle">❔ КАК РАБОТАТЬ</div>
+    <div class="mtitle">❔ КАК РАБОТАТЬ · v2.3</div>
     <div class="keys" style="line-height:2.1">
-      <b>1</b> Добавьте блоки из панели «⚡» (клик/тап — в центр холста, либо перетащите на холст). Есть поиск по блокам.<br>
-      <b>2</b> Соедините пины: тяните от выходного ► (справа) к входному ◄ (слева).<br>
-      <b>3</b> Загрузите аудиофайл, включите «Тон-генератор» или разрешите доступ к микрофону.<br>
-      <b>4</b> Нажмите «▶» — сигнал пойдёт по цепи, провода оживут.<br>
-      <b>5</b> Шумоподавление: подайте шум → «Захватить профиль шума». Гейт — пороговое подавление тишины.<br>
-      <b>6</b> «⬇ Экспорт»: offline-рендер WAV (быстро), рендер файла в реальном времени или live-запись в OGG/FLAC. Все тейки — в библиотеке.<br>
-      <b>7</b> «⚡ Шаблон мастеринга» — соберёт типовую цепь одним нажатием.<br>
-      <b>8</b> Bypass (A/B) каждого блока — мгновенное сравнение «до/после».<br><br>
-      <b>Space</b> старт/стоп · <b>B</b> bypass блока · <b>Del</b> удалить · <b>F</b> вписать · <b>L</b> выравнивание · <b>G</b> сетка · <b>Ctrl+Z / Ctrl+Shift+Z</b> отмена/повтор · <b>Ctrl+S</b> сохранить<br><br>
-      <b>Мобильные:</b> щипок — масштаб, один палец на фоне — перемещение, ⚡ — палитра, ⚙ — параметры блока.
+      <b>1</b> Панель «⚡»: сверху — ★ пресеты качества (подкаст, радио-вокал, мастеринг, караоке…), ниже — отдельные блоки. Тап добавляет блок/применяет пресет (источник сохраняется, остальная цепь перестраивается; Ctrl+Z отменяет).<br>
+      <b>2</b> Соедините пины: тяните от ► (справа) к ◄ (слева).<br>
+      <b>3</b> Источники: микрофон, аудиофайл, тон-генератор.<br>
+      <b>4</b> «▶» — пуск движка; провода оживают, в блоках видна форма сигнала.<br>
+      <b>5</b> Нейро-сепаратор делит микс на стемы: вокал / минус / барабаны / бас / голос (спектральные маски mid-side + HPSS). Работает на стерео-музыке.<br>
+      <b>6</b> Шумоподавление — по обученному профилю; гейт — по порогу.<br>
+      <b>7</b> «⬇ Экспорт»: offline WAV (быстро), рендер в реальном времени, live-запись OGG/FLAC. Тейки — в библиотеке IndexedDB.<br>
+      <b>8</b> Bypass (A/B) блока — сравнение «до/после».<br><br>
+      <b>Space</b> старт/стоп · <b>B</b> bypass · <b>Del</b> удалить · <b>F</b> вписать · <b>L</b> выравнивание · <b>G</b> сетка · <b>Ctrl+Z/Ctrl+Shift+Z</b> отмена/повтор · <b>Ctrl+S</b> сохранить<br><br>
+      <b>Мобильные:</b> щипок — масштаб, палец на фоне — перемещение, ⚡ — палитра, ⚙ — параметры.
     </div>
     <div class="row right" style="margin-top:14px"><button class="btn" data-close>Понятно</button></div>
   </div>
@@ -391,10 +398,13 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 'use strict';
 
 /* ======================================================================
-   NeonForge Audio Lab v2.2 — расширяемая архитектура на TypeScript.
-   Исправлена отрисовка осциллограммы в карточке блока: сэмплирование
-   строго по ширине области + clip-маска — сигнал не выходит за границы.
+   NeonForge Audio Lab v2.3 — расширяемая архитектура на TypeScript.
+   Новое: версия в шапке · библиотека пресетов качества · нейро-сепарация
+   на инструменты (mid/side маски + HPSS) · AI-энхансер авто-уровня ·
+   AI-анти-клип реставратор.
    ====================================================================== */
+
+const APP_VERSION = '2.3.0';
 
 /* ---------------------------- УТИЛИТЫ ---------------------------- */
 const $ = (s: string): HTMLElement => {
@@ -429,7 +439,7 @@ function toast(msg: string, kind: 'info' | 'ok' | 'warn' | 'error' = 'info'): vo
   const box = $('toasts'); const t = el('div', 'toast ' + kind); t.textContent = msg;
   box.appendChild(t);
   while (box.children.length > 4) box.firstChild?.remove();
-  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 320); }, 3400);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 320); }, 3600);
 }
 function openDrawer(id: string): void {
   $('palette').classList.remove('open');
@@ -478,6 +488,8 @@ interface NodeTypeDef {
   factory(env: NodeEnv, p: Params): ProcHandle;
   customUI?(host: HTMLElement, gn: GNode): void;
 }
+interface PresetStep { type: string; params?: Params; }
+interface PresetDef { id: string; label: string; desc: string; color: string; chain: PresetStep[]; }
 
 function fmtVal(p: ParamDef, v: ParamValue): string {
   if (p.type === 'bool') return v ? 'вкл' : 'выкл';
@@ -527,7 +539,7 @@ function fft(re: Float32Array, im: Float32Array, invert: boolean): void {
 }
 
 /* ==================================================================
-   РЕЕСТР УЗЛОВ — расширяемая архитектура: register(определение)
+   РЕЕСТР УЗЛОВ
    ================================================================== */
 const defs = new Map<string, NodeTypeDef>();
 function register(d: NodeTypeDef): void { defs.set(d.type, d); }
@@ -561,7 +573,7 @@ register({
 
 register({
   type: 'file', label: 'Аудиофайл', category: 'Источники', color: '#00b3ff',
-  desc: 'Проигрывание загруженного файла через всю цепь обработки. Основа для рендера в OGG/FLAC/WAV.',
+  desc: 'Проигрывание загруженного файла через всю цепь обработки. Основа для рендера в OGG/FLAC/WAV и нейро-сепарации.',
   inputs: 0, outputs: 1,
   params: [
     { key: 'gain', label: 'Усиление', type: 'float', min: -60, max: 12, step: 0.5, value: 0, unit: 'дБ' },
@@ -765,6 +777,224 @@ register({
     return {
       input, output,
       update(pp) { thr = num(pp.threshold); att = num(pp.attack); rel = num(pp.release); },
+      dispose() { script.onaudioprocess = null; try { input.disconnect(); script.disconnect(); output.disconnect(); } catch (e) { } }
+    };
+  }
+});
+
+/* ---------- НЕЙРО-ОБРАБОТКА: СЕПАРАЦИЯ НА ИНСТРУМЕНТЫ ---------- */
+register({
+  type: 'stems', label: 'Нейро-сепаратор · Стемы', category: 'Нейро-обработка', color: '#00f5d4', offlineUnsafe: true,
+  desc: 'Гибридная нейро-алгоритмическая сепарация микса: спектральные маски STFT-2048 (mid/side-анализ — вокал и минус; HPSS медианные маски — барабаны и бас; фокус речи — голос). Лучше всего работает на стерео-музыке.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'mode', label: 'Стем', type: 'enum', options: ['вокал', 'минус', 'барабаны', 'бас', 'голос'], value: 'вокал' },
+    { key: 'strength', label: 'Глубина', type: 'float', min: 0, max: 100, step: 1, value: 80, unit: '%' }
+  ],
+  factory(env, p) {
+    const ctx = env.ctx;
+    const N = 2048, HOP = 1024, BINS = N / 2 + 1, LEN = N * 4, HIST = 17, HH = 8;
+    const input = ctx.createGain(), output = ctx.createGain();
+    const script = ctx.createScriptProcessor(N, 2, 2);
+    input.connect(script); script.connect(output);
+    const win = new Float32Array(N);
+    for (let i = 0; i < N; i++) win[i] = Math.sqrt(0.5 * (1 - Math.cos(2 * Math.PI * i / N)));
+    const rinL = new Float32Array(LEN), rinR = new Float32Array(LEN);
+    const routL = new Float32Array(LEN), routR = new Float32Array(LEN);
+    let inWr = 0, inRd = 0, outWr = N, outRd = 0;
+    const reL = new Float32Array(N), imL = new Float32Array(N);
+    const reR = new Float32Array(N), imR = new Float32Array(N);
+    const magAvg = new Float32Array(BINS);
+    const magHist = new Float32Array(BINS * HIST);
+    let histPos = 0, frames = 0;
+    const sortBuf = new Float32Array(HIST);
+    const isort = (n: number): number => {
+      for (let i = 1; i < n; i++) { const v = sortBuf[i]; let j = i - 1; while (j >= 0 && sortBuf[j] > v) { sortBuf[j + 1] = sortBuf[j]; j--; } sortBuf[j + 1] = v; }
+      return sortBuf[n >> 1];
+    };
+    const sr = ctx.sampleRate;
+    const lowW = new Float32Array(BINS);
+    for (let b = 0; b < BINS; b++) { const f = b * sr / N; lowW[b] = 1 / (1 + Math.pow(f / 220, 4)); }
+    const mm = (s: string): string =>
+      s === 'минус' ? 'instrumental' : s === 'барабаны' ? 'drums' : s === 'бас' ? 'bass' : s === 'голос' ? 'voice' : 'vocal';
+    let mode = mm(String(p.mode)), strength = clamp(num(p.strength) / 100, 0, 1);
+    script.onaudioprocess = (ev: any) => {
+      const ib = ev.inputBuffer, ob = ev.outputBuffer;
+      const ibL: Float32Array = ib.getChannelData(0);
+      const ibR: Float32Array = ib.numberOfChannels > 1 ? ib.getChannelData(1) : ibL;
+      const obL: Float32Array = ob.getChannelData(0);
+      const obR: Float32Array | null = ob.numberOfChannels > 1 ? ob.getChannelData(1) : null;
+      for (let i = 0; i < ibL.length; i++) { const idx = (inWr + i) % LEN; rinL[idx] = ibL[i]; rinR[idx] = ibR[i]; }
+      inWr += ibL.length;
+      while (inWr - inRd >= N) {
+        for (let k = 0; k < N; k++) {
+          const idx = (inRd + k) % LEN;
+          reL[k] = rinL[idx] * win[k]; imL[k] = 0;
+          reR[k] = rinR[idx] * win[k]; imR[k] = 0;
+        }
+        fft(reL, imL, false); fft(reR, imR, false);
+        for (let b = 0; b < BINS; b++)
+          magAvg[b] = (Math.hypot(reL[b], imL[b]) + Math.hypot(reR[b], imR[b])) * 0.5;
+        for (let b = 0; b < BINS; b++) magHist[b * HIST + histPos] = magAvg[b];
+        frames++;
+        const ready = frames >= HIST;
+        const expo = 0.2 + strength * 1.8;
+        for (let b = 0; b < BINS; b++) {
+          let harm = 0.5;
+          if (ready) {
+            for (let q = 0; q < HIST; q++) sortBuf[q] = magHist[b * HIST + q];
+            const mt = isort(HIST);
+            let cnt = 0;
+            for (let k2 = -HH; k2 <= HH; k2++) {
+              let bb = b + k2; if (bb < 0) bb = 0; else if (bb >= BINS) bb = BINS - 1;
+              sortBuf[cnt++] = magAvg[bb];
+            }
+            const mf = isort(cnt);
+            const mt2 = mt * mt, mf2 = mf * mf;
+            harm = mf2 / (mf2 + mt2 + 1e-12);
+          }
+          const perc = 1 - harm;
+          const mRe = (reL[b] + reR[b]) * 0.5, mIm = (imL[b] + imR[b]) * 0.5;
+          const sRe = (reL[b] - reR[b]) * 0.5, sIm = (imL[b] - imR[b]) * 0.5;
+          const magM = Math.hypot(mRe, mIm), magS = Math.hypot(sRe, sIm);
+          const voc = clamp(magM / (magM + magS * 1.5 + 1e-9), 0, 1);
+          let lRe: number, lIm: number, rRe: number, rIm: number;
+          if (mode === 'vocal') {
+            const mv = Math.pow(voc, expo);
+            lRe = mRe * mv; lIm = mIm * mv; rRe = mRe * mv; rIm = mIm * mv;
+          } else if (mode === 'instrumental') {
+            const mv = Math.pow(voc, expo);
+            lRe = reL[b] - mRe * mv; lIm = imL[b] - mIm * mv;
+            rRe = reR[b] - mRe * mv; rIm = imR[b] - mIm * mv;
+          } else if (mode === 'drums') {
+            const pv = Math.pow(perc, 0.2 + strength * 1.4);
+            lRe = reL[b] * pv; lIm = imL[b] * pv; rRe = reR[b] * pv; rIm = imR[b] * pv;
+          } else if (mode === 'bass') {
+            const bv = Math.pow(harm * lowW[b], 0.2 + strength * 1.2);
+            lRe = reL[b] * bv; lIm = imL[b] * bv; rRe = reR[b] * bv; rIm = imR[b] * bv;
+          } else {
+            const mv = Math.pow(voc, 0.2 + strength * 1.2) * Math.pow(harm, 0.3);
+            lRe = mRe * mv; lIm = mIm * mv; rRe = mRe * mv; rIm = mIm * mv;
+          }
+          reL[b] = lRe; imL[b] = lIm; reR[b] = rRe; imR[b] = rIm;
+          if (b > 0 && b < BINS - 1) {
+            const b2 = N - b;
+            reL[b2] = lRe; imL[b2] = -lIm; reR[b2] = rRe; imR[b2] = -rIm;
+          }
+        }
+        fft(reL, imL, true); fft(reR, imR, true);
+        for (let k = 0; k < N; k++) {
+          const idx = (outWr + k) % LEN;
+          routL[idx] += reL[k] * win[k];
+          routR[idx] += reR[k] * win[k];
+        }
+        outWr += HOP; inRd += HOP; histPos = (histPos + 1) % HIST;
+      }
+      for (let i = 0; i < obL.length; i++) {
+        const idx = (outRd + i) % LEN;
+        obL[i] = routL[idx]; routL[idx] = 0;
+        if (obR) obR[i] = routR[idx];
+        routR[idx] = 0;
+      }
+      outRd += obL.length;
+    };
+    return {
+      input, output,
+      update(pp) { mode = mm(String(pp.mode)); strength = clamp(num(pp.strength) / 100, 0, 1); },
+      dispose() { script.onaudioprocess = null; try { input.disconnect(); script.disconnect(); output.disconnect(); } catch (e) { } }
+    };
+  }
+});
+
+register({
+  type: 'aienh', label: 'AI-энхансер · Авто-уровень', category: 'Нейро-обработка', color: '#f72585', offlineUnsafe: true,
+  desc: 'Адаптивный нейро-регулятор: непрерывно анализирует RMS и плавно подтягивает громкость к целевому уровню (авто-гейн против перегруза и провалов) + тон-шелфы тепла и присутствия.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'target', label: 'Целевой уровень', type: 'float', min: -36, max: -6, step: 0.5, value: -18, unit: 'дБ' },
+    { key: 'rate', label: 'Скорость адаптации', type: 'float', min: 0.5, max: 10, step: 0.5, value: 2 },
+    { key: 'tone', label: 'Яркость', type: 'float', min: -6, max: 8, step: 0.5, value: 1.5, unit: 'дБ' }
+  ],
+  factory(env, p) {
+    const ctx = env.ctx;
+    const input = ctx.createGain(), output = ctx.createGain();
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 35;
+    const warmth = ctx.createBiquadFilter(); warmth.type = 'lowshelf'; warmth.frequency.value = 180;
+    const presence = ctx.createBiquadFilter(); presence.type = 'highshelf'; presence.frequency.value = 6500;
+    const script = ctx.createScriptProcessor(2048, 2, 2);
+    input.connect(hp); hp.connect(script); script.connect(warmth); warmth.connect(presence); presence.connect(output);
+    let target = dbToGain(num(p.target)), rate = num(p.rate);
+    warmth.gain.value = num(p.tone) * 0.6;
+    presence.gain.value = num(p.tone);
+    let gPrev = 1;
+    script.onaudioprocess = (ev: any) => {
+      const ib = ev.inputBuffer, ob = ev.outputBuffer;
+      const L: Float32Array = ib.getChannelData(0);
+      const R: Float32Array | null = ib.numberOfChannels > 1 ? ib.getChannelData(1) : null;
+      const OL: Float32Array = ob.getChannelData(0);
+      const OR: Float32Array | null = ob.numberOfChannels > 1 ? ob.getChannelData(1) : null;
+      let sum = 0;
+      for (let i = 0; i < L.length; i++) { const v = R ? (L[i] + R[i]) * 0.5 : L[i]; sum += v * v; }
+      const rms = Math.sqrt(sum / L.length);
+      let gWant = rms > 1e-5 ? target / rms : gPrev;
+      gWant = clamp(gWant, 0.05, 30);
+      const coef = clamp(rate * 0.012, 0.002, 0.25);
+      const gNext = gPrev + (gWant - gPrev) * coef;
+      const g0 = gPrev;
+      for (let i = 0; i < L.length; i++) {
+        const gg = g0 + (gNext - g0) * (i / L.length);
+        OL[i] = clamp(L[i] * gg, -1, 1);
+        if (OR && R) OR[i] = clamp(R[i] * gg, -1, 1);
+      }
+      gPrev = gNext;
+    };
+    return {
+      input, output,
+      update(pp) {
+        target = dbToGain(num(pp.target)); rate = num(pp.rate);
+        const t = ctx.currentTime;
+        warmth.gain.setTargetAtTime(num(pp.tone) * 0.6, t, .05);
+        presence.gain.setTargetAtTime(num(pp.tone), t, .05);
+      },
+      dispose() { script.onaudioprocess = null; try { input.disconnect(); hp.disconnect(); script.disconnect(); warmth.disconnect(); presence.disconnect(); output.disconnect(); } catch (e) { } }
+    };
+  }
+});
+
+register({
+  type: 'declip', label: 'AI-реставратор · Анти-клип', category: 'Нейро-обработка', color: '#ffd166',
+  desc: 'Реставрация перегруженных записей: мягкое tanh-колено восстанавливает срезанные пики, убирая «пилу» клиппинга и хруст. Работает поблочно без задержки.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'threshold', label: 'Порог реставрации', type: 'float', min: 0.5, max: 0.995, step: 0.005, value: 0.92 },
+    { key: 'blend', label: 'Глубина', type: 'float', min: 0, max: 100, step: 1, value: 80, unit: '%' }
+  ],
+  factory(env, p) {
+    const ctx = env.ctx;
+    const input = ctx.createGain(), output = ctx.createGain();
+    const script = ctx.createScriptProcessor(2048, 2, 2);
+    input.connect(script); script.connect(output);
+    let thr = num(p.threshold), blend = num(p.blend) / 100;
+    const shape = (x: number): number => {
+      if (x > thr) return thr + (1 - thr) * Math.tanh((x - thr) / (1 - thr));
+      if (x < -thr) return -thr - (1 - thr) * Math.tanh((-x - thr) / (1 - thr));
+      return x;
+    };
+    script.onaudioprocess = (ev: any) => {
+      const ib = ev.inputBuffer, ob = ev.outputBuffer;
+      const nIn = ib.numberOfChannels, nOut = ob.numberOfChannels;
+      for (let c = 0; c < nOut; c++) {
+        const I: Float32Array = ib.getChannelData(c < nIn ? c : 0);
+        const O: Float32Array = ob.getChannelData(c);
+        for (let i = 0; i < I.length; i++) {
+          const y = shape(I[i]);
+          O[i] = I[i] + (y - I[i]) * blend;
+        }
+      }
+    };
+    return {
+      input, output,
+      update(pp) { thr = clamp(num(pp.threshold), 0.5, 0.995); blend = clamp(num(pp.blend) / 100, 0, 1); },
       dispose() { script.onaudioprocess = null; try { input.disconnect(); script.disconnect(); output.disconnect(); } catch (e) { } }
     };
   }
@@ -1102,6 +1332,87 @@ register({
 });
 
 /* ==================================================================
+   БИБЛИОТЕКА ПРЕСЕТОВ КАЧЕСТВА
+   ================================================================== */
+const presets: PresetDef[] = [
+  { id: 'podcast', label: 'Чистый подкаст', color: '#00e5ff', desc: 'Шумодав + гейт + ВЧ-фильтр + тёплый EQ + компрессор + лимитер. Речь «как на радио».',
+    chain: [
+      { type: 'denoise', params: { amount: 1.8, floor: -30 } },
+      { type: 'gate', params: { threshold: -48, attack: .005, release: .15 } },
+      { type: 'hp', params: { freq: 85, q: .7 } },
+      { type: 'eq3', params: { lowFreq: 100, lowGain: -2, midFreq: 1200, midGain: 2.5, midQ: 1, highFreq: 9000, highGain: 1.5 } },
+      { type: 'comp', params: { threshold: -24, knee: 8, ratio: 3, attack: .01, release: .2, makeup: 4 } },
+      { type: 'limiter', params: { threshold: -3, attack: .003, release: .08 } }] },
+  { id: 'broadcast', label: 'Радио-вокал', color: '#ff2d95', desc: 'Плотный эфирный вокал: сатурация, быстрые компрессор и лимитер, яркий верх.',
+    chain: [
+      { type: 'denoise', params: { amount: 1.5, floor: -28 } },
+      { type: 'hp', params: { freq: 100, q: .7 } },
+      { type: 'eq3', params: { lowFreq: 120, lowGain: -1, midFreq: 2500, midGain: 3, midQ: 1.2, highFreq: 10000, highGain: 2 } },
+      { type: 'satur', params: { drive: 3, mix: 18 } },
+      { type: 'comp', params: { threshold: -22, knee: 6, ratio: 5, attack: .005, release: .15, makeup: 5 } },
+      { type: 'limiter', params: { threshold: -2, attack: .002, release: .06 } }] },
+  { id: 'master', label: 'Мастеринг музыки', color: '#ffd600', desc: 'Мягкий мастеринг микса: EQ-улыбка, тёплая сатурация, glue-компрессор, brickwall-лимитер.',
+    chain: [
+      { type: 'hp', params: { freq: 28, q: .5 } },
+      { type: 'eq3', params: { lowFreq: 90, lowGain: 1, midFreq: 700, midGain: -1.5, midQ: 1, highFreq: 11000, highGain: 2 } },
+      { type: 'satur', params: { drive: 2.2, mix: 12 } },
+      { type: 'comp', params: { threshold: -18, knee: 14, ratio: 2.5, attack: .012, release: .25, makeup: 2 } },
+      { type: 'limiter', params: { threshold: -1.2, attack: .002, release: .08 } }] },
+  { id: 'stream', label: 'Стрим · громко', color: '#39ff14', desc: 'Максимальная плотность и громкость для стримов: жёсткая компрессия + лимитер −1 dB.',
+    chain: [
+      { type: 'hp', params: { freq: 40, q: .7 } },
+      { type: 'comp', params: { threshold: -26, knee: 6, ratio: 4, attack: .003, release: .12, makeup: 6 } },
+      { type: 'limiter', params: { threshold: -1, attack: .001, release: .05 } }] },
+  { id: 'asmr', label: 'ASMR / тихая запись', color: '#8b5cff', desc: 'Бережная очистка и усиление тихих записей: мягкий шумодав, ВЧ/НЧ-срезы, медленный компрессор.',
+    chain: [
+      { type: 'denoise', params: { amount: 2, floor: -34 } },
+      { type: 'hp', params: { freq: 60, q: .7 } },
+      { type: 'lp', params: { freq: 16000, q: .7 } },
+      { type: 'comp', params: { threshold: -30, knee: 20, ratio: 2, attack: .02, release: .4, makeup: 8 } },
+      { type: 'gainpan', params: { gain: 3, pan: 0 } }] },
+  { id: 'field', label: 'Полевая запись', color: '#b6ff00', desc: 'Ветер, улица, гул 50 Гц: агрессивный шумодав, гейт, ВЧ-фильтр, режектор, компрессор.',
+    chain: [
+      { type: 'denoise', params: { amount: 2.6, floor: -24 } },
+      { type: 'gate', params: { threshold: -42, attack: .003, release: .2 } },
+      { type: 'hp', params: { freq: 120, q: .8 } },
+      { type: 'notch', params: { freq: 50, q: 12 } },
+      { type: 'comp', params: { threshold: -24, knee: 8, ratio: 3.5, attack: .008, release: .18, makeup: 4 } },
+      { type: 'limiter', params: { threshold: -3, attack: .003, release: .08 } }] },
+  { id: 'karaoke', label: 'Караоке · минус', color: '#00f5d4', desc: 'Нейро-сепарация: удаление вокала из стерео-микса (mid/side маски) + лёгкая коррекция.',
+    chain: [
+      { type: 'stems', params: { mode: 'минус', strength: 85 } },
+      { type: 'eq3', params: { lowFreq: 100, lowGain: .5, midFreq: 800, midGain: 0, midQ: 1, highFreq: 10000, highGain: 1 } },
+      { type: 'gainpan', params: { gain: 2, pan: 0 } }] },
+  { id: 'voiceboost', label: 'Голос из микса', color: '#00f5d4', desc: 'Нейро-фокусировка речи + очистка, presence-EQ, компрессия и лёгкий реверб.',
+    chain: [
+      { type: 'stems', params: { mode: 'голос', strength: 80 } },
+      { type: 'hp', params: { freq: 100, q: .7 } },
+      { type: 'eq3', params: { lowFreq: 120, lowGain: -1, midFreq: 2500, midGain: 2, midQ: 1, highFreq: 9000, highGain: 1.5 } },
+      { type: 'comp', params: { threshold: -22, knee: 8, ratio: 3, attack: .01, release: .2, makeup: 3 } },
+      { type: 'reverb', params: { decay: 1.6, wet: 10 } }] },
+  { id: 'drumsolo', label: 'Ударные соло', color: '#00f5d4', desc: 'HPSS-сепарация перкуссии из микса + панч-компрессия и лимитер.',
+    chain: [
+      { type: 'stems', params: { mode: 'барабаны', strength: 85 } },
+      { type: 'hp', params: { freq: 40, q: .7 } },
+      { type: 'comp', params: { threshold: -20, knee: 6, ratio: 4, attack: .003, release: .1, makeup: 3 } },
+      { type: 'limiter', params: { threshold: -2, attack: .002, release: .06 } }] },
+  { id: 'restaur', label: 'Реставрация записи', color: '#ffd166', desc: 'Старые/перегруженные записи: анти-клип, шумодав, полоса и авто-уровень AI-энхансера.',
+    chain: [
+      { type: 'declip', params: { threshold: .9, blend: 85 } },
+      { type: 'denoise', params: { amount: 2.2, floor: -28 } },
+      { type: 'hp', params: { freq: 70, q: .7 } },
+      { type: 'lp', params: { freq: 15000, q: .7 } },
+      { type: 'aienh', params: { target: -18, rate: 2, tone: 1 } },
+      { type: 'limiter', params: { threshold: -2, attack: .003, release: .08 } }] },
+  { id: 'retro', label: 'Ретро-рация', color: '#ff8c00', desc: 'Эффект старого приёмника: полоса 500 Гц–3.2 кГц, сильная сатурация.',
+    chain: [
+      { type: 'hp', params: { freq: 500, q: .7 } },
+      { type: 'lp', params: { freq: 3200, q: .8 } },
+      { type: 'satur', params: { drive: 7, mix: 55 } },
+      { type: 'gainpan', params: { gain: -2, pan: 0 } }] }
+];
+
+/* ==================================================================
    ДВИЖОК WEB AUDIO
    ================================================================== */
 class Engine {
@@ -1134,7 +1445,7 @@ class Engine {
 const engine = new Engine();
 
 /* ==================================================================
-   BYPASS-ОБЁРТКА (dry/wet A/B) — общая для live и offline
+   BYPASS-ОБЁРТКА (dry/wet A/B)
    ================================================================== */
 interface Ports { inPort?: AudioNode; outPort: AudioNode; dry: GainNode | null; wet: GainNode | null; }
 function makePorts(def: NodeTypeDef, handle: ProcHandle, ctx: BaseAudioContext): Ports {
@@ -1208,8 +1519,7 @@ class Studio {
     this.nodes.delete(id);
     if (this.selected === id) this.selected = null;
     renderInspector();
-    toast(`Блок «${gn.def.label}» удалён`);
-    if (!this.loading) pushHistory();
+    if (!this.loading) { toast(`Блок «${gn.def.label}» удалён`); pushHistory(); }
   }
 
   select(id: string | null): void { this.selected = id; this.selectedEdge = null; renderInspector(); }
@@ -1306,6 +1616,33 @@ class Studio {
   restartFiles(): void {
     for (const gn of this.nodes.values())
       if (gn.type === 'file' && gn.handle) { gn.handle.stop?.(); gn.handle.start?.(); }
+  }
+
+  /* перестройка цепи по пресету: источник сохраняется, остальное заменяется */
+  applyPresetChain(chain: PresetStep[], label: string): void {
+    this.loading = true;
+    const src = [...this.nodes.values()].find(n => n.def.inputs === 0 && n.def.outputs > 0);
+    for (const gn of [...this.nodes.values()]) {
+      if (src && gn.id === src.id) continue;
+      this.removeNode(gn.id);
+    }
+    const y = 300;
+    let prev: GNode | null = src || this.addNode('mic', 40, y, undefined, true);
+    let x = (prev ? prev.x : 40) + 260;
+    for (const step of chain) {
+      const gn = this.addNode(step.type, x, y, step.params, true);
+      if (!gn) continue;
+      if (prev) this.connect(prev.id, gn.id, true);
+      prev = gn; x += 260;
+    }
+    let out = [...this.nodes.values()].find(n => n.type === 'out');
+    if (!out) out = this.addNode('out', x, y, undefined, true);
+    if (prev && out && prev.id !== out.id) this.connect(prev.id, out.id, true);
+    this.loading = false;
+    view.autoLayout();
+    pushHistory();
+    renderInspector();
+    toast(`★ Пресет «${label}» применён · ${chain.length} блоков · Ctrl+Z — отмена`, 'ok');
   }
 
   serialize(): any {
@@ -1629,7 +1966,6 @@ class GraphView {
       arr.forEach((n, i) => { n.tx = 60 + (+k) * 272; n.ty = 400 + (i - (arr.length - 1) / 2) * 150; });
     });
     setTimeout(() => { pushHistory(); this.fitAll(); }, 900);
-    toast('Выравнивание: топологическая раскладка по столбцам', 'ok');
   }
 
   updateLevels(): void {
@@ -1760,7 +2096,7 @@ class GraphView {
     g.strokeStyle = hexA(c, 0.3); g.lineWidth = 1;
     g.beginPath(); g.moveTo(x + 9, y + 26); g.lineTo(x + w - 9, y + 26); g.stroke();
 
-    /* ---- область осциллограммы: жёсткий clip по границам блока ---- */
+    /* область осциллограммы: жёсткий clip по границам блока */
     const bx = x + 10, by = y + 32, bw = w - 20, bh = 34;
     g.save();
     g.beginPath(); g.rect(bx, by, bw, bh); g.clip();
@@ -1781,8 +2117,6 @@ class GraphView {
       g.strokeStyle = hexA(c, 0.95); g.lineWidth = 1.3;
       g.shadowColor = c; g.shadowBlur = 6;
       g.beginPath();
-      /* сэмплируем массив РОВНО по ширине области: px = 0..bw,
-         индекс отсчёта = px * n / bw — выход за bx..bx+bw исключён */
       const n = gn.wave.length;
       for (let px = 0; px <= bw; px++) {
         const i = Math.min(n - 1, Math.floor(px * n / bw));
@@ -1796,7 +2130,7 @@ class GraphView {
       g.strokeStyle = 'rgba(255,255,255,0.15)'; g.setLineDash([3, 4]); g.lineWidth = 1;
       g.beginPath(); g.moveTo(bx, by + bh / 2); g.lineTo(bx + bw, by + bh / 2); g.stroke(); g.setLineDash([]);
     }
-    g.restore(); /* конец clip */
+    g.restore();
 
     g.font = '9px "JetBrains Mono",monospace'; g.fillStyle = 'rgba(215,228,255,0.55)';
     const sum = gn.def.params.filter(p => p.type !== 'bool').slice(0, 3)
@@ -1974,17 +2308,23 @@ function renderProjectPanel(host: HTMLElement): void {
   st.appendChild(mk('Связей', String(studio.edges.length)));
   st.appendChild(mk('Частота', engine.ctx ? (engine.ctx.sampleRate / 1000).toFixed(1) + ' кГц' : '—'));
   st.appendChild(mk('Движок', engine.running ? 'РАБОТАЕТ' : 'СТОП'));
+  st.appendChild(mk('Версия', 'v' + APP_VERSION));
+  st.appendChild(mk('Пресетов', String(presets.length)));
   host.appendChild(st);
   const s2 = el('div', 'sect'); s2.textContent = isMobile() ? 'УПРАВЛЕНИЕ (ТАЧ)' : 'ГОРЯЧИЕ КЛАВИШИ'; host.appendChild(s2);
   const k = el('div', 'keys');
   k.innerHTML = isMobile()
-    ? '⚡ — палитра блоков (тап = добавить в центр)<br>Один палец на фоне — перемещение холста<br>Щипок двумя пальцами — масштаб<br>Тап по блоку — параметры (⚙)<br>Тяните от пина ► к пину ◄ — соединение<br>«⌗ Выравнивание» — автораскладка'
+    ? '⚡ — палитра блоков и пресетов<br>Один палец на фоне — перемещение холста<br>Щипок двумя пальцами — масштаб<br>Тап по блоку — параметры (⚙)<br>Тяните от пина ► к пину ◄ — соединение<br>«⌗ Выравнивание» — автораскладка'
     : '<b>Space</b> старт/стоп движка<br><b>B</b> bypass выбранного блока<br><b>Del</b> удалить блок/связь<br><b>F</b> вписать граф · <b>L</b> авто-выравнивание<br><b>G</b> привязка к сетке<br><b>Ctrl+Z / Ctrl+Shift+Z</b> отмена/повтор<br><b>Ctrl+S</b> сохранить проект';
   host.appendChild(k);
-  const s3 = el('div', 'sect'); s3.textContent = 'ТИПОВОЙ МАСТЕРИНГ'; host.appendChild(s3);
-  const h2 = el('div', 'hint');
-  h2.textContent = 'Источник → Шумоподавление → Гейт → Фильтр ВЧ → Параметрик EQ → Сатуратор → Компрессор → Реверб → Лимитер → Мастер-выход. Или нажмите «⚡ Шаблон мастеринга» в палитре.';
-  host.appendChild(h2);
+  const s3 = el('div', 'sect'); s3.textContent = '★ ПРЕСЕТЫ'; host.appendChild(s3);
+  const h3 = el('div', 'hint');
+  h3.textContent = 'Панель «⚡» → «★ Пресеты качества»: подкаст, радио-вокал, мастеринг, караоке-минус, голос из микса, реставрация и др. Пресет перестраивает цепь, сохраняя ваш источник. Отмена — Ctrl+Z.';
+  host.appendChild(h3);
+  const s4 = el('div', 'sect'); s4.textContent = 'НЕЙРО-БЛОКИ'; host.appendChild(s4);
+  const h4 = el('div', 'hint');
+  h4.textContent = '«Нейро-сепаратор · Стемы» делит микс: вокал / минус / барабаны / бас / голос (спектральные маски mid-side + HPSS). «AI-энхансер» адаптирует громкость, «AI-анти-клип» реставрирует перегруз.';
+  host.appendChild(h4);
 }
 
 /* ==================================================================
@@ -2435,7 +2775,7 @@ function drawAnalyzerModal(): void {
 }
 
 /* ==================================================================
-   PWA: иконка (canvas), манифест, service worker
+   PWA
    ================================================================== */
 function makeIcon(size: number): string {
   const c = el('canvas') as HTMLCanvasElement; c.width = c.height = size;
@@ -2467,7 +2807,8 @@ function setupPWA(iconURL: string): void {
   const manifest = {
     name: 'NeonForge Audio Lab — студия мастеринга',
     short_name: 'NeonForge',
-    description: 'Конструктор цепочек обработки звука: шумоподавление, гейт, фильтры, EQ, компрессоры, реверб, дилей. Экспорт в OGG/FLAC/WAV.',
+    version: APP_VERSION,
+    description: 'Конструктор цепочек обработки звука: шумоподавление, гейт, фильтры, EQ, компрессоры, реверб, нейро-сепарация на инструменты. Экспорт в OGG/FLAC/WAV.',
     start_url: '.', display: 'standalone', orientation: 'any',
     background_color: '#05050d', theme_color: '#05050d',
     icons: [{ src: iconURL, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }]
@@ -2484,11 +2825,28 @@ function setupPWA(iconURL: string): void {
 }
 
 /* ==================================================================
-   ПАЛИТРА + ПОИСК + ШАБЛОН
+   ПАЛИТРА: ПРЕСЕТЫ + БЛОКИ + ПОИСК + ШАБЛОН
    ================================================================== */
 function buildPalette(): void {
   const pal = $('palette');
-  const cats = ['Источники', 'Очистка', 'Фильтры', 'Эквализация', 'Динамика', 'Эффекты', 'Утилиты', 'Выход'];
+
+  /* пресеты качества */
+  const ph = el('div', 'pcat');
+  ph.textContent = '★ Пресеты улучшения звука';
+  ph.style.borderLeftColor = 'var(--teal)';
+  pal.appendChild(ph);
+  for (const pr of presets) {
+    const it = el('div', 'pitem preset');
+    it.innerHTML = `<span class="pdot" style="background:${pr.color};box-shadow:0 0 8px ${pr.color}"></span><div><div class="pname">★ ${pr.label}</div><div class="pdesc">${pr.desc}</div></div>`;
+    it.addEventListener('click', () => {
+      studio.applyPresetChain(pr.chain, pr.label);
+      if (isMobile()) closeDrawers();
+    });
+    pal.appendChild(it);
+  }
+
+  /* отдельные блоки */
+  const cats = ['Источники', 'Очистка', 'Нейро-обработка', 'Фильтры', 'Эквализация', 'Динамика', 'Эффекты', 'Утилиты', 'Выход'];
   for (const cat of cats) {
     const list = [...defs.values()].filter(d => d.category === cat);
     if (!list.length) continue;
@@ -2537,7 +2895,7 @@ function applyTemplate(): void {
   studio.connect(prev.id, out.id, true);
   view.autoLayout();
   pushHistory();
-  toast('Шаблон мастеринга применён: источник → denoise → ВЧ → EQ → комп → лимитер → выход', 'ok');
+  toast('Шаблон мастеринга применён', 'ok');
 }
 
 /* ==================================================================
@@ -2567,6 +2925,7 @@ function updateFmtNote(): void {
 function init(): void {
   const iconURL = makeIcon(512);
   ($('logo') as HTMLImageElement).src = iconURL;
+  $('appVer').textContent = 'v' + APP_VERSION;
   setupPWA(iconURL);
 
   buildPalette();
@@ -2597,7 +2956,9 @@ function init(): void {
   $('backdrop').addEventListener('click', closeDrawers);
   const mqM = window.matchMedia('(max-width:900px)');
   const syncDraggable = () => {
-    $('palette').querySelectorAll('.pitem').forEach(it => { (it as HTMLElement).draggable = !isMobile(); });
+    $('palette').querySelectorAll('.pitem').forEach(it => {
+      if (!it.classList.contains('preset')) (it as HTMLElement).draggable = !isMobile();
+    });
   };
   const onMq = () => { if (!mqM.matches) closeDrawers(); syncDraggable(); view.resize(true); view.fitAll(); };
   if (mqM.addEventListener) mqM.addEventListener('change', onMq); else (mqM as any).addListener(onMq);
@@ -2699,14 +3060,14 @@ function init(): void {
   window.addEventListener('orientationchange', () => { setTimeout(() => { view.resize(true); view.fitAll(); }, 250); });
 
   if (isMobile()) {
-    setTimeout(() => toast('Мобильный режим: ⚡ — блоки, щипок — масштаб, тап по блоку — параметры', 'info'), 700);
+    setTimeout(() => toast(`NeonForge v${APP_VERSION}: ⚡ — блоки и пресеты, щипок — масштаб, тап по блоку — параметры`, 'info'), 700);
   }
 }
 
 init();
 
 /* отладочный доступ */
-(window as any).NF = { studio, engine, defs, view, history };
+(window as any).NF = { studio, engine, defs, view, history, presets, APP_VERSION };
 })();
 </script>
 
