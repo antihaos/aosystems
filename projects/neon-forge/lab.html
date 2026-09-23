@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#05050d">
-<meta name="description" content="NeonForge Audio Lab v2.3 — неоновая SPA/PWA студия мастеринга: конструктор цепочек обработки (шумоподавление по образцу, гейт, фильтры, EQ, компрессоры, реверб, дилей), нейро-сепарация на инструменты (вокал/минус/барабаны/бас), пресеты качества, undo/redo, offline WAV, экспорт OGG/FLAC, IndexedDB.">
+<meta name="description" content="NeonForge Audio Lab v2.4 — неоновая SPA/PWA студия мастеринга: нейро-шумоподавление (самообучающаяся маска), AI-очистка вокала, автотюн до чистых нот, нейро-сепарация на инструменты, пресеты качества, offline WAV, экспорт OGG/FLAC, IndexedDB.">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>NeonForge Audio Lab v2.3 — студия мастеринга</title>
+<title>NeonForge Audio Lab v2.4 — студия мастеринга</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/unbounded@5.0.12/400.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/unbounded@5.0.12/700.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.12/400.css">
@@ -52,15 +52,13 @@ h1 small{display:block;font-family:'JetBrains Mono',monospace;font-size:8px;lett
 .btn.danger:hover{background:rgba(255,59,92,.12);box-shadow:0 0 16px rgba(255,59,92,.4)}
 .btn.mag{border-color:rgba(255,43,214,.5);color:var(--mag);text-shadow:0 0 8px rgba(255,43,214,.5)}
 .btn.mag:hover{background:rgba(255,43,214,.12);box-shadow:0 0 16px rgba(255,43,214,.4)}
-.btn.teal{border-color:rgba(0,245,212,.5);color:var(--teal);text-shadow:0 0 8px rgba(0,245,212,.5)}
-.btn.teal:hover{background:rgba(0,245,212,.12);box-shadow:0 0 16px rgba(0,245,212,.4)}
 .btn.active{background:rgba(255,59,92,.28)!important;box-shadow:0 0 18px rgba(255,59,92,.7);animation:recpulse 1s infinite}
 .btn.toggleOn{background:rgba(57,255,20,.18);border-color:var(--green);color:var(--green);box-shadow:0 0 12px rgba(57,255,20,.4)}
 @keyframes recpulse{50%{box-shadow:0 0 26px rgba(255,59,92,.95)}}
 .btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
 
 main{flex:1;display:flex;min-height:0;position:relative}
-#palette{width:246px;flex-shrink:0;background:var(--panel);border-right:1px solid rgba(0,229,255,.12);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 30px}
+#palette{width:248px;flex-shrink:0;background:var(--panel);border-right:1px solid rgba(0,229,255,.12);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 30px}
 .palt{font-family:'Unbounded',sans-serif;font-size:10px;letter-spacing:3px;color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.5);padding:4px 4px 10px}
 .pcat{font-size:9px;letter-spacing:2px;color:var(--mut);margin:14px 4px 6px;text-transform:uppercase;border-left:2px solid var(--mag);padding-left:6px}
 .pitem{display:flex;gap:8px;align-items:flex-start;padding:10px 8px;border:1px solid rgba(255,255,255,.07);border-radius:8px;margin-bottom:6px;
@@ -243,13 +241,13 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 </head>
 <body>
 
-<div id="boot"><div class="ring"></div><div id="bootMsg">ИНИЦИАЛИЗАЦИЯ ЯДРА v2.3 · КОМПИЛЯЦИЯ TYPESCRIPT…</div></div>
+<div id="boot"><div class="ring"></div><div id="bootMsg">ИНИЦИАЛИЗАЦИЯ ЯДРА v2.4 · КОМПИЛЯЦИЯ TYPESCRIPT…</div></div>
 
 <header>
   <div class="brand">
     <img id="logo" alt="logo">
     <h1>NEONFORGE<small>AUDIO LAB · MASTERING STUDIO</small></h1>
-    <span class="vchip" id="appVer">v2.3.0</span>
+    <span class="vchip" id="appVer">v2.4.0</span>
   </div>
   <div class="spacer"></div>
   <div class="hgroup">
@@ -322,7 +320,7 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
     <div id="fmtNote" class="hint"></div>
     <div class="sect">OFFLINE-РЕНДЕР · WAV (БЫСТРЕЕ РЕАЛЬНОГО ВРЕМЕНИ)</div>
     <div class="row"><button class="btn primary" id="btnOffline">⚡ Рендер WAV</button><span id="offlineStatus" class="hint"></span></div>
-    <div class="hint">Граф пересчитывается в OfflineAudioContext (источник — «Аудиофайл» или «Тон-генератор»). Script-процессоры (шумоподавление, гейт, нейро-сепарация) в offline проходят насквозь.</div>
+    <div class="hint">Граф пересчитывается в OfflineAudioContext (источник — «Аудиофайл» или «Тон-генератор»). Script-процессоры (шумодавы, нейро-сепарация, автотюн) в offline проходят насквозь — для них используйте рендер в реальном времени.</div>
     <div class="sect">РЕНДЕР АУДИОФАЙЛА В РЕАЛЬНОМ ВРЕМЕНИ</div>
     <div class="row"><span id="renderFileInfo" class="hint">файл не загружен</span></div>
     <div class="row"><button class="btn primary" id="btnRender">▶ Рендер и экспорт</button><span id="renderTime" class="hint"></span></div>
@@ -371,16 +369,15 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 
 <div class="modal" id="modalHelp">
   <div class="mpanel">
-    <div class="mtitle">❔ КАК РАБОТАТЬ · v2.3</div>
+    <div class="mtitle">❔ КАК РАБОТАТЬ · v2.4</div>
     <div class="keys" style="line-height:2.1">
-      <b>1</b> Панель «⚡»: сверху — ★ пресеты качества (подкаст, радио-вокал, мастеринг, караоке…), ниже — отдельные блоки. Тап добавляет блок/применяет пресет (источник сохраняется, остальная цепь перестраивается; Ctrl+Z отменяет).<br>
+      <b>1</b> Панель «⚡»: сверху — ★ пресеты качества (подкаст, нейро-вокал, автотюн, караоке, мастеринг…), ниже — отдельные блоки.<br>
       <b>2</b> Соедините пины: тяните от ► (справа) к ◄ (слева).<br>
       <b>3</b> Источники: микрофон, аудиофайл, тон-генератор.<br>
       <b>4</b> «▶» — пуск движка; провода оживают, в блоках видна форма сигнала.<br>
-      <b>5</b> Нейро-сепаратор делит микс на стемы: вокал / минус / барабаны / бас / голос (спектральные маски mid-side + HPSS). Работает на стерео-музыке.<br>
-      <b>6</b> Шумоподавление — по обученному профилю; гейт — по порогу.<br>
-      <b>7</b> «⬇ Экспорт»: offline WAV (быстро), рендер в реальном времени, live-запись OGG/FLAC. Тейки — в библиотеке IndexedDB.<br>
-      <b>8</b> Bypass (A/B) блока — сравнение «до/после».<br><br>
+      <b>5</b> Нейро-блоки: «Нейро-шумодав» обучается сам (без записи профиля), «AI-очистка вокала» — полоса вещательной обработки, «Автотюн» — тянет ноты к ближайшим чистым нотам тональности, «Нейро-сепаратор» — делит микс на вокал/минус/барабаны/бас/голос.<br>
+      <b>6</b> «⬇ Экспорт»: offline WAV, рендер в реальном времени, live-запись OGG/FLAC; тейки — в библиотеке.<br>
+      <b>7</b> Bypass (A/B) блока — сравнение «до/после». Пресеты отменяются через Ctrl+Z.<br><br>
       <b>Space</b> старт/стоп · <b>B</b> bypass · <b>Del</b> удалить · <b>F</b> вписать · <b>L</b> выравнивание · <b>G</b> сетка · <b>Ctrl+Z/Ctrl+Shift+Z</b> отмена/повтор · <b>Ctrl+S</b> сохранить<br><br>
       <b>Мобильные:</b> щипок — масштаб, палец на фоне — перемещение, ⚡ — палитра, ⚙ — параметры.
     </div>
@@ -398,13 +395,14 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 'use strict';
 
 /* ======================================================================
-   NeonForge Audio Lab v2.3 — расширяемая архитектура на TypeScript.
-   Новое: версия в шапке · библиотека пресетов качества · нейро-сепарация
-   на инструменты (mid/side маски + HPSS) · AI-энхансер авто-уровня ·
-   AI-анти-клип реставратор.
+   NeonForge Audio Lab v2.4 — расширяемая архитектура на TypeScript.
+   Новое: нейро-шумодав (самообучающаяся MLP-маска, RNNoise-lite),
+   AI-очистка вокала (de-esser + presence + air + comp), автотюн
+   (HPS-детектор тона + спектральный pitch-snap до нот тональности),
+   общий STFT-хелпер с overlap-add.
    ====================================================================== */
 
-const APP_VERSION = '2.3.0';
+const APP_VERSION = '2.4.0';
 
 /* ---------------------------- УТИЛИТЫ ---------------------------- */
 const $ = (s: string): HTMLElement => {
@@ -538,6 +536,58 @@ function fft(re: Float32Array, im: Float32Array, invert: boolean): void {
   if (invert) for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
 }
 
+/* ---------------- общий STFT-процессор (50% overlap, √Hann, OLA) ----------------
+   Колбэк process() модифицирует спектры нижних бинов [0..bins-1] каждого канала;
+   верхняя половина достраивается сопряжённо (вещественный выход). */
+interface STFTProc { input: GainNode; output: GainNode; dispose(): void; }
+function createSTFTProcessor(ctx: AudioContext, N: number, chIn: number, chOut: number,
+  process: (re: Float32Array[], im: Float32Array[], bins: number) => void): STFTProc {
+  const HOP = N >> 1, BINS = N / 2 + 1, LEN = N * 4;
+  const input = ctx.createGain(), output = ctx.createGain();
+  const script = ctx.createScriptProcessor(N, chIn, chOut);
+  input.connect(script); script.connect(output);
+  const win = new Float32Array(N);
+  for (let i = 0; i < N; i++) win[i] = Math.sqrt(0.5 * (1 - Math.cos(2 * Math.PI * i / N)));
+  const rin: Float32Array[] = [], rout: Float32Array[] = [];
+  for (let c = 0; c < chIn; c++) rin.push(new Float32Array(LEN));
+  for (let c = 0; c < chOut; c++) rout.push(new Float32Array(LEN));
+  let inWr = 0, inRd = 0, outWr = N, outRd = 0;
+  const nC = Math.max(chIn, chOut);
+  const re: Float32Array[] = [], im: Float32Array[] = [];
+  for (let c = 0; c < nC; c++) { re.push(new Float32Array(N)); im.push(new Float32Array(N)); }
+  script.onaudioprocess = (ev: any) => {
+    const ib = ev.inputBuffer, ob = ev.outputBuffer, n = ib.length;
+    for (let c = 0; c < chIn; c++) {
+      const d: Float32Array = ib.getChannelData(c);
+      for (let i = 0; i < n; i++) rin[c][(inWr + i) % LEN] = d[i];
+    }
+    inWr += n;
+    while (inWr - inRd >= N) {
+      for (let c = 0; c < chIn; c++) {
+        for (let k = 0; k < N; k++) { re[c][k] = rin[c][(inRd + k) % LEN] * win[k]; im[c][k] = 0; }
+        fft(re[c], im[c], false);
+      }
+      process(re, im, BINS);
+      for (let c = 0; c < chOut; c++) {
+        for (let k = 1; k < BINS - 1; k++) { re[c][N - k] = re[c][k]; im[c][N - k] = -im[c][k]; }
+        fft(re[c], im[c], true);
+        for (let k = 0; k < N; k++) rout[c][(outWr + k) % LEN] += re[c][k] * win[k];
+      }
+      outWr += HOP; inRd += HOP;
+    }
+    for (let c = 0; c < chOut; c++) {
+      const d: Float32Array = ob.getChannelData(c);
+      for (let i = 0; i < n; i++) { const idx = (outRd + i) % LEN; d[i] = rout[c][idx]; rout[c][idx] = 0; }
+    }
+    outRd += n;
+  };
+  const dispose = () => {
+    script.onaudioprocess = null;
+    try { input.disconnect(); script.disconnect(); output.disconnect(); } catch (e) { }
+  };
+  return { input, output, dispose };
+}
+
 /* ==================================================================
    РЕЕСТР УЗЛОВ
    ================================================================== */
@@ -566,7 +616,7 @@ register({
   },
   customUI(host) {
     const d = el('div', 'hint');
-    d.textContent = 'При первом запуске браузер запросит доступ к микрофону. Требуется HTTPS или localhost. Эхо-подавление браузера отключено — используйте узел «Шумоподавление».';
+    d.textContent = 'При первом запуске браузер запросит доступ к микрофону. Требуется HTTPS или localhost. Эхо-подавление браузера отключено — используйте нейро-шумодав.';
     host.appendChild(d);
   }
 });
@@ -613,7 +663,7 @@ register({
 
 register({
   type: 'tone', label: 'Тон-генератор', category: 'Источники', color: '#6effd9',
-  desc: 'Тестовый осциллятор: синус/квадрат/пила/треугольник. Для настройки фильтров, проверки цепи и offline-рендера.',
+  desc: 'Тестовый осциллятор: синус/квадрат/пила/треугольник. Для настройки фильтров, проверки цепи, автотюна и offline-рендера.',
   inputs: 0, outputs: 1,
   params: [
     { key: 'wave', label: 'Форма волны', type: 'enum', options: ['sine', 'square', 'sawtooth', 'triangle'], value: 'sine' },
@@ -645,7 +695,7 @@ register({
   }
 });
 
-/* ---------- ОЧИСТКА ---------- */
+/* ---------- ОЧИСТКА (классика) ---------- */
 register({
   type: 'denoise', label: 'Шумоподавление', category: 'Очистка', color: '#39ff14', offlineUnsafe: true,
   desc: 'Спектральное вычитание шума по обученному профилю. STFT 2048, 50% overlap, √Hann-окно. Сначала захватите образец шума.',
@@ -782,7 +832,306 @@ register({
   }
 });
 
-/* ---------- НЕЙРО-ОБРАБОТКА: СЕПАРАЦИЯ НА ИНСТРУМЕНТЫ ---------- */
+/* ==================================================================
+   НЕЙРО-ОБРАБОТКА
+   ================================================================== */
+
+/* ---------- 1) НЕЙРО-ШУМОДАВ (самообучающаяся MLP-маска) ---------- */
+register({
+  type: 'nndenoise', label: 'Нейро-шумодав', category: 'Нейро-обработка', color: '#00ff9d', offlineUnsafe: true,
+  desc: 'RNNoise-lite: STFT-1024, 24 лог-полосы, оценка шума минимальной статистикой и самообучающаяся нейросеть (MLP 4→6→1, онлайн-SGD), предсказывающая винеровскую маску с темпоральным сглаживанием. Профиль шума не нужен — адаптируется сам.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'strength', label: 'Агрессивность', type: 'float', min: 0, max: 100, step: 1, value: 65, unit: '%' },
+    { key: 'floor', label: 'Пол', type: 'float', min: -60, max: -6, step: 1, value: -32, unit: 'дБ' },
+    { key: 'learn', label: 'Онлайн-обучение', type: 'bool', value: true }
+  ],
+  factory(env, p) {
+    const ctx = env.ctx;
+    const N = 1024, BINS = N / 2 + 1, BANDS = 24, sr = ctx.sampleRate;
+    let strength = clamp(num(p.strength) / 100, 0, 1);
+    let floorLin = dbToGain(num(p.floor));
+    let learn = !!p.learn;
+    /* лог-полосы */
+    const bandLo = new Int32Array(BANDS), bandHi = new Int32Array(BANDS), bandCtr = new Float32Array(BANDS);
+    {
+      const fMin = 80, fMax = Math.min(9000, sr / 2 * 0.92);
+      for (let b = 0; b < BANDS; b++) {
+        const f0 = fMin * Math.pow(fMax / fMin, b / BANDS);
+        const f1 = fMin * Math.pow(fMax / fMin, (b + 1) / BANDS);
+        bandLo[b] = Math.max(1, Math.floor(f0 * N / sr));
+        bandHi[b] = Math.max(bandLo[b] + 1, Math.min(BINS, Math.ceil(f1 * N / sr)));
+        bandCtr[b] = (bandLo[b] + bandHi[b]) / 2;
+      }
+    }
+    /* интерполяция полос → бины */
+    const bLo = new Int32Array(BINS), bFrac = new Float32Array(BINS);
+    for (let k = 0; k < BINS; k++) {
+      if (k <= bandCtr[0]) { bLo[k] = 0; bFrac[k] = 0; }
+      else if (k >= bandCtr[BANDS - 1]) { bLo[k] = BANDS - 1; bFrac[k] = 0; }
+      else {
+        let b = 0; while (b < BANDS - 2 && bandCtr[b + 1] < k) b++;
+        bLo[k] = b; bFrac[k] = (k - bandCtr[b]) / Math.max(1e-6, bandCtr[b + 1] - bandCtr[b]);
+      }
+    }
+    const noise = new Float32Array(BANDS); let nfInit = false;
+    const E = new Float32Array(BANDS), prevE = new Float32Array(BANDS);
+    prevE.fill(1e-6);
+    const xi = new Float32Array(BANDS), prevG = new Float32Array(BANDS), bandG = new Float32Array(BANDS);
+    prevG.fill(1);
+    /* MLP 4→6→1, детерминированная инициализация */
+    const H = 6;
+    let seed = 98765;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed / 2147483647) * 2 - 1; };
+    const W1 = new Float32Array(4 * H), b1 = new Float32Array(H), W2 = new Float32Array(H), b2 = new Float32Array(1);
+    for (let i = 0; i < 4 * H; i++) W1[i] = rnd() * 0.4;
+    for (let i = 0; i < H; i++) { b1[i] = rnd() * 0.15; W2[i] = rnd() * 0.25; }
+    b2[0] = 0.6; /* стартовое смещение ≈ маска 0.65 */
+    const hid = new Float32Array(H);
+    const sig = (x: number) => 1 / (1 + Math.exp(-x));
+    const stft = createSTFTProcessor(ctx, N, 1, 1, (re, im, bins) => {
+      const r = re[0], ii = im[0];
+      /* энергии полос */
+      for (let b = 0; b < BANDS; b++) {
+        let s = 0, cnt = 0;
+        for (let k = bandLo[b]; k < bandHi[b] && k < bins; k++) { s += r[k] * r[k] + ii[k] * ii[k]; cnt++; }
+        E[b] = s / Math.max(1, cnt);
+      }
+      /* оценка шума минимальной статистикой */
+      if (!nfInit) { for (let b = 0; b < BANDS; b++) noise[b] = E[b]; nfInit = true; }
+      else for (let b = 0; b < BANDS; b++) {
+        const a = E[b] < noise[b] ? 0.25 : 0.004;
+        noise[b] = (1 - a) * noise[b] + a * E[b];
+      }
+      const lr = learn ? 0.05 : 0;
+      for (let b = 0; b < BANDS; b++) {
+        const post = E[b] / (noise[b] + 1e-10);
+        const xiNew = Math.max(0.85 * prevG[b] * prevG[b] * post + 0.15 * Math.max(post - 1, 0), 1e-4);
+        xi[b] = xiNew;
+        const G = xi[b] / (1 + xi[b]); /* винеровская цель обучения */
+        const flux = Math.abs(E[b] - prevE[b]) / (E[b] + prevE[b] + 1e-10);
+        const x0 = Math.tanh(Math.log(post + 1e-6) * 0.5);
+        const x1 = Math.tanh(Math.log(xi[b] + 1e-6) * 0.5);
+        const x2 = flux * 2 - 1;
+        const x3 = prevG[b] * 2 - 1;
+        /* forward */
+        for (let h = 0; h < H; h++) hid[h] = Math.tanh(W1[h] * x0 + W1[H + h] * x1 + W1[2 * H + h] * x2 + W1[3 * H + h] * x3 + b1[h]);
+        let z = b2[0]; for (let h = 0; h < H; h++) z += W2[h] * hid[h];
+        const y = sig(z);
+        /* backward: дистилляция винеровской маски (онлайн-SGD) */
+        if (lr > 0) {
+          const dZ = 2 * (y - G) * y * (1 - y);
+          b2[0] -= lr * dZ;
+          for (let h = 0; h < H; h++) {
+            const wOld = W2[h];
+            W2[h] -= lr * dZ * hid[h];
+            const dH = dZ * wOld * (1 - hid[h] * hid[h]);
+            b1[h] -= lr * dH;
+            W1[h] -= lr * dH * x0; W1[H + h] -= lr * dH * x1; W1[2 * H + h] -= lr * dH * x2; W1[3 * H + h] -= lr * dH * x3;
+          }
+        }
+        /* сглаженная маска + агрессивность + пол */
+        let g = clamp(y, floorLin, 1);
+        g = 0.55 * prevG[b] + 0.45 * g;
+        prevG[b] = g;
+        bandG[b] = Math.max(floorLin, Math.pow(g, 0.4 + strength * 1.6));
+      }
+      /* интерполяция и применение к бинам */
+      for (let k = 0; k < bins; k++) {
+        const b0 = bLo[k];
+        const gk = b0 < BANDS - 1 ? bandG[b0] * (1 - bFrac[k]) + bandG[b0 + 1] * bFrac[k] : bandG[b0];
+        r[k] *= gk; ii[k] *= gk;
+      }
+      prevE.set(E);
+    });
+    return {
+      input: stft.input, output: stft.output,
+      update(pp) { strength = clamp(num(pp.strength) / 100, 0, 1); floorLin = dbToGain(num(pp.floor)); learn = !!pp.learn; },
+      dispose: stft.dispose
+    };
+  },
+  customUI(host) {
+    const d = el('div', 'hint');
+    d.textContent = 'Не требует записи профиля: сеть оценивает шум минимальной статистикой и непрерывно обучается в реальном времени. Для заморозки весов выключите «Онлайн-обучение».';
+    host.appendChild(d);
+  }
+});
+
+/* ---------- 2) AI-ОЧИСТКА ВОКАЛА ---------- */
+register({
+  type: 'vocal', label: 'AI-очистка вокала', category: 'Нейро-обработка', color: '#ff70e0', offlineUnsafe: true,
+  desc: 'Комплексная полоса очистки голоса одним регулятором: ВЧ-фильтр 85 Гц + режектор 50 Гц, адаптивный де-эссер (ВЧ-сплит с огибающей), presence-подъём 2.8 кГц, «воздух» 10 кГц и мягкий компрессор с авто-makeup.',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'intensity', label: 'Интенсивность', type: 'float', min: 0, max: 100, step: 1, value: 70, unit: '%' },
+    { key: 'deesser', label: 'Де-эссер', type: 'float', min: 0, max: 12, step: 0.5, value: 6, unit: 'дБ' },
+    { key: 'air', label: 'Воздух', type: 'float', min: 0, max: 9, step: 0.5, value: 3, unit: 'дБ' }
+  ],
+  factory(env, p) {
+    const ctx = env.ctx, sr = ctx.sampleRate;
+    const input = ctx.createGain(), output = ctx.createGain();
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 85; hp.Q.value = 0.7;
+    const notch = ctx.createBiquadFilter(); notch.type = 'notch'; notch.frequency.value = 50; notch.Q.value = 9;
+    const presence = ctx.createBiquadFilter(); presence.type = 'peaking'; presence.frequency.value = 2800; presence.Q.value = 1;
+    const airF = ctx.createBiquadFilter(); airF.type = 'highshelf'; airF.frequency.value = 10000;
+    const comp = ctx.createDynamicsCompressor(); comp.knee.value = 8; comp.ratio.value = 3; comp.attack.value = 0.008; comp.release.value = 0.22;
+    const mk = ctx.createGain();
+    const ds = ctx.createScriptProcessor(1024, 2, 2);
+    input.connect(hp); hp.connect(notch); notch.connect(ds); ds.connect(presence);
+    presence.connect(airF); airF.connect(comp); comp.connect(mk); mk.connect(output);
+    let intensity = clamp(num(p.intensity) / 100, 0, 1);
+    let dsAmt = clamp(num(p.deesser) / 12, 0, 1);
+    let airG = num(p.air);
+    let lpL = 0, lpR = 0, envL = 0, envR = 0;
+    const aLP = Math.exp(-2 * Math.PI * 4200 / sr);
+    const relC = Math.exp(-1 / (0.06 * sr));
+    const thr = 0.035;
+    ds.onaudioprocess = (ev: any) => {
+      const ib = ev.inputBuffer, ob = ev.outputBuffer;
+      const L: Float32Array = ib.getChannelData(0), OL: Float32Array = ob.getChannelData(0);
+      const R: Float32Array | null = ib.numberOfChannels > 1 ? ib.getChannelData(1) : null;
+      const OR: Float32Array | null = ob.numberOfChannels > 1 ? ob.getChannelData(1) : null;
+      const amt = dsAmt;
+      for (let i = 0; i < L.length; i++) {
+        lpL += aLP * (L[i] - lpL);
+        const hf = L[i] - lpL;
+        const a = Math.abs(hf);
+        envL = a > envL ? a : envL * relC;
+        const gL = 1 / (1 + amt * Math.max(0, envL / thr - 1));
+        OL[i] = lpL + hf * gL;
+        if (OR) {
+          const x = R ? R[i] : L[i];
+          lpR += aLP * (x - lpR);
+          const hfr = x - lpR;
+          const ar = Math.abs(hfr);
+          envR = ar > envR ? ar : envR * relC;
+          const gR = 1 / (1 + amt * Math.max(0, envR / thr - 1));
+          OR[i] = lpR + hfr * gR;
+        }
+      }
+    };
+    const apply = () => {
+      const t = ctx.currentTime;
+      presence.gain.setTargetAtTime(1 + 2.4 * intensity, t, .02);
+      airF.gain.setTargetAtTime(airG, t, .02);
+      comp.threshold.setTargetAtTime(-14 - 10 * intensity, t, .03);
+      mk.gain.setTargetAtTime(dbToGain(2 + intensity * 5), t, .03);
+    };
+    apply();
+    return {
+      input, output,
+      update(pp) {
+        intensity = clamp(num(pp.intensity) / 100, 0, 1);
+        dsAmt = clamp(num(pp.deesser) / 12, 0, 1);
+        airG = num(pp.air);
+        apply();
+      },
+      dispose() {
+        ds.onaudioprocess = null;
+        try { input.disconnect(); hp.disconnect(); notch.disconnect(); ds.disconnect(); presence.disconnect(); airF.disconnect(); comp.disconnect(); mk.disconnect(); output.disconnect(); } catch (e) { }
+      }
+    };
+  }
+});
+
+/* ---------- 3) АВТОТЮН (pitch-snap до чистых нот) ---------- */
+register({
+  type: 'autotune', label: 'Автотюн · Neuro-Pitch', category: 'Нейро-обработка', color: '#4cc9f0', offlineUnsafe: true,
+  desc: 'Коррекция высоты голоса до ближайших чистых нот выбранной тональности: HPS-детектор основного тона в спектре, плавный спектральный pitch-snap с регулируемой глубиной и глиссандо. Подайте моно-вокал (или тон-генератор для проверки).',
+  inputs: 1, outputs: 1,
+  params: [
+    { key: 'root', label: 'Тоника', type: 'enum', options: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'], value: 'C' },
+    { key: 'scale', label: 'Лад', type: 'enum', options: ['хроматическая', 'мажор', 'минор', 'пентатоника маж', 'пентатоника мин'], value: 'хроматическая' },
+    { key: 'depth', label: 'Глубина', type: 'float', min: 0, max: 100, step: 1, value: 90, unit: '%' },
+    { key: 'glide', label: 'Глиссандо', type: 'float', min: 0.05, max: 0.9, step: 0.05, value: 0.3 }
+  ],
+  factory(env, p) {
+    const ctx = env.ctx, N = 2048, BINS = N / 2 + 1, sr = ctx.sampleRate;
+    const roots = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const scaleSets: Record<string, number[]> = {
+      'хроматическая': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      'мажор': [0, 2, 4, 5, 7, 9, 11],
+      'минор': [0, 2, 3, 5, 7, 8, 10],
+      'пентатоника маж': [0, 2, 4, 7, 9],
+      'пентатоника мин': [0, 3, 5, 7, 10]
+    };
+    let rootPc = Math.max(0, roots.indexOf(String(p.root)));
+    let scale = scaleSets[String(p.scale)] || scaleSets['хроматическая'];
+    let depth = clamp(num(p.depth) / 100, 0, 1);
+    let glide = clamp(num(p.glide), 0.02, 0.95);
+    let ratioCur = 1;
+    const mag = new Float32Array(BINS);
+    const tmpR = new Float32Array(BINS), tmpI = new Float32Array(BINS);
+    const stft = createSTFTProcessor(ctx, N, 2, 2, (re, im, bins) => {
+      /* суммарная магнитуда для детектора тона */
+      for (let k = 0; k < bins; k++)
+        mag[k] = (Math.hypot(re[0][k], im[0][k]) + Math.hypot(re[1][k], im[1][k])) * 0.5;
+      /* гармонический детектор (HPS-sum) в диапазоне 70..700 Гц */
+      const kMin = Math.max(2, Math.floor(70 * N / sr));
+      const kMax = Math.min(bins - 5, Math.ceil(700 * N / sr));
+      let bestK = 0, bestS = -Infinity;
+      for (let k = kMin; k <= kMax; k++) {
+        let s = 0;
+        for (let h = 1; h <= 4; h++) { const idx = k * h; if (idx >= bins) break; s += Math.log(mag[idx] + 1e-6); }
+        if (s > bestS) { bestS = s; bestK = k; }
+      }
+      /* проверка «вокальности»: пик гармоник заметно выше среднего фона */
+      let meanLog = 0, cnt = 0;
+      for (let k = kMin; k < bins; k += 4) { meanLog += Math.log(mag[k] + 1e-6); cnt++; }
+      meanLog /= Math.max(1, cnt);
+      const voiced = bestK > 0 && (bestS / 4 - meanLog) > 0.55;
+      let target = 1;
+      if (voiced) {
+        const f0 = bestK * sr / N;
+        if (f0 > 65 && f0 < 800) {
+          const m = 69 + 12 * Math.log2(f0 / 440);
+          let bestD = 0, bestAbs = Infinity;
+          for (let s = 0; s < scale.length; s++) {
+            const pc = (rootPc + scale[s]) % 12;
+            const n = Math.round((m - pc) / 12) * 12 + pc;
+            const d = n - m;
+            if (Math.abs(d) < bestAbs) { bestAbs = Math.abs(d); bestD = d; }
+          }
+          bestD = clamp(bestD, -1.5, 1.5);
+          target = Math.pow(2, bestD * depth / 12);
+        }
+      }
+      ratioCur += (target - ratioCur) * clamp(glide, 0.02, 0.95);
+      const ratio = clamp(ratioCur, 0.85, 1.18);
+      if (Math.abs(ratio - 1) > 0.0008) {
+        for (let c = 0; c < 2; c++) {
+          const R = re[c], I = im[c];
+          for (let k = 0; k < bins; k++) { tmpR[k] = R[k]; tmpI[k] = I[k]; }
+          for (let k = 0; k < bins; k++) {
+            const pos = k / ratio;
+            const i0 = Math.floor(pos);
+            if (i0 >= bins - 1) { R[k] = 0; I[k] = 0; continue; }
+            const fr = pos - i0;
+            R[k] = tmpR[i0] * (1 - fr) + tmpR[i0 + 1] * fr;
+            I[k] = tmpI[i0] * (1 - fr) + tmpI[i0 + 1] * fr;
+          }
+        }
+      }
+    });
+    return {
+      input: stft.input, output: stft.output,
+      update(pp) {
+        rootPc = Math.max(0, roots.indexOf(String(pp.root)));
+        scale = scaleSets[String(pp.scale)] || scaleSets['хроматическая'];
+        depth = clamp(num(pp.depth) / 100, 0, 1);
+        glide = clamp(num(pp.glide), 0.02, 0.95);
+      },
+      dispose: stft.dispose
+    };
+  },
+  customUI(host) {
+    const d = el('div', 'hint');
+    d.textContent = 'Совет: для проверки подключите «Тон-генератор» (например 455 Гц, пила/синус) — автотюн дотянет его до ближайшей ноты тональности. На реальном вокале лучше работает хроматический лад и глубина 80–100%.';
+    host.appendChild(d);
+  }
+});
+
+/* ---------- 4) НЕЙРО-СЕПАРАЦИЯ НА ИНСТРУМЕНТЫ ---------- */
 register({
   type: 'stems', label: 'Нейро-сепаратор · Стемы', category: 'Нейро-обработка', color: '#00f5d4', offlineUnsafe: true,
   desc: 'Гибридная нейро-алгоритмическая сепарация микса: спектральные маски STFT-2048 (mid/side-анализ — вокал и минус; HPSS медианные маски — барабаны и бас; фокус речи — голос). Лучше всего работает на стерео-музыке.',
@@ -906,6 +1255,7 @@ register({
   }
 });
 
+/* ---------- 5) AI-ЭНХАНСЕР ---------- */
 register({
   type: 'aienh', label: 'AI-энхансер · Авто-уровень', category: 'Нейро-обработка', color: '#f72585', offlineUnsafe: true,
   desc: 'Адаптивный нейро-регулятор: непрерывно анализирует RMS и плавно подтягивает громкость к целевому уровню (авто-гейн против перегруза и провалов) + тон-шелфы тепла и присутствия.',
@@ -961,6 +1311,7 @@ register({
   }
 });
 
+/* ---------- 6) AI-АНТИКЛИП ---------- */
 register({
   type: 'declip', label: 'AI-реставратор · Анти-клип', category: 'Нейро-обработка', color: '#ffd166',
   desc: 'Реставрация перегруженных записей: мягкое tanh-колено восстанавливает срезанные пики, убирая «пилу» клиппинга и хруст. Работает поблочно без задержки.',
@@ -1335,19 +1686,31 @@ register({
    БИБЛИОТЕКА ПРЕСЕТОВ КАЧЕСТВА
    ================================================================== */
 const presets: PresetDef[] = [
-  { id: 'podcast', label: 'Чистый подкаст', color: '#00e5ff', desc: 'Шумодав + гейт + ВЧ-фильтр + тёплый EQ + компрессор + лимитер. Речь «как на радио».',
+  { id: 'nvocal', label: 'Нейро-вокал (полный)', color: '#00ff9d', desc: 'Максимальная очистка голоса: нейро-шумодав → AI-очистка вокала → автотюн (хроматика) → компрессор → лимитер.',
     chain: [
-      { type: 'denoise', params: { amount: 1.8, floor: -30 } },
+      { type: 'nndenoise', params: { strength: 65, floor: -32, learn: true } },
+      { type: 'vocal', params: { intensity: 70, deesser: 6, air: 3 } },
+      { type: 'autotune', params: { root: 'C', scale: 'хроматическая', depth: 85, glide: .3 } },
+      { type: 'comp', params: { threshold: -24, knee: 8, ratio: 3, attack: .01, release: .2, makeup: 4 } },
+      { type: 'limiter', params: { threshold: -2.5, attack: .003, release: .08 } }] },
+  { id: 'tune', label: 'Автотюн-вокал', color: '#4cc9f0', desc: 'Лёгкая нейро-чистка + автотюн до чистых нот (мажор) + воздух и реверб.',
+    chain: [
+      { type: 'nndenoise', params: { strength: 45, floor: -36, learn: true } },
+      { type: 'autotune', params: { root: 'C', scale: 'мажор', depth: 100, glide: .25 } },
+      { type: 'vocal', params: { intensity: 55, deesser: 5, air: 5 } },
+      { type: 'reverb', params: { decay: 1.8, wet: 12 } },
+      { type: 'limiter', params: { threshold: -3, attack: .003, release: .08 } }] },
+  { id: 'podcast', label: 'Чистый подкаст', color: '#00e5ff', desc: 'Нейро-шумодав + гейт + ВЧ-фильтр + тёплый EQ + компрессор + лимитер. Речь «как на радио».',
+    chain: [
+      { type: 'nndenoise', params: { strength: 60, floor: -30, learn: true } },
       { type: 'gate', params: { threshold: -48, attack: .005, release: .15 } },
       { type: 'hp', params: { freq: 85, q: .7 } },
       { type: 'eq3', params: { lowFreq: 100, lowGain: -2, midFreq: 1200, midGain: 2.5, midQ: 1, highFreq: 9000, highGain: 1.5 } },
       { type: 'comp', params: { threshold: -24, knee: 8, ratio: 3, attack: .01, release: .2, makeup: 4 } },
       { type: 'limiter', params: { threshold: -3, attack: .003, release: .08 } }] },
-  { id: 'broadcast', label: 'Радио-вокал', color: '#ff2d95', desc: 'Плотный эфирный вокал: сатурация, быстрые компрессор и лимитер, яркий верх.',
+  { id: 'broadcast', label: 'Радио-вокал', color: '#ff2d95', desc: 'Плотный эфирный вокал: AI-очистка, сатурация, быстрые компрессор и лимитер, яркий верх.',
     chain: [
-      { type: 'denoise', params: { amount: 1.5, floor: -28 } },
-      { type: 'hp', params: { freq: 100, q: .7 } },
-      { type: 'eq3', params: { lowFreq: 120, lowGain: -1, midFreq: 2500, midGain: 3, midQ: 1.2, highFreq: 10000, highGain: 2 } },
+      { type: 'vocal', params: { intensity: 80, deesser: 7, air: 4 } },
       { type: 'satur', params: { drive: 3, mix: 18 } },
       { type: 'comp', params: { threshold: -22, knee: 6, ratio: 5, attack: .005, release: .15, makeup: 5 } },
       { type: 'limiter', params: { threshold: -2, attack: .002, release: .06 } }] },
@@ -1363,16 +1726,16 @@ const presets: PresetDef[] = [
       { type: 'hp', params: { freq: 40, q: .7 } },
       { type: 'comp', params: { threshold: -26, knee: 6, ratio: 4, attack: .003, release: .12, makeup: 6 } },
       { type: 'limiter', params: { threshold: -1, attack: .001, release: .05 } }] },
-  { id: 'asmr', label: 'ASMR / тихая запись', color: '#8b5cff', desc: 'Бережная очистка и усиление тихих записей: мягкий шумодав, ВЧ/НЧ-срезы, медленный компрессор.',
+  { id: 'asmr', label: 'ASMR / тихая запись', color: '#8b5cff', desc: 'Бережная очистка и усиление тихих записей: нейро-шумодав, ВЧ/НЧ-срезы, медленный компрессор.',
     chain: [
-      { type: 'denoise', params: { amount: 2, floor: -34 } },
+      { type: 'nndenoise', params: { strength: 50, floor: -38, learn: true } },
       { type: 'hp', params: { freq: 60, q: .7 } },
       { type: 'lp', params: { freq: 16000, q: .7 } },
       { type: 'comp', params: { threshold: -30, knee: 20, ratio: 2, attack: .02, release: .4, makeup: 8 } },
       { type: 'gainpan', params: { gain: 3, pan: 0 } }] },
-  { id: 'field', label: 'Полевая запись', color: '#b6ff00', desc: 'Ветер, улица, гул 50 Гц: агрессивный шумодав, гейт, ВЧ-фильтр, режектор, компрессор.',
+  { id: 'field', label: 'Полевая запись', color: '#b6ff00', desc: 'Ветер, улица, гул 50 Гц: нейро-шумодав, гейт, ВЧ-фильтр, режектор, компрессор.',
     chain: [
-      { type: 'denoise', params: { amount: 2.6, floor: -24 } },
+      { type: 'nndenoise', params: { strength: 85, floor: -26, learn: true } },
       { type: 'gate', params: { threshold: -42, attack: .003, release: .2 } },
       { type: 'hp', params: { freq: 120, q: .8 } },
       { type: 'notch', params: { freq: 50, q: 12 } },
@@ -1383,11 +1746,10 @@ const presets: PresetDef[] = [
       { type: 'stems', params: { mode: 'минус', strength: 85 } },
       { type: 'eq3', params: { lowFreq: 100, lowGain: .5, midFreq: 800, midGain: 0, midQ: 1, highFreq: 10000, highGain: 1 } },
       { type: 'gainpan', params: { gain: 2, pan: 0 } }] },
-  { id: 'voiceboost', label: 'Голос из микса', color: '#00f5d4', desc: 'Нейро-фокусировка речи + очистка, presence-EQ, компрессия и лёгкий реверб.',
+  { id: 'voiceboost', label: 'Голос из микса', color: '#00f5d4', desc: 'Нейро-фокусировка речи + AI-очистка, presence-EQ, компрессия и лёгкий реверб.',
     chain: [
       { type: 'stems', params: { mode: 'голос', strength: 80 } },
-      { type: 'hp', params: { freq: 100, q: .7 } },
-      { type: 'eq3', params: { lowFreq: 120, lowGain: -1, midFreq: 2500, midGain: 2, midQ: 1, highFreq: 9000, highGain: 1.5 } },
+      { type: 'vocal', params: { intensity: 60, deesser: 5, air: 3 } },
       { type: 'comp', params: { threshold: -22, knee: 8, ratio: 3, attack: .01, release: .2, makeup: 3 } },
       { type: 'reverb', params: { decay: 1.6, wet: 10 } }] },
   { id: 'drumsolo', label: 'Ударные соло', color: '#00f5d4', desc: 'HPSS-сепарация перкуссии из микса + панч-компрессия и лимитер.',
@@ -1396,10 +1758,10 @@ const presets: PresetDef[] = [
       { type: 'hp', params: { freq: 40, q: .7 } },
       { type: 'comp', params: { threshold: -20, knee: 6, ratio: 4, attack: .003, release: .1, makeup: 3 } },
       { type: 'limiter', params: { threshold: -2, attack: .002, release: .06 } }] },
-  { id: 'restaur', label: 'Реставрация записи', color: '#ffd166', desc: 'Старые/перегруженные записи: анти-клип, шумодав, полоса и авто-уровень AI-энхансера.',
+  { id: 'restaur', label: 'Реставрация записи', color: '#ffd166', desc: 'Старые/перегруженные записи: анти-клип, нейро-шумодав, полоса и авто-уровень AI-энхансера.',
     chain: [
       { type: 'declip', params: { threshold: .9, blend: 85 } },
-      { type: 'denoise', params: { amount: 2.2, floor: -28 } },
+      { type: 'nndenoise', params: { strength: 70, floor: -28, learn: true } },
       { type: 'hp', params: { freq: 70, q: .7 } },
       { type: 'lp', params: { freq: 15000, q: .7 } },
       { type: 'aienh', params: { target: -18, rate: 2, tone: 1 } },
@@ -1618,7 +1980,6 @@ class Studio {
       if (gn.type === 'file' && gn.handle) { gn.handle.stop?.(); gn.handle.start?.(); }
   }
 
-  /* перестройка цепи по пресету: источник сохраняется, остальное заменяется */
   applyPresetChain(chain: PresetStep[], label: string): void {
     this.loading = true;
     const src = [...this.nodes.values()].find(n => n.def.inputs === 0 && n.def.outputs > 0);
@@ -2096,7 +2457,6 @@ class GraphView {
     g.strokeStyle = hexA(c, 0.3); g.lineWidth = 1;
     g.beginPath(); g.moveTo(x + 9, y + 26); g.lineTo(x + w - 9, y + 26); g.stroke();
 
-    /* область осциллограммы: жёсткий clip по границам блока */
     const bx = x + 10, by = y + 32, bw = w - 20, bh = 34;
     g.save();
     g.beginPath(); g.rect(bx, by, bw, bh); g.clip();
@@ -2176,7 +2536,7 @@ function buildParamRow(gn: GNode, p: ParamDef): HTMLElement {
     const sw = el('div', 'switchRow');
     const lab = el('span'); lab.textContent = p.label;
     const selEl = el('select', 'textinp') as HTMLSelectElement;
-    selEl.style.flex = '0 0 130px'; selEl.style.padding = '6px 8px';
+    selEl.style.flex = '0 0 150px'; selEl.style.padding = '6px 8px';
     for (const o of (p.options || [])) {
       const opt = el('option') as HTMLOptionElement; opt.value = o; opt.textContent = o;
       if (gn.params[p.key] === o) opt.selected = true;
@@ -2317,14 +2677,10 @@ function renderProjectPanel(host: HTMLElement): void {
     ? '⚡ — палитра блоков и пресетов<br>Один палец на фоне — перемещение холста<br>Щипок двумя пальцами — масштаб<br>Тап по блоку — параметры (⚙)<br>Тяните от пина ► к пину ◄ — соединение<br>«⌗ Выравнивание» — автораскладка'
     : '<b>Space</b> старт/стоп движка<br><b>B</b> bypass выбранного блока<br><b>Del</b> удалить блок/связь<br><b>F</b> вписать граф · <b>L</b> авто-выравнивание<br><b>G</b> привязка к сетке<br><b>Ctrl+Z / Ctrl+Shift+Z</b> отмена/повтор<br><b>Ctrl+S</b> сохранить проект';
   host.appendChild(k);
-  const s3 = el('div', 'sect'); s3.textContent = '★ ПРЕСЕТЫ'; host.appendChild(s3);
+  const s3 = el('div', 'sect'); s3.textContent = '★ НЕЙРО-БЛОКИ'; host.appendChild(s3);
   const h3 = el('div', 'hint');
-  h3.textContent = 'Панель «⚡» → «★ Пресеты качества»: подкаст, радио-вокал, мастеринг, караоке-минус, голос из микса, реставрация и др. Пресет перестраивает цепь, сохраняя ваш источник. Отмена — Ctrl+Z.';
+  h3.textContent = 'Нейро-шумодав — самообучающаяся маска (без записи профиля). AI-очистка вокала — де-эссер/presence/воздух/компрессия одной ручкой. Автотюн — тянет голос к чистым нотам тональности. Нейро-сепаратор — вокал/минус/барабаны/бас/голос.';
   host.appendChild(h3);
-  const s4 = el('div', 'sect'); s4.textContent = 'НЕЙРО-БЛОКИ'; host.appendChild(s4);
-  const h4 = el('div', 'hint');
-  h4.textContent = '«Нейро-сепаратор · Стемы» делит микс: вокал / минус / барабаны / бас / голос (спектральные маски mid-side + HPSS). «AI-энхансер» адаптирует громкость, «AI-анти-клип» реставрирует перегруз.';
-  host.appendChild(h4);
 }
 
 /* ==================================================================
@@ -2808,7 +3164,7 @@ function setupPWA(iconURL: string): void {
     name: 'NeonForge Audio Lab — студия мастеринга',
     short_name: 'NeonForge',
     version: APP_VERSION,
-    description: 'Конструктор цепочек обработки звука: шумоподавление, гейт, фильтры, EQ, компрессоры, реверб, нейро-сепарация на инструменты. Экспорт в OGG/FLAC/WAV.',
+    description: 'Конструктор цепочек обработки звука: нейро-шумодав, очистка вокала, автотюн, сепарация на инструменты, фильтры, EQ, компрессоры. Экспорт в OGG/FLAC/WAV.',
     start_url: '.', display: 'standalone', orientation: 'any',
     background_color: '#05050d', theme_color: '#05050d',
     icons: [{ src: iconURL, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }]
@@ -2830,7 +3186,6 @@ function setupPWA(iconURL: string): void {
 function buildPalette(): void {
   const pal = $('palette');
 
-  /* пресеты качества */
   const ph = el('div', 'pcat');
   ph.textContent = '★ Пресеты улучшения звука';
   ph.style.borderLeftColor = 'var(--teal)';
@@ -2845,7 +3200,6 @@ function buildPalette(): void {
     pal.appendChild(it);
   }
 
-  /* отдельные блоки */
   const cats = ['Источники', 'Очистка', 'Нейро-обработка', 'Фильтры', 'Эквализация', 'Динамика', 'Эффекты', 'Утилиты', 'Выход'];
   for (const cat of cats) {
     const list = [...defs.values()].filter(d => d.category === cat);
@@ -2882,7 +3236,7 @@ function applyTemplate(): void {
   let src = [...studio.nodes.values()].find(n => n.def.inputs === 0 && n.def.outputs > 0);
   if (!src) src = studio.addNode('mic', 40, 300, undefined, true) as GNode;
   const y = 300;
-  const seq = ['denoise', 'hp', 'eq3', 'comp', 'limiter'];
+  const seq = ['nndenoise', 'hp', 'eq3', 'comp', 'limiter'];
   let prev = src, x = prev.x + 260;
   for (const t of seq) {
     const gn = studio.addNode(t, x, y, undefined, true);
@@ -2903,11 +3257,11 @@ function applyTemplate(): void {
    ================================================================== */
 function buildDefaultProject(): void {
   const y = 300;
-  const chain: Array<[string, number]> = [['mic', 40], ['denoise', 300], ['hp', 560], ['eq3', 820], ['comp', 1080], ['limiter', 1340], ['out', 1600]];
+  const chain: Array<[string, number]> = [['mic', 40], ['nndenoise', 300], ['vocal', 560], ['eq3', 820], ['comp', 1080], ['limiter', 1340], ['out', 1600]];
   const ids: string[] = [];
   chain.forEach(([t, x]) => { const gn = studio.addNode(t, x, y, undefined, true); if (gn) ids.push(gn.id); });
   for (let i = 0; i + 1 < ids.length; i++) studio.connect(ids[i], ids[i + 1], true);
-  studio.name = 'Мастеринг-цепь по умолчанию';
+  studio.name = 'Нейро-мастеринг по умолчанию';
   studio.select(null);
 }
 
