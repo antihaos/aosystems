@@ -70,10 +70,8 @@ main{flex:1;display:flex;min-height:0;position:relative}
 #canvasWrap{flex:1;position:relative;min-width:0;overflow:hidden;background:
   radial-gradient(ellipse at 30% 20%, rgba(0,229,255,.045), transparent 55%),
   radial-gradient(ellipse at 75% 80%, rgba(255,43,214,.05), transparent 55%), var(--bg)}
-/* ФИКС КООРДИНАТ: canvas — replaced-элемент, без width/height:100% его
-   CSS-размер равен атрибутам width/height (= cssW*dpr), из-за чего на
-   экранах с dpr != 1 вся сцена отображалась крупнее расчётной и клики
-   попадали мимо блоков. Жёстко привязываем CSS-размер к контейнеру. */
+/* canvas — replaced-элемент: без width/height:100% его CSS-размер равен
+   атрибутам width/height (= cssW*dpr) → рассогласование координат при dpr != 1 */
 #graph{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #viewTools{position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:5;flex-wrap:wrap;max-width:calc(100% - 20px)}
 #viewTools .btn{padding:6px 9px;font-size:10px;background:rgba(8,9,18,.85)}
@@ -393,11 +391,9 @@ audio{width:100%;height:40px;border-radius:8px;background:#0a0c18}
 'use strict';
 
 /* ======================================================================
-   NeonForge Audio Lab v2.1 — расширяемая архитектура на TypeScript.
-   Исправлена система координат холста: CSS-размер canvas жёстко равен
-   контейнеру (width/height:100%), все экранные измерения берутся из
-   getBoundingClientRect самого canvas — рассогласования при dpr != 1
-   и на мобильных больше нет.
+   NeonForge Audio Lab v2.2 — расширяемая архитектура на TypeScript.
+   Исправлена отрисовка осциллограммы в карточке блока: сэмплирование
+   строго по ширине области + clip-маска — сигнал не выходит за границы.
    ====================================================================== */
 
 /* ---------------------------- УТИЛИТЫ ---------------------------- */
@@ -1400,9 +1396,6 @@ function toggleBypass(gn: GNode): void {
 
 /* ==================================================================
    CANVAS-ВИД — ЕДИНАЯ СИСТЕМА КООРДИНАТ
-   Экранные координаты (CSS px) всегда берутся из getBoundingClientRect
-   самого canvas; cssW/cssH — это ТОЧНО displayed-размер canvas;
-   мировые <-> экранные преобразования используют одни и те же cssW/H.
    ================================================================== */
 interface Hit { kind: 'none' | 'node' | 'pin' | 'pout' | 'edge'; node?: GNode; edge?: GEdge; }
 
@@ -1445,8 +1438,6 @@ class GraphView {
     requestAnimationFrame(ts => this.frame(ts));
   }
 
-  /* Размеры — ТОЛЬКО из фактического прямоугольника canvas.
-     forced=true пересоздаёт backbuffer даже если размеры не изменились. */
   resize(forced?: boolean): void {
     const r = this.canvas.getBoundingClientRect();
     const w = Math.max(1, r.width), h = Math.max(1, r.height);
@@ -1463,7 +1454,6 @@ class GraphView {
   }
   sx(wx: number): number { return (wx - this.cam.x) * this.cam.z + this.cssW / 2; }
   sy(wy: number): number { return (wy - this.cam.y) * this.cam.z + this.cssH / 2; }
-  /* мышиные/тач-координаты — относительно фактического rect canvas */
   mouseSet(e: PointerEvent | WheelEvent | MouseEvent | DragEvent): void {
     const r = this.canvas.getBoundingClientRect();
     this.mouse.x = e.clientX - r.left; this.mouse.y = e.clientY - r.top;
@@ -1574,7 +1564,7 @@ class GraphView {
     this.pointers.delete(e.pointerId);
     if (this.pointers.size < 2) this.pinch = null;
     if (this.wireFrom && this.pointers.size === 0) {
-      this.mouseSet(e); /* фикс: обновляем координаты именно в момент отпускания */
+      this.mouseSet(e);
       const h = this.pick();
       if (h.kind === 'pin' && h.node && h.node.id !== this.wireFrom) studio.connect(this.wireFrom, h.node.id);
       this.wireFrom = null;
@@ -1769,35 +1759,45 @@ class GraphView {
     }
     g.strokeStyle = hexA(c, 0.3); g.lineWidth = 1;
     g.beginPath(); g.moveTo(x + 9, y + 26); g.lineTo(x + w - 9, y + 26); g.stroke();
+
+    /* ---- область осциллограммы: жёсткий clip по границам блока ---- */
     const bx = x + 10, by = y + 32, bw = w - 20, bh = 34;
+    g.save();
+    g.beginPath(); g.rect(bx, by, bw, bh); g.clip();
     g.fillStyle = 'rgba(255,255,255,0.025)'; g.fillRect(bx, by, bw, bh);
     if (gn.type === 'scope' && gn.handle?.extra?.analyser) {
       const an: AnalyserNode = gn.handle.extra.analyser;
       if (!gn.spec) gn.spec = new Uint8Array(an.frequencyBinCount);
       an.getByteFrequencyData(gn.spec as any);
       const bars = 30;
+      const barW = bw / bars;
       for (let i = 0; i < bars; i++) {
-        const idx = Math.floor(Math.pow(i / bars, 1.7) * an.frequencyBinCount * 0.75);
-        const v = gn.spec[idx] / 255;
-        const bxx = bx + i * (bw / bars);
+        const idx = Math.min(gn.spec.length - 1, Math.floor(Math.pow(i / bars, 1.7) * an.frequencyBinCount * 0.75));
+        const v = clamp(gn.spec[idx] / 255, 0, 1);
         g.fillStyle = hexA(bp ? '#8b5cff' : c, 0.4 + v * 0.6);
-        g.fillRect(bxx + 1, by + bh - v * bh, bw / bars - 2, Math.max(1, v * bh));
+        g.fillRect(bx + i * barW + 1, by + bh - v * bh, Math.max(1, barW - 2), Math.max(1, v * bh));
       }
     } else if (engine.running && gn.wave && gn.level > 0.003) {
       g.strokeStyle = hexA(c, 0.95); g.lineWidth = 1.3;
       g.shadowColor = c; g.shadowBlur = 6;
       g.beginPath();
-      const stepI = Math.max(1, Math.floor(gn.wave.length / bw));
-      for (let i = 0, px = 0; i < gn.wave.length; i += stepI, px++) {
-        const v = (gn.wave[i] - 128) / 128;
-        const py = by + bh / 2 - v * bh * 0.46;
+      /* сэмплируем массив РОВНО по ширине области: px = 0..bw,
+         индекс отсчёта = px * n / bw — выход за bx..bx+bw исключён */
+      const n = gn.wave.length;
+      for (let px = 0; px <= bw; px++) {
+        const i = Math.min(n - 1, Math.floor(px * n / bw));
+        const v = clamp((gn.wave[i] - 128) / 128, -1, 1);
+        const py = by + bh / 2 - v * bh * 0.44;
         if (px === 0) g.moveTo(bx, py); else g.lineTo(bx + px, py);
       }
-      g.stroke(); g.shadowBlur = 0;
+      g.stroke();
+      g.shadowBlur = 0;
     } else {
       g.strokeStyle = 'rgba(255,255,255,0.15)'; g.setLineDash([3, 4]); g.lineWidth = 1;
       g.beginPath(); g.moveTo(bx, by + bh / 2); g.lineTo(bx + bw, by + bh / 2); g.stroke(); g.setLineDash([]);
     }
+    g.restore(); /* конец clip */
+
     g.font = '9px "JetBrains Mono",monospace'; g.fillStyle = 'rgba(215,228,255,0.55)';
     const sum = gn.def.params.filter(p => p.type !== 'bool').slice(0, 3)
       .map(p => `${p.label.split(' ')[0]} ${fmtVal(p, gn.params[p.key])}`).join(' · ');
@@ -2414,7 +2414,7 @@ function drawAnalyzerModal(): void {
   for (let i = 0, px = 0; i < footWave.length; i += stepI, px++) {
     const v = (footWave[i] - 128) / 128;
     const py = half / 2 - v * half * 0.45;
-    if (px === 0) g.moveTo(0, py); else g.lineTo(px, py);
+    if (px === 0) g.moveTo(0, py); else g.lineTo(Math.min(px, W), py);
   }
   g.stroke(); g.shadowBlur = 0;
   g.strokeStyle = 'rgba(255,255,255,0.1)'; g.lineWidth = 1;
@@ -2577,7 +2577,6 @@ function init(): void {
     toast('Восстановлена предыдущая сессия', 'info');
   }
 
-  /* fit после двух кадров — когда layout гарантированно установился */
   requestAnimationFrame(() => { requestAnimationFrame(() => { view.fitAll(); }); });
   view.fitAll();
   renderInspector();
@@ -2698,7 +2697,6 @@ function init(): void {
 
   window.addEventListener('resize', () => { view.resize(true); syncDraggable(); });
   window.addEventListener('orientationchange', () => { setTimeout(() => { view.resize(true); view.fitAll(); }, 250); });
-  window.addEventListener('scroll', () => view.resize(), true);
 
   if (isMobile()) {
     setTimeout(() => toast('Мобильный режим: ⚡ — блоки, щипок — масштаб, тап по блоку — параметры', 'info'), 700);
