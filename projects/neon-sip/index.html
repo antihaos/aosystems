@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MonoSIP — SIP-станция в одном файле</title>
-<meta name="description" content="Монолитное SPA: SIP-сервер (АТС), два софтфона, WebRTC-голос, запись и передача аудиофайлов + реальная SIP-линия по RFC 3261/7118.">
+<meta name="description" content="Монолитное SPA: SIP-сервер (АТС), софтфоны, WebRTC-голос, запись и передача аудиофайлов, реальная SIP-линия по RFC 3261/7118 и работа в локальной сети.">
 <style>
 @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/cyrillic-400-normal.woff2) format('woff2');unicode-range:U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
 @font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url(https://cdn.jsdelivr.net/fontsource/fonts/inter@latest/latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+2190-21BB}
@@ -364,7 +364,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .mic-test-meter{height:8px;background:var(--sf3);border-radius:5px;overflow:hidden;margin-top:10px}
 .mic-test-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--grn),var(--amb),var(--red))}
 .theme-chips{display:flex;gap:7px}
-/* ===== SIP (реальная линия) ===== */
+/* ===== SIP / LAN ===== */
 .sip-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;max-width:1100px}
 .ex-status{display:flex;align-items:center;gap:12px;padding:4px 0 12px;border-bottom:1px dashed var(--ln);margin-bottom:12px}
 .ex-status .dot{width:13px;height:13px}
@@ -389,6 +389,24 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .ex-dial-row{display:flex;gap:8px;margin-bottom:10px}
 .ex-dial-row input{flex:1;min-width:0;background:var(--bg1);border:1px solid var(--ln2);border-radius:10px;padding:10px 12px;font-family:var(--mono);font-size:14px;color:var(--tx);outline:0}
 .ex-dial-row input:focus{border-color:var(--pri)}
+.lan-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:color-mix(in srgb,var(--grn) 9%,var(--sf));border:1px solid color-mix(in srgb,var(--grn) 45%,var(--ln2));border-radius:14px;padding:12px 15px;margin-bottom:16px}
+.lan-banner .ic{color:var(--grn);width:20px;height:20px}
+.lan-banner b{font-size:13px}
+.lan-banner .mono{font-size:12px;color:var(--cyan)}
+.lan-banner .btn{margin-left:auto}
+.cmd-box{display:flex;align-items:center;gap:9px;background:#060a15;border:1px solid var(--ln);border-radius:11px;padding:10px 12px;margin:10px 0}
+[data-theme="light"] .cmd-box{background:#0e1526}
+.cmd-box code{flex:1;font-family:var(--mono);font-size:12.5px;color:#3fe0a0;word-break:break-all}
+.cmd-box .btn{flex:none}
+.step-list{display:flex;flex-direction:column;gap:11px;counter-reset:st}
+.step{display:flex;gap:11px;align-items:flex-start;font-size:12.5px;color:var(--tx2);line-height:1.5}
+.step::before{counter-increment:st;content:counter(st);flex:none;width:24px;height:24px;border-radius:8px;background:var(--grad-a);color:#fff;font-weight:800;font-size:12px;display:grid;place-items:center;margin-top:1px}
+.step b{color:var(--tx)}
+.step .mono{color:var(--cyan)}
+.peer-row{display:flex;align-items:center;gap:10px;padding:8px 9px;border:1px solid var(--ln);border-radius:10px;margin-bottom:6px;font-size:12.5px}
+.peer-row b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.peer-row .mono{font-size:11px;color:var(--tx3)}
+.peer-row .btn{padding:4px 9px}
 /* ===== STATUSBAR ===== */
 .statusbar{grid-column:1/3;display:flex;align-items:center;gap:0;background:color-mix(in srgb,var(--sf) 88%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--ln);font-size:11.5px;color:var(--tx2);padding:0 10px;overflow:hidden;font-family:var(--mono)}
 .sb-item{display:flex;align-items:center;gap:6px;padding:0 11px;height:100%;border-right:1px solid var(--ln);white-space:nowrap;cursor:default}
@@ -413,8 +431,8 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .mini-hang:hover{background:var(--red);color:#fff;filter:brightness(1.15)}
 .mini-hang .ic{transform:rotate(135deg);width:15px;height:15px}
 /* ===== TOASTS ===== */
-.toasts{position:fixed;top:calc(var(--tb) + 12px);right:14px;z-index:120;display:flex;flex-direction:column;gap:9px;max-width:min(360px,calc(100vw - 28px))}
-.toast{display:flex;gap:11px;align-items:flex-start;background:var(--sf);border:1px solid var(--ln2);border-left:3px solid var(--tc,var(--inf));border-radius:13px;padding:12px 13px;box-shadow:var(--shadow);animation:tin .3s cubic-bezier(.2,.7,.3,1)}
+.toasts{position:fixed;top:calc(var(--tb) + 12px);right:14px;z-index:120;display:flex;flex-direction:column;gap:9px;max-width:min(360px,calc(100vw - 28px));pointer-events:none}
+.toast{display:flex;gap:11px;align-items:flex-start;background:var(--sf);border:1px solid var(--ln2);border-left:3px solid var(--tc,var(--inf));border-radius:13px;padding:12px 13px;box-shadow:var(--shadow);animation:tin .3s cubic-bezier(.2,.7,.3,1);pointer-events:auto}
 @keyframes tin{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
 .toast.out{opacity:0;transform:translateX(30px);transition:.25s}
 .toast .ic{width:17px;height:17px;color:var(--tc,var(--inf));margin-top:1px}
@@ -450,22 +468,27 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 /* ===== INCOMING ===== */
 .incoming{position:fixed;inset:0;z-index:110;display:none;align-items:center;justify-content:center;background:var(--scrim);backdrop-filter:blur(8px);padding:18px}
 .incoming.on{display:flex}
-.inc-card{background:var(--sf);border:1px solid color-mix(in srgb,var(--cyan) 45%,var(--ln2));border-radius:22px;padding:28px 26px;width:min(360px,100%);text-align:center;box-shadow:0 24px 70px rgba(3,6,16,.6);animation:min .3s}
-.inc-avatar-wrap{position:relative;width:92px;height:92px;margin:4px auto 16px}
-.inc-avatar-wrap::before,.inc-avatar-wrap::after{content:'';position:absolute;inset:0;border-radius:28px;border:2px solid var(--cyan);animation:ring 1.8s ease-out infinite}
+.inc-card{position:relative;z-index:2;background:var(--sf);border:1px solid color-mix(in srgb,var(--cyan) 45%,var(--ln2));border-radius:22px;padding:28px 26px 22px;width:min(360px,100%);text-align:center;box-shadow:0 24px 70px rgba(3,6,16,.6);animation:min .3s}
+.inc-avatar-wrap{position:relative;width:92px;height:92px;margin:4px auto 16px;pointer-events:none}
+.inc-avatar-wrap::before,.inc-avatar-wrap::after{content:'';position:absolute;inset:0;border-radius:28px;border:2px solid var(--cyan);animation:ring 1.8s ease-out infinite;pointer-events:none}
 .inc-avatar-wrap::after{animation-delay:.9s}
 @keyframes ring{from{transform:scale(1);opacity:.8}to{transform:scale(1.55);opacity:0}}
 .inc-avatar-wrap .avatar{width:92px;height:92px;border-radius:28px;font-size:30px}
 .inc-card h2{font-size:19px;font-weight:800}
-.inc-card .mono{color:var(--cyan);font-size:13px;margin:5px 0 3px}
+.inc-card .mono{color:var(--cyan);font-size:13px;margin:5px 0 3px;word-break:break-all}
 .inc-to{font-size:12px;color:var(--tx2);margin-bottom:6px}
 .inc-auto{font-size:11.5px;color:var(--amb);min-height:16px;margin-bottom:12px}
-.inc-actions{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:8px}
-.inc-btn{padding:14px;border-radius:14px;font-weight:800;font-size:13.5px;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s}
-.inc-btn:hover{transform:translateY(-2px)}
+.inc-actions{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:8px;position:relative;z-index:3}
+.inc-btn{padding:14px 10px;border-radius:14px;font-weight:800;font-size:13.5px;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,filter .15s,opacity .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
+.inc-btn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.inc-btn:active{transform:scale(.97)}
 .inc-btn.ok{background:linear-gradient(135deg,#1fbf7f,#22d3ee);box-shadow:0 8px 24px rgba(47,212,143,.35)}
 .inc-btn.no{background:linear-gradient(135deg,#ff4d6d,#ff2e55);box-shadow:0 8px 24px rgba(255,77,109,.3)}
 .inc-btn.no .ic{transform:rotate(135deg)}
+.inc-btn[disabled]{opacity:.65;pointer-events:none;transform:none}
+.inc-btn.busy .ic{animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.inc-hint{margin-top:12px;font-size:10.5px;color:var(--tx3);font-family:var(--mono);letter-spacing:.03em}
 /* ===== RESPONSIVE ===== */
 @media (max-width:1180px){.phone-grid{grid-template-columns:1fr}.phone-right{display:grid;grid-template-columns:1fr 1fr;align-items:start}.phone-right .recent{grid-column:1/3}}
 @media (max-width:1024px){
@@ -507,6 +530,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .dial-display input{font-size:21px}
 .line-switch{flex-wrap:wrap}
 .line-chip{min-width:calc(50% - 4px)}
+.lan-banner .btn{margin-left:0}
+.inc-card{padding:22px 18px 18px}
+.inc-btn{padding:15px 8px;font-size:13px}
 }
 @media (max-width:560px){#sbLine{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
@@ -557,45 +583,51 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8a14.2 14.2 0 0 1 0 18.4M12 2.8a14.2 14.2 0 0 0 0 18.4"/></symbol>
 <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
 <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-7.5 11-7.5S23 12 23 12s-4 7.5-11 7.5S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-network" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="5" rx="1.2"/><rect x="2" y="17" width="6" height="5" rx="1.2"/><rect x="16" y="17" width="6" height="5" rx="1.2"/><path d="M12 7v4M12 11H5v6M12 11h7v6"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
 </defs></svg>
 
 <div class="app">
   <!-- ================= TOOLBAR ================= -->
   <header class="toolbar">
-    <button class="icon-btn burger" data-action="sidebar" aria-label="Меню"><svg class="ic"><use href="#i-menu"/></svg></button>
+    <button type="button" class="icon-btn burger" data-action="sidebar" aria-label="Меню"><svg class="ic"><use href="#i-menu"/></svg></button>
     <div class="brand" data-action="nav" data-view="phone" title="На главную">
       <div class="brand-mark"><svg viewBox="0 0 24 24"><path d="M4 12h2l2-5 3 10 3-14 2 9h4"/></svg></div>
       <div><b>MonoSIP</b><span>SIP-станция в одном файле</span></div>
     </div>
     <div class="tb-mid">
-      <button class="power-pill" id="tbPower" data-action="server-toggle" title="Включить / выключить демо-АТС">
+      <button type="button" class="power-pill" id="tbPower" data-action="server-toggle" title="Включить / выключить демо-АТС">
         <svg class="ic"><use href="#i-power"/></svg><span>АТС</span><i class="dot" id="tbPowerDot"></i>
+      </button>
+      <button type="button" class="power-pill" id="tbLan" data-action="nav" data-view="lan" title="Локальная сеть: сервер и клиенты на разных ПК">
+        <svg class="ic"><use href="#i-network"/></svg><span id="tbLanText">LAN</span><i class="dot" id="tbLanDot"></i>
       </button>
       <span class="transport-badge" id="transportBadge">WS · :5060</span>
     </div>
     <div class="tb-right">
-      <button class="icon-btn" id="tbExt" data-action="nav" data-view="sip" title="Внешняя SIP-линия (RFC 3261/7118)"><svg class="ic"><use href="#i-globe"/></svg><i class="dot ext-dot" id="tbExtDot"></i></button>
-      <button class="icon-btn" data-action="upload-global" title="Загрузить аудиофайл"><svg class="ic"><use href="#i-upload"/></svg></button>
-      <button class="icon-btn" id="tbSound" data-action="sound-toggle" title="Звук: вкл/выкл"><svg class="ic"><use href="#i-volume"/></svg></button>
-      <button class="icon-btn" id="tbTheme" data-action="theme-toggle" title="Тема"><svg class="ic"><use href="#i-sun"/></svg></button>
+      <button type="button" class="icon-btn" id="tbExt" data-action="nav" data-view="sip" title="Внешняя SIP-линия (RFC 3261/7118)"><svg class="ic"><use href="#i-globe"/></svg><i class="dot ext-dot" id="tbExtDot"></i></button>
+      <button type="button" class="icon-btn" data-action="upload-global" title="Загрузить аудиофайл"><svg class="ic"><use href="#i-upload"/></svg></button>
+      <button type="button" class="icon-btn" id="tbSound" data-action="sound-toggle" title="Звук: вкл/выкл"><svg class="ic"><use href="#i-volume"/></svg></button>
+      <button type="button" class="icon-btn" id="tbTheme" data-action="theme-toggle" title="Тема"><svg class="ic"><use href="#i-sun"/></svg></button>
     </div>
   </header>
 
   <!-- ================= SIDEBAR ================= -->
   <aside class="sidebar" id="sidebar">
     <nav class="nav" id="nav">
-      <button class="nav-item on" data-action="nav" data-view="phone"><svg class="ic"><use href="#i-keypad"/></svg><span class="lbl">Телефон</span></button>
-      <button class="nav-item" data-action="nav" data-view="history"><svg class="ic"><use href="#i-history"/></svg><span class="lbl">Журнал</span><span class="nav-badge" id="badgeMissed" hidden>0</span></button>
-      <button class="nav-item" data-action="nav" data-view="contacts"><svg class="ic"><use href="#i-users"/></svg><span class="lbl">Контакты</span></button>
-      <button class="nav-item" data-action="nav" data-view="recs"><svg class="ic"><use href="#i-rec"/></svg><span class="lbl">Записи</span><span class="nav-badge calm" id="badgeRecs" hidden>0</span></button>
-      <button class="nav-item" data-action="nav" data-view="files"><svg class="ic"><use href="#i-file-audio"/></svg><span class="lbl">Аудиофайлы</span></button>
-      <button class="nav-item" data-action="nav" data-view="server"><svg class="ic"><use href="#i-server"/></svg><span class="lbl">SIP-сервер</span><span class="nav-badge calm" id="badgeLog" hidden>0</span></button>
-      <button class="nav-item" data-action="nav" data-view="sip"><svg class="ic"><use href="#i-globe"/></svg><span class="lbl">Внешний SIP</span></button>
-      <button class="nav-item" data-action="nav" data-view="settings"><svg class="ic"><use href="#i-settings"/></svg><span class="lbl">Настройки</span></button>
+      <button type="button" class="nav-item on" data-action="nav" data-view="phone"><svg class="ic"><use href="#i-keypad"/></svg><span class="lbl">Телефон</span></button>
+      <button type="button" class="nav-item" data-action="nav" data-view="history"><svg class="ic"><use href="#i-history"/></svg><span class="lbl">Журнал</span><span class="nav-badge" id="badgeMissed" hidden>0</span></button>
+      <button type="button" class="nav-item" data-action="nav" data-view="contacts"><svg class="ic"><use href="#i-users"/></svg><span class="lbl">Контакты</span></button>
+      <button type="button" class="nav-item" data-action="nav" data-view="recs"><svg class="ic"><use href="#i-rec"/></svg><span class="lbl">Записи</span><span class="nav-badge calm" id="badgeRecs" hidden>0</span></button>
+      <button type="button" class="nav-item" data-action="nav" data-view="files"><svg class="ic"><use href="#i-file-audio"/></svg><span class="lbl">Аудиофайлы</span></button>
+      <button type="button" class="nav-item" data-action="nav" data-view="server"><svg class="ic"><use href="#i-server"/></svg><span class="lbl">SIP-сервер</span><span class="nav-badge calm" id="badgeLog" hidden>0</span></button>
+      <button type="button" class="nav-item" data-action="nav" data-view="lan"><svg class="ic"><use href="#i-network"/></svg><span class="lbl">Локальная сеть</span></button>
+      <button type="button" class="nav-item" data-action="nav" data-view="sip"><svg class="ic"><use href="#i-globe"/></svg><span class="lbl">Внешний SIP</span></button>
+      <button type="button" class="nav-item" data-action="nav" data-view="settings"><svg class="ic"><use href="#i-settings"/></svg><span class="lbl">Настройки</span></button>
     </nav>
     <div class="side-sec">Линии</div>
     <div id="accounts"></div>
-    <div class="side-foot">MonoSIP v1.1 · монолит<br>Демо-АТС + реальная SIP-линия<br>RFC 3261 · 7118 · WebRTC</div>
+    <div class="side-foot">MonoSIP v1.2.1 · монолит<br>Демо-АТС · LAN · внешний SIP<br>RFC 3261 · 7118 · WebRTC</div>
   </aside>
   <div class="scrim" id="scrim" data-action="sidebar-close"></div>
 
@@ -610,21 +642,21 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
           <div class="dial-card" id="dialCard">
             <div class="dial-display">
               <input id="dialInput" placeholder="Номер: 102, 200, 600…" inputmode="tel" autocomplete="off" spellcheck="false" aria-label="Набираемый номер">
-              <button class="dial-back" data-action="dial-back" title="Стереть символ"><svg class="ic"><use href="#i-backspace"/></svg></button>
+              <button type="button" class="dial-back" data-action="dial-back" title="Стереть символ"><svg class="ic"><use href="#i-backspace"/></svg></button>
             </div>
             <div class="dial-sub"><span id="dialSub">АТС local.pbx · линия 101</span><span class="mono" id="keyHint"></span></div>
             <div class="keypad" id="keypad"></div>
             <div class="dial-actions">
-              <button class="btn ghost" data-action="dial-clear">Сброс</button>
-              <button class="call-btn" data-action="dial-call"><svg class="ic"><use href="#i-phone"/></svg>Позвонить</button>
-              <button class="btn ghost" data-action="nav" data-view="contacts">Контакты</button>
+              <button type="button" class="btn ghost" data-action="dial-clear">Сброс</button>
+              <button type="button" class="call-btn" data-action="dial-call"><svg class="ic"><use href="#i-phone"/></svg>Позвонить</button>
+              <button type="button" class="btn ghost" data-action="nav" data-view="contacts">Контакты</button>
             </div>
             <div class="quick" id="quickChips"></div>
           </div>
           <div class="hint-chip" id="hintChip">
             <svg class="ic"><use href="#i-info"/></svg>
-            <span>Наберите <b class="mono">200</b> — эхо-тест АТС вернёт ваш голос с задержкой. Или позвоните на вторую линию <b class="mono">102</b> и ответьте во всплывающем окне. Реальный провайдер подключается в разделе «Внешний SIP».</span>
-            <button data-action="hint-x" aria-label="Скрыть подсказку"><svg class="ic" style="width:13px;height:13px"><use href="#i-x"/></svg></button>
+            <span>Наберите <b class="mono">200</b> — эхо-тест АТС вернёт ваш голос с задержкой. Или позвоните на вторую линию <b class="mono">102</b> и ответьте во всплывающем окне.</span>
+            <button type="button" data-action="hint-x" aria-label="Скрыть подсказку"><svg class="ic" style="width:13px;height:13px"><use href="#i-x"/></svg></button>
           </div>
         </div>
         <div class="phone-right">
@@ -633,20 +665,20 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
             <div class="svc-ic" style="background:linear-gradient(135deg,#1fbf7f,#22d3ee)"><svg class="ic"><use href="#i-waves"/></svg></div>
             <div class="svc-body"><b>Эхо-тест</b><span class="mono">200</span>
               <p>Сервис АТС возвращает ваш голос через 350 мс. Проверка микрофона, тракта WebRTC и записи разговора.</p>
-              <button class="btn sm grn" data-action="quick-call" data-ext="200"><svg class="ic"><use href="#i-phone"/></svg>Проверить связь</button>
+              <button type="button" class="btn sm grn" data-action="quick-call" data-ext="200"><svg class="ic"><use href="#i-phone"/></svg>Проверить связь</button>
             </div>
           </div>
           <div class="card svc">
             <div class="svc-ic" style="background:linear-gradient(135deg,#ffb020,#ff4d6d)"><svg class="ic"><use href="#i-voicemail"/></svg></div>
             <div class="svc-body"><b>Голосовая почта</b><span class="mono">600</span>
               <p>Автоответчик проигрывает приветствие и записывает до 15 секунд вашего сообщения. Запись появится в разделе «Записи».</p>
-              <button class="btn sm" data-action="quick-call" data-ext="600"><svg class="ic"><use href="#i-phone"/></svg>Оставить сообщение</button>
+              <button type="button" class="btn sm" data-action="quick-call" data-ext="600"><svg class="ic"><use href="#i-phone"/></svg>Оставить сообщение</button>
             </div>
           </div>
           <div class="card recent">
             <h3><svg class="ic" style="width:15px;height:15px;color:var(--pri)"><use href="#i-history"/></svg>Последние вызовы</h3>
             <div id="recentMini"></div>
-            <button class="btn sm ghost" style="margin-top:8px;width:100%" data-action="nav" data-view="history">Весь журнал</button>
+            <button type="button" class="btn sm ghost" style="margin-top:8px;width:100%" data-action="nav" data-view="history">Весь журнал</button>
           </div>
         </div>
       </div>
@@ -657,20 +689,20 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
         <div><h1>Журнал вызовов</h1><p id="histCount">—</p></div>
         <div class="head-actions">
           <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="histSearch" placeholder="Имя или номер…"></div>
-          <button class="btn danger sm" data-action="hist-clear"><svg class="ic"><use href="#i-trash"/></svg>Очистить</button>
+          <button type="button" class="btn danger sm" data-action="hist-clear"><svg class="ic"><use href="#i-trash"/></svg>Очистить</button>
         </div>
       </div>
       <div class="chips" id="histFilters">
-        <button class="chip on" data-action="hist-filter" data-f="all">Все</button>
-        <button class="chip" data-action="hist-filter" data-f="in"><svg class="ic"><use href="#i-phone-in"/></svg>Входящие</button>
-        <button class="chip" data-action="hist-filter" data-f="out"><svg class="ic"><use href="#i-phone-out"/></svg>Исходящие</button>
-        <button class="chip" data-action="hist-filter" data-f="missed"><svg class="ic"><use href="#i-phone-missed"/></svg>Пропущенные</button>
+        <button type="button" class="chip on" data-action="hist-filter" data-f="all">Все</button>
+        <button type="button" class="chip" data-action="hist-filter" data-f="in"><svg class="ic"><use href="#i-phone-in"/></svg>Входящие</button>
+        <button type="button" class="chip" data-action="hist-filter" data-f="out"><svg class="ic"><use href="#i-phone-out"/></svg>Исходящие</button>
+        <button type="button" class="chip" data-action="hist-filter" data-f="missed"><svg class="ic"><use href="#i-phone-missed"/></svg>Пропущенные</button>
       </div>
       <div class="bulk-bar" id="histBulk" hidden>
         <input type="checkbox" class="h-check" id="histAll" data-action="hist-all">
         <span id="histBulkCount">Выбрано: 0</span>
-        <button class="btn danger sm" data-action="hist-bulk-del"><svg class="ic"><use href="#i-trash"/></svg>Удалить выбранные</button>
-        <button class="btn ghost sm" data-action="hist-bulk-cancel">Отмена</button>
+        <button type="button" class="btn danger sm" data-action="hist-bulk-del"><svg class="ic"><use href="#i-trash"/></svg>Удалить выбранные</button>
+        <button type="button" class="btn ghost sm" data-action="hist-bulk-cancel">Отмена</button>
       </div>
       <div class="list" id="histList"></div>
     </section>
@@ -678,7 +710,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
     <section class="view" id="view-contacts">
       <div class="view-head">
         <div><h1>Контакты</h1><p>Абоненты и сервисы АТС · перетаскивайте карточки для сортировки</p></div>
-        <div class="head-actions"><button class="btn pri" data-action="contact-add"><svg class="ic"><use href="#i-plus"/></svg>Новый контакт</button></div>
+        <div class="head-actions"><button type="button" class="btn pri" data-action="contact-add"><svg class="ic"><use href="#i-plus"/></svg>Новый контакт</button></div>
       </div>
       <div class="contact-grid" id="contactGrid"></div>
     </section>
@@ -687,14 +719,14 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
       <div class="view-head">
         <div><h1>Записи</h1><p id="recCount">—</p></div>
         <div class="head-actions">
-          <button class="btn pri" id="micRecBtn" data-action="rec-mic-start"><svg class="ic"><use href="#i-mic"/></svg>Записать с микрофона</button>
+          <button type="button" class="btn pri" id="micRecBtn" data-action="rec-mic-start"><svg class="ic"><use href="#i-mic"/></svg>Записать с микрофона</button>
         </div>
       </div>
       <div class="rec-bar" id="recBar" hidden>
         <i class="rec-dot"></i><b>Запись микрофона</b><span class="mono" id="recBarTime">0:00</span>
         <div class="rec-meter"><i id="recBarMeter"></i></div>
-        <button class="btn grn sm" data-action="rec-mic-stop"><svg class="ic"><use href="#i-check"/></svg>Сохранить</button>
-        <button class="btn danger sm" data-action="rec-mic-cancel"><svg class="ic"><use href="#i-x"/></svg>Отмена</button>
+        <button type="button" class="btn grn sm" data-action="rec-mic-stop"><svg class="ic"><use href="#i-check"/></svg>Сохранить</button>
+        <button type="button" class="btn danger sm" data-action="rec-mic-cancel"><svg class="ic"><use href="#i-x"/></svg>Отмена</button>
       </div>
       <div class="list" id="recList"></div>
     </section>
@@ -702,7 +734,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
     <section class="view" id="view-files">
       <div class="view-head">
         <div><h1>Аудиофайлы</h1><p>Библиотека для передачи в активный вызов · WAV, MP3, OGG, WebM</p></div>
-        <div class="head-actions"><button class="btn pri" data-action="files-upload"><svg class="ic"><use href="#i-upload"/></svg>Загрузить</button></div>
+        <div class="head-actions"><button type="button" class="btn pri" data-action="files-upload"><svg class="ic"><use href="#i-upload"/></svg>Загрузить</button></div>
       </div>
       <div class="dropzone" id="dropzone" data-action="files-upload">
         <svg class="ic"><use href="#i-upload"/></svg>
@@ -714,9 +746,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 
     <section class="view" id="view-server">
       <div class="view-head">
-        <div><h1>SIP-сервер (АТС)</h1><p id="srvSub">Регистратор, прокси и сервисы · SIP over WebSocket (эмуляция транспорта)</p></div>
+        <div><h1>SIP-сервер (АТС)</h1><p id="srvSub">Регистратор, прокси и сервисы · обслуживает локальные линии и узлы LAN</p></div>
         <div class="head-actions">
-          <button class="srv-power" id="srvPower" data-action="server-toggle"><svg class="ic"><use href="#i-power"/></svg><span id="srvPowerText">Запустить</span></button>
+          <button type="button" class="srv-power" id="srvPower" data-action="server-toggle"><svg class="ic"><use href="#i-power"/></svg><span id="srvPowerText">Запустить</span></button>
         </div>
       </div>
       <div class="stat-grid">
@@ -745,14 +777,83 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
           <svg class="ic" style="color:var(--cyan);width:15px;height:15px"><use href="#i-server"/></svg>
           <b style="font-size:12.5px">SIP-консоль</b>
           <select id="logFilter" data-action="srv-filter" aria-label="Фильтр">
-            <option value="all">Все узлы</option><option value="АТС">АТС</option><option value="101">Линия 101</option><option value="102">Линия 102</option><option value="EXT">SIP-линия</option><option value="SYS">Система</option>
+            <option value="all">Все узлы</option><option value="АТС">АТС</option><option value="101">Линия 101</option><option value="102">Линия 102</option><option value="LAN">LAN</option><option value="EXT">SIP-линия</option><option value="SYS">Система</option>
           </select>
           <div class="search"><svg class="ic"><use href="#i-search"/></svg><input id="logSearch" placeholder="INVITE, Call-ID…"></div>
-          <button class="btn sm ghost" id="logPause" data-action="srv-pause"><svg class="ic"><use href="#i-pause"/></svg>Пауза</button>
-          <button class="btn sm ghost" data-action="srv-export"><svg class="ic"><use href="#i-download"/></svg>Экспорт</button>
-          <button class="btn sm danger" data-action="srv-clear"><svg class="ic"><use href="#i-trash"/></svg></button>
+          <button type="button" class="btn sm ghost" id="logPause" data-action="srv-pause"><svg class="ic"><use href="#i-pause"/></svg>Пауза</button>
+          <button type="button" class="btn sm ghost" data-action="srv-export"><svg class="ic"><use href="#i-download"/></svg>Экспорт</button>
+          <button type="button" class="btn sm danger" data-action="srv-clear"><svg class="ic"><use href="#i-trash"/></svg></button>
         </div>
         <div class="console-body" id="consoleBody"></div>
+      </div>
+    </section>
+
+    <!-- ================= ЛОКАЛЬНАЯ СЕТЬ ================= -->
+    <section class="view" id="view-lan">
+      <div class="view-head">
+        <div><h1>Локальная сеть</h1><p>Сервер и несколько клиентов на разных компьютерах: один ПК запускает хаб, остальные открывают приложение в браузере и регистрируют свои линии. Голос идёт напрямую между ПК по WebRTC.</p></div>
+        <div class="head-actions"><button type="button" class="btn ghost sm" data-action="nav" data-view="server"><svg class="ic"><use href="#i-server"/></svg>SIP-консоль</button></div>
+      </div>
+      <div class="lan-banner" id="lanBanner" hidden>
+        <svg class="ic"><use href="#i-network"/></svg>
+        <div><b>Страница отдана LAN-сервером</b><div class="mono" id="lanBannerUrl">ws://…/ws</div></div>
+        <button type="button" class="btn grn sm" data-action="lan-quick" data-role="hub"><svg class="ic"><use href="#i-server"/></svg>Я сервер — запустить хаб</button>
+        <button type="button" class="btn pri sm" data-action="lan-quick" data-role="client"><svg class="ic"><use href="#i-phone"/></svg>Я клиент — подключиться</button>
+      </div>
+      <div class="sip-grid">
+        <div class="card set-card">
+          <h3><svg class="ic"><use href="#i-server"/></svg>Сервер для локальной сети</h3>
+          <p>Браузер не умеет слушать порт, поэтому на одном ПК запускается лёгкий Node.js-сервер без зависимостей. Он отдаёт это приложение по HTTP и ретранслирует SIP между хабом и клиентами.</p>
+          <div class="set-row"><label>Порт сервера<small>HTTP + WebSocket</small></label><input type="number" id="lanPort" data-action="lan-cfg" data-key="port" min="1" max="65535" value="8080"></div>
+          <button type="button" class="btn pri" style="width:100%;margin-top:12px" data-action="lan-download"><svg class="ic"><use href="#i-download"/></svg>Скачать LAN-сервер (monosip-lan.js)</button>
+          <div class="cmd-box"><code id="lanCmd">node monosip-lan.js</code><button type="button" class="btn sm" data-action="lan-copy-cmd"><svg class="ic"><use href="#i-copy"/></svg>Копировать</button></div>
+          <div class="ex-note"><svg class="ic"><use href="#i-info"/></svg><span>Файл самодостаточный: внутри уже вшито это приложение. Node.js ≥ 16, установка пакетов не нужна. Сервер напечатает адреса вида <span class="mono">http://192.168.x.x:8080</span> — откройте их на всех ПК.</span></div>
+        </div>
+        <div class="card set-card">
+          <h3><svg class="ic"><use href="#i-network"/></svg>Подключение этого ПК</h3>
+          <div class="ex-status"><i class="dot" id="lanDot"></i><div style="min-width:0"><b id="lanStatus">Отключено</b><span id="lanStatusSub">Автономный режим (демо-АТС)</span></div></div>
+          <div class="chips" style="margin-bottom:10px">
+            <button type="button" class="chip" data-action="lan-mode" data-role="hub"><svg class="ic"><use href="#i-server"/></svg>Сервер (хаб)</button>
+            <button type="button" class="chip" data-action="lan-mode" data-role="client"><svg class="ic"><use href="#i-phone"/></svg>Клиент</button>
+          </div>
+          <div class="set-row"><label>URL хаба</label><input type="text" id="lanUrl" data-action="lan-cfg" data-key="url" placeholder="ws://192.168.1.10:8080/ws" style="width:210px"></div>
+          <div class="set-row"><label>Комната сети<small>изоляция групп</small></label><input type="text" id="lanRoom" data-action="lan-cfg" data-key="room"></div>
+          <div class="set-row"><label>Имя узла</label><input type="text" id="lanName" data-action="lan-cfg" data-key="name"></div>
+          <div class="set-row"><label>Автопереподключение</label><button type="button" class="switch" role="switch" id="lanReconnect" data-action="lan-reconnect" aria-checked="true"></button></div>
+          <div class="ex-btns" style="margin-top:12px">
+            <button type="button" class="srv-power" id="lanConnBtn" data-action="lan-connect"><svg class="ic"><use href="#i-power"/></svg>Подключить</button>
+            <button type="button" class="btn" data-action="lan-copy-url"><svg class="ic"><use href="#i-copy"/></svg>URL</button>
+          </div>
+          <div class="kv"><span>ID узла</span><b id="lanKvId">—</b></div>
+          <div class="kv"><span>Хаб</span><b id="lanKvHub">—</b></div>
+          <div class="kv"><span>Комната</span><b id="lanKvRoom">—</b></div>
+          <div class="kv"><span>Пинг</span><b id="lanKvPing">—</b></div>
+          <div class="kv"><span>Трафик rx/tx</span><b id="lanKvTraffic">0 / 0</b></div>
+          <div class="exlog" id="lanLog"></div>
+        </div>
+        <div class="card set-card">
+          <h3><svg class="ic"><use href="#i-phone"/></svg>Линии этого ПК</h3>
+          <p>В режиме клиента две линии регистрируются на хабе под этими номерами. На каждом компьютере задайте свои, чтобы не совпадали.</p>
+          <div class="set-row"><label>Линия A</label><input type="text" id="lanExtA" inputmode="numeric" value="201"></div>
+          <div class="set-row"><label>Линия B</label><input type="text" id="lanExtB" inputmode="numeric" value="202"></div>
+          <button type="button" class="btn grn" style="width:100%;margin-top:12px" data-action="lan-apply-ext"><svg class="ic"><use href="#i-check"/></svg>Применить и перерегистрировать</button>
+          <div class="ex-note"><svg class="ic"><use href="#i-info"/></svg><span>Хаб всегда держит линии <span class="mono">101</span> и <span class="mono">102</span>, а также сервисы <span class="mono">200</span> (эхо) и <span class="mono">600</span> (почта) — они доступны всем клиентам сети.</span></div>
+          <h3 style="margin-top:16px"><svg class="ic"><use href="#i-users"/></svg>Каталог абонентов сети</h3>
+          <div id="lanDirectory"></div>
+        </div>
+        <div class="card set-card">
+          <h3><svg class="ic"><use href="#i-network"/></svg>Узлы сети</h3>
+          <p>Живой список подключённых компьютеров в комнате</p>
+          <div id="lanPeers"></div>
+          <h3 style="margin-top:16px"><svg class="ic"><use href="#i-info"/></svg>Как запустить</h3>
+          <div class="step-list">
+            <div class="step"><span><b>На ПК-сервере</b> скачайте <span class="mono">monosip-lan.js</span> и выполните <span class="mono">node monosip-lan.js</span>. Разрешите порт в брандмауэре.</span></div>
+            <div class="step"><span><b>На всех ПК</b> (в одной подсети) откройте <span class="mono">http://IP-сервера:8080</span> в Chrome/Edge/Firefox.</span></div>
+            <div class="step"><span><b>На ПК-сервере</b> выберите роль «Сервер (хаб)» → Подключить. АТС включится автоматически.</span></div>
+            <div class="step"><span><b>На остальных ПК</b> роль «Клиент» → Подключить, задайте уникальные номера (201, 202, 203…).</span></div>
+            <div class="step"><span><b>Звоните</b> между любыми номерами. Сигнализация идёт через хаб, а голос — напрямую между компьютерами по WebRTC, без интернета.</span></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -760,16 +861,16 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
     <section class="view" id="view-sip">
       <div class="view-head">
         <div><h1>Внешняя SIP-линия</h1><p>Опциональный режим: настоящий SIP поверх WebSocket — REGISTER, INVITE/ACK/BYE, Digest, ICE/DTLS-SRTP. Совместимо с Asterisk, FreeSWITCH, Kamailio, OpenSIPS.</p></div>
-        <div class="head-actions"><button class="btn ghost sm" data-action="nav" data-view="server"><svg class="ic"><use href="#i-server"/></svg>Общая SIP-консоль</button></div>
+        <div class="head-actions"><button type="button" class="btn ghost sm" data-action="nav" data-view="server"><svg class="ic"><use href="#i-server"/></svg>Общая SIP-консоль</button></div>
       </div>
       <div class="sip-grid">
         <div class="card set-card">
           <h3><svg class="ic"><use href="#i-globe"/></svg>Состояние линии</h3>
           <div class="ex-status"><i class="dot" id="exStatusDot"></i><div style="min-width:0"><b id="exStatusText">Выключено</b><span id="exStatusSub">WSS-транспорт не подключён</span></div></div>
           <div class="ex-btns">
-            <button class="srv-power" id="exConnBtn" data-action="ext-conn"><svg class="ic"><use href="#i-power"/></svg>Подключить</button>
-            <button class="btn" id="exRegBtn" data-action="ext-reg" disabled><svg class="ic"><use href="#i-check"/></svg>REGISTER</button>
-            <button class="btn" id="exActiveBtn" data-action="ext-active"><svg class="ic"><use href="#i-phone"/></svg>Сделать активной</button>
+            <button type="button" class="srv-power" id="exConnBtn" data-action="ext-conn"><svg class="ic"><use href="#i-power"/></svg>Подключить</button>
+            <button type="button" class="btn" id="exRegBtn" data-action="ext-reg" disabled><svg class="ic"><use href="#i-check"/></svg>REGISTER</button>
+            <button type="button" class="btn" id="exActiveBtn" data-action="ext-active"><svg class="ic"><use href="#i-phone"/></svg>Сделать активной</button>
           </div>
           <div class="kv"><span>AOR</span><b id="exKvAor">—</b></div>
           <div class="kv"><span>Contact</span><b id="exKvContact">—</b></div>
@@ -788,11 +889,11 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
           <div class="set-row"><label>Номер (user)</label><input type="text" id="exUser" data-action="ex-cfg" data-key="user" placeholder="1001"></div>
           <div class="set-row"><label>Auth-имя<small>если отличается</small></label><input type="text" id="exAuth" data-action="ex-cfg" data-key="authUser" placeholder="1001"></div>
           <div class="set-row"><label>Пароль<small>Digest MD5 / MD5-sess</small></label>
-            <div class="ex-pass-wrap"><input type="password" id="exPass" autocomplete="off" placeholder="••••••"><button class="icon-btn" id="exPassBtn" data-action="ext-pass-toggle" title="Показать пароль"><svg class="ic" style="width:14px;height:14px"><use href="#i-eye"/></svg></button></div>
+            <div class="ex-pass-wrap"><input type="password" id="exPass" autocomplete="off" placeholder="••••••"><button type="button" class="icon-btn" id="exPassBtn" data-action="ext-pass-toggle" title="Показать пароль"><svg class="ic" style="width:14px;height:14px"><use href="#i-eye"/></svg></button></div>
           </div>
           <div class="set-row"><label>Display name</label><input type="text" id="exName" data-action="ex-cfg" data-key="displayName" placeholder="Моно SIP"></div>
           <div class="set-row"><label>Expires, c</label><input type="number" id="exExpires" data-action="ex-cfg" data-key="expires" min="60" max="7200" value="300"></div>
-          <div class="set-row"><label>Регистрация при подключении</label><button class="switch" role="switch" data-action="ex-toggle-key" data-key="register" aria-checked="true"></button></div>
+          <div class="set-row"><label>Регистрация при подключении</label><button type="button" class="switch" role="switch" data-action="ex-toggle-key" data-key="register" aria-checked="true"></button></div>
           <div class="ex-note"><svg class="ic"><use href="#i-lock"/></svg><span>Пароль хранится только в памяти вкладки и не записывается в localStorage. Для страницы по HTTPS требуется wss://. Пример Asterisk: <span class="mono">wss://host:8089/ws</span> (chan_pjsip, transport-wss).</span></div>
         </div>
         <div class="card set-card">
@@ -805,18 +906,18 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
           <div class="set-row"><label>ICE-таймаут, c</label><input type="number" id="exIce" data-action="ex-cfg" data-key="iceTimeout" min="1" max="10" value="4"></div>
           <div class="set-row"><label>Кодек</label><select id="exCodec" data-action="ex-cfg" data-key="codec"><option value="auto">Как в offer</option><option value="opus">Opus</option><option value="pcmu">G.711 μ-law</option><option value="pcma">G.711 A-law</option></select></div>
           <div class="set-row"><label>DTMF</label><select id="exDtmf" data-action="ex-cfg" data-key="dtmf"><option value="rtp">RTP (RFC 4733)</option><option value="info">SIP INFO</option><option value="both">RTP + INFO</option></select></div>
-          <div class="set-row"><label>Session timers<small>RFC 4028 · 1800 c</small></label><button class="switch" role="switch" data-action="ex-toggle-key" data-key="sessionTimers" aria-checked="true"></button></div>
-          <div class="set-row"><label>OPTIONS keepalive<small>каждые 30 с</small></label><button class="switch" role="switch" data-action="ex-toggle-key" data-key="keepalive" aria-checked="true"></button></div>
-          <div class="set-row"><label>Автопереподключение</label><button class="switch" role="switch" data-action="ex-toggle-key" data-key="reconnect" aria-checked="true"></button></div>
+          <div class="set-row"><label>Session timers<small>RFC 4028 · 1800 c</small></label><button type="button" class="switch" role="switch" data-action="ex-toggle-key" data-key="sessionTimers" aria-checked="true"></button></div>
+          <div class="set-row"><label>OPTIONS keepalive<small>каждые 30 с</small></label><button type="button" class="switch" role="switch" data-action="ex-toggle-key" data-key="keepalive" aria-checked="true"></button></div>
+          <div class="set-row"><label>Автопереподключение</label><button type="button" class="switch" role="switch" data-action="ex-toggle-key" data-key="reconnect" aria-checked="true"></button></div>
         </div>
         <div class="card set-card">
           <h3><svg class="ic"><use href="#i-phone"/></svg>Быстрый вызов</h3>
           <p>Звонок через внешнюю линию независимо от активной линии демо-АТС</p>
-          <div class="ex-dial-row"><input id="exDial" placeholder="Номер или sip:user@host" autocomplete="off" spellcheck="false"><button class="btn grn" data-action="ext-call"><svg class="ic"><use href="#i-phone"/></svg>Позвонить</button></div>
+          <div class="ex-dial-row"><input id="exDial" placeholder="Номер или sip:user@host" autocomplete="off" spellcheck="false"><button type="button" class="btn grn" data-action="ext-call"><svg class="ic"><use href="#i-phone"/></svg>Позвонить</button></div>
           <div class="chips" style="margin-bottom:12px">
-            <button class="chip" data-action="ext-preset" data-ext="*43"><svg class="ic"><use href="#i-waves"/></svg>*43 · эхо Asterisk</button>
-            <button class="chip" data-action="ext-preset" data-ext="600"><svg class="ic"><use href="#i-voicemail"/></svg>600 · демо-почта</button>
-            <button class="chip" data-action="ext-preset" data-ext="100"><svg class="ic"><use href="#i-phone"/></svg>100</button>
+            <button type="button" class="chip" data-action="ext-preset" data-ext="*43"><svg class="ic"><use href="#i-waves"/></svg>*43 · эхо Asterisk</button>
+            <button type="button" class="chip" data-action="ext-preset" data-ext="600"><svg class="ic"><use href="#i-voicemail"/></svg>600 · демо-почта</button>
+            <button type="button" class="chip" data-action="ext-preset" data-ext="100"><svg class="ic"><use href="#i-phone"/></svg>100</button>
           </div>
           <div class="rfc-list">
             <div class="rfc-item"><span class="rfc-chip">RFC 3261</span><span>Транзакции и диалоги: branch z9hG4bK, теги, CSeq, Route/Record-Route, ACK на non-2xx, CANCEL → 487, Timer B/F 32 с.</span></div>
@@ -839,13 +940,13 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
           <h3><svg class="ic"><use href="#i-mic"/></svg>Аудио</h3>
           <p>Микрофон и обработка голоса</p>
           <div class="set-row"><label>Микрофон<small>устройство ввода</small></label><select id="setMic" data-action="set-mic"><option value="">По умолчанию</option></select></div>
-          <div class="set-row"><label>Эхоподавление</label><button class="switch" role="switch" data-action="set-toggle" data-key="aec" aria-checked="true"></button></div>
-          <div class="set-row"><label>Шумоподавление</label><button class="switch" role="switch" data-action="set-toggle" data-key="ns" aria-checked="true"></button></div>
-          <div class="set-row"><label>Автоусиление</label><button class="switch" role="switch" data-action="set-toggle" data-key="agc" aria-checked="true"></button></div>
+          <div class="set-row"><label>Эхоподавление</label><button type="button" class="switch" role="switch" data-action="set-toggle" data-key="aec" aria-checked="true"></button></div>
+          <div class="set-row"><label>Шумоподавление</label><button type="button" class="switch" role="switch" data-action="set-toggle" data-key="ns" aria-checked="true"></button></div>
+          <div class="set-row"><label>Автоусиление</label><button type="button" class="switch" role="switch" data-action="set-toggle" data-key="agc" aria-checked="true"></button></div>
           <div class="set-row"><label>Громкость вызова<small>для новых и активных вызовов</small></label><input type="range" min="0" max="100" value="85" id="setVolume" data-action="set-volume" style="width:130px"></div>
           <div class="set-row"><label>Громкость сигналов<small>рингтон, гудки, DTMF</small></label><input type="range" min="0" max="100" value="70" id="setRingVol" data-action="set-ringvol" style="width:130px"></div>
           <div class="set-row" style="display:block">
-            <button class="btn sm" id="micTestBtn" data-action="mic-test"><svg class="ic"><use href="#i-mic"/></svg>Проверить микрофон (6 с)</button>
+            <button type="button" class="btn sm" id="micTestBtn" data-action="mic-test"><svg class="ic"><use href="#i-mic"/></svg>Проверить микрофон (6 с)</button>
             <div class="mic-test-meter"><i id="micTestMeter"></i></div>
           </div>
         </div>
@@ -856,27 +957,28 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
           <div class="set-row"><label>Порт</label><input type="number" id="setPort" data-action="set-port" min="1" max="65535" value="5060"></div>
           <div class="set-row"><label>Expires, c<small>период регистрации</small></label><input type="number" id="setExpires" data-action="set-expires" min="30" max="3600" value="120"></div>
           <div class="set-row"><label>Кодек</label><select id="setCodec" data-action="set-codec"><option value="opus">Opus (48 кГц)</option><option value="pcmu">G.711 μ-law</option><option value="pcma">G.711 A-law</option></select></div>
-          <div class="set-row"><label>Автоответ<small>отвечать через 1,2 с</small></label><button class="switch" role="switch" data-action="set-toggle" data-key="autoAnswer" aria-checked="false"></button></div>
-          <div class="set-row"><label>Автозапись разговоров</label><button class="switch" role="switch" data-action="set-toggle" data-key="autoRecord" aria-checked="false"></button></div>
-          <div class="set-row"><label>Внешняя SIP-линия<small>реальный провайдер по RFC 7118</small></label><button class="btn sm" data-action="nav" data-view="sip"><svg class="ic"><use href="#i-globe"/></svg>Открыть</button></div>
+          <div class="set-row"><label>Автоответ<small>отвечать через 1,2 с</small></label><button type="button" class="switch" role="switch" data-action="set-toggle" data-key="autoAnswer" aria-checked="false"></button></div>
+          <div class="set-row"><label>Автозапись разговоров</label><button type="button" class="switch" role="switch" data-action="set-toggle" data-key="autoRecord" aria-checked="false"></button></div>
+          <div class="set-row"><label>Локальная сеть<small>сервер + клиенты на разных ПК</small></label><button type="button" class="btn sm" data-action="nav" data-view="lan"><svg class="ic"><use href="#i-network"/></svg>Открыть</button></div>
+          <div class="set-row"><label>Внешняя SIP-линия<small>реальный провайдер по RFC 7118</small></label><button type="button" class="btn sm" data-action="nav" data-view="sip"><svg class="ic"><use href="#i-globe"/></svg>Открыть</button></div>
         </div>
         <div class="card set-card">
           <h3><svg class="ic"><use href="#i-sun"/></svg>Интерфейс</h3>
           <p>Оформление и звук</p>
           <div class="set-row"><label>Тема</label>
             <div class="theme-chips">
-              <button class="chip" data-action="theme-set" data-theme="dark"><svg class="ic"><use href="#i-moon"/></svg>Тёмная</button>
-              <button class="chip" data-action="theme-set" data-theme="light"><svg class="ic"><use href="#i-sun"/></svg>Светлая</button>
+              <button type="button" class="chip" data-action="theme-set" data-theme="dark"><svg class="ic"><use href="#i-moon"/></svg>Тёмная</button>
+              <button type="button" class="chip" data-action="theme-set" data-theme="light"><svg class="ic"><use href="#i-sun"/></svg>Светлая</button>
             </div>
           </div>
-          <div class="set-row"><label>Все звуки</label><button class="switch" role="switch" data-action="set-toggle" data-key="sound" aria-checked="true"></button></div>
+          <div class="set-row"><label>Все звуки</label><button type="button" class="switch" role="switch" data-action="set-toggle" data-key="sound" aria-checked="true"></button></div>
         </div>
         <div class="card set-card">
           <h3><svg class="ic"><use href="#i-download"/></svg>Данные</h3>
           <p>Экспорт и сброс</p>
-          <div class="set-row"><label>Экспорт JSON<small>контакты, журнал, настройки</small></label><button class="btn sm" data-action="data-export"><svg class="ic"><use href="#i-download"/></svg>Скачать</button></div>
-          <div class="set-row"><label>Сброс настроек</label><button class="btn sm danger" data-action="settings-reset"><svg class="ic"><use href="#i-refresh"/></svg>Сбросить</button></div>
-          <div class="set-row"><label>Удалить все записи<small>безвозвратно</small></label><button class="btn sm danger" data-action="recs-clear"><svg class="ic"><use href="#i-trash"/></svg>Удалить</button></div>
+          <div class="set-row"><label>Экспорт JSON<small>контакты, журнал, настройки</small></label><button type="button" class="btn sm" data-action="data-export"><svg class="ic"><use href="#i-download"/></svg>Скачать</button></div>
+          <div class="set-row"><label>Сброс настроек</label><button type="button" class="btn sm danger" data-action="settings-reset"><svg class="ic"><use href="#i-refresh"/></svg>Сбросить</button></div>
+          <div class="set-row"><label>Удалить все записи<small>безвозвратно</small></label><button type="button" class="btn sm danger" data-action="recs-clear"><svg class="ic"><use href="#i-trash"/></svg>Удалить</button></div>
         </div>
       </div>
     </section>
@@ -886,12 +988,12 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
   <footer class="statusbar">
     <div class="sb-item click" data-action="nav" data-view="server" id="sbServer"><i class="dot" id="sbServerDot"></i><span id="sbServerText">АТС: выкл</span></div>
     <div class="sb-item click" data-action="nav" data-view="phone" id="sbLine"><svg class="ic"><use href="#i-phone"/></svg><span id="sbLineText">101: не в сети</span></div>
-    <div class="sb-item click" data-action="nav" data-view="sip" id="sbExt"><i class="dot" id="sbExtDot"></i><span id="sbExtText">SIP: выключено</span></div>
+    <div class="sb-item click" data-action="nav" data-view="lan" id="sbLan"><i class="dot" id="sbLanDot"></i><span id="sbLanText">LAN: отключено</span></div>
+    <div class="sb-item click sb-md" data-action="nav" data-view="sip" id="sbExt"><i class="dot" id="sbExtDot"></i><span id="sbExtText">SIP: выключено</span></div>
     <div class="sb-item sb-call click" data-action="nav" data-view="phone" id="sbCall" hidden><svg class="ic"><use href="#i-phone"/></svg><b id="sbCallText">—</b></div>
     <div class="sb-item sb-rec" id="sbRec" hidden><i></i>REC</div>
     <div class="sb-item sb-md" title="Уровень микрофона"><svg class="ic"><use href="#i-mic"/></svg><span class="sb-mic" id="sbMic"><i></i><i></i><i></i><i></i><i></i></span></div>
     <div class="sb-item sb-md" title="SIP-сообщения"><svg class="ic"><use href="#i-send"/></svg><span id="sbMsg">0</span></div>
-    <div class="sb-item sb-md" id="sbNet">UDP→WS · эмуляция</div>
     <div class="sb-item sb-clock" id="sbClock">--:--:--</div>
   </footer>
 </div>
@@ -899,14 +1001,15 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <div class="mini-call" id="miniCall">
   <div class="avatar" id="miniAv">?</div>
   <div><b id="miniName">—</b><span class="mono" id="miniTime">0:00</span></div>
-  <button class="icon-btn" data-action="mini-open" title="Открыть"><svg class="ic"><use href="#i-expand"/></svg></button>
-  <button class="icon-btn mini-hang" data-action="mini-hangup" title="Завершить"><svg class="ic"><use href="#i-phone"/></svg></button>
+  <button type="button" class="icon-btn" data-action="mini-open" title="Открыть"><svg class="ic"><use href="#i-expand"/></svg></button>
+  <button type="button" class="icon-btn mini-hang" data-action="mini-hangup" title="Завершить"><svg class="ic"><use href="#i-phone"/></svg></button>
 </div>
 
 <div class="toasts" id="toasts"></div>
 <div class="modal-wrap" id="modalWrap"><div class="modal" id="modalBox"></div></div>
 
-<div class="incoming" id="incoming">
+<!-- ================= ВХОДЯЩИЙ ВЫЗОВ ================= -->
+<div class="incoming" id="incoming" role="dialog" aria-modal="true" aria-labelledby="incName">
   <div class="inc-card">
     <div class="inc-avatar-wrap"><div class="avatar" id="incAv">?</div></div>
     <h2 id="incName">—</h2>
@@ -914,9 +1017,10 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
     <div class="inc-to" id="incTo">Входящий вызов</div>
     <div class="inc-auto" id="incAuto"></div>
     <div class="inc-actions">
-      <button class="inc-btn no" data-action="inc-decline"><svg class="ic"><use href="#i-phone"/></svg>Отклонить</button>
-      <button class="inc-btn ok" data-action="inc-accept"><svg class="ic"><use href="#i-phone"/></svg>Ответить</button>
+      <button type="button" class="inc-btn no" id="incDecline" data-action="inc-decline"><svg class="ic"><use href="#i-phone"/></svg>Отклонить</button>
+      <button type="button" class="inc-btn ok" id="incAccept" data-action="inc-accept"><svg class="ic"><use href="#i-phone"/></svg>Ответить</button>
     </div>
+    <div class="inc-hint">Enter — ответить · Esc — отклонить</div>
   </div>
 </div>
 
@@ -926,7 +1030,8 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <script>
 'use strict';
 /* ============================================================
-   MonoSIP — монолитное SPA: SIP-АТС + два софтфона + WebRTC
+   MonoSIP — монолитное SPA: SIP-АТС + софтфоны + WebRTC
+   + локальная сеть (хаб/клиенты на разных ПК)
    + опциональная реальная SIP-линия (RFC 3261/7118)
    ============================================================ */
 const $=id=>document.getElementById(id);
@@ -957,7 +1062,7 @@ const MR_OK=typeof MediaRecorder!=='undefined';
 const AV={'101':['#6d7cff','#22d3ee'],'102':['#e879f9','#ffb020'],'200':['#1fbf7f','#22d3ee'],'600':['#ffb020','#ff4d6d'],'ext':['#22d3ee','#2fd48f']};
 const avGrad=e=>{const c=AV[e]||['#8b5cf6','#6d7cff'];return'linear-gradient(135deg,'+c[0]+','+c[1]+')'};
 const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
-const peerName=e=>{const c=S.contacts.find(x=>x.ext===e);return c?c.name:e};
+const peerName=e=>{const c=S.contacts.find(x=>x.ext===e);if(c)return c.name;if(typeof NET!=='undefined'&&NET.directory[e])return NET.directory[e];return e};
 const isService=e=>e==='200'||e==='600';
 const avatarHtml=(e,n,cls)=>'<div class="avatar '+(cls||'')+'" style="background:'+avGrad(e)+'">'+esc(initials(n||peerName(e)))+'</div>';
 
@@ -967,7 +1072,7 @@ function toast(type,title,text,act){
   const id=uid();const colors={success:'var(--ok)',info:'var(--inf)',warn:'var(--warn)',error:'var(--err)'};
   const icons={success:'check',info:'info',warn:'alert',error:'alert'};
   const el=document.createElement('div');el.className='toast';el.style.setProperty('--tc',colors[type]||colors.info);el.id='toast-'+id;
-  el.innerHTML=ic(icons[type]||'info')+'<div class="toast-body"><b>'+esc(title)+'</b>'+(text?'<p>'+esc(text)+'</p>':'')+(act?'<button class="toast-act" data-action="toast-act" data-id="'+id+'">'+esc(act.label)+'</button>':'')+'</div><button class="toast-x" data-action="toast-x" data-id="'+id+'">'+ic('x')+'</button>';
+  el.innerHTML=ic(icons[type]||'info')+'<div class="toast-body"><b>'+esc(title)+'</b>'+(text?'<p>'+esc(text)+'</p>':'')+(act?'<button type="button" class="toast-act" data-action="toast-act" data-id="'+id+'">'+esc(act.label)+'</button>':'')+'</div><button type="button" class="toast-x" data-action="toast-x" data-id="'+id+'">'+ic('x')+'</button>';
   if(act)TOAST_CB[id]=act.cb;
   const box=$('toasts');box.appendChild(el);while(box.children.length>4)box.firstChild.remove();
   setTimeout(()=>dismissToast(id),act?7000:4600);
@@ -978,7 +1083,7 @@ function dismissToast(id){const el=$('toast-'+id);if(!el)return;el.classList.add
 const MOD={type:null,data:null,cb:null};
 function openModal(html,type,data,drawer){MOD.type=type;MOD.data=data;const w=$('modalWrap');w.classList.toggle('as-drawer',!!drawer);$('modalBox').innerHTML=html;w.classList.add('on')}
 function closeModal(){MOD.type=null;MOD.data=null;MOD.cb=null;$('modalWrap').classList.remove('on','as-drawer')}
-function openConfirm(title,text,okLabel,cb){MOD.cb=cb;openModal('<h2>'+ic('alert')+esc(title)+'</h2><div class="sub">'+esc(text)+'</div><div class="m-actions"><button class="btn ghost" data-action="modal-close">Отмена</button><button class="btn danger" data-action="modal-ok">'+esc(okLabel)+'</button></div>','confirm')}
+function openConfirm(title,text,okLabel,cb){MOD.cb=cb;openModal('<h2>'+ic('alert')+esc(title)+'</h2><div class="sub">'+esc(text)+'</div><div class="m-actions"><button type="button" class="btn ghost" data-action="modal-close">Отмена</button><button type="button" class="btn danger" data-action="modal-ok">'+esc(okLabel)+'</button></div>','confirm')}
 
 /* ---------------- Аудиодвижок ---------------- */
 const AC={ctx:null,master:null,ring:null,micStream:null,micSrc:null,analyser:null,consumers:new Set(),buf:null,fbuf:null};
@@ -1086,25 +1191,25 @@ function buildSip(o){
   L.push('Contact: <sip:'+o.from+'@ua-'+o.from+'.local;transport=ws>');
   if(o.expires!==undefined)L.push('Expires: '+o.expires);
   if(o.contentType)L.push('Content-Type: '+o.contentType);
-  L.push('User-Agent: MonoSIP/1.0');
+  L.push('User-Agent: MonoSIP/1.2.1');
   const body=o.body||'';L.push('Content-Length: '+body.length);L.push('');if(body)L.push(body);
   return L.join('\r\n');
 }
 function sipReq(method,uri,from,to,callId,cseq,o){
-  o=o||{};const m={kind:'req',method,label:method,from,to,callId,cseq,fromTag:o.fromTag||uid(),toTag:o.toTag,fromName:o.fromName||peerName(from),uri,sdp:o.sdp,expires:o.expires,body:o.body,contentType:o.contentType};
+  o=o||{};const m={kind:'req',method,label:method,from,to,callId,cseq,fromTag:o.fromTag||uid(),toTag:o.toTag,fromName:o.fromName||peerName(from),uri,sdp:o.sdp,expires:o.expires,body:o.body,contentType:o.contentType||(o.sdp?'application/sdp':undefined)};
   m.text=buildSip(Object.assign({method,uri,viaHost:'ua-'+from+'.local'},m));
   m.sum=uri+(o.body&&!o.sdp?' · '+String(o.body).split('\n')[0].slice(0,40):'');
   return m;
 }
 function sipRes(status,reason,req,o){
-  o=o||{};const m={kind:'res',status,reason,label:status+' '+reason,reqMethod:req.method,from:req.from,to:req.to,callId:req.callId,cseq:req.cseq,fromTag:req.fromTag,toTag:o.toTag||req.toTag,fromName:req.fromName,sdp:o.sdp,expires:o.expires};
+  o=o||{};const m={kind:'res',status,reason,label:status+' '+reason,reqMethod:req.method,from:req.from,to:req.to,callId:req.callId,cseq:req.cseq,fromTag:req.fromTag,toTag:o.toTag||req.toTag,fromName:req.fromName,sdp:o.sdp,expires:o.expires,contentType:o.contentType||(o.sdp?'application/sdp':undefined)};
   m.text=buildSip(Object.assign({status,reason,viaHost:(req.to==='АТС'?'ats':'ua-'+req.to)+'.local',reqMethod:req.method,uri:req.uri},m));
   m.sum='→ '+req.from+' · '+req.method;
   return m;
 }
 function logMsg(from,to,m){
   const cls=m.kind==='req'?m.method.toLowerCase():'r'+Math.floor(m.status/100);
-  const e={id:uid(),t:Date.now(),from,to,label:m.label,cls,callId:m.callId,text:m.text,sum:m.sum||''};
+  const e={id:uid(),t:Date.now(),from,to,label:m.label,cls,callId:m.callId,text:m.text,sum:m.sum||'',lan:!!m.lan};
   LOG.list.push(e);if(LOG.list.length>600)LOG.list.shift();
   SRV.msgTotal++;rateAcc++;
   if(m.kind==='req')SRV.kinds[m.method]=(SRV.kinds[m.method]||0)+1;else SRV.kinds['r'+Math.floor(m.status/100)]=(SRV.kinds['r'+Math.floor(m.status/100)]||0)+1;
@@ -1122,41 +1227,53 @@ function waitIce(pc){return new Promise(res=>{if(pc.iceGatheringState==='complet
 function mungeCodecPref(sdp,pref){try{const want={opus:'opus',pcmu:'PCMU',pcma:'PCMA'}[pref];if(!want||!sdp)return sdp;const lines=sdp.split('\r\n');const map={};lines.forEach(l=>{const m=/^a=rtpmap:(\d+) ([^/]+)/.exec(l);if(m)map[m[2].toUpperCase()]=m[1]});const pt=map[want.toUpperCase()];if(!pt)return sdp;return lines.map(l=>{if(l.startsWith('m=audio')){const p=l.split(' ');return p.slice(0,3).concat([pt]).concat(p.slice(3).filter(x=>x!==pt)).join(' ')}return l}).join('\r\n')}catch(e){return sdp}}
 function mungeCodec(sdp){return mungeCodecPref(sdp,S.settings.codec)}
 
-/* ---------------- SIP-сервер (демо-АТС) ---------------- */
+/* ---------------- SIP-сервер (АТС / хаб) ---------------- */
 const SRV={running:false,startedAt:0,msgTotal:0,kinds:{},bindings:new Map(),dialogs:new Map(),
-  toUA(ext,m){deliver('АТС',ext,m,()=>{const ua=S.clients[ext];if(ua)ua.handle(m)})},
+  toUA(ext,m,peer){
+    const p=peer||(SRV.bindings.get(ext)||{}).peer||(typeof NET!=='undefined'?NET.extPeer.get(ext):null);
+    if(p&&NET.mode==='hub'){netSip(p,m);return}
+    deliver('АТС',ext,m,()=>{const ua=S.clients[ext];if(ua)ua.handle(m)})
+  },
   handle(m){
     if(!SRV.running)return;
     if(m.kind==='req'){
       switch(m.method){
         case 'REGISTER':{
-          if(m.expires===0){SRV.bindings.delete(m.from);sysLog('Регистрация снята: '+m.from)}
-          else{SRV.bindings.set(m.from,{contact:'sip:'+m.from+'@ua-'+m.from+'.local:5060;transport=ws',expires:m.expires,at:Date.now()});}
-          SRV.toUA(m.from,sipRes(200,'OK',m,{expires:m.expires,toTag:'ats'+uid()}));renderServerBits();break;
+          const existing=SRV.bindings.get(m.from);
+          if(m._peer&&existing&&existing.peer&&existing.peer!==m._peer){SRV.toUA(m.from,sipRes(403,'Forbidden',m),m._peer);break}
+          if(m._peer&&S.clients[m.from]&&!S.clients[m.from].real){SRV.toUA(m.from,sipRes(403,'Forbidden',m),m._peer);break}
+          if(m.expires===0){SRV.bindings.delete(m.from);if(m._peer)NET.extPeer.delete(m.from);sysLog('Регистрация снята: '+m.from)}
+          else{
+            const pNode=m._peer?NET.peers.find(x=>x.id===m._peer):null;
+            SRV.bindings.set(m.from,{contact:m._peer?('sip:'+m.from+'@'+((pNode&&pNode.name)||'node')+'.lan;transport=ws'):('sip:'+m.from+'@ua-'+m.from+'.local:5060;transport=ws'),expires:m.expires,at:Date.now(),peer:m._peer||null,name:m.fromName||m.from});
+            if(m._peer)NET.extPeer.set(m.from,m._peer);
+          }
+          SRV.toUA(m.from,sipRes(200,'OK',m,{expires:m.expires,toTag:'ats'+uid()}),m._peer);
+          netBroadcastDirectory();renderServerBits();if(S.view==='lan')renderLan();break;
         }
-        case 'OPTIONS':SRV.toUA(m.from,sipRes(200,'OK',m,{toTag:'ats'}));break;
+        case 'OPTIONS':SRV.toUA(m.from,sipRes(200,'OK',m,{toTag:'ats'}),m._peer);break;
         case 'INVITE':{
           let d=SRV.dialogs.get(m.callId);
-          if(d){const dest=m.from===d.a?d.b:d.a;if(!d.svc)SRV.toUA(dest,m);else SRV.toUA(m.from,sipRes(200,'OK',m));break}
-          d={id:m.callId,a:m.from,b:m.to,state:'trying',at:Date.now(),activeAt:0,svc:isService(m.to)?m.to:null,toTag:'svc'+uid()};
+          if(d){const dest=m.from===d.a?d.b:d.a;if(!d.svc)SRV.toUA(dest,m);else SRV.toUA(m.from,sipRes(200,'OK',m),m._peer);break}
+          d={id:m.callId,a:m.from,b:m.to,state:'trying',at:Date.now(),activeAt:0,svc:isService(m.to)?m.to:null,toTag:'svc'+uid(),pa:m._peer||null,pb:(SRV.bindings.get(m.to)||{}).peer||null};
           SRV.dialogs.set(m.callId,d);
-          SRV.toUA(m.from,sipRes(100,'Trying',m));
+          SRV.toUA(m.from,sipRes(100,'Trying',m),m._peer);
           if(d.svc)SRV.serviceInvite(d,m);
           else if(SRV.bindings.has(m.to)){d.state='ringing';SRV.toUA(m.to,m)}
-          else{SRV.toUA(m.from,sipRes(404,'Not Found',m));SRV.dialogs.delete(m.callId)}
+          else{SRV.toUA(m.from,sipRes(404,'Not Found',m),m._peer);SRV.dialogs.delete(m.callId)}
           renderServerBits();break;
         }
         case 'ACK':{const d=SRV.dialogs.get(m.callId);if(d){if(d.svc){d.state='active';d.activeAt=Date.now()}else SRV.toUA(d.b,m);renderServerBits()}break}
         case 'BYE':{
-          const d=SRV.dialogs.get(m.callId);SRV.toUA(m.from,sipRes(200,'OK',m));
+          const d=SRV.dialogs.get(m.callId);SRV.toUA(m.from,sipRes(200,'OK',m),m._peer);
           if(d){if(d.svc)SRV.serviceBye(d);else SRV.toUA(m.from===d.a?d.b:d.a,m);SRV.dialogs.delete(m.callId);renderServerBits()}break;
         }
         case 'CANCEL':{
-          const d=SRV.dialogs.get(m.callId);SRV.toUA(m.from,sipRes(200,'OK',m));
-          SRV.toUA(m.from,sipRes(487,'Request Terminated',m));
+          const d=SRV.dialogs.get(m.callId);SRV.toUA(m.from,sipRes(200,'OK',m),m._peer);
+          SRV.toUA(m.from,sipRes(487,'Request Terminated',m),m._peer);
           if(d&&!d.svc)SRV.toUA(d.b,m);SRV.dialogs.delete(m.callId);renderServerBits();break;
         }
-        case 'INFO':{const d=SRV.dialogs.get(m.callId);SRV.toUA(m.from,sipRes(200,'OK',m));if(d&&!d.svc)SRV.toUA(m.from===d.a?d.b:d.a,m);break}
+        case 'INFO':{const d=SRV.dialogs.get(m.callId);SRV.toUA(m.from,sipRes(200,'OK',m),m._peer);if(d&&!d.svc)SRV.toUA(m.from===d.a?d.b:d.a,m);break}
       }
     }else{
       const d=SRV.dialogs.get(m.callId);if(!d)return;
@@ -1168,7 +1285,7 @@ const SRV={running:false,startedAt:0,msgTotal:0,kinds:{},bindings:new Map(),dial
     }
   },
   async serviceInvite(d,m){
-    SRV.toUA(d.a,sipRes(180,'Ringing',m,{toTag:d.toTag}));
+    SRV.toUA(d.a,sipRes(180,'Ringing',m,{toTag:d.toTag}),d.pa);
     setTimeout(async()=>{
       if(!SRV.dialogs.has(d.id)||!SRV.running)return;
       try{
@@ -1184,8 +1301,8 @@ const SRV={running:false,startedAt:0,msgTotal:0,kinds:{},bindings:new Map(),dial
           pc.addTrack(dest.stream.getAudioTracks()[0],dest.stream);
           await pc.setRemoteDescription({type:'offer',sdp:m.sdp});
           const ans=await pc.createAnswer();await pc.setLocalDescription(ans);await waitIce(pc);
-          d.state='answered';SRV.toUA(d.a,sipRes(200,'OK',m,{sdp:mungeCodec(pc.localDescription.sdp),toTag:d.toTag}));
-        }else{d.state='answered';SRV.toUA(d.a,sipRes(200,'OK',m,{toTag:d.toTag}))}
+          d.state='answered';SRV.toUA(d.a,sipRes(200,'OK',m,{sdp:mungeCodec(pc.localDescription.sdp),toTag:d.toTag}),d.pa);
+        }else{d.state='answered';SRV.toUA(d.a,sipRes(200,'OK',m,{toTag:d.toTag}),d.pa)}
         if(d.svc==='600'){
           const buf=await greetingBuffer();
           if(d.pc&&ctx){const gs=ctx.createBufferSource();gs.buffer=buf;const gg=ctx.createGain();gg.gain.value=.9;gs.connect(gg);gg.connect(d.dest);gs.start();d.greetSrc=gs}
@@ -1194,7 +1311,7 @@ const SRV={running:false,startedAt:0,msgTotal:0,kinds:{},bindings:new Map(),dial
           sysLog('Сервис 600: приветствие, затем запись ≤15 с');
         }else sysLog('Сервис 200: эхо-петля 350 мс запущена');
         renderServerBits();
-      }catch(err){console.error(err);SRV.toUA(d.a,sipRes(500,'Service Error',m));SRV.dialogs.delete(d.id)}
+      }catch(err){console.error(err);SRV.toUA(d.a,sipRes(500,'Service Error',m),d.pa);SRV.dialogs.delete(d.id)}
     },900);
   },
   vmStart(d){
@@ -1209,7 +1326,7 @@ const SRV={running:false,startedAt:0,msgTotal:0,kinds:{},bindings:new Map(),dial
   vmBye(d){
     sysLog('Сервис 600: лимит 15 с — BYE');
     const m=sipReq('BYE','sip:'+d.a+'@'+S.settings.domain,d.svc,d.a,d.id,2,{fromTag:d.toTag});
-    SRV.toUA(d.a,m);
+    SRV.toUA(d.a,m,d.pa);
   },
   serviceBye(d){
     clearTimeout(d.vmTimer);clearTimeout(d.vmMax);
@@ -1222,21 +1339,22 @@ const SRV={running:false,startedAt:0,msgTotal:0,kinds:{},bindings:new Map(),dial
 function startServer(){
   if(SRV.running)return;
   SRV.running=true;SRV.startedAt=Date.now();
-  sysLog('АТС запущена · SIP/2.0 over WS · порт '+S.settings.port+' · домен '+S.settings.domain);
+  sysLog('АТС запущена · SIP/2.0 over WS · порт '+S.settings.port+' · домен '+S.settings.domain+(NET.mode==='hub'?' · режим LAN-хаба':''));
   setTimeout(()=>{if(SRV.running)S.clients['101'].register()},350);
   setTimeout(()=>{if(SRV.running)S.clients['102'].register()},950);
-  toast('success','АТС запущена','Регистрация линий 101 и 102…');
+  toast('success','АТС запущена',NET.mode==='hub'?'Хаб обслуживает локальную сеть':'Регистрация линий 101 и 102…');
   renderServerBits();renderStatus();renderAccounts();renderLineCard();renderToolbar();
 }
 function stopServer(){
   if(!SRV.running)return;
+  if(NET.mode!=='local')netDisconnect();
   Object.values(S.clients).forEach(ua=>{
     if(ua.real)return;
     if(ua.call){addHistory(ua,ua.call,ua.call.dir==='out'?'out':'in',callDur(ua.call),'Сервер остановлен');cleanupCall(ua.call)}
     ua.registered=false;clearTimeout(ua.regTimer);clearInterval(ua.optTimer);
   });
   SRV.dialogs.forEach(d=>{if(d.svc)SRV.serviceBye(d)});
-  SRV.dialogs.clear();SRV.bindings.clear();SRV.running=false;
+  SRV.dialogs.clear();SRV.bindings.clear();NET.extPeer.clear();SRV.running=false;
   sysLog('АТС остановлена · все диалоги завершены, биндинги сняты');
   toast('warn','АТС остановлена','Вызовы завершены, регистрации сняты');
   renderServerBits();renderStatus();renderAccounts();renderLineCard();renderToolbar();renderDialMode();
@@ -1245,11 +1363,14 @@ const callDur=c=>c.activeAt?Math.round((Date.now()-c.activeAt)/1000):0;
 
 /* ---------------- Абонентский терминал (UA) ---------------- */
 class UA{
-  constructor(ext,name){this.ext=ext;this.name=name;this.registered=false;this.call=null;this.regCseq=0;this.optCseq=0;this.regTimer=null;this.optTimer=null;this.regAt=0}
-  reply(m){deliver(this.ext,'АТС',m,SRV.handle)}
+  constructor(ext,name){this.ext=ext;this.name=name;this.registered=false;this.call=null;this.regCseq=0;this.optCseq=0;this.regTimer=null;this.optTimer=null;this.regAt=0;this.lanExt=null}
+  get wire(){return (NET.mode==='client'&&this.lanExt)?this.lanExt:this.ext}
+  reply(m){if(NET.mode==='client'){netSip('hub',m)}else deliver(this.ext,'АТС',m,SRV.handle)}
   register(unreg){
-    if(!SRV.running){if(!unreg)toast('warn','АТС не запущена','Включите сервер на панели инструментов');return}
-    const m=sipReq('REGISTER','sip:'+S.settings.domain,this.ext,this.ext,'reg-'+this.ext+'-'+uid(),++this.regCseq,{expires:unreg?0:S.settings.expires,fromTag:'reg'+this.ext,fromName:this.name});
+    if(NET.mode==='client'){if(!netReady()||!NET.hubId){if(!unreg)toast('warn','Хаб недоступен','Подключитесь к LAN-серверу');return}}
+    else if(!SRV.running){if(!unreg)toast('warn','АТС не запущена','Включите сервер на панели инструментов');return}
+    const w=this.wire;
+    const m=sipReq('REGISTER','sip:'+S.settings.domain,w,w,'reg-'+w+'-'+uid(),++this.regCseq,{expires:unreg?0:S.settings.expires,fromTag:'reg'+w,fromName:this.name});
     this.reply(m);
   }
   handle(m){
@@ -1258,12 +1379,12 @@ class UA{
         if(m.status===200){
           if(m.expires===0){this.registered=false;clearTimeout(this.regTimer);clearInterval(this.optTimer)}
           else{const first=!this.registered;this.registered=true;this.regAt=Date.now();
-            clearTimeout(this.regTimer);this.regTimer=setTimeout(()=>{if(SRV.running&&this.registered)this.register()},S.settings.expires*800);
-            clearInterval(this.optTimer);this.optTimer=setInterval(()=>{if(SRV.running&&this.registered){this.reply(sipReq('OPTIONS','sip:'+S.settings.domain,this.ext,'АТС','opt-'+uid(),++this.optCseq,{fromTag:'opt'+this.ext}))}},26000+Math.random()*6000);
-            if(first)sysLog('Линия '+this.ext+' ('+this.name+') зарегистрирована');
+            clearTimeout(this.regTimer);this.regTimer=setTimeout(()=>{if((SRV.running||NET.mode==='client')&&this.registered)this.register()},S.settings.expires*800);
+            clearInterval(this.optTimer);this.optTimer=setInterval(()=>{if((SRV.running||NET.mode==='client')&&this.registered){this.reply(sipReq('OPTIONS','sip:'+S.settings.domain,this.wire,'АТС','opt-'+uid(),++this.optCseq,{fromTag:'opt'+this.wire}))}},26000+Math.random()*6000);
+            if(first)sysLog('Линия '+this.wire+' ('+this.name+') зарегистрирована');
           }
           renderAccounts();renderStatus();renderLineCard();renderServerBits();
-        }else{this.registered=false;renderAccounts();renderStatus();renderLineCard()}
+        }else{this.registered=false;if(m.status===403)toast('error','Номер занят','Линия '+this.wire+' уже зарегистрирована другим узлом');renderAccounts();renderStatus();renderLineCard()}
         return;
       }
       const c=this.call;if(!c||c.callId!==m.callId)return;
@@ -1272,7 +1393,7 @@ class UA{
         else if(m.status===180||m.status===183){if(c.state!=='ringing'){c.state='ringing';c.toTag=m.toTag;startRingback(c);renderCallArea();renderStatus()}}
         else if(m.status===200){
           c.toTag=m.toTag;
-          this.reply(sipReq('ACK','sip:'+c.peer+'@'+S.settings.domain,this.ext,c.peer,c.callId,c.cseq,{fromTag:c.fromTag,toTag:c.toTag}));
+          this.reply(sipReq('ACK','sip:'+c.peer+'@'+S.settings.domain,this.wire,c.peer,c.callId,c.cseq,{fromTag:c.fromTag,toTag:c.toTag}));
           (async()=>{try{if(c.pc&&m.sdp)await c.pc.setRemoteDescription({type:'answer',sdp:m.sdp})}catch(e){console.error(e)}activateCall(c)})();
         }
         else if(m.status>=400)failCall(c,m.status,m.reason);
@@ -1294,8 +1415,8 @@ class UA{
         this.call=c;
         this.reply(sipRes(180,'Ringing',m,{toTag:c.toTag}));
         startRingtone(c);INC.push(c);showIncoming();
-        c.timeoutInt=setTimeout(()=>{if(this.call===c&&c.state==='incoming'){this.reply(sipRes(480,'Temporarily Unavailable',m));addHistory(this,c,'missed',0,'Не отвечен');toast('warn','Пропущенный вызов',c.peerName+' → '+this.ext);cleanupCall(c)}},25000);
-        if(S.settings.autoAnswer)c.autoInt=setTimeout(()=>{if(this.call===c&&c.state==='incoming')answerCall(c)},1200);
+        c.timeoutInt=setTimeout(()=>{if(this.call===c&&c.state==='incoming'){this.reply(sipRes(480,'Temporarily Unavailable',m));addHistory(this,c,'missed',0,'Не отвечен');toast('warn','Пропущенный вызов',c.peerName+' → '+this.wire);cleanupCall(c)}},25000);
+        if(S.settings.autoAnswer)c.autoInt=setTimeout(()=>{if(this.call===c&&c.state==='incoming')safeAnswer(c)},1200);
         renderCallArea();renderStatus();renderDialMode();break;
       }
       case 'ACK':{const c=this.call;if(c&&c.callId===m.callId&&c.state==='answering')activateCall(c);break}
@@ -1336,7 +1457,7 @@ class ExtUA{
  get number(){return EXT.cfg.user||'SIP'}
  register(unreg){if(!rsOpen()){setView('sip');toast('warn','Транспорт не подключён','Откройте WSS-соединение с SIP-сервером');return}rsRegister(unreg)}
 }
-const extLabel=u=>u.real?u.number:u.ext;
+const extLabel=u=>u.real?u.number:(u.wire||u.ext);
 const rsOpen=()=>!!EXT.ws&&EXT.ws.readyState===1;
 const rsEnc=new TextEncoder();
 function md5(s){function L(k,d){return(k<<d)|(k>>>(32-d))}function K(G,k){var I,d,F,H,x;F=(G&2147483648);H=(k&2147483648);I=(G&1073741824);d=(k&1073741824);x=(G&1073741823)+(k&1073741823);if(I&d){return(x^2147483648^F^H)}if(I|d){if(x&1073741824){return(x^3221225472^F^H)}else{return(x^1073741824^F^H)}}else{return(x^F^H)}}function r(d,F,k){return(d&F)|((~d)&k)}function q(d,F,k){return(d&k)|(F&(~k))}function p(d,F,k){return(d^F^k)}function n(d,F,k){return(F^(d|(~k)))}function u(G,F,aa,Z,k,H,I){G=K(G,K(K(r(F,aa,Z),k),I));return K(L(G,H),F)}function f(G,F,aa,Z,k,H,I){G=K(G,K(K(q(F,aa,Z),k),I));return K(L(G,H),F)}function D(G,F,aa,Z,k,H,I){G=K(G,K(K(p(F,aa,Z),k),I));return K(L(G,H),F)}function t(G,F,aa,Z,k,H,I){G=K(G,K(K(n(F,aa,Z),k),I));return K(L(G,H),F)}function e(G){var Z,F=G.length,x=F+8,k=(x-(x%64))/64,I=(k+1)*16,aa=Array(I-1),d=0,H=0;while(H<F){Z=(H-(H%4))/4;d=(H%4)*8;aa[Z]=(aa[Z]|(G.charCodeAt(H)<<d));H++}Z=(H-(H%4))/4;d=(H%4)*8;aa[Z]=aa[Z]|(128<<d);aa[I-2]=F<<3;aa[I-1]=F>>>29;return aa}function B(x){var k="",F="",G,d;for(d=0;d<=3;d++){G=(x>>>(d*8))&255;F="0"+G.toString(16);k=k+F.substr(F.length-2,2)}return k}var C=Array(),P,h,E,v,g,Y,X,W,V;var S=7,Q=12,N=17,M=22,A=5,z=9,y=14,w=20,o=4,m=11,l=16,j=23,U=6,T=10,R=15,O=21;s=unescape(encodeURIComponent(s));C=e(s);Y=1732584193;X=4023233417;W=2562383102;V=271733878;for(P=0;P<C.length;P+=16){h=Y;E=X;v=W;g=V;Y=u(Y,X,W,V,C[P+0],S,3614090360);V=u(V,Y,X,W,C[P+1],Q,3905402710);W=u(W,V,Y,X,C[P+2],N,606105819);X=u(X,W,V,Y,C[P+3],M,3250441966);Y=u(Y,X,W,V,C[P+4],S,4118548399);V=u(V,Y,X,W,C[P+5],Q,1200080426);W=u(W,V,Y,X,C[P+6],N,2821735955);X=u(X,W,V,Y,C[P+7],M,4249261313);Y=u(Y,X,W,V,C[P+8],S,1770035416);V=u(V,Y,X,W,C[P+9],Q,2336552879);W=u(W,V,Y,X,C[P+10],N,4294925233);X=u(X,W,V,Y,C[P+11],M,2304563134);Y=u(Y,X,W,V,C[P+12],S,1804603682);V=u(V,Y,X,W,C[P+13],Q,4254626195);W=u(W,V,Y,X,C[P+14],N,2792965006);X=u(X,W,V,Y,C[P+15],M,1236535329);Y=f(Y,X,W,V,C[P+1],A,4129170786);V=f(V,Y,X,W,C[P+6],z,3225465664);W=f(W,V,Y,X,C[P+11],y,643717713);X=f(X,W,V,Y,C[P+0],w,3921069994);Y=f(Y,X,W,V,C[P+5],A,3593408605);V=f(V,Y,X,W,C[P+10],z,38016083);W=f(W,V,Y,X,C[P+15],y,3634488961);X=f(X,W,V,Y,C[P+4],w,3889429448);Y=f(Y,X,W,V,C[P+9],A,568446438);V=f(V,Y,X,W,C[P+14],z,3275163606);W=f(W,V,Y,X,C[P+3],y,4107603335);X=f(X,W,V,Y,C[P+8],w,1163531501);Y=f(Y,X,W,V,C[P+13],A,2850285829);V=f(V,Y,X,W,C[P+2],z,4243563512);W=f(W,V,Y,X,C[P+7],y,1735328473);X=f(X,W,V,Y,C[P+12],w,2368359562);Y=D(Y,X,W,V,C[P+5],o,4294588738);V=D(V,Y,X,W,C[P+8],m,2272392833);W=D(W,V,Y,X,C[P+11],l,1839030562);X=D(X,W,V,Y,C[P+14],j,4259657740);Y=D(Y,X,W,V,C[P+1],o,2763975236);V=D(V,Y,X,W,C[P+4],m,1272893353);W=D(W,V,Y,X,C[P+7],l,4139469664);X=D(X,W,V,Y,C[P+10],j,3200236656);Y=D(Y,X,W,V,C[P+13],o,681279174);V=D(V,Y,X,W,C[P+0],m,3936430074);W=D(W,V,Y,X,C[P+3],l,3572445317);X=D(X,W,V,Y,C[P+6],j,76029189);Y=D(Y,X,W,V,C[P+9],o,3654602809);V=D(V,Y,X,W,C[P+12],m,3873151461);W=D(W,V,Y,X,C[P+15],l,530742520);X=D(X,W,V,Y,C[P+2],j,3299628645);Y=t(Y,X,W,V,C[P+0],U,4096336452);V=t(V,Y,X,W,C[P+7],T,1126891415);W=t(W,V,Y,X,C[P+14],R,2878612391);X=t(X,W,V,Y,C[P+5],O,4237533241);Y=t(Y,X,W,V,C[P+12],U,1700485571);V=t(V,Y,X,W,C[P+3],T,2399980690);W=t(W,V,Y,X,C[P+10],R,4293915773);X=t(X,W,V,Y,C[P+1],O,2240044497);Y=t(Y,X,W,V,C[P+8],U,1873313359);V=t(V,Y,X,W,C[P+15],T,4264355552);W=t(W,V,Y,X,C[P+6],R,2734768916);X=t(X,W,V,Y,C[P+13],O,1309151649);Y=t(Y,X,W,V,C[P+4],U,4149444226);V=t(V,Y,X,W,C[P+11],T,3174756917);W=t(W,V,Y,X,C[P+2],R,718787259);X=t(X,W,V,Y,C[P+9],O,3951481745);Y=K(Y,h);X=K(X,E);W=K(W,v);V=K(V,g)}return(B(Y)+B(X)+B(W)+B(V)).toLowerCase()}
@@ -1387,7 +1508,7 @@ function rsReq(o){
  H.push(['Supported',rsSupported()],['Allow',RS_ALLOW]);
  if(o.se)H.push(['Session-Expires',o.se]);
  (o.extra||[]).forEach(x=>H.push(x));
- H.push(['User-Agent','MonoSIP/1.0 (RFC7118)']);
+ H.push(['User-Agent','MonoSIP/1.2.1 (RFC7118)']);
  if(o.body)H.push(['Content-Type',o.contentType||'application/sdp']);
  const text=rsBuild(o.method+' '+o.ruri+' SIP/2.0',H,o.body);
  return{text,branch,ruri:o.ruri,cseq:o.cseq,method:o.method,callId:o.callId,fromTag:o.fromTag,toTag:o.toTag,route:o.route||[]}}
@@ -1399,7 +1520,7 @@ function rsReply(req,status,reason,o){
  if(o.contact!==false&&(req.cseqMethod==='INVITE'||req.cseqMethod==='REGISTER'||o.contact))H.push(['Contact',rsContact(req.method==='REGISTER')]);
  if(o.se)H.push(['Session-Expires',o.se]);
  (o.extra||[]).forEach(x=>H.push(x));
- H.push(['Supported',rsSupported()],['Allow',RS_ALLOW],['User-Agent','MonoSIP/1.0 (RFC7118)']);
+ H.push(['Supported',rsSupported()],['Allow',RS_ALLOW],['User-Agent','MonoSIP/1.2.1 (RFC7118)']);
  if(o.body)H.push(['Content-Type',o.contentType||'application/sdp']);
  return rsBuild('SIP/2.0 '+status+' '+reason,H,o.body)}
 function rsLog(dir,msg,text){
@@ -1611,7 +1732,7 @@ function rsHandleReq(msg){
   rsSend(rsReply(msg,180,'Ringing',{tag:localTag}));
   startRingtone(c);INC.push(c);showIncoming();
   c.timeoutInt=setTimeout(()=>{if(ua.call===c&&c.state==='incoming'){rsSend(rsReply(msg,480,'Temporarily Unavailable',{tag:localTag}));addHistory(ua,c,'missed',0,'Не отвечен');toast('warn','Пропущенный вызов',c.peerName);cleanupCall(c)}},25000);
-  if(S.settings.autoAnswer)c.autoInt=setTimeout(()=>{if(ua.call===c&&c.state==='incoming')answerCall(c)},1200);
+  if(S.settings.autoAnswer)c.autoInt=setTimeout(()=>{if(ua.call===c&&c.state==='incoming')safeAnswer(c)},1200);
   renderCallArea();renderStatus();renderDialMode();return}
  rsSend(rsReply(msg,501,'Not Implemented'));
 }
@@ -1626,7 +1747,7 @@ function rsHandleRes(msg){
 }
 /* ---- ответ / завершение реальной линии ---- */
 async function rsAnswer(c){
- if(c.state!=='incoming'||c.dead)return;
+ if(!c||c.dead||c.state!=='incoming')return;
  c.state='answering';clearTimeout(c.timeoutInt);clearTimeout(c.autoInt);stopRing(c);hideIncomingFor(c);
  S.activeExt='ext';store.set('activeExt','ext');setView('phone');
  audioCtx();await ensureMic();
@@ -1645,12 +1766,12 @@ async function rsAnswer(c){
  }catch(e){rsSend(rsReply(c.inviteReq,488,'Not Acceptable Here',{tag:c.dlg.localTag}));toast('error','Медиа не согласовано',String(e.message||e));cleanupCall(c);return}
  renderCallArea();renderStatus();renderDialMode();
 }
-function rsDecline(c){rsSend(rsReply(c.inviteReq,603,'Decline',{tag:c.dlg.localTag}));addHistory(c.ua,c,'missed',0,'Отклонён');cleanupCall(c);sndHang()}
+function rsDecline(c){if(!c)return;try{rsSend(rsReply(c.inviteReq,603,'Decline',{tag:c.dlg.localTag}))}catch(e){}addHistory(c.ua,c,'missed',0,'Отклонён');cleanupCall(c);sndHang()}
 function rsHangup(c){
  const d=c.dlg;
  if(c.state==='incoming'){rsDecline(c);return}
  if(d&&d.confirmed||c.state==='answering'||c.state==='active'){const m=rsInDlg(d,'BYE');rsSend(m.text);rsTx(m,()=>{});addHistory(c.ua,c,c.dir==='out'?'out':'in',callDur(c),'')}
- else{const m=rsReq({method:'CANCEL',ruri:d.toUri,callId:d.callId,cseq:d.inviteCseq,fromUri:d.fromUri,toUri:d.toUri,fromTag:d.localTag,toTag:d.remoteTag});rsSend(m.text);rsTx(m,()=>{});addHistory(c.ua,c,'out',0,'Отменён')}
+ else if(d){const m=rsReq({method:'CANCEL',ruri:d.toUri,callId:d.callId,cseq:d.inviteCseq,fromUri:d.fromUri,toUri:d.toUri,fromTag:d.localTag,toTag:d.remoteTag});rsSend(m.text);rsTx(m,()=>{});addHistory(c.ua,c,'out',0,'Отменён')}
  sndHang();cleanupCall(c);
 }
 function rsDtmf(c,k){
@@ -1694,6 +1815,234 @@ function renderExtBits(){
 function renderExLog(){const el=$('exLog');if(!el)return;const rows=LOG.list.filter(e=>e.from==='EXT'||e.to==='EXT').slice(-6).reverse();
  el.innerHTML=rows.length?rows.map(e=>'<div class="exlog-row k-'+e.cls+'"><span class="lt">'+fmtClock(e.t)+'</span><span class="lb">'+esc(e.label)+'</span><span class="ls">'+esc(e.from)+' → '+esc(e.to)+'</span></div>').join(''):'<div style="color:var(--tx3);font-size:11.5px">Транспортных сообщений пока нет</div>'}
 
+/* ================= ЛОКАЛЬНАЯ СЕТЬ: хаб + клиенты на разных ПК ================= */
+const NET={mode:'local',role:store.get('lan.role','hub'),ws:null,status:'off',manual:false,attempts:0,
+ url:store.get('lan.url',''),room:store.get('lan.room','monosip-lan'),name:store.get('lan.name','ПК-'+Math.random().toString(36).slice(2,6).toUpperCase()),
+ port:store.get('lan.port',8080),extA:store.get('lan.extA','201'),extB:store.get('lan.extB','202'),reconnect:store.get('lan.reconnect',true),
+ id:null,hubId:null,peers:[],directory:{},extPeer:new Map(),ping:0,pingTimer:null,reTimer:null,rx:0,tx:0,lastErr:''};
+const netReady=()=>!!NET.ws&&NET.ws.readyState===1;
+const netDefaultUrl=()=>/^https?:/.test(location.protocol)?((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws'):'ws://localhost:'+NET.port+'/ws';
+function wireToMsg(p){
+ const user=u=>String(u||'').replace(/^sips?:/i,'').split('@')[0].split(';')[0];
+ const ct=p.headers['content-type']||'';
+ return{kind:p.kind,method:p.method,status:p.status,reason:p.reason,callId:p.callId,cseq:p.cseqNum,reqMethod:p.cseqMethod,
+  from:user(p.from.uri),to:user(p.to.uri),fromTag:p.fromTag,toTag:p.toTag,fromName:p.from.display||user(p.from.uri),
+  body:p.body,sdp:/sdp/i.test(ct)?p.body:undefined,contentType:ct||undefined,
+  expires:p.headers['expires']!==undefined?parseInt(p.headers['expires']):undefined,
+  text:p.raw,label:p.kind==='req'?p.method:p.status+' '+p.reason,sum:p.kind==='req'?p.ruri:('CSeq '+p.cseqNum+' '+p.cseqMethod),lan:true}}
+function netLog(dir,m){const a=dir==='out'?(NET.mode==='hub'?'АТС':m.from):(NET.mode==='hub'?m.from:'АТС');
+ const b=dir==='out'?(NET.mode==='hub'?m.to:'АТС'):(NET.mode==='hub'?'АТС':m.to);logMsg(a,b,m)}
+function netSend(o){if(!netReady())return false;try{NET.ws.send(JSON.stringify(o));return true}catch(e){return false}}
+function netSip(to,m){if(!netSend({t:'sip',to,text:m.text}))return false;NET.tx++;netLog('out',m);return true}
+function netSetStatus(st,err){NET.status=st;if(err!==undefined)NET.lastErr=err;renderNetBits();renderAccounts();renderLineSwitch();renderStatus();renderToolbar();renderDialMode();if(S.view==='lan')renderLan()}
+function netConnect(role){
+ if(netReady()||NET.status==='connecting')return;
+ if(role)NET.role=role;
+ const url=(NET.url||netDefaultUrl()).trim();
+ if(!/^wss?:\/\//i.test(url)){toast('error','Неверный URL хаба','Пример: ws://192.168.1.10:8080/ws');setView('lan');return}
+ NET.manual=false;NET.url=url;store.set('lan.url',url);netSetStatus('connecting','');
+ sysLog('LAN: подключение к '+url+' · роль '+(NET.role==='hub'?'хаб (АТС)':'клиент')+' · комната '+NET.room);
+ let ws;try{ws=new WebSocket(url)}catch(e){netSetStatus('error',String(e.message||e));toast('error','WebSocket не создан',String(e.message||e));return}
+ NET.ws=ws;
+ ws.onopen=()=>{NET.attempts=0;netSend({t:'hello',role:NET.role,room:NET.room,name:NET.name});
+  clearInterval(NET.pingTimer);NET.pingTimer=setInterval(()=>{if(netReady())netSend({t:'ping',ts:Date.now()})},5000)};
+ ws.onmessage=e=>{let env;try{env=JSON.parse(e.data)}catch(err){return}netOnEnv(env)};
+ ws.onerror=()=>{NET.lastErr='Ошибка WebSocket'};
+ ws.onclose=ev=>{const wasHub=NET.mode==='hub';NET.ws=null;clearInterval(NET.pingTimer);
+  if(NET.mode==='client'){Object.values(S.clients).forEach(u=>{if(u.real)return;if(u.call){addHistory(u,u.call,u.call.dir==='out'?'out':'in',callDur(u.call),'Связь с хабом потеряна');cleanupCall(u.call)}u.registered=false;clearTimeout(u.regTimer);clearInterval(u.optTimer)})}
+  if(wasHub){[...SRV.bindings.entries()].forEach(([ext,b])=>{if(b.peer){[...SRV.dialogs.values()].forEach(d=>{if(d.a===ext||d.b===ext){const other=d.a===ext?d.b:d.a;SRV.toUA(other,sipReq('BYE','sip:'+other+'@'+S.settings.domain,'АТС',other,d.id,99,{fromTag:'bye'}));SRV.dialogs.delete(d.id)}});SRV.bindings.delete(ext);NET.extPeer.delete(ext)}});renderServerBits()}
+  NET.peers=[];NET.directory={};NET.hubId=null;NET.mode='local';
+  netSetStatus(NET.manual?'off':'error','code '+ev.code);
+  sysLog('LAN: соединение закрыто (code '+ev.code+')');
+  if(!NET.manual){toast('warn','LAN-соединение потеряно',NET.reconnect?'Автопереподключение…':'Переподключение выключено');
+   if(NET.reconnect){clearTimeout(NET.reTimer);const delay=Math.min(15000,1000*Math.pow(1.6,NET.attempts++));NET.reTimer=setTimeout(()=>{if(!NET.manual)netConnect()},delay)}}};
+}
+function netDisconnect(){NET.manual=true;clearTimeout(NET.reTimer);clearInterval(NET.pingTimer);
+ if(NET.mode==='client'){Object.values(S.clients).forEach(u=>{if(!u.real&&u.call)hangupCall(u);if(!u.real&&u.registered){try{u.register(true)}catch(e){}}})}
+ if(NET.mode==='hub')netSend({t:'hub-off'});
+ setTimeout(()=>{try{NET.ws&&NET.ws.close(1000)}catch(e){}NET.ws=null;NET.peers=[];NET.directory={};NET.hubId=null;
+  if(NET.mode==='client'){Object.values(S.clients).forEach(u=>{if(!u.real){u.registered=false;clearTimeout(u.regTimer);clearInterval(u.optTimer)}})}
+  NET.mode='local';netSetStatus('off','');sysLog('LAN: отключено пользователем');renderServerBits()},300);
+}
+function netOnEnv(env){
+ switch(env.t){
+  case 'welcome':{NET.id=env.id;NET.hubId=env.hub;
+   if(NET.role==='hub'){NET.mode='hub';if(!SRV.running)startServer();netSetStatus('connected','');toast('success','Хаб запущен','Эта АТС обслуживает всю локальную сеть');netBroadcastDirectory()}
+   else{if(SRV.running)stopServer();NET.mode='client';netSetStatus(env.hub?'connected':'nohub','');
+    if(env.hub){toast('success','Подключено к хабу','Регистрация линий '+NET.extA+' / '+NET.extB);setTimeout(()=>{const a=S.clients['101'],b=S.clients['102'];a.lanExt=NET.extA;b.lanExt=NET.extB;a.register();setTimeout(()=>b.register(),350)},250)}
+    else toast('warn','Хаб не запущен','Нажмите «Запустить АТС» на компьютере-сервере')}
+   renderLan();break}
+  case 'peers':NET.peers=env.list||[];NET.hubId=env.hub||null;
+   if(NET.mode==='client'){const was=NET.status;NET.status=env.hub?'connected':'nohub';if(was==='nohub'&&env.hub){toast('success','Хаб появился в сети','Регистрация линий…');const a=S.clients['101'],b=S.clients['102'];a.lanExt=NET.extA;b.lanExt=NET.extB;a.register();setTimeout(()=>b.register(),350)}if(was==='connected'&&!env.hub){Object.values(S.clients).forEach(u=>{if(!u.real){u.registered=false}});toast('warn','Хаб отключился','Ожидание сервера…')}renderNetBits();renderAccounts();renderStatus()}
+   if(S.view==='lan')renderLan();break;
+  case 'sip':{NET.rx++;const p=rsParse(env.text);if(!p)return;const m=wireToMsg(p);netLog('in',m);
+   if(NET.mode==='hub'){m._peer=env.from;try{SRV.handle(m)}catch(e){console.error(e)}}
+   else{const ua=Object.values(S.clients).find(u=>!u.real&&u.wire===m.to);if(ua){try{ua.handle(m)}catch(e){console.error(e)}}}
+   break}
+  case 'directory':NET.directory=env.map||{};if(S.view==='lan')renderLan();renderRecentMini();break;
+  case 'nohub':netSetStatus('nohub','Хаб не запущен в комнате '+NET.room);toast('warn','Хаб не запущен','Запустите АТС на компьютере-сервере');break;
+  case 'hub-gone':{if(NET.mode==='client'){Object.values(S.clients).forEach(u=>{if(u.real)return;if(u.call){addHistory(u,u.call,u.call.dir==='out'?'out':'in',callDur(u.call),'Хаб остановлен');cleanupCall(u.call)}u.registered=false});netSetStatus('nohub','Хаб остановлен');toast('warn','Хаб остановлен','Ожидание перезапуска АТС')}break}
+  case 'peer-gone':{if(NET.mode==='hub'){const gone=env.id;
+    [...SRV.bindings.entries()].forEach(([ext,b])=>{if(b.peer===gone){
+      [...SRV.dialogs.values()].forEach(d=>{if(d.a===ext||d.b===ext){const other=d.a===ext?d.b:d.a;SRV.toUA(other,sipReq('BYE','sip:'+other+'@'+S.settings.domain,'АТС',other,d.id,99,{fromTag:'bye'}));SRV.dialogs.delete(d.id)}});
+      SRV.bindings.delete(ext);NET.extPeer.delete(ext);sysLog('LAN: узел отключился — снята регистрация '+ext)}});
+    netBroadcastDirectory();renderServerBits();renderLan()}break}
+  case 'error':{NET.manual=true;netSetStatus('error',env.why==='hub-exists'?'Хаб уже запущен в этой комнате':'Ошибка сервера');toast('error','LAN-сервер отклонил подключение',env.why==='hub-exists'?'В комнате уже есть хаб — подключитесь как клиент':'Проверьте параметры');break}
+  case 'pong':NET.ping=Date.now()-env.ts;if(S.view==='lan')renderLan();break;
+ }
+}
+function netBroadcastDirectory(){if(NET.mode!=='hub')return;const map={};SRV.bindings.forEach((b,ext)=>{map[ext]=b.name||ext});netSend({t:'directory',map})}
+function netApplyExts(){
+ const a=$('lanExtA').value.trim(),b=$('lanExtB').value.trim();
+ if(!/^\d{3,6}$/.test(a)||!/^\d{3,6}$/.test(b)){toast('warn','Неверные номера','3–6 цифр');return}
+ if(a===b||['200','600'].includes(a)||['200','600'].includes(b)){toast('warn','Номера должны различаться','200 и 600 заняты сервисами');return}
+ const uaA=S.clients['101'],uaB=S.clients['102'];
+ const re=(u,old,nv)=>{if(NET.mode==='client'&&u.registered&&old!==nv){const m=sipReq('REGISTER','sip:'+S.settings.domain,old,old,'reg-'+old+'-'+uid(),++u.regCseq,{expires:0,fromTag:'reg'+old,fromName:u.name});netSip('hub',m)}u.lanExt=nv;u.registered=false;if(NET.mode==='client'&&netReady())setTimeout(()=>u.register(),200)};
+ re(uaA,NET.extA,a);re(uaB,NET.extB,b);
+ NET.extA=a;NET.extB=b;store.set('lan.extA',a);store.set('lan.extB',b);
+ renderAccounts();renderLineSwitch();renderDialSub();renderLan();toast('success','Номера линий применены',a+' / '+b);
+}
+const LAN_ST={off:['Отключено','off'],connecting:['Соединение…','warn'],connected:['В сети','on'],nohub:['Ожидание хаба','warn'],error:['Ошибка связи','err']};
+function renderNetBits(){
+ const st=LAN_ST[NET.status]||LAN_ST.off;const cls=st[1]==='on'?'on':st[1]==='warn'?'warn':st[1]==='err'?'err':'';
+ const td=$('tbLanDot');if(td)td.className='dot '+cls;
+ const tl=$('tbLanText');if(tl)tl.textContent=NET.mode==='hub'?'Хаб':NET.mode==='client'?'Клиент':'LAN';
+ const sd=$('sbLanDot');if(sd)sd.className='dot '+cls;
+ const stx=$('sbLanText');if(stx)stx.textContent='LAN: '+(NET.status==='connected'?(NET.mode==='hub'?'хаб · '+NET.peers.length+' узл.':'клиент'):st[0].toLowerCase());
+ if(S.view==='lan')renderLan();
+}
+function renderLan(){
+ if(S.view!=='lan')return;
+ const st=LAN_ST[NET.status]||LAN_ST.off;const cls=st[1]==='on'?'on':st[1]==='warn'?'warn':st[1]==='err'?'err':'';
+ const set=(id,v)=>{const el=$(id);if(el)el.textContent=v};
+ const dot=$('lanDot');if(dot)dot.className='dot '+cls;
+ set('lanStatus',st[0]+(NET.status==='connected'?(NET.mode==='hub'?' · эта АТС — хаб':' · клиент хаба'):''));
+ set('lanStatusSub',NET.lastErr||(netReady()?NET.url:'Роль: '+(NET.role==='hub'?'сервер (хаб)':'клиент')+' · без подключения — автономный режим'));
+ const cb=$('lanConnBtn');if(cb){cb.innerHTML=ic('power')+(netReady()||NET.status==='connecting'?'Отключить':'Подключить');cb.classList.toggle('on',netReady())}
+ document.querySelectorAll('[data-action="lan-mode"]').forEach(ch=>ch.classList.toggle('on',ch.dataset.role===NET.role));
+ const served=/^https?:/.test(location.protocol);
+ const ban=$('lanBanner');if(ban)ban.hidden=!served;
+ const bu=$('lanBannerUrl');if(bu&&served)bu.textContent=(location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws';
+ set('lanKvId',NET.id||'—');set('lanKvHub',NET.hubId?(NET.hubId===NET.id?'этот узел':NET.hubId):'—');
+ set('lanKvRoom',NET.room);set('lanKvPing',netReady()?NET.ping+' мс':'—');
+ set('lanKvTraffic',NET.rx+' / '+NET.tx);
+ const url=$('lanUrl');if(url&&document.activeElement!==url)url.value=NET.url||netDefaultUrl();
+ const rm=$('lanRoom');if(rm&&document.activeElement!==rm)rm.value=NET.room;
+ const nm=$('lanName');if(nm&&document.activeElement!==nm)nm.value=NET.name;
+ const pt=$('lanPort');if(pt&&document.activeElement!==pt)pt.value=NET.port;
+ const ea=$('lanExtA');if(ea&&document.activeElement!==ea)ea.value=NET.extA;
+ const eb=$('lanExtB');if(eb&&document.activeElement!==eb)eb.value=NET.extB;
+ const rc=$('lanReconnect');if(rc)rc.setAttribute('aria-checked',NET.reconnect?'true':'false');
+ const rows=NET.peers.map(p=>'<div class="peer-row"><i class="dot '+(p.role==='hub'?'on':'')+'"></i><b>'+esc(p.name)+'</b><span class="mono">'+esc(p.id)+(p.id===NET.id?' · вы':'')+'</span><span class="badge '+(p.role==='hub'?'ok':'inf')+'">'+(p.role==='hub'?'хаб':'клиент')+'</span></div>').join('');
+ const pl=$('lanPeers');if(pl)pl.innerHTML=rows||'<div style="font-size:12px;color:var(--tx3);padding:6px 2px">Узлов пока нет — подключите другие ПК</div>';
+ const dir=Object.entries(NET.directory).map(([ext,name])=>'<div class="peer-row"><i class="dot on"></i><b>'+esc(name)+'</b><span class="mono">'+esc(ext)+'</span><button type="button" class="btn sm grn" data-action="quick-call" data-ext="'+esc(ext)+'">'+ic('phone')+'</button></div>').join('');
+ const dl=$('lanDirectory');if(dl)dl.innerHTML=dir||'<div style="font-size:12px;color:var(--tx3);padding:6px 2px">Каталог появляется после регистраций</div>';
+ const lg=$('lanLog');if(lg){const rows2=LOG.list.filter(e=>e.lan||/LAN:/.test(e.sum||'')).slice(-6).reverse();
+  lg.innerHTML=rows2.length?rows2.map(e=>'<div class="exlog-row k-'+e.cls+'"><span class="lt">'+fmtClock(e.t)+'</span><span class="lb">'+esc(e.label)+'</span><span class="ls">'+esc(e.from)+' → '+esc(e.to)+'</span></div>').join(''):'<div style="color:var(--tx3);font-size:11.5px">LAN-событий пока нет</div>'}
+}
+function lanDownloadServer(){
+ const html='<!DOCTYPE html>\n'+PRISTINE;
+ const tpl=LAN_SERVER_TPL.split('__PORT__').join(String(NET.port)).split('__HTML__').join(JSON.stringify(html));
+ download(new Blob([tpl],{type:'text/javascript'}),'monosip-lan.js');
+ toast('success','LAN-сервер скачан','Запустите: node monosip-lan.js — затем откройте http://IP:'+NET.port+' на всех ПК',{label:'Скопировать команду',cb:()=>lanCopy('node monosip-lan.js')});
+}
+function lanCopy(text){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast('success','Скопировано',text)).catch(()=>toast('warn','Не удалось скопировать',text))}else toast('info','Скопируйте вручную',text)}
+const LAN_SERVER_TPL=`/* MonoSIP LAN — автономный сервер локальной сети (Node.js, без зависимостей).
+   Запуск:  node monosip-lan.js   →   откройте http://IP-этого-ПК:__PORT__ на всех компьютерах.
+   Сервер отдаёт это SPA по HTTP и ретранслирует SIP-сообщения между хабом (АТС) и клиентами по WebSocket. */
+'use strict';
+const http=require('http'),crypto=require('crypto'),os=require('os');
+const PORT=__PORT__;
+const HTML=__HTML__;
+const rooms=new Map();let seq=0,msgCount=0;
+function sendFrame(c,op,payload){
+ const len=payload.length;let head;
+ if(len<126){head=Buffer.from([128|op,len])}
+ else if(len<65536){head=Buffer.alloc(4);head[0]=128|op;head[1]=126;head.writeUInt16BE(len,2)}
+ else{head=Buffer.alloc(10);head[0]=128|op;head[1]=127;head.writeBigUInt64BE(BigInt(len),2)}
+ try{c.sock.write(Buffer.concat([head,payload]))}catch(e){}
+}
+const send=(c,o)=>sendFrame(c,1,Buffer.from(JSON.stringify(o)));
+function roomOf(c){return rooms.get(c.room)}
+function broadcast(r,o,except){r.clients.forEach(x=>{if(x!==except)send(x,o)})}
+function peersMsg(r){return{t:'peers',hub:r.hub,list:[...r.clients.values()].map(x=>({id:x.id,name:x.name,role:x.role}))}}
+function leave(c){
+ if(c.left)return;c.left=true;
+ const r=roomOf(c);
+ if(r){r.clients.delete(c.id);
+  if(r.hub===c.id){r.hub=null;broadcast(r,{t:'hub-gone'});console.log('[LAN] хаб отключился:',c.name)}
+  else{if(r.hub){const h=r.clients.get(r.hub);if(h)send(h,{t:'peer-gone',id:c.id})}console.log('[LAN] клиент отключился:',c.name)}
+  broadcast(r,peersMsg(r));
+  if(r.clients.size===0)rooms.delete(c.room);
+ }
+ try{c.sock.destroy()}catch(e){}
+}
+function handle(c,msg){
+ if(msg.t==='hello'){
+  c.room=String(msg.room||'monosip-lan').slice(0,40);c.role=msg.role==='hub'?'hub':'client';c.name=String(msg.name||'ПК').slice(0,32);
+  let r=rooms.get(c.room);if(!r){r={clients:new Map(),hub:null};rooms.set(c.room,r)}
+  r.clients.set(c.id,c);
+  if(c.role==='hub'){if(r.hub&&r.clients.get(r.hub)){send(c,{t:'error',why:'hub-exists'});console.log('[LAN] второй хаб отклонён:',c.name);leave(c);return}r.hub=c.id;broadcast(r,{t:'hub-on'},c)}
+  send(c,{t:'welcome',id:c.id,hub:r.hub});
+  broadcast(r,peersMsg(r));
+  console.log('[LAN] подключён',c.role,c.name,'('+c.id+') комната',c.room,'· узлов:',r.clients.size);
+  return}
+ if(msg.t==='ping'){send(c,{t:'pong',ts:msg.ts});return}
+ if(msg.t==='hub-off'){const r=roomOf(c);if(r&&r.hub===c.id){r.hub=null;broadcast(r,{t:'hub-gone'});broadcast(r,peersMsg(r))}return}
+ if(msg.t==='directory'){const r=roomOf(c);if(r&&r.hub===c.id)broadcast(r,{t:'directory',map:msg.map},c);return}
+ if(msg.t==='sip'){
+  const r=roomOf(c);if(!r)return;msgCount++;
+  if(c.role==='hub'){const target=r.clients.get(String(msg.to));if(target)send(target,{t:'sip',from:c.id,text:msg.text})}
+  else{if(r.hub){const h=r.clients.get(r.hub);if(h)send(h,{t:'sip',from:c.id,text:msg.text})}else send(c,{t:'nohub'})}
+  return}
+}
+function parseFrames(c){
+ for(;;){const b=c.buf;if(b.length<2)return;
+  const op=b[0]&15,masked=(b[1]&128)!==0;let len=b[1]&127,off=2;
+  if(len===126){if(b.length<4)return;len=b.readUInt16BE(2);off=4}
+  else if(len===127){if(b.length<10)return;len=Number(b.readBigUInt64BE(2));off=10}
+  const maskLen=masked?4:0;
+  if(b.length<off+maskLen+len)return;
+  let payload=b.slice(off+maskLen,off+maskLen+len);
+  if(masked){const mask=b.slice(off,off+4);payload=Buffer.from(payload);for(let i=0;i<payload.length;i++)payload[i]^=mask[i%4]}
+  c.buf=b.slice(off+maskLen+len);
+  if(op===8){sendFrame(c,8,Buffer.alloc(0));leave(c);return}
+  if(op===9){sendFrame(c,10,payload);continue}
+  if(op===10)continue;
+  if(op===1){try{handle(c,JSON.parse(payload.toString('utf8')))}catch(e){}}
+ }
+}
+const server=http.createServer((req,res)=>{
+ if(req.url==='/health'){res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({app:'MonoSIP-LAN',rooms:rooms.size,messages:msgCount}));return}
+ if(req.url==='/favicon.ico'){res.writeHead(204);res.end();return}
+ res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(HTML);
+});
+server.on('upgrade',(req,sock)=>{
+ if(!req.url||!req.url.startsWith('/ws')){sock.destroy();return}
+ const key=req.headers['sec-websocket-key'];
+ if(!key){sock.destroy();return}
+ const accept=crypto.createHash('sha1').update(key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
+ sock.write('HTTP/1.1 101 Switching Protocols\\r\\nUpgrade: websocket\\r\\nConnection: Upgrade\\r\\nSec-WebSocket-Accept: '+accept+'\\r\\n\\r\\n');
+ sock.setNoDelay(true);
+ const c={id:'p'+(++seq)+Math.random().toString(36).slice(2,6),sock,room:null,role:'client',name:'ПК',buf:Buffer.alloc(0),left:false};
+ sock.on('data',d=>{c.buf=Buffer.concat([c.buf,d]);try{parseFrames(c)}catch(e){leave(c)}});
+ sock.on('close',()=>leave(c));sock.on('error',()=>leave(c));
+});
+server.on('error',e=>{if(e.code==='EADDRINUSE'){console.error('[MonoSIP] Порт '+PORT+' занят. Закройте другой процесс или измените порт при генерации сервера.')}else console.error('[MonoSIP]',e.message)});
+server.listen(PORT,'0.0.0.0',()=>{
+ console.log('==============================================================');
+ console.log('  MonoSIP LAN-сервер запущен · порт '+PORT);
+ console.log('  Откройте на ВСЕХ компьютерах локальной сети один из адресов:');
+ const ifs=os.networkInterfaces();
+ Object.keys(ifs).forEach(k=>{(ifs[k]||[]).forEach(a=>{if(a.family==='IPv4'&&!a.internal)console.log('   → http://'+a.address+':'+PORT)})});
+ console.log('  На ПК-сервере: роль «Сервер (хаб)» → Подключить → АТС включится.');
+ console.log('  На остальных ПК: роль «Клиент» → Подключить (номера 201, 202…).');
+ console.log('  Медиа (голос) идёт напрямую между ПК по WebRTC, минуя сервер.');
+ console.log('==============================================================');
+});
+setInterval(()=>{rooms.forEach(r=>{r.clients.forEach(c=>sendFrame(c,9,Buffer.alloc(0)))})},25000);
+`;
+
 function makeCall(ua,dir,peer){
   return{id:uid(),ua,dir,peer,peerName:peerName(peer),callId:null,fromTag:null,toTag:null,cseq:1,state:dir==='out'?'calling':'incoming',
     pc:null,outDest:null,micGain:null,recDest:null,remoteGain:null,remoteSrc:null,remoteAnalyser:null,rfbuf:null,sinkEl:null,
@@ -1729,10 +2078,11 @@ function applyCallGains(c){
 }
 async function startCall(ua,target){
   if(ua.real)return rsStartCall(ua,target);
-  if(!SRV.running){toast('error','АТС не запущена','Включите сервер кнопкой на панели инструментов');sndErr();return}
+  if(NET.mode==='client'){if(!netReady()||!NET.hubId){toast('error','Нет связи с хабом','Подключите LAN-клиент');setView('lan');return}}
+  else if(!SRV.running){toast('error','АТС не запущена','Включите сервер кнопкой на панели инструментов');sndErr();return}
   if(!ua.registered){toast('warn','Линия не зарегистрирована','Регистрация… повторите через секунду');ua.register();return}
-  if(ua.call){toast('warn','Линия '+ua.ext+' занята','Завершите текущий вызов');return}
-  if(target===ua.ext){toast('warn','Нельзя позвонить самому себе');return}
+  if(ua.call){toast('warn','Линия '+extLabel(ua)+' занята','Завершите текущий вызов');return}
+  if(target===ua.wire){toast('warn','Нельзя позвонить самому себе');return}
   audioCtx();
   await ensureMic();
   const c=makeCall(ua,'out',target);ua.call=c;
@@ -1746,41 +2096,57 @@ async function startCall(ua,target){
       c.sdpOffer=mungeCodec(c.pc.localDescription.sdp);
     }
   }catch(e){console.error(e);toast('warn','WebRTC недоступен','Вызов будет сигнальным, без медиа')}
-  const m=sipReq('INVITE','sip:'+target+'@'+S.settings.domain,ua.ext,target,c.callId,c.cseq,{fromTag:c.fromTag,sdp:c.sdpOffer,fromName:ua.name});
+  const m=sipReq('INVITE','sip:'+target+'@'+S.settings.domain,ua.wire,target,c.callId,c.cseq,{fromTag:c.fromTag,sdp:c.sdpOffer,fromName:ua.name});
   c.inviteMsg=m;ua.reply(m);
-  c.timeoutInt=setTimeout(()=>{if(ua.call===c&&(c.state==='calling'||c.state==='ringing')){ua.reply(sipReq('CANCEL','sip:'+target+'@'+S.settings.domain,ua.ext,target,c.callId,c.cseq,{fromTag:c.fromTag}));addHistory(ua,c,'out',0,'Нет ответа');toast('warn','Нет ответа',c.peerName+' не отвечает');cleanupCall(c)}},25000);
+  c.timeoutInt=setTimeout(()=>{if(ua.call===c&&(c.state==='calling'||c.state==='ringing')){ua.reply(sipReq('CANCEL','sip:'+target+'@'+S.settings.domain,ua.wire,target,c.callId,c.cseq,{fromTag:c.fromTag}));addHistory(ua,c,'out',0,'Нет ответа');toast('warn','Нет ответа',c.peerName+' не отвечает');cleanupCall(c)}},25000);
   S.activeExt=ua.ext;store.set('activeExt',S.activeExt);
   setView('phone');renderCallArea();renderStatus();renderDialMode();renderAccounts();renderLineSwitch();
 }
 async function answerCall(c){
+  if(!c||c.dead)return;
   if(c.ua.real)return rsAnswer(c);
-  if(c.state!=='incoming'||c.dead)return;
+  if(c.state!=='incoming')return;
   c.state='answering';clearTimeout(c.timeoutInt);clearTimeout(c.autoInt);stopRing(c);hideIncomingFor(c);
   S.activeExt=c.ua.ext;store.set('activeExt',S.activeExt);setView('phone');
   audioCtx();await ensureMic();
   try{
     buildCallMedia(c);
-    if(RTC_OK&&AC.ctx&&c.sdpOffer){
+    if(RTC_OK&&AC.ctx&&c.sdpOffer&&c.outDest){
       c.pc=new RTCPeerConnection({iceServers:[]});wirePc(c);
       c.pc.addTrack(c.outDest.stream.getAudioTracks()[0],c.outDest.stream);
       await c.pc.setRemoteDescription({type:'offer',sdp:c.sdpOffer});
       const ans=await c.pc.createAnswer();await c.pc.setLocalDescription(ans);await waitIce(c.pc);
       c.ua.reply(sipRes(200,'OK',c.inviteMsg,{sdp:mungeCodec(c.pc.localDescription.sdp),toTag:c.toTag}));
     }else c.ua.reply(sipRes(200,'OK',c.inviteMsg,{toTag:c.toTag}));
-  }catch(e){console.error(e);c.ua.reply(sipRes(488,'Not Acceptable Here',c.inviteMsg));toast('error','Не удалось установить медиа',String(e.message||e));cleanupCall(c);return}
+  }catch(e){console.error(e);try{c.ua.reply(sipRes(488,'Not Acceptable Here',c.inviteMsg))}catch(x){}toast('error','Не удалось установить медиа',String(e.message||e));cleanupCall(c);return}
   renderCallArea();renderStatus();renderDialMode();
   setTimeout(()=>{if(!c.dead&&c.state==='answering')activateCall(c)},600);
 }
+/* Единая безопасная точка входа для «Ответить» */
+function safeAnswer(c){
+  if(!c||c.dead){incBusy(false);return}
+  if(c.state!=='incoming'){incBusy(false);return}
+  incBusy(true);
+  let p;
+  try{p=answerCall(c)}catch(err){console.error(err);toast('error','Не удалось ответить',String(err&&err.message||err));try{declineCall(c)}catch(x){cleanupCall(c)}incBusy(false);return}
+  if(p&&typeof p.then==='function'){p.catch(err=>{console.error(err);toast('error','Не удалось ответить',String(err&&err.message||err));try{declineCall(c)}catch(x){cleanupCall(c)}}).finally(()=>incBusy(false))}
+  else incBusy(false);
+}
+function safeDecline(c){
+  incBusy(false);
+  if(!c||c.dead){$('incoming').classList.remove('on');return}
+  try{declineCall(c)}catch(err){console.error(err);cleanupCall(c)}
+}
 function activateCall(c){
-  if(c.dead||c.state==='active')return;
-  c.state='active';c.activeAt=Date.now();clearTimeout(c.timeoutInt);stopRing(c);sndConnect();
+  if(!c||c.dead||c.state==='active')return;
+  c.state='active';c.activeAt=Date.now();clearTimeout(c.timeoutInt);stopRing(c);sndConnect();incBusy(false);
   if(S.settings.autoRecord&&MR_OK)startCallRecording(c);
   renderCallArea();renderStatus();renderDialMode();renderMini();renderServerBits();
 }
 function declineCall(c){
+  if(!c)return;
   if(c.ua.real)return rsDecline(c);
-  if(c.state!=='incoming')return;
-  c.ua.reply(sipRes(603,'Decline',c.inviteMsg,{toTag:c.toTag}));
+  if(c.state==='incoming'&&c.inviteMsg){try{c.ua.reply(sipRes(603,'Decline',c.inviteMsg,{toTag:c.toTag}))}catch(e){console.error(e)}}
   addHistory(c.ua,c,'missed',0,'Отклонён');cleanupCall(c);sndHang();
 }
 function failCall(c,status,reason){
@@ -1791,21 +2157,21 @@ function failCall(c,status,reason){
   cleanupCall(c);
 }
 function hangupCall(c){
-  if(c.dead)return;
+  if(!c||c.dead)return;
   if(c.ua.real)return rsHangup(c);
   if(c.state==='incoming'){declineCall(c);return}
   const dom=S.settings.domain;
   if(c.state==='active'||c.state==='answering'){
-    c.ua.reply(sipReq('BYE','sip:'+c.peer+'@'+dom,c.ua.ext,c.peer,c.callId,++c.cseq,{fromTag:c.fromTag,toTag:c.toTag}));
+    c.ua.reply(sipReq('BYE','sip:'+c.peer+'@'+dom,c.ua.wire,c.peer,c.callId,++c.cseq,{fromTag:c.fromTag,toTag:c.toTag}));
     addHistory(c.ua,c,c.dir==='out'?'out':'in',callDur(c),'');
   }else{
-    c.ua.reply(sipReq('CANCEL','sip:'+c.peer+'@'+dom,c.ua.ext,c.peer,c.callId,c.cseq,{fromTag:c.fromTag}));
+    c.ua.reply(sipReq('CANCEL','sip:'+c.peer+'@'+dom,c.ua.wire,c.peer,c.callId,c.cseq,{fromTag:c.fromTag}));
     addHistory(c.ua,c,'out',0,'Отменён');
   }
   sndHang();cleanupCall(c);
 }
 function cleanupCall(c){
-  if(c.dead)return;c.dead=true;
+  if(!c||c.dead)return;c.dead=true;
   clearTimeout(c.timeoutInt);clearTimeout(c.autoInt);clearInterval(c.fileTimer);stopRing(c);
   clearTimeout(c.seTimer);clearTimeout(c.ackTimer);
   if(c.dlg){EXT.dlg.delete(c.dlg.id);c.dlg=null}
@@ -1818,7 +2184,7 @@ function cleanupCall(c){
   try{if(c.outDest)c.outDest.disconnect()}catch(e){}
   if(c.sinkEl){try{c.sinkEl.srcObject=null;c.sinkEl.remove()}catch(e){}}
   try{if(c.pc)c.pc.close()}catch(e){}
-  if(c.ua.call===c)c.ua.call=null;
+  if(c.ua&&c.ua.call===c)c.ua.call=null;
   hideIncomingFor(c);
   renderCallArea();renderStatus();renderDialMode();renderMini();renderFiles();renderServerBits();renderLineCard();
 }
@@ -1895,7 +2261,7 @@ async function sendFileToCall(c,item){
     c.fileSrc=src;c.fileGain=g;c.fileMon=mon;c.fileMeta={name:item.name,dur:audio.duration,start:Date.now()};
     src.onended=()=>endFilePlay(c);src.start();
     c.fileTimer=setInterval(()=>{const el=$('fpb-'+c.ua.ext);if(el&&c.fileMeta)el.style.width=clamp((Date.now()-c.fileMeta.start)/(c.fileMeta.dur*1000)*100,0,100)+'%'},180);
-    if(!c.real)c.ua.reply(sipReq('INFO','sip:'+c.peer+'@'+S.settings.domain,c.ua.ext,c.peer,c.callId,++c.cseq,{fromTag:c.fromTag,toTag:c.toTag,contentType:'application/audio-file',body:'File: '+item.name+'\r\nDuration: '+audio.duration.toFixed(1)+'\r\nSize: '+item.size}));
+    if(!c.real)c.ua.reply(sipReq('INFO','sip:'+c.peer+'@'+S.settings.domain,c.ua.wire,c.peer,c.callId,++c.cseq,{fromTag:c.fromTag,toTag:c.toTag,contentType:'application/audio-file',body:'File: '+item.name+'\r\nDuration: '+audio.duration.toFixed(1)+'\r\nSize: '+item.size}));
     toast('success','Файл передаётся в вызов',item.name);renderCallArea();
   }catch(e){toast('error','Не удалось воспроизвести файл','Формат не поддерживается декодером браузера')}
 }
@@ -1908,23 +2274,38 @@ function endFilePlay(c,silent){
   if(!silent)renderCallArea();
 }
 
-/* ---------------- Входящие ---------------- */
+/* ---------------- Входящие: очередь, окно, кнопки ---------------- */
 const INC=[];
+function incomingCall(){
+  while(INC.length&&(!INC[0]||INC[0].dead||INC[0].state!=='incoming'))INC.shift();
+  if(INC[0])return INC[0];
+  const u=Object.values(S.clients).find(x=>x.call&&!x.call.dead&&x.call.state==='incoming');
+  if(u){INC.unshift(u.call);return u.call}
+  return null;
+}
+function incBusy(on){
+  const a=$('incAccept'),d=$('incDecline');
+  if(a){a.disabled=!!on;a.classList.toggle('busy',!!on);a.innerHTML=on?ic('refresh')+'Соединение…':ic('phone')+'Ответить'}
+  if(d)d.disabled=!!on;
+}
 function showIncoming(){
-  const c=INC[0];const box=$('incoming');
-  if(!c){box.classList.remove('on');return}
+  const c=incomingCall();const box=$('incoming');
+  if(!c){box.classList.remove('on');incBusy(false);return}
   $('incAv').style.background=avGrad(c.peer);$('incAv').textContent=initials(c.peerName);
-  $('incName').textContent=c.peerName;$('incExt').textContent=c.peerUri||('sip:'+c.peer+'@'+S.settings.domain);
+  $('incName').textContent=c.peerName||c.peer;$('incExt').textContent=c.peerUri||('sip:'+c.peer+'@'+S.settings.domain);
   $('incTo').textContent='Входящий → линия '+extLabel(c.ua)+' ('+c.ua.name+')';
   $('incAuto').textContent=S.settings.autoAnswer?'Автоответ через 1,2 с…':'';
+  incBusy(false);
   box.classList.add('on');
 }
 function hideIncomingFor(c){const i=INC.indexOf(c);if(i>=0)INC.splice(i,1);showIncoming()}
+function doAcceptIncoming(){audioCtx();const c=incomingCall();if(!c){$('incoming').classList.remove('on');incBusy(false);toast('info','Вызов уже завершён','Собеседник положил трубку или вызов отменён');return}safeAnswer(c)}
+function doDeclineIncoming(){audioCtx();const c=incomingCall();if(!c){$('incoming').classList.remove('on');incBusy(false);return}safeDecline(c)}
 
 /* ---------------- Журнал ---------------- */
 function addHistory(ua,c,dir,dur,note){
   if(c.histDone)return;c.histDone=true;
-  S.history.unshift({id:uid(),ext:c.peer,name:c.peerName,dir,dur:Math.max(0,dur||0),at:Date.now(),acc:(ua.real?ua.number:ua.ext),real:!!ua.real,note:note||'',recorded:c.recording||c.recSavedFlag||false,callId:c.callId,fresh:dir==='missed'});
+  S.history.unshift({id:uid(),ext:c.peer,name:c.peerName,dir,dur:Math.max(0,dur||0),at:Date.now(),acc:extLabel(ua),real:!!ua.real,note:note||'',recorded:c.recording||c.recSavedFlag||false,callId:c.callId,fresh:dir==='missed'});
   if(S.history.length>250)S.history.pop();
   store.set('history',S.history);renderHistory();renderRecentMini();renderBadges();
 }
@@ -1942,7 +2323,8 @@ function renderToolbar(){
   $('tbSound').classList.toggle('accent',!S.soundOn);
   $('tbTheme').innerHTML=ic(S.theme==='dark'?'sun':'moon');
   const sp=$('srvPower');sp.classList.toggle('on',SRV.running);
-  $('srvPowerText').textContent=SRV.running?'Остановить АТС':'Запустить АТС';
+  $('srvPowerText').textContent=NET.mode==='client'?'АТС на хабе':SRV.running?'Остановить АТС':'Запустить АТС';
+  renderNetBits();
 }
 function renderAccounts(){
   $('accounts').innerHTML=Object.values(S.clients).map(u=>
@@ -1950,12 +2332,12 @@ function renderAccounts(){
     +avatarHtml(u.ext,u.name)
     +'<div class="acct-info"><b>'+esc(u.name)+'</b><span>'+extLabel(u)+' · '+(u.call?'в разговоре':u.registered?'в сети':'не в сети')+(u.mwi?' · ✉'+u.mwi:'')+'</span></div>'
     +'<i class="dot '+(u.call?'warn':u.registered?'on':'')+'"></i>'
-    +'<button class="acct-reg" data-action="acct-reg" data-ext="'+u.ext+'" title="'+(u.registered?'Снять регистрацию':'Зарегистрировать')+'">'+ic(u.registered?'x':'refresh')+'</button></div>'
+    +'<button type="button" class="acct-reg" data-action="acct-reg" data-ext="'+u.ext+'" title="'+(u.registered?'Снять регистрацию':'Зарегистрировать')+'">'+ic(u.registered?'x':'refresh')+'</button></div>'
   ).join('');
 }
 function renderLineSwitch(){
   $('lineSwitch').innerHTML=Object.values(S.clients).map(u=>
-    '<button class="line-chip'+(S.activeExt===u.ext?' on':'')+'" data-action="line-set" data-ext="'+u.ext+'">'
+    '<button type="button" class="line-chip'+(S.activeExt===u.ext?' on':'')+'" data-action="line-set" data-ext="'+u.ext+'">'
     +avatarHtml(u.ext,u.name)+'<div style="flex:1;min-width:0"><b>'+esc(u.name)+'</b><span>линия '+extLabel(u)+'</span></div>'
     +'<i class="dot '+(u.call?'warn':u.registered?'on':'')+'"></i></button>').join('');
 }
@@ -1973,26 +2355,28 @@ function renderLineCard(){
     return;
   }
   const left=u.registered?Math.max(0,S.settings.expires-Math.round((Date.now()-u.regAt)/1000)):0;
+  const transport=NET.mode==='client'?('WS → '+NET.url.replace(/^wss?:\/\//i,'')):NET.mode==='hub'?'WS → LAN-хаб':('WS → '+esc(S.settings.domain)+':'+S.settings.port);
   $('lineCard').innerHTML='<h3>'+ic('phone','width:15px;height:15px;color:var(--pri)')+'Состояние линии</h3>'
-    +'<div class="lc-row"><span>Абонент</span><b>'+esc(u.name)+' · <span class="mono">'+u.ext+'</span></b></div>'
+    +'<div class="lc-row"><span>Абонент</span><b>'+esc(u.name)+' · <span class="mono">'+extLabel(u)+'</span></b></div>'
     +'<div class="lc-row"><span>Регистрация</span>'+(u.registered?'<span class="badge ok"><i class="dot on" style="width:6px;height:6px"></i>200 OK</span>':'<span class="badge off">не в сети</span>')+'</div>'
     +'<div class="lc-row"><span>Обновление через</span><b class="mono" id="lcReg">'+(u.registered?left+' c':'—')+'</b></div>'
     +'<div class="lc-row"><span>Кодек</span><b class="mono">'+({opus:'Opus/48000',pcmu:'PCMU/8000',pcma:'PCMA/8000'}[S.settings.codec])+'</b></div>'
-    +'<div class="lc-row"><span>Транспорт</span><b class="mono">WS → '+esc(S.settings.domain)+':'+S.settings.port+'</b></div>'
+    +'<div class="lc-row"><span>Транспорт</span><b class="mono">'+transport+'</b></div>'
     +'<div class="lc-row"><span>Микрофон</span>'+(AC.micStream&&AC.micStream.active?'<span class="badge ok">активен</span>':'<span class="badge off">не захвачен</span>')+'</div>';
 }
 function renderDialSub(){
   const u=S.clients[S.activeExt];
-  $('dialSub').textContent=u.real?('SIP '+ (EXT.cfg.domain||'—')+' · линия '+u.number):('АТС '+S.settings.domain+' · линия '+S.activeExt+' ('+u.name+')');
+  $('dialSub').textContent=u.real?('SIP '+ (EXT.cfg.domain||'—')+' · линия '+u.number):NET.mode==='client'?('LAN-хаб · линия '+u.wire+' ('+u.name+')'):('АТС '+S.settings.domain+' · линия '+extLabel(u)+' ('+u.name+')');
 }
 function buildKeypad(){
   const keys=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ'],['*',''],['0','+'],['#','']];
-  $('keypad').innerHTML=keys.map(k=>'<button class="key" data-action="key" data-k="'+k[0]+'"><b>'+k[0]+'</b><span>'+k[1]+'</span></button>').join('');
+  $('keypad').innerHTML=keys.map(k=>'<button type="button" class="key" data-action="key" data-k="'+k[0]+'"><b>'+k[0]+'</b><span>'+k[1]+'</span></button>').join('');
 }
 function renderQuick(){
   const other=S.activeExt==='101'?'102':'101';
-  $('quickChips').innerHTML=[['200','Эхо-тест','waves'],['600','Почта','voicemail'],[other,peerName(other),'phone']]
-    .map(q=>'<button class="chip" data-action="quick-call" data-ext="'+q[0]+'">'+ic(q[2])+q[1]+' · <span class="mono">'+q[0]+'</span></button>').join('');
+  const otherExt=NET.mode==='client'?S.clients[other].wire:other;
+  $('quickChips').innerHTML=[['200','Эхо-тест','waves'],['600','Почта','voicemail'],[otherExt,peerName(otherExt),'phone']]
+    .map(q=>'<button type="button" class="chip" data-action="quick-call" data-ext="'+q[0]+'">'+ic(q[2])+q[1]+' · <span class="mono">'+q[0]+'</span></button>').join('');
 }
 function renderDialMode(){
   const fc=focusCall();const card=$('dialCard');
@@ -2017,17 +2401,17 @@ function renderCallArea(){
     html+='<div class="cc-timer mono" id="ct-'+u.ext+'">'+(c.state==='active'?fmtDur(callDur(c)):'—:—')+'</div>'
       +'<canvas class="cc-wave" id="cw-'+u.ext+'"></canvas>'
       +'<div class="cc-dtmf mono" id="dt-'+u.ext+'">'+esc(c.dtmf)+'</div>';
-    if(c.fileMeta)html+='<div class="cc-file">'+ic('file-audio')+'<b>'+esc(c.fileMeta.name)+'</b><div class="cc-prog"><i id="fpb-'+u.ext+'"></i></div><button class="icon-btn" style="width:28px;height:28px" data-action="call-file-stop" data-ext="'+u.ext+'" title="Остановить">'+ic('stop')+'</button></div>';
+    if(c.fileMeta)html+='<div class="cc-file">'+ic('file-audio')+'<b>'+esc(c.fileMeta.name)+'</b><div class="cc-prog"><i id="fpb-'+u.ext+'"></i></div><button type="button" class="icon-btn" style="width:28px;height:28px" data-action="call-file-stop" data-ext="'+u.ext+'" title="Остановить">'+ic('stop')+'</button></div>';
     const dis=c.state!=='active'?' disabled':'';
     html+='<div class="cc-controls">'
-      +'<button class="cc-tgl'+(c.muted?' off':'')+'" data-action="call-mute" data-ext="'+u.ext+'"'+dis+'>'+ic(c.muted?'mic-off':'mic')+(c.muted?'Вкл. микро':'Микрофон')+'</button>'
-      +'<button class="cc-tgl'+(c.held?' on':'')+'" data-action="call-hold" data-ext="'+u.ext+'"'+dis+'>'+ic('pause')+(c.held?'Снять':'Удержать')+'</button>'
-      +'<button class="cc-tgl'+(c.recording?' rec-on':'')+'" data-action="call-rec" data-ext="'+u.ext+'"'+dis+'>'+ic('rec')+(c.recording?'Стоп':'Запись')+'</button>'
-      +'<button class="cc-tgl" data-action="call-file" data-ext="'+u.ext+'"'+dis+'>'+ic('file-audio')+'Файл</button>'
+      +'<button type="button" class="cc-tgl'+(c.muted?' off':'')+'" data-action="call-mute" data-ext="'+u.ext+'"'+dis+'>'+ic(c.muted?'mic-off':'mic')+(c.muted?'Вкл. микро':'Микрофон')+'</button>'
+      +'<button type="button" class="cc-tgl'+(c.held?' on':'')+'" data-action="call-hold" data-ext="'+u.ext+'"'+dis+'>'+ic('pause')+(c.held?'Снять':'Удержать')+'</button>'
+      +'<button type="button" class="cc-tgl'+(c.recording?' rec-on':'')+'" data-action="call-rec" data-ext="'+u.ext+'"'+dis+'>'+ic('rec')+(c.recording?'Стоп':'Запись')+'</button>'
+      +'<button type="button" class="cc-tgl" data-action="call-file" data-ext="'+u.ext+'"'+dis+'>'+ic('file-audio')+'Файл</button>'
       +'</div>'
       +'<div class="cc-vol">'+ic('volume')+'<input type="range" min="0" max="100" value="'+Math.round(c.vol*100)+'" data-action="call-volume" data-ext="'+u.ext+'"'+dis+' aria-label="Громкость собеседника"><span class="mono">'+Math.round(c.vol*100)+'%</span></div>';
-    if(c.state==='incoming')html+='<div class="cc-in-actions"><button class="cc-end" data-action="call-decline" data-ext="'+u.ext+'">'+ic('phone')+'Отклонить</button><button class="cc-accept" data-action="call-accept" data-ext="'+u.ext+'">'+ic('phone')+'Ответить</button></div>';
-    else html+='<button class="cc-end" data-action="call-hangup" data-ext="'+u.ext+'">'+ic('phone')+(c.state==='active'||c.state==='answering'?'Завершить':'Отменить')+'</button>';
+    if(c.state==='incoming')html+='<div class="cc-in-actions"><button type="button" class="cc-end" data-action="call-decline" data-ext="'+u.ext+'">'+ic('phone')+'Отклонить</button><button type="button" class="cc-accept" data-action="call-accept" data-ext="'+u.ext+'">'+ic('phone')+'Ответить</button></div>';
+    else html+='<button type="button" class="cc-end" data-action="call-hangup" data-ext="'+u.ext+'">'+ic('phone')+(c.state==='active'||c.state==='answering'?'Завершить':'Отменить')+'</button>';
     html+='</div>';
   });
   box.innerHTML=html;
@@ -2044,14 +2428,14 @@ function renderMini(){
 }
 function renderStatus(){
   $('sbServerDot').className='dot'+(SRV.running?' on':'');
-  $('sbServerText').textContent='АТС: '+(SRV.running?'вкл :'+S.settings.port:'выкл');
+  $('sbServerText').textContent='АТС: '+(SRV.running?(NET.mode==='hub'?'хаб :'+S.settings.port:'вкл :'+S.settings.port):'выкл');
   const u=S.clients[S.activeExt];
   $('sbLineText').textContent=extLabel(u)+': '+(u.call?'в разговоре':u.registered?'в сети':'не в сети');
   const fc=focusCall();
   $('sbCall').hidden=!fc;
   if(fc)$('sbCallText').textContent=fc.peerName+' · '+(fc.state==='active'?fmtDur(callDur(fc)):ST_LABEL[fc.state]||'');
   $('sbRec').hidden=!(SR.on||Object.values(S.clients).some(x=>x.call&&x.call.recording));
-  renderExtBits();
+  renderExtBits();renderNetBits();
 }
 function renderBadges(){
   const missed=S.history.filter(h=>h.fresh).length;
@@ -2075,7 +2459,7 @@ function renderHistory(){
   $('histBulk').hidden=sel.size===0;
   $('histBulkCount').textContent='Выбрано: '+sel.size;
   $('histAll').checked=list.length>0&&list.every(h=>sel.has(h.id));
-  if(!list.length){$('histList').innerHTML='<div class="empty">'+ic('history')+'<b>Журнал пуст</b><p>Совершите первый вызов — CDR появится здесь.</p><button class="btn pri sm" data-action="nav" data-view="phone">Открыть телефон</button></div>';return}
+  if(!list.length){$('histList').innerHTML='<div class="empty">'+ic('history')+'<b>Журнал пуст</b><p>Совершите первый вызов — CDR появится здесь.</p><button type="button" class="btn pri sm" data-action="nav" data-view="phone">Открыть телефон</button></div>';return}
   let html='',day='';
   list.forEach(h=>{
     const d=dayLabel(h.at);if(d!==day){day=d;html+='<div class="day-sep">'+day+'</div>'}
@@ -2085,8 +2469,8 @@ function renderHistory(){
       +'<div class="row-ic ri-'+h.dir+'">'+ic(icn)+'</div>'
       +'<div class="row-main"><b>'+esc(h.name)+(h.fresh?' <span class="badge err" style="font-size:9.5px;padding:1px 7px">новый</span>':'')+(h.real?' <span class="badge inf" style="font-size:9.5px;padding:1px 7px">SIP</span>':'')+'</b><span>'+esc(h.ext)+' · линия '+esc(h.acc)+(h.note?' · '+esc(h.note):'')+(h.recorded?' · с записью':'')+'</span></div>'
       +'<div class="row-meta">'+(h.dur?fmtDur(h.dur):'—')+'<small>'+new Date(h.at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</small></div>'
-      +'<div class="row-acts"><button class="icon-btn" data-action="quick-call" data-ext="'+esc(h.ext)+'"'+(h.real?' data-real="1"':'')+' title="Позвонить">'+ic('phone')+'</button>'
-      +'<button class="icon-btn" data-action="hist-del" data-id="'+h.id+'" title="Удалить">'+ic('trash')+'</button></div></div>';
+      +'<div class="row-acts"><button type="button" class="icon-btn" data-action="quick-call" data-ext="'+esc(h.ext)+'"'+(h.real?' data-real="1"':'')+' title="Позвонить">'+ic('phone')+'</button>'
+      +'<button type="button" class="icon-btn" data-action="hist-del" data-id="'+h.id+'" title="Удалить">'+ic('trash')+'</button></div></div>';
   });
   $('histList').innerHTML=html;
 }
@@ -2098,9 +2482,9 @@ function renderContacts(){
       +'<div class="cc2-top">'+avatarHtml(c.ext,c.name)+'<div style="min-width:0"><b>'+esc(c.name)+'</b><span class="mono">'+esc(c.ext)+'</span> '
       +(online?'<span class="badge ok" style="margin-left:4px">в сети</span>':'<span class="badge off" style="margin-left:4px">не в сети</span>')+'</div></div>'
       +'<div class="contact-note">'+esc(c.note||'—')+'</div>'
-      +'<div class="contact-acts"><button class="btn grn sm" data-action="quick-call" data-ext="'+esc(c.ext)+'">'+ic('phone')+'Позвонить</button>'
-      +'<button class="icon-btn" data-action="contact-edit" data-id="'+c.id+'" title="Изменить">'+ic('edit')+'</button>'
-      +'<button class="icon-btn" data-action="contact-del" data-id="'+c.id+'" title="Удалить">'+ic('trash')+'</button></div></div>';
+      +'<div class="contact-acts"><button type="button" class="btn grn sm" data-action="quick-call" data-ext="'+esc(c.ext)+'">'+ic('phone')+'Позвонить</button>'
+      +'<button type="button" class="icon-btn" data-action="contact-edit" data-id="'+c.id+'" title="Изменить">'+ic('edit')+'</button>'
+      +'<button type="button" class="icon-btn" data-action="contact-del" data-id="'+c.id+'" title="Удалить">'+ic('trash')+'</button></div></div>';
   }).join('')||'<div class="empty">'+ic('users')+'<b>Нет контактов</b><p>Добавьте абонента вручную.</p></div>';
 }
 const SRC_LABEL={call:'Разговор',mic:'Микрофон',vm:'Голосовая почта'};
@@ -2111,26 +2495,26 @@ function renderRecs(){
   if(!MR_OK)$('micRecBtn').setAttribute('disabled','');
   $('recList').innerHTML=S.recs.length?S.recs.map(r=>
     '<div class="row'+(PREV.id===r.id?' playing':'')+'" data-action="rec-row" data-id="'+r.id+'">'
-    +'<button class="play-btn" data-action="rec-play" data-id="'+r.id+'" title="Воспроизвести">'+ic(PREV.id===r.id?'stop':'play')+'</button>'
+    +'<button type="button" class="play-btn" data-action="rec-play" data-id="'+r.id+'" title="Воспроизвести">'+ic(PREV.id===r.id?'stop':'play')+'</button>'
     +'<div class="row-main"><b>'+esc(r.name)+'</b><span>'+(SRC_LABEL[r.src]||r.src)+(r.ext?' · линия '+esc(r.ext):'')+' · '+fmtDT(r.at)+'</span></div>'
     +waveBars(r.id)
     +'<div class="row-meta">'+fmtDur(r.dur)+'<small>'+fmtBytes(r.size)+'</small></div>'
-    +'<div class="row-acts"><button class="icon-btn" data-action="rec-dl" data-id="'+r.id+'" title="Скачать">'+ic('download')+'</button>'
-    +'<button class="icon-btn" data-action="rec-del" data-id="'+r.id+'" title="Удалить">'+ic('trash')+'</button></div></div>').join('')
-  :'<div class="empty">'+ic('rec')+'<b>Записей пока нет</b><p>Запишите голос с микрофона или включите запись во время вызова.</p><button class="btn pri sm" data-action="rec-mic-start">'+ic('mic')+'Записать с микрофона</button></div>';
+    +'<div class="row-acts"><button type="button" class="icon-btn" data-action="rec-dl" data-id="'+r.id+'" title="Скачать">'+ic('download')+'</button>'
+    +'<button type="button" class="icon-btn" data-action="rec-del" data-id="'+r.id+'" title="Удалить">'+ic('trash')+'</button></div></div>').join('')
+  :'<div class="empty">'+ic('rec')+'<b>Записей пока нет</b><p>Запишите голос с микрофона или включите запись во время вызова.</p><button type="button" class="btn pri sm" data-action="rec-mic-start">'+ic('mic')+'Записать с микрофона</button></div>';
 }
 function renderFiles(){
   const fc=focusCall();const canSend=fc&&fc.state==='active';
   $('fileList').innerHTML=S.files.length?S.files.map(f=>
     '<div class="row'+(PREV.id===f.id?' playing':'')+'">'
-    +'<button class="play-btn" data-action="file-play" data-id="'+f.id+'" title="Прослушать">'+ic(PREV.id===f.id?'stop':'play')+'</button>'
+    +'<button type="button" class="play-btn" data-action="file-play" data-id="'+f.id+'" title="Прослушать">'+ic(PREV.id===f.id?'stop':'play')+'</button>'
     +'<div class="row-main"><b>'+esc(f.name)+'</b><span>'+(f.seed?'встроенный тон АТС':'загружен')+' · '+fmtDT(f.at)+'</span></div>'
     +waveBars(f.id)
     +'<div class="row-meta">'+fmtBytes(f.size)+'</div>'
     +'<div class="row-acts">'
-    +'<button class="btn sm '+(canSend?'grn':'ghost')+'" data-action="file-send" data-id="'+f.id+'"'+(canSend?'':' disabled')+' title="Передать в активный вызов">'+ic('send')+'В вызов</button>'
-    +'<button class="icon-btn" data-action="file-dl" data-id="'+f.id+'" title="Скачать">'+ic('download')+'</button>'
-    +'<button class="icon-btn" data-action="file-del" data-id="'+f.id+'" title="Удалить">'+ic('trash')+'</button></div></div>').join('')
+    +'<button type="button" class="btn sm '+(canSend?'grn':'ghost')+'" data-action="file-send" data-id="'+f.id+'"'+(canSend?'':' disabled')+' title="Передать в активный вызов">'+ic('send')+'В вызов</button>'
+    +'<button type="button" class="icon-btn" data-action="file-dl" data-id="'+f.id+'" title="Скачать">'+ic('download')+'</button>'
+    +'<button type="button" class="icon-btn" data-action="file-del" data-id="'+f.id+'" title="Удалить">'+ic('trash')+'</button></div></div>').join('')
   :'<div class="empty">'+ic('file-audio')+'<b>Библиотека пуста</b><p>Загрузите WAV/MP3 — файл можно передать собеседнику прямо в разговоре.</p></div>';
 }
 /* превью-плеер */
@@ -2157,14 +2541,14 @@ function renderBindings(){
   const rows=[...SRV.bindings.entries()];
   $('bindTbl').innerHTML=rows.length?rows.map(([ext,b])=>{
     const left=Math.max(0,b.expires-Math.round((Date.now()-b.at)/1000));
-    return'<tr><td style="color:var(--cyan)">sip:'+ext+'@'+esc(S.settings.domain)+'</td><td>'+esc(b.contact)+'</td><td style="color:var(--grn)">'+left+' c</td><td><button class="btn sm danger" data-action="srv-unbind" data-ext="'+ext+'">Снять</button></td></tr>';
+    return'<tr><td style="color:var(--cyan)">sip:'+esc(ext)+'@'+esc(S.settings.domain)+'</td><td>'+esc(b.contact)+(b.peer?' <span style="color:var(--amb)">[LAN]</span>':'')+'</td><td style="color:var(--grn)">'+left+' c</td><td><button type="button" class="btn sm danger" data-action="srv-unbind" data-ext="'+esc(ext)+'">Снять</button></td></tr>';
   }).join(''):'<tr><td colspan="4" style="color:var(--tx3);font-family:Inter,sans-serif">Нет регистраций</td></tr>';
 }
 function renderDialogs(){
   const rows=[...SRV.dialogs.values()];
   const stMap={trying:'100 Trying',ringing:'180 Ringing',answered:'200 OK',active:'ACK · медиа'};
   $('dlgTbl').innerHTML=rows.length?rows.map(d=>
-    '<tr><td>'+esc(d.id.slice(0,14))+'…</td><td>'+esc(d.a)+' → '+esc(d.b)+(d.svc?' <span style="color:var(--amb)">[сервис]</span>':'')+'</td><td style="color:var(--cyan)">'+(stMap[d.state]||d.state)+'</td><td>'+(d.activeAt?fmtDur((Date.now()-d.activeAt)/1000):'—')+'</td></tr>').join('')
+    '<tr><td>'+esc(d.id.slice(0,14))+'…</td><td>'+esc(d.a)+' → '+esc(d.b)+(d.svc?' <span style="color:var(--amb)">[сервис]</span>':'')+((d.pa||d.pb)?' <span style="color:var(--amb)">[LAN]</span>':'')+'</td><td style="color:var(--cyan)">'+(stMap[d.state]||d.state)+'</td><td>'+(d.activeAt?fmtDur((Date.now()-d.activeAt)/1000):'—')+'</td></tr>').join('')
   :'<tr><td colspan="4" style="color:var(--tx3);font-family:Inter,sans-serif">Нет активных диалогов</td></tr>';
 }
 function renderMethodBars(){
@@ -2192,7 +2576,8 @@ function drawSparkline(){
 /* консоль */
 function logMatch(e){
   const f=LOG.filter,q=LOG.q.trim().toLowerCase();
-  if(f!=='all'&&e.from!==f&&e.to!==f)return false;
+  if(f==='LAN'&&!e.lan)return false;
+  if(f!=='all'&&f!=='LAN'&&e.from!==f&&e.to!==f)return false;
   if(q&&!(e.label.toLowerCase().includes(q)||e.sum.toLowerCase().includes(q)||e.text.toLowerCase().includes(q)||(e.callId||'').toLowerCase().includes(q)))return false;
   return true;
 }
@@ -2221,9 +2606,7 @@ function syncSettings(){
   });
   document.querySelectorAll('[data-action="theme-set"]').forEach(b=>b.classList.toggle('on',b.dataset.theme===S.theme));
 }
-function applySetting(k,v){
-  S.settings[k]=v;store.set('settings',S.settings);
-}
+function applySetting(k,v){S.settings[k]=v;store.set('settings',S.settings)}
 function restartServerToast(){if(SRV.running){stopServer();setTimeout(startServer,400);toast('info','АТС перезапущена','Новые параметры применены')}else toast('info','Параметры сохранены','АТС применит их при запуске')}
 function setTheme(t){S.theme=t;store.set('theme',t);document.documentElement.dataset.theme=t;renderToolbar();syncSettings()}
 function setSound(on){S.soundOn=on;store.set('sound',on);if(AC.master)AC.master.gain.setTargetAtTime(on?1:0,AC.ctx.currentTime,.03);renderToolbar();syncSettings();toast('info',on?'Звук включён':'Звук выключен',on?'Рингтоны, голос и сигналы активны':'Все звуки приложения заглушены')}
@@ -2239,6 +2622,7 @@ function setView(v){
   if(v==='recs')renderRecs();
   if(v==='files')renderFiles();
   if(v==='server'){S.logUnread=0;renderConsole();renderServerBits();drawSparkline()}
+  if(v==='lan')renderLan();
   if(v==='sip'){syncExtCfg();renderExtBits()}
   if(v==='settings'){syncSettings();populateMics()}
   if(v==='phone'){renderCallArea();renderDialMode();renderLineCard();renderRecentMini()}
@@ -2272,14 +2656,14 @@ function pressKey(k){
     dtmfTone(k);
     try{const sender=fc.pc&&fc.pc.getSenders().find(s=>s.track&&s.track.kind==='audio');if(sender&&sender.dtmf)sender.dtmf.insertDTMF(k,120,70)}catch(e){}
     if(fc.ua.real)rsDtmf(fc,k);
-    else fc.ua.reply(sipReq('INFO','sip:'+fc.peer+'@'+S.settings.domain,fc.ua.ext,fc.peer,fc.callId,++fc.cseq,{fromTag:fc.fromTag,toTag:fc.toTag,contentType:'application/dtmf-relay',body:'Signal='+k+'\r\nDuration=160'}));
+    else fc.ua.reply(sipReq('INFO','sip:'+fc.peer+'@'+S.settings.domain,fc.ua.wire,fc.peer,fc.callId,++fc.cseq,{fromTag:fc.fromTag,toTag:fc.toTag,contentType:'application/dtmf-relay',body:'Signal='+k+'\r\nDuration=160'}));
   }else if(!fc){audioCtx();$('dialInput').value+=k;keyTone(k)}
 }
 function callByExt(ext){const c=S.clients[ext]&&S.clients[ext].call;if(!c){toast('warn','Вызов не найден');return null}return c}
 function openFilePicker(ext){
   const c=callByExt(ext);if(!c||c.state!=='active'){toast('warn','Нет активного вызова');return}
-  const rows=S.files.map(f=>'<div class="pick-row">'+ic('file-audio','color:var(--cyan)')+'<b>'+esc(f.name)+'</b><span>'+fmtBytes(f.size)+'</span><button class="btn sm grn" data-action="file-pick" data-id="'+f.id+'" data-ext="'+ext+'">'+ic('send')+'Передать</button></div>').join('');
-  openModal('<h2>'+ic('file-audio')+'Передать аудиофайл</h2><div class="sub">Файл прозвучит у собеседника в реальном времени · линия '+esc(extLabel(c.ua))+'</div>'+(rows||'<div class="sub">Библиотека пуста — загрузите файл.</div>')+'<div class="m-actions"><button class="btn ghost" data-action="modal-close">Закрыть</button><button class="btn pri" data-action="file-pick-upload" data-ext="'+ext+'">'+ic('upload')+'Загрузить новый</button></div>','filepick',{ext});
+  const rows=S.files.map(f=>'<div class="pick-row">'+ic('file-audio','color:var(--cyan)')+'<b>'+esc(f.name)+'</b><span>'+fmtBytes(f.size)+'</span><button type="button" class="btn sm grn" data-action="file-pick" data-id="'+f.id+'" data-ext="'+ext+'">'+ic('send')+'Передать</button></div>').join('');
+  openModal('<h2>'+ic('file-audio')+'Передать аудиофайл</h2><div class="sub">Файл прозвучит у собеседника в реальном времени · линия '+esc(extLabel(c.ua))+'</div>'+(rows||'<div class="sub">Библиотека пуста — загрузите файл.</div>')+'<div class="m-actions"><button type="button" class="btn ghost" data-action="modal-close">Закрыть</button><button type="button" class="btn pri" data-action="file-pick-upload" data-ext="'+ext+'">'+ic('upload')+'Загрузить новый</button></div>','filepick',{ext});
 }
 function openContactModal(id){
   const c=id?S.contacts.find(x=>x.id===id):null;
@@ -2288,7 +2672,7 @@ function openContactModal(id){
     +'<div class="m-field"><label>Имя</label><input id="cName" value="'+esc(c?c.name:'')+'" placeholder="Например, Виктор Ли"></div>'
     +'<div class="m-field"><label>Номер (extension)</label><input id="cExt" value="'+esc(c?c.ext:'')+'"'+(sys?' disabled':'')+' placeholder="103" inputmode="numeric"></div>'
     +'<div class="m-field"><label>Заметка</label><input id="cNote" value="'+esc(c?c.note||'':'')+'" placeholder="Отдел, роль…"></div>'
-    +'<div class="m-actions"><button class="btn ghost" data-action="modal-close">Отмена</button><button class="btn pri" data-action="contact-save">'+ic('check')+'Сохранить</button></div>','contact',{id});
+    +'<div class="m-actions"><button type="button" class="btn ghost" data-action="modal-close">Отмена</button><button type="button" class="btn pri" data-action="contact-save">'+ic('check')+'Сохранить</button></div>','contact',{id});
 }
 function openHistDrawer(id){
   const h=S.history.find(x=>x.id===id);if(!h)return;
@@ -2304,7 +2688,7 @@ function openHistDrawer(id){
     +'<div class="kv"><span>Статус</span><b>'+esc(h.note||'Завершён')+'</b></div>'
     +'<div class="kv"><span>Call-ID</span><b>'+esc(h.callId||'—')+'</b></div>'
     +'<div class="kv"><span>Запись</span><b>'+(h.recorded?'да':'нет')+'</b></div></div>'
-    +'<div class="m-actions"><button class="btn danger" data-action="hist-del" data-id="'+h.id+'">'+ic('trash')+'Удалить</button><button class="btn grn" data-action="quick-call" data-ext="'+esc(h.ext)+'"'+(h.real?' data-real="1"':'')+'>'+ic('phone')+'Позвонить</button></div>','histdrawer',{id},true);
+    +'<div class="m-actions"><button type="button" class="btn danger" data-action="hist-del" data-id="'+h.id+'">'+ic('trash')+'Удалить</button><button type="button" class="btn grn" data-action="quick-call" data-ext="'+esc(h.ext)+'"'+(h.real?' data-real="1"':'')+'>'+ic('phone')+'Позвонить</button></div>','histdrawer',{id},true);
 }
 function openRecDrawer(id){
   const r=S.recs.find(x=>x.id===id);if(!r)return;
@@ -2314,7 +2698,7 @@ function openRecDrawer(id){
     +'<div class="kv"><span>Размер</span><b>'+fmtBytes(r.size)+'</b></div>'
     +'<div class="kv"><span>Формат</span><b>'+esc(r.blob.type||'audio/webm')+'</b></div>'
     +(r.ext?'<div class="kv"><span>Линия</span><b>'+esc(r.ext)+'</b></div>':'')
-    +'<div class="m-actions" style="flex-wrap:wrap"><button class="btn danger" data-action="rec-del" data-id="'+r.id+'">'+ic('trash')+'</button><button class="btn" data-action="rec-rename" data-id="'+r.id+'">'+ic('edit')+'Имя</button><button class="btn pri" data-action="rec-dl" data-id="'+r.id+'">'+ic('download')+'Скачать</button></div>','recdrawer',{id},true);
+    +'<div class="m-actions" style="flex-wrap:wrap"><button type="button" class="btn danger" data-action="rec-del" data-id="'+r.id+'">'+ic('trash')+'</button><button type="button" class="btn" data-action="rec-rename" data-id="'+r.id+'">'+ic('edit')+'Имя</button><button type="button" class="btn pri" data-action="rec-dl" data-id="'+r.id+'">'+ic('download')+'Скачать</button></div>','recdrawer',{id},true);
 }
 function handleFiles(list){
   let added=0,last=null;
@@ -2340,7 +2724,7 @@ const ACTIONS={
   'nav':el=>setView(el.dataset.view),
   'sidebar':()=>openSidebar(),
   'sidebar-close':()=>closeSidebar(),
-  'server-toggle':()=>{audioCtx();SRV.running?stopServer():startServer()},
+  'server-toggle':()=>{if(NET.mode==='client'){toast('info','АТС работает на хабе','Управление сервером — на компьютере-сервере');setView('lan');return}audioCtx();SRV.running?stopServer():startServer()},
   'sound-toggle':()=>{audioCtx();setSound(!S.soundOn)},
   'theme-toggle':()=>setTheme(S.theme==='dark'?'light':'dark'),
   'theme-set':el=>setTheme(el.dataset.theme),
@@ -2360,17 +2744,17 @@ const ACTIONS={
     if(c.ua.real){c.held=!c.held;applyCallGains(c);renderCallArea();rsRenegotiate(c,c.held?'sendonly':'sendrecv');return}
     c.held=!c.held;applyCallGains(c);
     const sdp=c.pc&&c.pc.localDescription?c.pc.localDescription.sdp.replace(/a=sendrecv/g,c.held?'a=sendonly':'a=sendrecv'):undefined;
-    c.ua.reply(sipReq('INVITE','sip:'+c.peer+'@'+S.settings.domain,c.ua.ext,c.peer,c.callId,++c.cseq,{fromTag:c.fromTag,toTag:c.toTag,sdp}));
+    c.ua.reply(sipReq('INVITE','sip:'+c.peer+'@'+S.settings.domain,c.ua.wire,c.peer,c.callId,++c.cseq,{fromTag:c.fromTag,toTag:c.toTag,sdp}));
     toast('info',c.held?'Вызов на удержании':'Вызов возобновлён','re-INVITE · '+(c.held?'sendonly':'sendrecv'));renderCallArea();
   },
   'call-rec':el=>{const c=callByExt(el.dataset.ext);if(!c)return;c.recording?stopCallRecording(c,true):startCallRecording(c)},
   'call-file':el=>openFilePicker(el.dataset.ext),
   'call-file-stop':el=>{const c=callByExt(el.dataset.ext);if(c)endFilePlay(c)},
   'call-hangup':el=>{const c=callByExt(el.dataset.ext);if(c)hangupCall(c)},
-  'call-accept':el=>{const c=callByExt(el.dataset.ext);if(c)answerCall(c)},
-  'call-decline':el=>{const c=callByExt(el.dataset.ext);if(c)declineCall(c)},
-  'inc-accept':()=>{if(INC[0])answerCall(INC[0])},
-  'inc-decline':()=>{if(INC[0])declineCall(INC[0])},
+  'call-accept':el=>{const c=callByExt(el.dataset.ext);if(c)safeAnswer(c)},
+  'call-decline':el=>{const c=callByExt(el.dataset.ext);if(c)safeDecline(c)},
+  'inc-accept':()=>doAcceptIncoming(),
+  'inc-decline':()=>doDeclineIncoming(),
   'mini-open':()=>setView('phone'),
   'mini-hangup':()=>{const c=focusCall();if(c)hangupCall(c)},
   'hist-filter':el=>{S.histFilter.f=el.dataset.f;store.set('histf',S.histFilter.f);S.histSel.clear();renderHistory()},
@@ -2403,7 +2787,7 @@ const ACTIONS={
   'rec-row':(el,e)=>{if(e.target.closest('button,input'))return;openRecDrawer(el.dataset.id)},
   'rec-dl':el=>{const r=S.recs.find(x=>x.id===el.dataset.id);if(r)download(r.blob,r.name.replace(/[\\/:*?"<>|]/g,'_')+'.webm')},
   'rec-del':el=>{const r=S.recs.find(x=>x.id===el.dataset.id);if(!r)return;closeModal();if(PREV.id===r.id)previewStop();undoable('Запись удалена',S.recs,r,()=>{renderRecs();renderBadges()},()=>DB.del('recs',r.id),()=>DB.put('recs',r))},
-  'rec-rename':el=>{const r=S.recs.find(x=>x.id===el.dataset.id);if(!r)return;openModal('<h2>'+ic('edit')+'Переименовать запись</h2><div class="sub">Текущее: '+esc(r.name)+'</div><div class="m-field"><label>Новое имя</label><input id="renName" value="'+esc(r.name)+'"></div><div class="m-actions"><button class="btn ghost" data-action="modal-close">Отмена</button><button class="btn pri" data-action="rename-save" data-id="'+r.id+'">Сохранить</button></div>','rename',{id:r.id})},
+  'rec-rename':el=>{const r=S.recs.find(x=>x.id===el.dataset.id);if(!r)return;openModal('<h2>'+ic('edit')+'Переименовать запись</h2><div class="sub">Текущее: '+esc(r.name)+'</div><div class="m-field"><label>Новое имя</label><input id="renName" value="'+esc(r.name)+'"></div><div class="m-actions"><button type="button" class="btn ghost" data-action="modal-close">Отмена</button><button type="button" class="btn pri" data-action="rename-save" data-id="'+r.id+'">Сохранить</button></div>','rename',{id:r.id})},
   'rename-save':el=>{const r=S.recs.find(x=>x.id===el.dataset.id);const v=$('renName').value.trim();if(!r||!v){toast('warn','Введите имя');return}r.name=v;DB.put('recs',r);closeModal();renderRecs();toast('success','Переименовано',v)},
   'recs-clear':()=>{if(!S.recs.length)return;openConfirm('Удалить все записи?','Будет удалено '+S.recs.length+' аудиофайлов безвозвратно.','Удалить всё',()=>{S.recs.forEach(r=>{if(r._url)URL.revokeObjectURL(r._url)});S.recs=[];DB.clear('recs');previewStop();renderRecs();renderBadges();toast('info','Все записи удалены')})},
   'file-play':el=>{const f=S.files.find(x=>x.id===el.dataset.id);if(f)previewToggle(f.id,f)},
@@ -2414,10 +2798,12 @@ const ACTIONS={
   'file-del':el=>{const f=S.files.find(x=>x.id===el.dataset.id);if(!f)return;if(PREV.id===f.id)previewStop();undoable('Файл удалён',S.files,f,renderFiles,()=>DB.del('files',f.id),()=>DB.put('files',f))},
   'srv-pause':()=>{LOG.paused=!LOG.paused;$('logPause').innerHTML=LOG.paused?ic('play')+'Продолжить':ic('pause')+'Пауза';$('logPause').classList.toggle('on',LOG.paused);if(!LOG.paused)renderConsole()},
   'srv-export':()=>{const txt=LOG.list.map(e=>'['+new Date(e.t).toISOString()+'] '+e.from+' → '+e.to+' · '+e.label+'\n'+e.text+'\n'+'-'.repeat(60)).join('\n');download(new Blob([txt],{type:'text/plain'}),'monosip-sip.log');toast('success','Лог экспортирован',LOG.list.length+' сообщений')},
-  'srv-clear':()=>{LOG.list=[];$('consoleBody').innerHTML='';renderExLog();toast('info','Консоль очищена')},
+  'srv-clear':()=>{LOG.list=[];$('consoleBody').innerHTML='';renderExLog();if(S.view==='lan')renderLan();toast('info','Консоль очищена')},
   'srv-unbind':el=>{const ext=el.dataset.ext;const u=S.clients[ext];if(u&&u.call){toast('warn','Линия в разговоре','Нельзя снять регистрацию во время вызова');return}
-    SRV.bindings.delete(ext);if(u){u.registered=false;clearTimeout(u.regTimer);clearInterval(u.optTimer)}
-    sysLog('Администратор снял биндинг '+ext);toast('warn','Регистрация снята принудительно',ext);renderServerBits();renderAccounts();renderStatus();renderLineCard()},
+    const b=SRV.bindings.get(ext);
+    if(b&&b.peer){const m=sipReq('REGISTER','sip:'+S.settings.domain,ext,ext,'unbind-'+uid(),1,{expires:0,fromTag:'adm'});netSip(b.peer,m)}
+    SRV.bindings.delete(ext);NET.extPeer.delete(ext);if(u&&!u.real){u.registered=false;clearTimeout(u.regTimer);clearInterval(u.optTimer)}
+    sysLog('Администратор снял биндинг '+ext);toast('warn','Регистрация снята принудительно',ext);netBroadcastDirectory();renderServerBits();renderAccounts();renderStatus();renderLineCard()},
   'log-expand':(el,e)=>{if(e.target.tagName==='PRE')return;el.classList.toggle('open')},
   'set-toggle':el=>{
     const k=el.dataset.key;
@@ -2428,11 +2814,20 @@ const ACTIONS={
   },
   'mic-test':()=>mtToggle(),
   'settings-reset':()=>{S.settings=Object.assign({},DEF_SETTINGS);store.set('settings',S.settings);syncSettings();renderDialSub();renderLineCard();restartServerToast();toast('success','Настройки сброшены','Значения по умолчанию восстановлены')},
-  'data-export':()=>{download(new Blob([JSON.stringify({app:'MonoSIP',exported:new Date().toISOString(),settings:S.settings,contacts:S.contacts,history:S.history,ext:Object.assign({},EXT.cfg,{turnPass:''})},null,2)],{type:'application/json'}),'monosip-data.json');toast('success','Данные экспортированы','JSON скачан')},
+  'data-export':()=>{download(new Blob([JSON.stringify({app:'MonoSIP',exported:new Date().toISOString(),settings:S.settings,contacts:S.contacts,history:S.history,ext:Object.assign({},EXT.cfg,{turnPass:''}),lan:{room:NET.room,name:NET.name,port:NET.port,extA:NET.extA,extB:NET.extB}},null,2)],{type:'application/json'}),'monosip-data.json');toast('success','Данные экспортированы','JSON скачан')},
   'modal-close':()=>closeModal(),
   'modal-ok':()=>{const cb=MOD.cb;closeModal();if(cb)cb()},
   'toast-act':el=>{const cb=TOAST_CB[el.dataset.id];dismissToast(el.dataset.id);if(cb)cb()},
   'toast-x':el=>dismissToast(el.dataset.id),
+  /* --- локальная сеть --- */
+  'lan-mode':el=>{NET.role=el.dataset.role;store.set('lan.role',NET.role);if(netReady()||NET.status==='connecting'){netDisconnect();setTimeout(()=>netConnect(),600)}else renderLan();toast('info','Роль выбрана',NET.role==='hub'?'Сервер (хаб)':'Клиент')},
+  'lan-connect':()=>{audioCtx();(netReady()||NET.status==='connecting')?netDisconnect():netConnect()},
+  'lan-quick':el=>{audioCtx();NET.role=el.dataset.role;store.set('lan.role',NET.role);NET.url=netDefaultUrl();store.set('lan.url',NET.url);if(netReady())netDisconnect();setTimeout(()=>netConnect(),netReady()?600:0)},
+  'lan-download':()=>lanDownloadServer(),
+  'lan-copy-cmd':()=>lanCopy('node monosip-lan.js'),
+  'lan-copy-url':()=>lanCopy($('lanUrl').value||netDefaultUrl()),
+  'lan-apply-ext':()=>netApplyExts(),
+  'lan-reconnect':el=>{NET.reconnect=!NET.reconnect;store.set('lan.reconnect',NET.reconnect);el.setAttribute('aria-checked',NET.reconnect?'true':'false');toast('info','Автопереподключение',NET.reconnect?'включено':'выключено')},
   /* --- внешняя SIP-линия --- */
   'ext-conn':()=>{audioCtx();(rsOpen()||EXT.status==='connecting')?rsDisconnect():rsConnect()},
   'ext-reg':()=>{const u=S.clients['ext'];rsRegister(u.registered)},
@@ -2448,7 +2843,7 @@ document.addEventListener('click',e=>{
   const el=e.target.closest('[data-action]');
   if(!el)return;
   const a=el.dataset.action;
-  if(['hist-check','hist-all','srv-filter','set-mic','set-codec','set-domain','set-port','set-expires','ex-cfg'].includes(a))return;
+  if(['hist-check','hist-all','srv-filter','set-mic','set-codec','set-domain','set-port','set-expires','ex-cfg','lan-cfg'].includes(a))return;
   if(ACTIONS[a]){e.preventDefault();ACTIONS[a](el,e)}
 });
 document.addEventListener('input',e=>{
@@ -2479,12 +2874,17 @@ document.addEventListener('change',e=>{
     EXT.cfg[k]=v;saveExtCfg();renderExtBits();renderLineCard();renderDialSub();
     if(k==='user'||k==='displayName'){renderAccounts();renderLineSwitch()}
     return}
+  if(a==='lan-cfg'){const k=el.dataset.key;let v=el.value;
+    if(k==='port'){v=clamp(parseInt(v)||8080,1,65535);el.value=v}
+    if(k==='room')v=v.trim()||'monosip-lan';
+    if(k==='name')v=v.trim()||NET.name;
+    NET[k]=v;store.set('lan.'+k,v);renderLan();return}
   if(el.id==='fileInput'){handleFiles(el.files);el.value='';return}
 });
 document.addEventListener('keydown',e=>{
   if($('incoming').classList.contains('on')){
-    if(e.key==='Enter'){e.preventDefault();if(INC[0])answerCall(INC[0])}
-    if(e.key==='Escape'){e.preventDefault();if(INC[0])declineCall(INC[0])}
+    if(e.key==='Enter'){e.preventDefault();doAcceptIncoming()}
+    if(e.key==='Escape'){e.preventDefault();doDeclineIncoming()}
     return;
   }
   if($('modalWrap').classList.contains('on')){if(e.key==='Escape')closeModal();return}
@@ -2516,7 +2916,7 @@ document.addEventListener('drop',e=>{
   S.dragContact=null;document.querySelectorAll('.drag-over').forEach(x=>x.classList.remove('drag-over'));
 });
 document.addEventListener('pointerdown',()=>{audioCtx()},{once:true});
-window.addEventListener('beforeunload',()=>{try{AC.micStream&&AC.micStream.getTracks().forEach(t=>t.stop());EXT.ws&&EXT.ws.close()}catch(e){}});
+window.addEventListener('beforeunload',()=>{try{AC.micStream&&AC.micStream.getTracks().forEach(t=>t.stop());EXT.ws&&EXT.ws.close();NET.ws&&NET.ws.close()}catch(e){}});
 
 /* ---------------- Циклы ---------------- */
 function tick(){
@@ -2539,7 +2939,13 @@ function tick(){
     renderServerBits();drawSparkline();
   }
   if(S.view==='sip')renderExtBits();
+  if(S.view==='lan')renderLan();
   if(S.view==='phone'){const u=S.clients[S.activeExt];const n=$('lcReg');if(n&&u&&!u.real)n.textContent=u.registered?Math.max(0,S.settings.expires-Math.round((now-u.regAt)/1000))+' c':'—';if(u&&u.real)renderLineCard()}
+  /* страховка: окно входящего всегда соответствует реальному состоянию */
+  const incOpen=$('incoming').classList.contains('on');
+  const live=incomingCall();
+  if(incOpen&&!live){$('incoming').classList.remove('on');incBusy(false)}
+  else if(!incOpen&&live&&!$('modalWrap').classList.contains('on'))showIncoming();
 }
 function drawWave(c){
   const cv=c.waveCanvas;if(!cv||!cv.isConnected)return;
@@ -2614,24 +3020,31 @@ async function boot(){
   if(!S.clients['101'])S.clients['101']=new UA('101',(S.contacts.find(c=>c.ext==='101')||{}).name||'Анна Соколова');
   if(!S.clients['102'])S.clients['102']=new UA('102',(S.contacts.find(c=>c.ext==='102')||{}).name||'Борис Орлов');
   S.clients['ext']=new ExtUA();
+  S.clients['101'].lanExt=NET.extA;S.clients['102'].lanExt=NET.extB;
   if(!S.clients[S.activeExt])S.activeExt='101';
   document.documentElement.dataset.theme=S.theme;
   if(!store.get('hint',true))$('hintChip').style.display='none';
   buildKeypad();
+  /* Прямые обработчики кнопок входящего вызова — не зависят от делегирования и перерисовок */
+  const acc=$('incAccept'),dec=$('incDecline');
+  if(acc){['click','touchend'].forEach(ev=>acc.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();if(ev==='touchend')acc.dataset.t='1';if(ev==='click'&&acc.dataset.t){delete acc.dataset.t}doAcceptIncoming()},{passive:false}))}
+  if(dec){['click','touchend'].forEach(ev=>dec.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();doDeclineIncoming()},{passive:false}))}
   renderToolbar();renderAccounts();renderLineSwitch();renderDialMode();renderLineCard();
-  renderRecentMini();renderHistory();renderContacts();renderRecs();renderFiles();renderStatus();renderBadges();syncSettings();syncExtCfg();renderExtBits();
+  renderRecentMini();renderHistory();renderContacts();renderRecs();renderFiles();renderStatus();renderBadges();syncSettings();syncExtCfg();renderExtBits();renderNetBits();
   if(!RTC_OK)toast('warn','WebRTC недоступен','Вызовы будут сигнальными, без передачи медиа');
   if(!MR_OK)toast('warn','MediaRecorder недоступен','Запись аудио отключена в этом браузере');
-  sysLog('MonoSIP v1.1 загружен · монолит: АТС + 2 UA + внешняя SIP-линия (RFC 3261/7118)');
+  sysLog('MonoSIP v1.2.1 загружен · исправлены кнопки «Ответить» / «Отклонить» во входящем окне');
   await DB.init();
   const recs=await DB.all('recs');S.recs=recs.sort((a,b)=>b.at-a.at);
   const files=await DB.all('files');files.sort((a,b)=>b.at-a.at);S.files=files;
   await seedAudioFiles();
   renderRecs();renderFiles();renderBadges();
   setTimeout(startServer,600);
+  if(/^https?:/.test(location.protocol))setTimeout(()=>toast('info','Страница отдана LAN-сервером','Подключите этот ПК как хаб или клиент',{label:'Открыть',cb:()=>setView('lan')}),1400);
   setInterval(tick,1000);
   requestAnimationFrame(frame);
 }
+const PRISTINE=document.documentElement.outerHTML;
 boot();
 </script>
 </body>
